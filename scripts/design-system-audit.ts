@@ -158,7 +158,7 @@ fs.writeFileSync('design-system-audit.html', htmlReport);
 
 console.log('Reports generated: design-system-audit.md, design-system-audit.html');
 if (violations.length > 0) {
-    console.log(\`Found \${violations.length} violations.\`);
+    console.log('Found ' + violations.length + ' violations.');
 } else {
     console.log('No violations found!');
 }
