@@ -5,10 +5,26 @@ export type EmailRevalidationJob = Database['public']['Tables']['email_revalidat
 export type EmailHealthSummary = Database['public']['Tables']['email_health_summary']['Row'];
 
 export const emailApi = {
-  getAuditLogs: async (from: number, to: number) => {
-    return await supabase
+  getAuditLogs: async (
+    from: number, 
+    to: number, 
+    filters?: { status?: string; dateFrom?: string; dateTo?: string }
+  ) => {
+    let query = supabase
       .from('email_revalidation_jobs')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact' });
+
+    if (filters?.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.dateFrom) {
+      query = query.gte('requested_at', filters.dateFrom);
+    }
+    if (filters?.dateTo) {
+      query = query.lte('requested_at', filters.dateTo);
+    }
+
+    return await query
       .order('requested_at', { ascending: false })
       .range(from, to);
   },
@@ -27,5 +43,24 @@ export const emailApi = {
   },
   getTokenStatus: async () => {
     return await supabase.rpc('rpc_email_token_status');
+  },
+  retryJob: async (jobId: string) => {
+    // Implementação de retry: atualiza o status para pending para que o worker processe novamente
+    // Ou cria um novo job baseado no anterior
+    const { data: job } = await supabase
+      .from('email_revalidation_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (!job) throw new Error('Job não encontrado');
+
+    return await supabase
+      .from('email_revalidation_jobs')
+      .insert({
+        status: 'pending',
+        requested_by: job.requested_by,
+        result: { retry_of: jobId }
+      });
   }
 };
