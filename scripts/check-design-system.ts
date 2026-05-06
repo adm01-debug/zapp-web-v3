@@ -23,22 +23,20 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
 
-  if (label === 'Raw Hex' || label === 'Arbitrary Color') {
-    const lowerClean = cleanMatch.toLowerCase();
-    const isWhite = lowerClean.includes('white') || lowerClean.includes('#ffffff') || lowerClean.includes('#fff');
-    const isBlack = lowerClean.includes('black') || lowerClean.includes('#000000') || lowerClean.includes('#000');
-    
+  const isWhite = cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#fff');
+  const isBlack = cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000');
+
+  if (label === 'Raw Hex' || label === 'Arbitrary Color' || label === 'Literal Color') {
     if (isWhite) {
        const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-background' : (cleanMatch.startsWith('text-') ? 'text-foreground' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-background'}`, priority: 'High', replacement };
     }
     if (isBlack) {
-       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : undefined);
+       const baseReplacement = cleanMatch.startsWith('bg-') ? 'bg-foreground' : (cleanMatch.startsWith('text-') ? 'text-background' : (cleanMatch.startsWith('border-') ? 'border-border' : undefined));
        const replacement = baseReplacement ? `${prefix}${baseReplacement}` : undefined;
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-foreground'}`, priority: 'High', replacement };
     }
-    return { cleanMatch, prefix, suggestion: 'Use theme tokens (primary, secondary, etc.)', priority: 'High' };
   }
 
   if (label === 'Literal Color') {
@@ -120,12 +118,43 @@ function scanDir(dir: string, results: Violation[]) {
 }
 
 if (require.main === module) {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run');
+  const applyPatch = args.includes('--apply-patch') || dryRun;
+  const ci = args.includes('--ci');
+  const pathArg = args.find(a => !a.startsWith('--'));
+  const minPriorityArg = args.find(a => a.startsWith('--min-priority='))?.split('=')[1] || 'Low';
+  
+  const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+  const minPriorityValue = priorityMap[minPriorityArg as keyof typeof priorityMap] || 1;
+
+  const scanPath = pathArg || './src';
   const violations: Violation[] = [];
-  scanDir('./src', violations);
+  
+  console.log(`🔍 Scanning ${scanPath} (min-priority: ${minPriorityArg})...`);
+
+  if (!existsSync(scanPath)) {
+    console.error(`❌ Path does not exist: ${scanPath}`);
+    process.exit(1);
+  }
+
+  if (statSync(scanPath).isDirectory()) {
+    scanDir(scanPath, violations);
+  } else {
+    const content = readFileSync(scanPath, 'utf-8');
+    scanContent(content, relative(process.cwd(), scanPath), violations);
+  }
+
+  const filteredViolations = violations.filter(v => priorityMap[v.priority] >= minPriorityValue);
+
+  if (filteredViolations.length === 0) {
+    console.log('✅ No violations found.');
+    process.exit(0);
+  }
 
   // Generate Reports
   const groupedViolations: Record<string, Violation[]> = {};
-  violations.forEach(v => {
+  filteredViolations.forEach(v => {
     if (!groupedViolations[v.file]) groupedViolations[v.file] = [];
     groupedViolations[v.file].push(v);
   });
@@ -133,9 +162,9 @@ if (require.main === module) {
   // Markdown Report
   let mdReport = `# Design System Audit\nGenerated on: ${new Date().toLocaleString()}\n\n`;
   Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
-    mdReport += `## ${file}\n| Priority | Line | Type | Raw Match | Variant | Clean Match | Suggestion |\n|---|---|---|---|---|---|---|\n`;
+    mdReport += `## ${file}\n| Priority | Line | Type | Raw Match | Variant | Clean Match | Suggestion | Patch |\n|---|---|---|---|---|---|---|---|\n`;
     fileViolations.forEach(v => {
-      mdReport += `| ${v.priority} | ${v.line} | ${v.label} | \`${v.match}\` | \`${v.prefix}\` | \`${v.cleanMatch}\` | ${v.suggestion} |\n`;
+      mdReport += `| ${v.priority} | ${v.line} | ${v.label} | \`${v.match}\` | \`${v.prefix}\` | \`${v.cleanMatch}\` | ${v.suggestion} | ${v.replacement ? `\`${v.replacement}\`` : '-'} |\n`;
     });
     mdReport += '\n';
   });
@@ -154,6 +183,7 @@ if (require.main === module) {
       .high { color: #ef4444; font-weight: bold; }
       .medium { color: #f59e0b; font-weight: bold; }
       code { background: #f1f1f1; padding: 2px 4px; border-radius: 4px; }
+      .patch { color: #10b981; font-weight: bold; }
     </style>
   </head>
   <body>
@@ -166,10 +196,12 @@ if (require.main === module) {
             <tr>
               <th>Priority</th>
               <th>Line</th>
+              <th>Type</th>
               <th>Raw Match</th>
               <th>Variant</th>
               <th>Clean Match</th>
               <th>Suggestion</th>
+              <th>Patch</th>
             </tr>
           </thead>
           <tbody>
@@ -177,10 +209,12 @@ if (require.main === module) {
               <tr>
                 <td class="${v.priority.toLowerCase()}">${v.priority}</td>
                 <td>${v.line}</td>
+                <td>${v.label}</td>
                 <td><code>${v.match}</code></td>
                 <td><code>${v.prefix}</code></td>
                 <td><code>${v.cleanMatch}</code></td>
                 <td>${v.suggestion}</td>
+                <td class="patch">${v.replacement ? `<code>${v.replacement}</code>` : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -192,24 +226,30 @@ if (require.main === module) {
   `;
   writeFileSync('design-system-audit.html', htmlReport);
 
-  if (process.argv.includes('--apply-patch')) {
+  if (applyPatch) {
+    console.log(dryRun ? '\n--- Dry Run: Proposed Changes ---' : '\n--- Applying Patches ---');
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       let content = readFileSync(file, 'utf-8');
       let lines = content.split('\n');
       let hasChanges = false;
+      
       fileViolations.forEach(v => {
         if (v.replacement && lines[v.line-1].includes(v.match)) {
+          console.log(`[${file}:${v.line}] Replace "${v.match}" with "${v.replacement}"`);
           lines[v.line-1] = lines[v.line-1].replace(v.match, v.replacement);
           hasChanges = true;
         }
       });
-      if (hasChanges) writeFileSync(file, lines.join('\n'));
+      
+      if (hasChanges && !dryRun) {
+        writeFileSync(file, lines.join('\n'));
+      }
     });
-    console.log('✅ Applied patches.');
+    console.log(dryRun ? '--- End of Dry Run ---' : '✅ Applied patches.');
   }
 
-  if (process.argv.includes('--ci') && violations.length > 0) {
-    console.error(`❌ Found ${violations.length} violations.`);
+  if (ci && filteredViolations.length > 0) {
+    console.error(`❌ Found ${filteredViolations.length} violations.`);
     process.exit(1);
   }
 }
