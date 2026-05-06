@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,6 +28,12 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   const [conversionProgress, setConversionProgress] = useState(0);
   const [showCloneWarning, setShowCloneWarning] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (convertedAudioUrl) URL.revokeObjectURL(convertedAudioUrl);
+    };
+  }, [convertedAudioUrl]);
+
   const stopPlayback = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -39,10 +45,11 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
   const cleanup = useCallback(() => {
     stopPlayback();
     if (convertedAudioUrl) {
-      URL.revokeObjectURL(convertedAudioUrl);
+      // Don't revoke here if we want to keep it while the popover is open
+      // URL.revokeObjectURL(convertedAudioUrl); 
       setConvertedAudioUrl(null);
     }
-  }, [convertedAudioUrl, stopPlayback]);
+  }, [stopPlayback]);
 
   const handleConvert = async (voice: ElevenLabsVoice) => {
     // Check if it's a "cloned" voice (placeholder logic - usually based on ID prefix or metadata)
@@ -57,19 +64,25 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
     cleanup();
     setSelectedVoice(voice);
     setIsConverting(true);
-    setConversionProgress(10);
+    setConversionProgress(5);
 
     try {
+      const progressSteps = [15, 30, 45, 60, 75, 85];
+      let currentStep = 0;
       const progressInterval = setInterval(() => {
-        setConversionProgress(prev => (prev < 90 ? prev + 5 : prev));
-      }, 500);
+        if (currentStep < progressSteps.length) {
+          setConversionProgress(progressSteps[currentStep]);
+          currentStep++;
+        }
+      }, 800);
 
       const formData = new FormData();
       formData.append('audio', audioBlob, 'audio.webm');
-      formData.append('voiceId', voice.id);
+      formData.append('voice_preset', voice.id); 
+      if (showCloneWarning) formData.append('authorized', 'true');
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-sts`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-changer`,
         {
           method: 'POST',
           headers: {
@@ -80,11 +93,14 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
         }
       );
 
+      clearInterval(progressInterval);
+
       if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        const err = await response.json().catch(() => ({ error: 'Erro na conversão' }));
         throw new Error(err.error || `Erro ${response.status}`);
       }
 
+      setConversionProgress(100);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       setConvertedAudioUrl(url);
@@ -101,9 +117,15 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
       setIsPlaying(true);
 
       toast.success(`Voz convertida para ${voice.name}!`);
+      setShowCloneWarning(false);
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error(`Erro ao converter voz: ${msg}`);
+      toast.error(`Conversão falhou: ${msg}`, {
+        action: {
+          label: 'Tentar novamente',
+          onClick: () => handleConvert(voice)
+        }
+      });
       setSelectedVoice(null);
     } finally {
       setIsConverting(false);

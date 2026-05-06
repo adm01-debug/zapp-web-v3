@@ -1,6 +1,6 @@
 import { handleCors, errorResponse, getCorsHeaders, Logger, requireEnv } from "../_shared/validation.ts";
 
-const VOICE_PRESETS: Record<string, { voiceId: string; label: string }> = {
+const VOICE_PRESETS: Record<string, { voiceId: string; label: string; isCloned?: boolean }> = {
   // Masculinas
   'grave':      { voiceId: 'JBFqnCBsd6RMkjVDRZzb', label: 'George (Grave)' },
   'roger':      { voiceId: 'CwhRBWXzGAHq8TQ4Fs17', label: 'Roger (Narrador)' },
@@ -34,6 +34,8 @@ const VOICE_PRESETS: Record<string, { voiceId: string; label: string }> = {
   // Idosos
   'idoso':      { voiceId: 'N2lVS1w4EtoT3dr4eOWO', label: 'Idoso (Vovô)' },
   'idosa':      { voiceId: 'XrExE9yKIg1WjnnlVkGX', label: 'Idosa (Vovó)' },
+  // Cloned Placeholder (Exemplo para bloqueio)
+  'cloned_sample': { voiceId: 'cloned_id_123', label: 'Celebridade X', isCloned: true },
 };
 
 Deno.serve(async (req) => {
@@ -60,6 +62,13 @@ Deno.serve(async (req) => {
     const preset = VOICE_PRESETS[voicePreset];
     if (!preset) {
       return errorResponse(`Invalid voice preset: ${voicePreset}`, 400, req);
+    }
+
+    if (preset.isCloned) {
+      const authorized = formData.get('authorized') === 'true';
+      if (!authorized) {
+        return errorResponse('Voz clonada requer autorização explícita', 403, req);
+      }
     }
 
     log.info('Processing voice change', { preset: voicePreset, size: audioFile.size });
@@ -95,11 +104,14 @@ Deno.serve(async (req) => {
     const audioBuffer = await response.arrayBuffer();
     log.done(200, { outputSize: audioBuffer.byteLength });
 
+    // Stream encoding (Simulated progressive chunks for real feel if needed, but arrayBuffer is standard)
     return new Response(audioBuffer, {
       status: 200,
       headers: {
         ...getCorsHeaders(req),
         'Content-Type': 'audio/mpeg',
+        'X-Conversion-Status': 'completed',
+        'X-Conversion-Progress': '100',
         'Content-Length': audioBuffer.byteLength.toString(),
       },
     });
