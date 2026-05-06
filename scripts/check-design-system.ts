@@ -10,6 +10,7 @@ const IGNORED_FILES = [
   'index.css',
   'check-design-system.ts',
   'ds-config.ts',
+  'test-audit.ts'
 ];
 
 const IGNORED_DIRS = ['node_modules', '.git', 'dist', 'stories', '__tests__'];
@@ -94,30 +95,30 @@ function scanDir(dir: string, results: Violation[]) {
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Match word-like chunks and check if they match our pattern
-        const words = line.matchAll(/[a-zA-Z0-9:#\-\[\]]+/g);
+        // Pattern inside quotes or delimiters
+        const fullPattern = new RegExp(`(?:^|['"\`\\s])${variantsPart}${pattern.source}(?=['"\`\\s]|$)`, 'g');
+        const matches = line.matchAll(fullPattern);
         
-        for (const match of words) {
-          const rawMatch = match[0];
-          const fullPattern = new RegExp(`^${variantsPart}${pattern.source}$`);
-          if (fullPattern.test(rawMatch)) {
-            const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
-            
-            if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
-            
-            if (suggestion || priority === 'High') {
-              results.push({
-                file: fullPath,
-                line: index + 1,
-                match: rawMatch,
-                cleanMatch,
-                prefix,
-                label,
-                suggestion,
-                replacement,
-                priority
-              });
-            }
+        for (const match of matches) {
+          const rawMatch = match[0].trim().replace(/^['"`]|['"`]$/g, '');
+          if (!rawMatch) continue;
+
+          const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
+          
+          if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
+          
+          if (suggestion || priority === 'High') {
+            results.push({
+              file: fullPath,
+              line: index + 1,
+              match: rawMatch,
+              cleanMatch,
+              prefix,
+              label,
+              suggestion,
+              replacement,
+              priority
+            });
           }
         }
       });
