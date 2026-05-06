@@ -18,7 +18,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('@/features/inbox', () => ({
   useAllTicketStates: vi.fn(() => ({})),
   useFailureMetricsBatch: vi.fn(() => ({ data: {} })),
-  filterByContactType: vi.fn((list) => list), // mock helper
+  filterByContactType: vi.fn((list) => list),
 }));
 
 const mockConversations = [
@@ -39,9 +39,9 @@ const mockConversations = [
   }
 ];
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <MemoryRouter>{children}</MemoryRouter>
-);
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  return React.createElement(MemoryRouter, null, children);
+};
 
 describe('useInboxFilters - Scope Logic', () => {
   it('filters by "mine" scope correctly', () => {
@@ -84,7 +84,6 @@ describe('useInboxFilters - Scope Logic', () => {
     });
     
     const filtered = result.current.filteredConversations;
-    // In subTab='attending', scope='all' shows all assigned conversations
-    expect(filtered.length).toBe(2); // c1, c2
+    expect(filtered.length).toBe(2);
   });
 });
