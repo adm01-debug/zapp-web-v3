@@ -96,9 +96,9 @@ describe('ProductCatalog Component', () => {
     
     await waitFor(() => expect(screen.getByText('Apple')).toBeInTheDocument());
     
-    const listButton = screen.getByRole('button', { name: /list/i });
+    const listButton = screen.getByLabelText('Modo lista');
     fireEvent.click(listButton);
-    
+
     // Check if view mode changed (ProductCard renders differently in list mode)
     // Compact mode (list) has smaller padding or different structure.
   });

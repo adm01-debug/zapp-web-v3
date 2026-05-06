@@ -33,38 +33,41 @@ describe('ShoppingCart Component', () => {
     const trigger = screen.getByTitle('Carrinho');
     fireEvent.click(trigger);
     
-    expect(screen.getByText('Test Product')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Test Product')).toBeInTheDocument(), { timeout: 2000 });
     expect(screen.getByText('R$ 200,00')).toBeInTheDocument(); // 100 * 2
     expect(screen.getByText('2')).toBeInTheDocument(); // Quantity
   });
 
-  it('calls onUpdateQuantity when incrementing', () => {
+  it('calls onUpdateQuantity when incrementing', async () => {
     render(<ShoppingCart {...defaultProps} />);
     fireEvent.click(screen.getByTitle('Carrinho'));
-    
-    const plusButton = screen.getByRole('button', { name: /plus/i });
+    await screen.findByText('Test Product');
+
+    const plusButton = screen.getByLabelText('Aumentar quantidade');
     fireEvent.click(plusButton);
-    
+
     expect(defaultProps.onUpdateQuantity).toHaveBeenCalledWith('1', 3);
   });
 
-  it('calls onUpdateQuantity when decrementing', () => {
+  it('calls onUpdateQuantity when decrementing', async () => {
     render(<ShoppingCart {...defaultProps} />);
     fireEvent.click(screen.getByTitle('Carrinho'));
-    
-    const minusButton = screen.getByRole('button', { name: /minus/i });
+    await screen.findByText('Test Product');
+
+    const minusButton = screen.getByLabelText('Diminuir quantidade');
     fireEvent.click(minusButton);
-    
+
     expect(defaultProps.onUpdateQuantity).toHaveBeenCalledWith('1', 1);
   });
 
-  it('calls onRemoveItem when delete is clicked', () => {
+  it('calls onRemoveItem when delete is clicked', async () => {
     render(<ShoppingCart {...defaultProps} />);
     fireEvent.click(screen.getByTitle('Carrinho'));
-    
-    const removeButton = screen.getByRole('button', { name: /trash/i });
+    await screen.findByText('Test Product');
+
+    const removeButton = screen.getByLabelText('Remover item');
     fireEvent.click(removeButton);
-    
+
     expect(defaultProps.onRemoveItem).toHaveBeenCalledWith('1');
   });
 
