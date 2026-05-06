@@ -29,6 +29,7 @@ const ResetPassword = lazyWithRetry(() => import("@/pages/ResetPassword"));
 const VerifyEmail = lazyWithRetry(() => import("@/pages/VerifyEmail"));
 const SSOCallback = lazyWithRetry(() => import("@/pages/SSOCallback"));
 const TwoFactorAuth = lazyWithRetry(() => import("@/pages/TwoFactorAuth"));
+const DesignSystem = lazyWithRetry(() => import("@/pages/DesignSystem"));
 const QueueDetails = lazyWithRetry(() => import("@/pages/QueueDetails"));
 const QueuesComparison = lazyWithRetry(() => import("@/pages/QueuesComparison"));
 const SLADashboard = lazyWithRetry(() => import("@/pages/SLADashboard"));
@@ -87,6 +88,7 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
+        <Route path="/design-system" element={<DesignSystem />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
