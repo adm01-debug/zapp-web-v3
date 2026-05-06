@@ -80,7 +80,7 @@ describe('useEmail', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        then: (resolve: any) => resolve({ error: { message: 'relation "email_accounts" does not exist' } }),
+        then: (resolve: any) => resolve({ error: { message: 'not found relation "email_accounts"' } }),
       }));
 
       const { result } = renderHook(() => useEmail());
