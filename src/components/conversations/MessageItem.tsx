@@ -83,7 +83,7 @@ const MessageItem = memo(({
       )}>
         {/* Quoted Message Preview */}
         {msg.quoted_message_id && (
-          <div className="mb-1 p-2 rounded bg-black/5 dark:bg-white/5 border-l-4 border-l-primary/50 text-[11px] opacity-80">
+          <div className="mb-1 p-2 rounded bg-muted/40 border-l-4 border-l-primary/50 text-[11px] opacity-80">
             {quotedMessageContent || 'Mensagem citada'}
           </div>
         )}
