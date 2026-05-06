@@ -600,7 +600,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
         workspaceId="wpp2"
-        onImported={() => crud.refetch()}
+        onImportComplete={() => crud.refetch()}
       />
 
       <ContactQuickView
