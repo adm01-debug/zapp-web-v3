@@ -136,9 +136,9 @@ const htmlReport = `<!DOCTYPE html>
 writeFileSync('design-system-report.html', htmlReport);
 
 if (violations.length > 0) {
-  console.error(\`\\x1b[31mFound \${violations.length} Design System violations.\\x1b[0m\`);
-  console.log(\`Reports generated: design-system-report.md, design-system-report.html\`);
+  console.error(`\x1b[31mFound ${violations.length} Design System violations.\x1b[0m`);
+  console.log(`Reports generated: design-system-report.md, design-system-report.html`);
   process.exit(1);
 } else {
-  console.log('\\x1b[32m✅ No Design System violations found!\\x1b[0m');
+  console.log('\x1b[32m✅ No Design System violations found!\x1b[0m');
 }
