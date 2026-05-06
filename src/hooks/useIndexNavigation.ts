@@ -59,8 +59,8 @@ export function useIndexNavigation(user: User | null, loading: boolean) {
     // Se o targetView for uma rota que agora é interna (como connections ou integrations)
     // mapeamos para o novo hub unificado.
     let resolvedView = targetView;
-    if (targetView === 'connections' || targetView === 'integrations') {
-      resolvedView = 'connections'; // 'connections' é o ID do Hub unificado no lazyViews/ViewRouter
+    if (targetView === 'connections' || targetView === 'integrations' || targetView === 'bridge') {
+      resolvedView = 'connections'; // 'connections' é o ID do Hub unificado
     }
 
     if (resolvedView && resolvedView !== currentView) {
