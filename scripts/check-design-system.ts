@@ -101,10 +101,13 @@ scanDir('./src', violations);
 let mdReport = '# Design System Violations Report\n';
 mdReport += 'Generated on: ' + new Date().toLocaleString() + '\n';
 mdReport += 'Total Violations: ' + violations.length + '\n\n';
-mdReport += '| File | Line | Violation Type | Value |\n';
-mdReport += '|------|------|----------------|-------|\n';
-violations.forEach(v => {
-  mdReport += '| `' + v.file + '` | ' + v.line + ' | ' + v.label + ' | `' + v.match + '` |\n';
+mdReport += '| Priority | File | Line | Violation Type | Value | Suggestion |\n';
+mdReport += '|----------|------|------|----------------|-------|------------|\n';
+violations.sort((a, b) => {
+  const p = { 'High': 0, 'Medium': 1, 'Low': 2 };
+  return p[a.priority] - p[b.priority];
+}).forEach(v => {
+  mdReport += '| ' + v.priority + ' | `' + v.file + '` | ' + v.line + ' | ' + v.label + ' | `' + v.match + '` | ' + v.suggestion + ' |\n';
 });
 
 writeFileSync('design-system-audit.md', mdReport);
