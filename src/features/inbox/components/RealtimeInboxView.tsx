@@ -52,7 +52,7 @@ export function RealtimeInboxView() {
   const inbox = useRealtimeInbox();
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
-  useEvolutionAutoReconnection('wpp2');
+  useEvolutionAutoReconnect('wpp2');
 
   // Conecta alertas de delivery ao useSLAAlerts
   useSLAAlerts({
