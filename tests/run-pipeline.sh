@@ -9,7 +9,8 @@ echo "🔨 2. Type Checking..."
 echo "✅ Type check passed"
 
 echo "🧪 3. Edge Function Tests..."
-lovable-exec test-edge || echo "❌ Edge function tests failed"
+# Use direct deno test if lovable-exec is not configured
+deno test --allow-net --allow-env supabase/functions/evolution-api/index.test.ts || echo "❌ Edge function tests failed"
 
 echo "🌐 4. E2E Tests (Smoke)..."
 # In a real CI, we'd start the server first
