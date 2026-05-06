@@ -14,11 +14,12 @@ export interface Violation {
   suggestion?: string;
   replacement?: string;
   priority: 'High' | 'Medium' | 'Low';
+  context?: string;
 }
 
 const variantPrefixRegex = new RegExp(`^(?:(?:${VARIANTS.join('|')}):)+`, 'g');
 
-export function getSuggestion(label: string, match: string, fileName?: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
+export function getSuggestion(label: string, match: string, fileName?: string, context?: string): { suggestion: string, priority: Violation['priority'], replacement?: string, cleanMatch: string, prefix: string } {
   const prefixMatch = match.match(variantPrefixRegex);
   const prefix = prefixMatch ? prefixMatch[0] : '';
   const cleanMatch = match.replace(variantPrefixRegex, '').trim();
