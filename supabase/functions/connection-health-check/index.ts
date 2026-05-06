@@ -27,8 +27,11 @@ interface FetchInstanceShape {
   connectionStatus?: string;
 }
 
-const ACTIVITY_DEGRADED_MS = 30 * 60 * 1000;   // 30 min sem evento → silent
-const ACTIVITY_STALE_MS    = 6 * 60 * 60 * 1000; // 6h sem evento → stale
+// Sem mensagens há 6h ainda é normal (noite/fds). Só virou degraded depois de 2h e
+// só vira "stale" (suspeito) depois de 24h — e mesmo assim NUNCA marca como disconnected
+// se o socket está aberto e o owner está pareado.
+const ACTIVITY_DEGRADED_MS = 2 * 60 * 60 * 1000;     // 2h sem evento → silent (warn)
+const ACTIVITY_STALE_MS    = 24 * 60 * 60 * 1000;    // 24h sem evento → stale (warn, não erro)
 
 async function fetchOwnerJid(baseUrl: string, key: string, instanceName: string, log: Logger): Promise<string | null> {
   try {
