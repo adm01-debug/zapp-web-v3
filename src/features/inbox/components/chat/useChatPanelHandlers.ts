@@ -360,7 +360,7 @@ export function useChatPanelHandlers(opts: UseChatPanelHandlersOptions) {
     handleReplyToMessage, handleCopyMessage, handleForwardMessage, handleForwardToTargets,
     handleInputChange, handleKeyDown, handleSlashCommand,
     handleSendProduct, handleSendInteractiveMessage, handleInteractiveButtonClick,
-    handleSendLocation, handleAudioSend,
+    handleSendLocation, handleAudioSend, handleAudioVoiceChange,
     lastSendError, lastSendErrorDetail, retryLastSend, dismissSendError,
     isWhisper, setIsWhisper,
   };
