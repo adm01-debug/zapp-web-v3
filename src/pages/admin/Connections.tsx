@@ -80,19 +80,50 @@ export default function AdminConnectionsPage() {
   }
 
   async function saveCredentials() {
+    if (!draftUrl || !draftKey) {
+      toast({ 
+        title: 'Campos obrigatórios', 
+        description: 'URL e Chave Anon não podem ficar vazios.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
     setSaving(true);
+    const payload: any = {
+      name: 'FATOR X',
+      provider: 'supabase_external',
+      config: { url: draftUrl, anon_key: draftKey },
+      is_active: true,
+    };
+
     try {
-      const payload: any = {
-        name: 'FATOR X',
-        provider: 'supabase_external',
-        config: { url: draftUrl, anon_key: draftKey },
-        is_active: true,
-      };
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-      const { error } = existing
-        ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id)
-        : await supabase.from('system_connections' as any).insert(payload);
-      if (error) throw error;
+      
+      const { data, error, status } = existing
+        ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id).select()
+        : await supabase.from('system_connections' as any).insert(payload).select();
+
+      if (error) {
+        console.error('Erro ao salvar conexão:', error);
+        toast({ 
+          title: 'Erro ao salvar', 
+          description: `Erro: ${error.message} (Código: ${error.code}). Campo: ${error.details || 'N/A'}. Payload: ${JSON.stringify(payload)}`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      // Verificação de persistência (resposta 200 mas sem dados retornados)
+      if (status >= 200 && status < 300 && (!data || data.length === 0)) {
+        toast({
+          title: 'Aviso de persistência',
+          description: `Resposta ${status} recebida, mas o registro não foi retornado. Verifique as políticas de RLS. Payload: ${JSON.stringify(payload)}`,
+          variant: 'destructive'
+        });
+        return;
+      }
+
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
@@ -102,7 +133,12 @@ export default function AdminConnectionsPage() {
       });
       await fetchConnections();
     } catch (e: any) {
-      toast({ title: 'Erro ao salvar', description: e?.message ?? 'falha', variant: 'destructive' });
+      console.error('Exceção ao salvar:', e);
+      toast({ 
+        title: 'Erro inesperado', 
+        description: e?.message ?? 'Falha desconhecida ao processar a requisição.', 
+        variant: 'destructive' 
+      });
     } finally {
       setSaving(false);
     }
