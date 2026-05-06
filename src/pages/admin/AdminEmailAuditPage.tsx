@@ -3,19 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  History as HistoryIcon, User, Activity, Clock, Shield, 
-  ExternalLink, Search, Filter, ChevronLeft, ChevronRight
+  History as HistoryIcon, User, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { Database } from '@/integrations/supabase/types';
-
-type EmailRevalidationJob = Database['public']['Tables']['email_revalidation_jobs']['Row'];
-
-interface AuditLog extends EmailRevalidationJob {}
+import { emailApi, type EmailRevalidationJob } from '@/services/email/emailApi';
 
 export default function AdminEmailAuditPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<EmailRevalidationJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
