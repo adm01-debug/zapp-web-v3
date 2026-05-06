@@ -234,7 +234,7 @@ if (require.main === module) {
       // Sort violations by line descending to avoid offset issues if we were adding lines, 
       // but here we just replace content within same line.
       fileViolations.forEach(v => {
-        if (v.replacement && lines[v.line-1].includes(v.match)) {
+        if (v.replacement !== undefined && lines[v.line-1].includes(v.match)) {
           const oldLine = lines[v.line-1];
           lines[v.line-1] = oldLine.replace(v.match, v.replacement);
           
