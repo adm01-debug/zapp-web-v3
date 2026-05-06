@@ -3106,6 +3106,39 @@ export type Database = {
           },
         ]
       }
+      conversation_audit_logs: {
+        Row: {
+          attempt_number: number | null
+          conversation_id: string
+          created_at: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          attempt_number?: number | null
+          conversation_id: string
+          created_at?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          status: string
+        }
+        Update: {
+          attempt_number?: number | null
+          conversation_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       conversation_closures: {
         Row: {
           classification: string | null
@@ -6176,6 +6209,36 @@ export type Database = {
           token_hash?: string
           token_prefix?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      media_cache: {
+        Row: {
+          created_at: string | null
+          file_hash: string
+          id: string
+          last_accessed_at: string | null
+          mime_type: string | null
+          size: number | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_hash: string
+          id?: string
+          last_accessed_at?: string | null
+          mime_type?: string | null
+          size?: number | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string | null
+          file_hash?: string
+          id?: string
+          last_accessed_at?: string | null
+          mime_type?: string | null
+          size?: number | null
+          storage_path?: string
         }
         Relationships: []
       }
