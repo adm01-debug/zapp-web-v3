@@ -88,9 +88,9 @@ interface VideoPreviewProps {
 }
 
 export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
-  function VideoPreview({ url, caption, isSent, refreshKey }, ref) {
+  function VideoPreview({ url, caption, isSent, refreshKey, isPtv }, ref) {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(true);
+    const [isMuted, setIsMuted] = useState(!isPtv); // Auto-play ptv with audio often, but standard video muted
     const [showFullscreen, setShowFullscreen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const refresh = useMediaRefresh(url, refreshKey);
@@ -101,11 +101,13 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
       return (
         <div
           ref={ref}
-          className="max-w-[300px] rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center"
+          className={cn(
+            "rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center gap-2 text-center",
+            isPtv ? "w-[200px] h-[200px] rounded-full justify-center" : "max-w-[300px]"
+          )}
         >
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground">Baixando vídeo...</p>
-          <p className="text-xs text-muted-foreground">Aguarde enquanto processamos a mídia.</p>
+          <p className="text-sm font-medium text-foreground">Baixando {isPtv ? 'vídeo-nota' : 'vídeo'}...</p>
         </div>
       );
     }
