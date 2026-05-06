@@ -442,6 +442,22 @@ export default function AdminStressTestPage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="queue">Fila (Opcional - Simula Atendentes da Fila)</Label>
+            <Select value={targetQueue || 'none'} onValueChange={(v) => setTargetQueue(v === 'none' ? null : v)} disabled={isRunning}>
+              <SelectTrigger id="queue">
+                <SelectValue placeholder="Selecione uma fila..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhuma (Alvo Direto)</SelectItem>
+                {queues.map(q => (
+                  <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Se selecionada, o teste simula a carga sendo processada por agentes dessa fila.</p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="total">Total de envios</Label>
             <Input id="total" type="number" min={8} max={500} value={total}
               onChange={(e) => setTotal(Math.max(8, Math.min(500, Number(e.target.value) || 8)))}
