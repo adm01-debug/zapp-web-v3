@@ -1,5 +1,6 @@
 // Centralized logging utility with correlation IDs and structured output
 // Logs are automatically filtered in production builds
+import * as Sentry from "@sentry/react";
 
 const isDev = import.meta.env.DEV;
 
