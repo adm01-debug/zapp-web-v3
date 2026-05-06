@@ -139,11 +139,11 @@ export default function AdminDispatchErrorsHistoryPage() {
                     <TableCell className="text-xs whitespace-nowrap">
                       {format(new Date(r.occurred_at), 'dd/MM HH:mm:ss', { locale: ptBR })}
                     </TableCell>
-                    <TableCell className="text-xs font-mono">{r.instance_name}</TableCell>
-                    <TableCell className="text-xs font-mono truncate max-w-[160px]" title={r.agent_email ?? ''}>
+                    <TableCell className="text-xs ">{r.instance_name}</TableCell>
+                    <TableCell className="text-xs  truncate max-w-[160px]" title={r.agent_email ?? ''}>
                       {r.agent_email ?? '—'}
                     </TableCell>
-                    <TableCell className="text-xs font-mono truncate max-w-[160px]" title={r.remote_jid ?? ''}>
+                    <TableCell className="text-xs  truncate max-w-[160px]" title={r.remote_jid ?? ''}>
                       {r.remote_jid ?? '—'}
                     </TableCell>
                     <TableCell className="text-xs">

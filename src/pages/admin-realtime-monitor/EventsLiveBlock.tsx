@@ -122,7 +122,7 @@ export function EventsLiveBlock({ windowHours, autoRefresh, onNavigateTo }: Prop
                       <TableCell className="text-xs">
                         {format(new Date(r.created_at), 'HH:mm:ss', { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="text-xs font-mono">{r.event_type}</TableCell>
+                      <TableCell className="text-xs ">{r.event_type}</TableCell>
                       <TableCell className="text-xs">{r.instance_name}</TableCell>
                       <TableCell>
                         {r.error_message ? (

@@ -73,7 +73,7 @@ function TopCustomers() {
             {(data?.data || []).map((c, i) => (
               <div key={c.id || i} className="flex items-center justify-between text-xs bg-muted/15 rounded-md px-2 py-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground font-mono w-4">#{i + 1}</span>
+                  <span className="text-muted-foreground  w-4">#{i + 1}</span>
                   <span className="font-medium truncate max-w-[120px]">{c.vendedor_nome || '—'}</span>
                   <Badge variant="outline" className={`text-[9px] ${c.cliente_ativado ? 'text-primary' : 'text-muted-foreground'}`}>
                     {c.cliente_ativado ? 'Ativo' : 'Inativo'}

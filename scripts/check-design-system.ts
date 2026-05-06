@@ -46,23 +46,45 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
     // Mapping logic for standard literal colors to semantic tokens
     const semanticMap: Record<string, string> = {
       'red': 'destructive',
-      'blue': 'primary',
-      'amber': 'warning',
-      'orange': 'warning',
+      'rose': 'destructive',
+      'pink': 'accent',
+      'fuchsia': 'accent',
+      'purple': 'primary',
+      'violet': 'primary',
+      'indigo': 'primary',
+      'blue': 'info',
+      'sky': 'info',
+      'cyan': 'info',
+      'teal': 'success',
       'emerald': 'success',
       'green': 'success',
+      'lime': 'success',
+      'amber': 'warning',
+      'yellow': 'warning',
+      'orange': 'warning',
       'slate': 'muted',
       'gray': 'muted',
       'zinc': 'muted',
-      'neutral': 'muted'
+      'neutral': 'muted',
+      'stone': 'muted'
     };
 
     for (const [literal, semantic] of Object.entries(semanticMap)) {
       if (cleanMatch.includes(literal)) {
         let baseReplacement = '';
-        if (isBg) baseReplacement = `bg-${semantic}`;
-        else if (isText) baseReplacement = `text-${semantic}-foreground`;
-        else if (isBorder) baseReplacement = `border-${semantic}`;
+        if (isBg) {
+          baseReplacement = `bg-${semantic}`;
+        } else if (isText) {
+          // Check if we should use -foreground for semantic tokens
+          const useForeground = ['primary', 'secondary', 'destructive', 'accent', 'success', 'warning', 'info'].includes(semantic);
+          baseReplacement = useForeground ? `text-${semantic}-foreground` : `text-${semantic}`;
+          // Fallback: simple text-semantic is often better if we don't want high contrast
+          // But usually semantic tokens come with a foreground.
+          // Let's stick to simple text-semantic unless it's a known pair.
+          baseReplacement = `text-${semantic}`;
+        } else if (isBorder) {
+          baseReplacement = `border-${semantic}`;
+        }
 
         if (baseReplacement) {
           const replacement = `${prefix}${baseReplacement}`;
@@ -82,9 +104,11 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
       return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
     }
     if (cleanMatch === 'font-mono') {
-      return { cleanMatch, prefix, suggestion: 'Check if font-mono is intentional or should inherit global typography', priority: 'Medium' };
+      // User asked to remove it where there is divergence. 
+      // Often used in tags or small labels that should probably be standard.
+      return { cleanMatch, prefix, suggestion: 'Remove literal font; inherit from global typography', priority: 'Medium', replacement: '' };
     }
-    return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low' };
+    return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low', replacement: '' };
   }
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
 }

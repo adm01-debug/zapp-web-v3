@@ -193,7 +193,7 @@ export default function AdminInstancePausesPage() {
                       className="border-b last:border-0 hover:bg-muted/30 cursor-pointer"
                       onClick={() => setSelected(p)}
                     >
-                      <td className="py-2 pr-4 font-mono text-xs">{p.instance_name}</td>
+                      <td className="py-2 pr-4  text-xs">{p.instance_name}</td>
                       <td className="py-2 pr-4">
                         {p.auto_paused
                           ? <Badge variant="destructive">auto</Badge>
@@ -201,7 +201,7 @@ export default function AdminInstancePausesPage() {
                         {p.investigated_at && <Badge variant="success" className="ml-1 text-[10px]">investigado</Badge>}
                       </td>
                       <td className="py-2 pr-4 text-xs">{p.reason}</td>
-                      <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
+                      <td className="py-2 pr-4 text-xs ">{p.trigger_count}</td>
                       <td className="py-2 pr-4 text-xs">
                         {formatDistanceToNow(new Date(p.paused_until), { addSuffix: true, locale: ptBR })}
                       </td>
@@ -256,12 +256,12 @@ export default function AdminInstancePausesPage() {
                         <td className="py-2 pr-4 text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(p.created_at), { addSuffix: true, locale: ptBR })}
                         </td>
-                        <td className="py-2 pr-4 font-mono text-xs">{p.instance_name}</td>
+                        <td className="py-2 pr-4  text-xs">{p.instance_name}</td>
                         <td className="py-2 pr-4">
                           {p.auto_paused ? <Badge variant="destructive">auto</Badge> : <Badge variant="subtle">manual</Badge>}
                         </td>
                         <td className="py-2 pr-4 text-xs">{p.reason}</td>
-                        <td className="py-2 pr-4 text-xs font-mono">{p.trigger_count}</td>
+                        <td className="py-2 pr-4 text-xs ">{p.trigger_count}</td>
                         <td className="py-2 pr-4">
                           <div className="flex items-center gap-1">
                             {isActive ? <Badge variant="warning">ativa</Badge> : <Badge variant="subtle">expirada</Badge>}

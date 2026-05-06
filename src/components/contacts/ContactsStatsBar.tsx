@@ -59,7 +59,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-[10.5px] border-amber-400/30 text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/20"
+                  className="gap-1 py-0 text-[10.5px] border-warning/30 text-warning-foreground bg-warning dark:text-warning-foreground dark:bg-warning/20"
                 >
                   <AlertTriangle className="h-3 w-3" />
                   {stats.noConsent} sem LGPD
@@ -85,7 +85,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-[10.5px] border-pink-400/30 text-pink-700 bg-pink-50 dark:text-pink-400 dark:bg-pink-950/20"
+                  className="gap-1 py-0 text-[10.5px] border-accent/30 text-accent bg-accent dark:text-accent dark:bg-accent/20"
                 >
                   <Cake className="h-3 w-3" />
                   {stats.birthdayToday} aniversário{stats.birthdayToday !== 1 ? 's' : ''} hoje

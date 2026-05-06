@@ -160,7 +160,7 @@ export function WebhookAlertHistoryPanel({ history, onCleared }: Props) {
                   <tbody>
                     {filtered.map((entry) => (
                       <tr key={entry.id} className="border-t hover:bg-muted/30">
-                        <td className="px-3 py-2 whitespace-nowrap font-mono text-[11px]">
+                        <td className="px-3 py-2 whitespace-nowrap  text-[11px]">
                           {format(new Date(entry.firedAt), 'dd/MM/yyyy HH:mm:ss', { locale: ptBR })}
                         </td>
                         <td className="px-3 py-2">
@@ -172,7 +172,7 @@ export function WebhookAlertHistoryPanel({ history, onCleared }: Props) {
                         <td className="px-3 py-2 text-muted-foreground">
                           {TYPE_LABEL[entry.type]}
                         </td>
-                        <td className="px-3 py-2 font-mono text-[11px]">
+                        <td className="px-3 py-2  text-[11px]">
                           {formatMetric(entry)}
                         </td>
                       </tr>

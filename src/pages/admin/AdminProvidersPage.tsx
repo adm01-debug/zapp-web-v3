@@ -125,7 +125,7 @@ export const AdminProvidersPage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="text-xs font-mono text-muted-foreground truncate">{p.base_url}</div>
+                <div className="text-xs  text-muted-foreground truncate">{p.base_url}</div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <Stat label="Sessões" value={p.open_sessions} />
                   <Stat label="Ativo em" value={p.routes_active} />
@@ -183,14 +183,14 @@ export const AdminProvidersPage = () => {
                     l.level === 'info' && 'border-primary/40 bg-muted/30',
                   )}
                 >
-                  <span className="text-xs font-mono text-muted-foreground shrink-0 w-20">
+                  <span className="text-xs  text-muted-foreground shrink-0 w-20">
                     {new Date(l.created_at).toLocaleTimeString()}
                   </span>
                   <Badge variant="outline" className="text-xs shrink-0">{l.event}</Badge>
                   <span className="text-xs text-muted-foreground shrink-0 w-32 truncate">{l.provider_name}</span>
                   <span className="text-xs flex-1 truncate">{l.message ?? '—'}</span>
                   {l.latency_ms != null && (
-                    <span className="text-xs font-mono text-muted-foreground shrink-0">{l.latency_ms}ms</span>
+                    <span className="text-xs  text-muted-foreground shrink-0">{l.latency_ms}ms</span>
                   )}
                 </div>
               ))}

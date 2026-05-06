@@ -141,7 +141,7 @@ export function LocationMessageDisplay({ location, isSent }: LocationMessageDisp
           </p>
         )}
         <p className={cn(
-          "text-[10px] font-mono",
+          "text-[10px] ",
           isSent ? "text-primary-foreground/50" : "text-muted-foreground/70"
         )}>
           {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}

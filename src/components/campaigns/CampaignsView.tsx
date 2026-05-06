@@ -155,7 +155,7 @@ export function CampaignsView() {
                             {(campaign.status === 'sending' || campaign.status === 'completed') && (
                               <div className="mt-2 flex items-center gap-2">
                                 <Progress value={progress} className="flex-1 h-2" />
-                                <span className="text-xs text-muted-foreground font-mono">{progress}%</span>
+                                <span className="text-xs text-muted-foreground ">{progress}%</span>
                               </div>
                             )}
                           </div>

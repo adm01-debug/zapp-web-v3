@@ -82,8 +82,8 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
     },
     {
       icon: Shield,
-      iconColor: uptime.percentage >= 99 ? 'text-primary' : uptime.percentage >= 95 ? 'text-amber-500' : 'text-destructive',
-      bgColor: uptime.percentage >= 99 ? 'bg-primary/10' : uptime.percentage >= 95 ? 'bg-amber-500/10' : 'bg-destructive/10',
+      iconColor: uptime.percentage >= 99 ? 'text-primary' : uptime.percentage >= 95 ? 'text-warning-foreground' : 'text-destructive',
+      bgColor: uptime.percentage >= 99 ? 'bg-primary/10' : uptime.percentage >= 95 ? 'bg-warning/10' : 'bg-destructive/10',
       label: 'Uptime 24h',
       value: `${uptime.percentage}%`,
       subtitle: uptime.totalChecks > 0 ? `${uptime.healthyChecks}/${uptime.totalChecks} checks OK` : 'Sem dados',
@@ -104,14 +104,14 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
     },
     {
       icon: Zap,
-      iconColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-amber-500',
-      bgColor: avgLatency && avgLatency < 500 ? 'bg-primary/10' : 'bg-amber-500/10',
+      iconColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-warning-foreground',
+      bgColor: avgLatency && avgLatency < 500 ? 'bg-primary/10' : 'bg-warning/10',
       label: 'Latência Média',
       value: avgLatency ? `${avgLatency}ms` : '--',
       subtitle: avgLatency && avgLatency < 300 ? 'Excelente' : avgLatency && avgLatency < 800 ? 'Boa' : avgLatency ? 'Lenta' : 'Sem dados',
       pulse: false,
       sparkline: sparklines.latency,
-      sparkColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-amber-500',
+      sparkColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-warning-foreground',
     },
     {
       icon: ArrowUpDown,

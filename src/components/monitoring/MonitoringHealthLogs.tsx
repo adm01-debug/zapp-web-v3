@@ -21,7 +21,7 @@ const statusConfig: Record<string, { icon: typeof CheckCircle2; color: string; b
   healthy: { icon: CheckCircle2, color: 'text-primary', bg: 'bg-primary/5' },
   disconnected: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/5' },
   error: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/5' },
-  degraded: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/5' },
+  degraded: { icon: AlertTriangle, color: 'text-warning-foreground', bg: 'bg-warning/5' },
 };
 const defaultStatus = { icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted/30' };
 
@@ -139,7 +139,7 @@ export function MonitoringHealthLogs({ healthLogs }: Props) {
                     {log.response_time_ms != null && (
                       <span className={cn('font-medium',
                         log.response_time_ms < 300 ? 'text-primary' :
-                        log.response_time_ms < 800 ? 'text-amber-500' : 'text-destructive'
+                        log.response_time_ms < 800 ? 'text-warning-foreground' : 'text-destructive'
                       )}>
                         {log.response_time_ms}ms
                       </span>

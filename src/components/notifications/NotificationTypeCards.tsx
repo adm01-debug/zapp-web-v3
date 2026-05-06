@@ -173,10 +173,10 @@ export function SentimentAlertCard({ settings, updateSettings }: SentimentAlertC
             <div className="flex items-center justify-between">
               <Label className="text-sm">Limite de Alerta</Label>
               <Badge variant="outline" className={cn(
-                "font-mono",
+                "",
                 settings.sentimentAlertThreshold < 30 ? "text-destructive border-destructive/50" :
                 settings.sentimentAlertThreshold < 50 ? "text-warning border-warning/50" :
-                "text-warning border-yellow-400/50"
+                "text-warning border-warning/50"
               )}>
                 {settings.sentimentAlertThreshold}%
               </Badge>
@@ -194,7 +194,7 @@ export function SentimentAlertCard({ settings, updateSettings }: SentimentAlertC
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm">Análises Consecutivas</Label>
-              <Badge variant="secondary" className="font-mono">{settings.sentimentConsecutiveCount}x</Badge>
+              <Badge variant="secondary" className="">{settings.sentimentConsecutiveCount}x</Badge>
             </div>
             <div className="flex items-center gap-2">
               {[2, 3, 4, 5].map((count) => (

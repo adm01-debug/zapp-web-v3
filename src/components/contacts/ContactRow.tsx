@@ -19,12 +19,12 @@ import { type Contact } from '@/hooks/useContacts';
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
   novo:        'bg-muted text-muted-foreground',
-  em_contato:  'bg-blue-100 text-blue-700',
+  em_contato:  'bg-primary text-primary-foreground',
   qualificado: 'bg-primary text-primary',
-  proposta:    'bg-purple-100 text-purple-700',
-  negociacao:  'bg-amber-100 text-amber-700',
+  proposta:    'bg-primary text-primary',
+  negociacao:  'bg-warning text-warning-foreground',
   fechado:     'bg-primary text-primary',
-  perdido:     'bg-red-100 text-red-700',
+  perdido:     'bg-destructive text-destructive-foreground',
 };
 
 const LEAD_STATUS_LABELS: Record<string, string> = {

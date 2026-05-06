@@ -118,7 +118,7 @@ export function ContactInfoSection({ contact, enrichedData }: ContactInfoSection
       >
         <div className="flex items-center gap-2.5">
           <Phone className="w-4 h-4 text-primary" />
-          <span className="text-foreground font-mono text-xs">{contact.phone}</span>
+          <span className="text-foreground  text-xs">{contact.phone}</span>
         </div>
         <Copy className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>

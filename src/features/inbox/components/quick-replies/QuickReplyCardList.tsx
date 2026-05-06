@@ -72,7 +72,7 @@ export function QuickReplyCardList({
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                     className={cn(
                       "p-3 rounded-xl border border-border/50 bg-card hover:border-primary/30 transition-all group cursor-pointer",
-                      isFavorite(template.id) && "border-yellow-400/30 bg-warning/5"
+                      isFavorite(template.id) && "border-warning/30 bg-warning/5"
                     )}
                     onClick={() => onSelect(template)}
                   >

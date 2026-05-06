@@ -104,7 +104,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${health}%` }}
-                className={cn("h-full", health >= 70 ? "bg-primary" : health >= 40 ? "bg-orange-500" : "bg-destructive")}
+                className={cn("h-full", health >= 70 ? "bg-primary" : health >= 40 ? "bg-warning" : "bg-destructive")}
               />
             </div>
             <p className="text-[11px] text-muted-foreground leading-tight">
@@ -127,7 +127,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
             <div className="space-y-2">
               {!contact.email && (
                 <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-warning mt-1 shrink-0" />
                   <p>Faltando <strong>E-mail</strong>: Adicione para liberar automações de marketing e envio de propostas.</p>
                 </div>
               )}
@@ -139,7 +139,7 @@ export const ContactQuickView: React.FC<ContactQuickViewProps> = ({
               )}
               {contact.tags?.length === 0 && (
                 <div className="flex items-start gap-2 text-[11px] text-muted-foreground bg-background/50 p-2 rounded-lg border border-border/30">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1 shrink-0" />
                   <p>Sem <strong>Etiquetas</strong>: Use tags para segmentar este contato em campanhas futuras.</p>
                 </div>
               )}

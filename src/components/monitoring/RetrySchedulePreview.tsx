@@ -63,16 +63,16 @@ export function RetrySchedulePreview({ instances }: RetrySchedulePreviewProps) {
 
       {/* Resumo da config ativa */}
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-[10px] ">
           maxRetries: {config.maxRetries}
         </Badge>
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-[10px] ">
           baseBackoff: {formatScheduleMs(config.baseBackoffMs)}
         </Badge>
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-[10px] ">
           maxBackoff: {formatScheduleMs(config.maxBackoffMs)}
         </Badge>
-        <Badge variant="outline" className="text-[10px] font-mono">
+        <Badge variant="outline" className="text-[10px] ">
           timeout: {formatScheduleMs(config.timeoutMs)}
         </Badge>
         {loading && (
@@ -86,19 +86,19 @@ export function RetrySchedulePreview({ instances }: RetrySchedulePreviewProps) {
           <p className="uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1">
             <Zap className="w-3 h-3" /> Melhor caso
           </p>
-          <p className="font-mono mt-0.5">≤ {formatScheduleMs(schedule.bestCaseTotalMs)}</p>
+          <p className=" mt-0.5">≤ {formatScheduleMs(schedule.bestCaseTotalMs)}</p>
         </div>
         <div className="rounded border bg-muted/20 px-2 py-1.5">
           <p className="uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1">
             <Clock className="w-3 h-3" /> Backoff total
           </p>
-          <p className="font-mono mt-0.5">{formatScheduleMs(schedule.totalBackoffMs)}</p>
+          <p className=" mt-0.5">{formatScheduleMs(schedule.totalBackoffMs)}</p>
         </div>
         <div className="rounded border bg-muted/20 px-2 py-1.5">
           <p className="uppercase tracking-wide text-muted-foreground inline-flex items-center gap-1">
             <AlertOctagon className="w-3 h-3" /> Pior caso (abort)
           </p>
-          <p className="font-mono mt-0.5">{formatScheduleMs(schedule.worstCaseTotalMs)}</p>
+          <p className=" mt-0.5">{formatScheduleMs(schedule.worstCaseTotalMs)}</p>
         </div>
       </div>
 
@@ -117,14 +117,14 @@ export function RetrySchedulePreview({ instances }: RetrySchedulePreviewProps) {
           <TableBody>
             {schedule.attempts.map((a) => (
               <TableRow key={a.attempt}>
-                <TableCell className="text-xs font-mono">#{a.attempt}</TableCell>
-                <TableCell className="text-xs font-mono text-muted-foreground">
+                <TableCell className="text-xs ">#{a.attempt}</TableCell>
+                <TableCell className="text-xs  text-muted-foreground">
                   {a.delayBeforeMs === 0 ? '—' : formatScheduleMs(a.delayBeforeMs)}
                 </TableCell>
-                <TableCell className="text-xs font-mono">
+                <TableCell className="text-xs ">
                   {formatScheduleMs(a.startAtMs)}
                 </TableCell>
-                <TableCell className="text-xs font-mono">
+                <TableCell className="text-xs ">
                   {formatScheduleMs(a.abortAtMs)}
                 </TableCell>
                 <TableCell>

@@ -117,7 +117,7 @@ export function PublicApiDashboard() {
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Token Atual</Label>
               <div className="flex items-center gap-2">
-                <Input readOnly value={showToken ? apiToken : '•'.repeat(30)} className="font-mono text-xs" />
+                <Input readOnly value={showToken ? apiToken : '•'.repeat(30)} className=" text-xs" />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowToken(!showToken)} aria-label={showToken ? 'Ocultar token' : 'Mostrar token'}>
                   {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
@@ -133,7 +133,7 @@ export function PublicApiDashboard() {
               placeholder="Gere um novo token..."
               value={newToken}
               readOnly
-              className="font-mono text-xs"
+              className=" text-xs"
             />
             <Button variant="outline" size="sm" onClick={generateToken} className="shrink-0">
               Gerar Token
@@ -155,7 +155,7 @@ export function PublicApiDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="bg-muted/50 rounded-lg p-4 font-mono text-xs space-y-2 border">
+          <div className="bg-muted/50 rounded-lg p-4  text-xs space-y-2 border">
             <p className="text-muted-foreground">POST {baseUrl}</p>
             <p className="text-muted-foreground">Headers:</p>
             <p className="pl-4">x-api-key: <span className="text-primary">{'<seu_token>'}</span></p>

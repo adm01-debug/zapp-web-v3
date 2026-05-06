@@ -107,7 +107,7 @@ function InstanceCallsBlock({ instance, calls }: { instance: string; calls: Call
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Phone className="h-4 w-4 text-primary" />
-          <span className="font-mono">{instance}</span>
+          <span className="">{instance}</span>
           <Badge variant="outline" className="ml-2 text-xs">
             {calls.length} chamada{calls.length === 1 ? '' : 's'}
           </Badge>
@@ -134,7 +134,7 @@ function CallTimelineRow({ call }: { call: CallTimelineGroup }) {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <code className="text-xs font-mono bg-muted px-2 py-0.5 rounded truncate max-w-[260px]">
+            <code className="text-xs  bg-muted px-2 py-0.5 rounded truncate max-w-[260px]">
               {call.callId}
             </code>
             {call.finalStatus && (
@@ -150,7 +150,7 @@ function CallTimelineRow({ call }: { call: CallTimelineGroup }) {
             )}
           </div>
           <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-            <span className="font-mono">{shortJid(call.remoteJid)}</span>
+            <span className="">{shortJid(call.remoteJid)}</span>
             {call.pushName && <span>· {call.pushName}</span>}
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -199,7 +199,7 @@ function TimelineNode({ entry, startedAt }: { entry: CallTimelineEntry; startedA
         )}
       />
       <div className="flex items-center gap-2 flex-wrap text-xs">
-        <Badge variant="outline" className="font-mono text-[10px]">
+        <Badge variant="outline" className=" text-[10px]">
           {entry.eventType}
         </Badge>
         {entry.status && (

@@ -134,7 +134,7 @@ export function ContactInlineEdit({
         <button
           onClick={cancel}
           disabled={isSaving}
-          className="p-1 text-red-600 hover:bg-red-50 rounded"
+          className="p-1 text-destructive-foreground hover:bg-destructive rounded"
           aria-label="Cancelar"
         >
           <X className="h-3.5 w-3.5" />

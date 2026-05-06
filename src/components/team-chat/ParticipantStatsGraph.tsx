@@ -99,7 +99,7 @@ export function ParticipantStatsGraph({ conversationId }: ParticipantStatsGraphP
         <CardTitle className="text-sm font-bold">Evolução por Participante</CardTitle>
         <CardDescription className="text-xs">
           Mensagens Enviadas, Entregues e Lidas por cada membro do grupo.
-          {settings.simulation_mode_enabled && <span className="ml-2 text-amber-500 font-bold">(MODO SIMULAÇÃO)</span>}
+          {settings.simulation_mode_enabled && <span className="ml-2 text-warning-foreground font-bold">(MODO SIMULAÇÃO)</span>}
         </CardDescription>
       </CardHeader>
       <CardContent>

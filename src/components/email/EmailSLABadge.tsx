@@ -32,7 +32,7 @@ const CONFIG: Record<SLAStatus, {
     label: 'Atenção',
     icon: AlertTriangle,
     variant: 'outline',
-    className: 'border-amber-500/50 text-amber-600 dark:text-amber-400 animate-pulse',
+    className: 'border-warning/50 text-warning-foreground dark:text-warning-foreground animate-pulse',
   },
   breached: {
     label: 'SLA violado',
@@ -102,7 +102,7 @@ export function SLADot({ status, className }: SLADotProps) {
     <span
       className={cn(
         'inline-block h-2 w-2 rounded-full',
-        status === 'warning' && 'bg-amber-500',
+        status === 'warning' && 'bg-warning',
         status === 'breached' && 'bg-destructive animate-pulse',
         className
       )}
@@ -128,7 +128,7 @@ export function SLAProgressBar({ receivedAt, thresholdMinutes, repliedAt, classN
 
   const color =
     pct >= 100 ? 'bg-destructive' :
-    pct >= 80  ? 'bg-amber-500' :
+    pct >= 80  ? 'bg-warning' :
     'bg-primary';
 
   return (

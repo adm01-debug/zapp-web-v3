@@ -124,7 +124,7 @@ export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
           )}
           {/* Avisos de token/watch */}
           {(hasTokenWarning || hasWatchWarning) && (
-            <div className="px-2 py-1.5 bg-amber-50 dark:bg-amber-950/30 border-b text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+            <div className="px-2 py-1.5 bg-warning dark:bg-warning/30 border-b text-xs text-warning-foreground dark:text-warning-foreground flex items-center gap-1.5">
               <AlertTriangle className="h-3 w-3 shrink-0" />
               {hasTokenWarning ? 'Token expirado' : 'Watch expirando'}
             </div>
@@ -204,7 +204,7 @@ export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
                     <div
                       className={`group relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors
                         ${selectedId === thread.id ? 'bg-primary/5' : 'hover:bg-muted/50'}
-                        ${thread.unread_count > 0 ? 'bg-blue-50/30 dark:bg-blue-950/10' : ''}
+                        ${thread.unread_count > 0 ? 'bg-primary/30 dark:bg-primary/10' : ''}
                       `}
                       onClick={() => handleSelectThread(thread)}
                       role="button"
@@ -245,7 +245,7 @@ export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
                           <TooltipTrigger asChild>
                             <button
                               onClick={e => { e.stopPropagation(); starThread(thread.id, !thread.is_starred); }}
-                              className={`p-1 rounded hover:bg-muted ${thread.is_starred ? 'text-yellow-500' : 'text-muted-foreground'}`}
+                              className={`p-1 rounded hover:bg-muted ${thread.is_starred ? 'text-warning' : 'text-muted-foreground'}`}
                               aria-label={thread.is_starred ? 'Remover favorito' : 'Adicionar favorito'}
                             >
                               <Star className="h-3.5 w-3.5" fill={thread.is_starred ? 'currentColor' : 'none'} />

@@ -126,7 +126,7 @@ export function CrossTabDedupePanel() {
                           {!ev.ok && <span className="ml-1">·err</span>}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{shortKey(ev.key)}</TableCell>
+                      <TableCell className=" text-xs">{shortKey(ev.key)}</TableCell>
                       <TableCell className="text-right text-xs tabular-nums">
                         {ev.durationMs}
                       </TableCell>

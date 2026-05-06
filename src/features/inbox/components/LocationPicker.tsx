@@ -67,7 +67,7 @@ export function LocationPicker({ open, onOpenChange, onSend }: LocationPickerPro
                   <div className="flex-1 min-w-0">
                     {selectedLocation.name && <p className="font-medium text-sm">{selectedLocation.name}</p>}
                     {selectedLocation.address && <p className="text-xs text-muted-foreground line-clamp-2">{selectedLocation.address}</p>}
-                    <p className="text-[10px] font-mono text-muted-foreground/70 mt-1">{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
+                    <p className="text-[10px]  text-muted-foreground/70 mt-1">{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}</p>
                   </div>
                 </div>
               </motion.div>

@@ -25,7 +25,7 @@ function getInitials(name: string | null, email: string | null): string {
 }
 
 function getAvatarColor(email: string | null): string {
-  const colors = ['bg-primary','bg-primary','bg-violet-500','bg-amber-500','bg-rose-500'];
+  const colors = ['bg-primary','bg-primary','bg-primary','bg-warning','bg-destructive'];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
 }

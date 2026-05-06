@@ -105,14 +105,14 @@ export function InstanceBreakdownTable({ stats, onSelectInstance }: InstanceBrea
                       className="border-b last:border-0 hover:bg-muted/40 cursor-pointer"
                       onClick={() => onSelectInstance(s.instance)}
                     >
-                      <td className="py-2 pr-4 font-mono text-xs">{s.instance}</td>
-                      <td className="py-2 pr-4 text-right font-mono">
+                      <td className="py-2 pr-4  text-xs">{s.instance}</td>
+                      <td className="py-2 pr-4 text-right ">
                         {s.total.toLocaleString('pt-BR')}
                       </td>
-                      <td className="py-2 pr-4 text-right font-mono">
+                      <td className="py-2 pr-4 text-right ">
                         {s.validated.toLocaleString('pt-BR')}
                       </td>
-                      <td className="py-2 pr-4 text-right font-mono">
+                      <td className="py-2 pr-4 text-right ">
                         {s.validationRate < 0 ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (

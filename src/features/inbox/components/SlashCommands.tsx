@@ -121,7 +121,7 @@ export function SlashCommands({ inputValue, onSelectCommand, onClose, isOpen }: 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className={cn("font-medium", selectedIndex === globalIndex ? "text-primary" : "text-foreground")}>{cmd.label}</span>
-                              <code className="text-[10px] px-1.5 py-0.5 bg-muted rounded font-mono text-muted-foreground">{cmd.command}</code>
+                              <code className="text-[10px] px-1.5 py-0.5 bg-muted rounded  text-muted-foreground">{cmd.command}</code>
                             </div>
                             <p className="text-xs text-muted-foreground truncate">{cmd.description}</p>
                           </div>

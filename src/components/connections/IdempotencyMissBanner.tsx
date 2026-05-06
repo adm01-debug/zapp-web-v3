@@ -78,7 +78,7 @@ export function IdempotencyMissBanner() {
             </Badge>
             <Badge
               variant="outline"
-              className="text-[10px] gap-1 font-mono"
+              className="text-[10px] gap-1 "
               title={`Próximo reset às ${formatBucketTime(nextResetAt)}`}
             >
               <Clock className="w-3 h-3" aria-hidden />
@@ -106,7 +106,7 @@ export function IdempotencyMissBanner() {
                 <Badge
                   key={item.instance}
                   variant="destructive"
-                  className="font-mono text-xs"
+                  className=" text-xs"
                   title={`${item.count} idempotency_miss em ${item.instance}`}
                 >
                   {item.instance} · {item.count}
@@ -130,7 +130,7 @@ export function IdempotencyMissBanner() {
                   <Badge
                     key={instance}
                     variant="secondary"
-                    className="font-mono text-[11px]"
+                    className=" text-[11px]"
                     title={`${n} toast(s) disparado(s) para ${instance} desde ${formatBucketTime(
                       nextResetAt - 60 * 60 * 1000,
                     )}`}

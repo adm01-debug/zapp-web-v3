@@ -34,7 +34,7 @@ function toneClasses(tone: 'success' | 'destructive' | 'warning' | 'info'): stri
   switch (tone) {
     case 'success': return 'bg-primary/10 text-primary border-primary/30';
     case 'destructive': return 'bg-destructive/10 text-destructive border-destructive/30';
-    case 'warning': return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
+    case 'warning': return 'bg-warning/10 text-warning-foreground border-warning/30';
     default: return 'bg-muted text-muted-foreground border-border';
   }
 }

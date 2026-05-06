@@ -55,7 +55,7 @@ export function AIUsageLogsTab({ logs, logsPage, setLogsPage, profileMap }: AIUs
                       </Badge>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground text-xs">{l.model?.replace('google/', '').replace('openai/', '') || '-'}</td>
-                    <td className="px-3 py-2 text-right font-mono text-foreground">{l.total_tokens.toLocaleString()}</td>
+                    <td className="px-3 py-2 text-right  text-foreground">{l.total_tokens.toLocaleString()}</td>
                     <td className="px-3 py-2 text-right text-muted-foreground">{l.duration_ms ? `${l.duration_ms}ms` : '-'}</td>
                     <td className="px-3 py-2 text-center">
                       <Badge variant={l.status === 'success' ? 'default' : 'destructive'} className="text-[10px]">{l.status === 'success' ? '✓' : '✗'}</Badge>

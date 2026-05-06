@@ -20,7 +20,7 @@ function VariableHighlighter({ text, className }: { text: string; className?: st
     <span className={className}>
       {parts.map((part, index) => {
         if (part.match(/^\{\{[^}]+\}\}$/)) {
-          return <Badge key={index} variant="secondary" className="mx-0.5 text-xs font-mono">{part.slice(2, -2)}</Badge>;
+          return <Badge key={index} variant="secondary" className="mx-0.5 text-xs ">{part.slice(2, -2)}</Badge>;
         }
         return <span key={index}>{part}</span>;
       })}
@@ -94,7 +94,7 @@ export function TemplatesWithVariables({ onUseTemplate, contactData }: TemplateW
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-sm truncate">{template.title}</h4>
                         <Badge variant="secondary" className="text-xs">{template.category}</Badge>
-                        {template.shortcut && <Badge variant="outline" className="text-xs font-mono">/{template.shortcut}</Badge>}
+                        {template.shortcut && <Badge variant="outline" className="text-xs ">/{template.shortcut}</Badge>}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground line-clamp-2"><VariableHighlighter text={template.content} /></div>
                     </div>

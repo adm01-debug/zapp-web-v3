@@ -31,7 +31,7 @@ export function FailedMessageDetailsSheet({ selected, onClose, onViewInChat }: {
           <SheetTitle>Detalhes da falha</SheetTitle>
           <SheetDescription>
             {selected && (
-              <span className="font-mono text-xs">
+              <span className=" text-xs">
                 {selected.instance_name} → {selected.remote_jid}
               </span>
             )}
@@ -80,7 +80,7 @@ export function FailedMessageDetailsSheet({ selected, onClose, onViewInChat }: {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase font-bold text-muted-foreground">Erro</label>
-                <p className="text-sm font-mono truncate" title={selected.error_code || '-'}>
+                <p className="text-sm  truncate" title={selected.error_code || '-'}>
                   {selected.error_code || (selected.http_status ? `HTTP ${selected.http_status}` : '-')}
                 </p>
               </div>
@@ -88,7 +88,7 @@ export function FailedMessageDetailsSheet({ selected, onClose, onViewInChat }: {
 
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase font-bold text-muted-foreground">Mensagem de erro</label>
-              <div className="bg-muted p-2 rounded text-xs font-mono break-all relative group">
+              <div className="bg-muted p-2 rounded text-xs  break-all relative group">
                 {selected.error_message || 'Nenhuma mensagem disponível'}
                 {selected.error_message && (
                   <Button
@@ -111,7 +111,7 @@ export function FailedMessageDetailsSheet({ selected, onClose, onViewInChat }: {
                 </Button>
               </div>
               <ScrollArea className="h-[250px] w-full rounded border bg-foreground p-3">
-                <pre className="text-[11px] text-muted-foreground font-mono">
+                <pre className="text-[11px] text-muted-foreground ">
                   {JSON.stringify(selected.payload, null, 2)}
                 </pre>
               </ScrollArea>

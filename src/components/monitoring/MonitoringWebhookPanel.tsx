@@ -102,10 +102,10 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                 {secretStatus.configured && (
                   <>
                     <span className="text-xs text-muted-foreground">
-                      Comprimento: <span className="font-mono">{secretStatus.length}</span>
+                      Comprimento: <span className="">{secretStatus.length}</span>
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      Hash SHA-256: <span className="font-mono">{secretStatus.hashPrefix}…</span>
+                      Hash SHA-256: <span className="">{secretStatus.hashPrefix}…</span>
                     </span>
                   </>
                 )}
@@ -212,7 +212,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-xs font-mono break-all">{webhookConfig.url}</p>
+                    <p className="text-xs  break-all">{webhookConfig.url}</p>
                   </div>
                 )}
 
@@ -226,7 +226,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                     return (
                       <div key={category} className="p-2.5 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-2 mb-1.5">
-                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-warning-foreground" />}
                           <span className="text-[11px] font-medium">{category}</span>
                           <span className="text-[10px] text-muted-foreground ml-auto">{configured.length}/{events.length}</span>
                         </div>

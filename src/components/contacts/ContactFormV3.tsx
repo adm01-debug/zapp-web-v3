@@ -207,9 +207,9 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
     <div className="space-y-6">
       {/* Duplicate warning */}
       {hasDuplicates && !checking && (
-        <Alert className="border-amber-300 bg-amber-50">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-sm text-amber-800">
+        <Alert className="border-warning bg-warning">
+          <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+          <AlertDescription className="text-sm text-warning-foreground">
             <strong>{duplicates.length} contato(s) similar(es) encontrado(s).</strong>{' '}
             {duplicates.slice(0, 2).map((d) => sanitizeText(d.name)).join(', ')}
             {duplicates[0] && (
@@ -217,7 +217,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
                 variant="link"
                 size="sm"
                 onClick={() => { setMergeTarget(duplicates[0] as unknown as ContactForMerge); setMergeOpen(true); }}
-                className="ml-2 text-amber-700 underline p-0 h-auto"
+                className="ml-2 text-warning-foreground underline p-0 h-auto"
               >
                 <GitMerge className="h-3.5 w-3.5 mr-1" />
                 Mesclar
@@ -254,7 +254,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
             onChange={(e) => update('phone', e.target.value)}
             onBlur={handlePhoneBlur}
             placeholder="(11) 99999-9999"
-            className={`font-mono ${hasDuplicates && duplicates.some((d) => d.match_field === 'phone') ? 'border-amber-400' : ''}`}
+            className={` ${hasDuplicates && duplicates.some((d) => d.match_field === 'phone') ? 'border-warning' : ''}`}
             autoComplete="tel"
           />
           {checking && (
@@ -293,7 +293,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
           value={form.email}
           onChange={(e) => update('email', e.target.value)}
           placeholder="email@exemplo.com.br"
-          className={hasDuplicates && duplicates.some((d) => d.match_field === 'email') ? 'border-amber-400' : ''}
+          className={hasDuplicates && duplicates.some((d) => d.match_field === 'email') ? 'border-warning' : ''}
           autoComplete="email"
         />
       </div>

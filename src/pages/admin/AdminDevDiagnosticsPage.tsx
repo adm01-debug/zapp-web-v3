@@ -100,7 +100,7 @@ export default function AdminDevDiagnosticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">OPERACIONAL</div>
+            <div className="text-2xl font-bold text-success-foreground">OPERACIONAL</div>
             <p className="text-xs text-muted-foreground">Todos os serviços respondendo</p>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export default function AdminDevDiagnosticsPage() {
                 </TableHeader>
                 <TableBody>
                   {logs.map(log => (
-                    <TableRow key={log.id} className="font-mono text-xs">
+                    <TableRow key={log.id} className=" text-xs">
                       <TableCell className="whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString()}
                       </TableCell>

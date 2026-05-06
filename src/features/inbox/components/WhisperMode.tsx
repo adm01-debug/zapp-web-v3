@@ -171,7 +171,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           "relative gap-1.5 text-xs transition-all duration-200",
-          isExpanded ? "bg-amber-100 text-amber-700 hover:bg-amber-200" : "text-muted-foreground hover:text-foreground"
+          isExpanded ? "bg-warning text-warning-foreground hover:bg-warning" : "text-muted-foreground hover:text-foreground"
         )}
         title="Modo Sussurro — Notas internas invisíveis ao cliente (Alt+W)"
         aria-expanded={isExpanded}
@@ -196,32 +196,32 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full right-0 mb-3 z-[100] bg-card border border-amber-200/50 rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5"
+            className="absolute bottom-full right-0 mb-3 z-[100] bg-card border border-warning/50 rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5"
             style={{ width: 340 }}
             role="dialog"
             aria-modal="true"
             aria-label="Painel de Sussurro"
           >
-            <div className="p-3 bg-amber-50/50 border-b border-amber-100 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
+            <div className="p-3 bg-warning/50 border-b border-warning flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-warning-foreground uppercase tracking-wider">
                 {activeThreadId ? (
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-6 w-6 mr-1 text-amber-600 hover:bg-amber-100" 
+                    className="h-6 w-6 mr-1 text-warning-foreground hover:bg-warning" 
                     onClick={() => setActiveThreadId(null)}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                 ) : (
-                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
                 )}
                 {activeThreadId ? 'Discussão em Thread' : 'Equipe — Interno'}
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 hover:bg-amber-100 text-amber-600" 
+                className="h-6 w-6 hover:bg-warning text-warning-foreground" 
                 onClick={() => {
                   setIsExpanded(false);
                   setActiveThreadId(null);
@@ -238,15 +238,15 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
               aria-live="polite"
             >
               {/* Overlay visual para o modo interno */}
-              <div className="sticky top-0 z-10 bg-amber-100/80 backdrop-blur-sm border border-amber-200/50 rounded-lg px-2 py-1 mb-2 flex items-center justify-center gap-1.5 shadow-sm">
-                <EyeOff className="w-3 h-3 text-amber-700" />
-                <span className="text-[9px] font-bold text-amber-800 uppercase tracking-tighter">Ambiente de Equipe — Privado</span>
+              <div className="sticky top-0 z-10 bg-warning/80 backdrop-blur-sm border border-warning/50 rounded-lg px-2 py-1 mb-2 flex items-center justify-center gap-1.5 shadow-sm">
+                <EyeOff className="w-3 h-3 text-warning-foreground" />
+                <span className="text-[9px] font-bold text-warning-foreground uppercase tracking-tighter">Ambiente de Equipe — Privado</span>
               </div>
 
               {whispers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
-                  <EyeOff className="w-8 h-8 text-amber-200" />
-                  <p className="text-xs text-amber-600/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
+                  <EyeOff className="w-8 h-8 text-warning-foreground" />
+                  <p className="text-xs text-warning-foreground/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
                 </div>
               ) : (
                 whispers.map((w, idx) => {
@@ -259,19 +259,19 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                       transition={{ delay: idx * 0.05 }}
                       className={cn(
                         "flex flex-col gap-1 group/whisper",
-                        isParent && "border-l-2 border-amber-400 pl-3 py-1 bg-amber-100/30 rounded-r-xl"
+                        isParent && "border-l-2 border-warning pl-3 py-1 bg-warning/30 rounded-r-xl"
                       )}
                     >
                       <div className="flex items-center justify-between px-1">
-                        <span className="text-[10px] font-bold text-amber-600/80">
-                          {w.sender_name} {isParent && <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 bg-amber-200 border-amber-300">PAI</Badge>}
+                        <span className="text-[10px] font-bold text-warning-foreground/80">
+                          {w.sender_name} {isParent && <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 bg-warning border-warning">PAI</Badge>}
                         </span>
                         <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <div className="relative text-xs p-2.5 rounded-2xl bg-amber-100/50 border border-amber-200/30 text-amber-900 shadow-sm leading-relaxed group-hover/whisper:bg-amber-100 transition-colors">
+                      <div className="relative text-xs p-2.5 rounded-2xl bg-warning/50 border border-warning/30 text-warning-foreground shadow-sm leading-relaxed group-hover/whisper:bg-warning transition-colors">
                         {w.content}
                         
-                        <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-amber-100 rounded-full px-1 shadow-sm z-20">
+                        <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-warning rounded-full px-1 shadow-sm z-20">
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -290,7 +290,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                                 <TooltipTrigger asChild>
                                   <button 
                                     onClick={() => setActiveThreadId(w.id)} 
-                                    className="hover:scale-120 transition-transform text-amber-600 ml-0.5 p-0.5"
+                                    className="hover:scale-120 transition-transform text-warning-foreground ml-0.5 p-0.5"
                                   >
                                     <MessageSquare className="w-3 h-3" />
                                   </button>
@@ -304,7 +304,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                         {!activeThreadId && w.reply_count && w.reply_count > 0 ? (
                           <button 
                             onClick={() => setActiveThreadId(w.id)}
-                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-warning-foreground hover:text-warning-foreground transition-colors"
                           >
                             <MessageSquare className="w-2.5 h-2.5" />
                             {w.reply_count} {w.reply_count === 1 ? 'resposta' : 'respostas'}
@@ -339,7 +339,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                   />
                   <Button 
                     size="icon" 
-                    className="h-9 w-9 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-foreground shadow-lg shadow-amber-200" 
+                    className="h-9 w-9 shrink-0 rounded-xl bg-warning hover:bg-warning text-foreground shadow-lg shadow-amber-200" 
                     onClick={sendWhisper} 
                     disabled={!message.trim()}
                     aria-label="Enviar sussurro"

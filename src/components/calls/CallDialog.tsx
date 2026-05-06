@@ -195,7 +195,7 @@ export function CallDialog({
               </p>
             )}
             {status === 'answered' && (
-              <p className="text-whatsapp font-mono text-lg">{formatDuration(duration)}</p>
+              <p className="text-whatsapp  text-lg">{formatDuration(duration)}</p>
             )}
           </motion.div>
 

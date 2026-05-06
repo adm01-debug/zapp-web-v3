@@ -100,7 +100,7 @@ export function TicketTabs({
       label: 'Não lidas', 
       icon: MessageCircle, 
       count: conversations.filter(c => c.unreadCount > 0).length,
-      activeColor: 'bg-orange-500 text-foreground',
+      activeColor: 'bg-warning text-foreground',
     },
     { 
       id: 'search' as MainTab, 

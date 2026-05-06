@@ -192,7 +192,7 @@ export function RateLimitConfigPanel() {
                   <Input
                     value={rule.endpoint}
                     onChange={(e) => updateRule(rule.id, { endpoint: e.target.value })}
-                    className="h-8 text-xs font-mono"
+                    className="h-8 text-xs "
                   />
                 </div>
                 <div>

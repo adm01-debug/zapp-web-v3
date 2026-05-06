@@ -28,7 +28,7 @@ export function FailedMessagesErrorCodeChart({ stats, filter, onFilterChange }: 
                 isActive ? 'bg-primary/10' : 'hover:bg-muted/50',
               )}
             >
-              <span className="text-xs font-mono w-32 truncate shrink-0">{r.code}</span>
+              <span className="text-xs  w-32 truncate shrink-0">{r.code}</span>
               <div className="flex-1 h-5 bg-muted/40 rounded overflow-hidden">
                 <div
                   className={cn(

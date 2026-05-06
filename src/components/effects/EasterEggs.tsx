@@ -237,7 +237,7 @@ export const EasterEggsProvider = forwardRef<HTMLDivElement, EasterEggsProviderP
             {Array.from({ length: 20 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute text-success font-mono text-sm"
+                className="absolute text-success  text-sm"
                 style={{ left: `${i * 5}%` }}
                 initial={{ top: '-100%' }}
                 animate={{ top: '100%' }}

@@ -128,11 +128,11 @@ export function SicoobBridgeDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="bg-muted/50 rounded-lg p-3 font-mono text-xs border space-y-1">
+          <div className="bg-muted/50 rounded-lg p-3  text-xs border space-y-1">
             <p><Badge variant="secondary" className="text-[9px] mr-2">POST</Badge> /functions/v1/sicoob-bridge</p>
             <p className="text-muted-foreground pl-16">→ Recebe mensagens do Sicoob (action: new_message, mark_read)</p>
           </div>
-          <div className="bg-muted/50 rounded-lg p-3 font-mono text-xs border space-y-1">
+          <div className="bg-muted/50 rounded-lg p-3  text-xs border space-y-1">
             <p><Badge variant="secondary" className="text-[9px] mr-2">AUTO</Badge> /functions/v1/sicoob-bridge-reply</p>
             <p className="text-muted-foreground pl-16">→ Trigger automático ao responder contato Sicoob</p>
           </div>
@@ -206,7 +206,7 @@ export function SicoobBridgeDashboard() {
                 <tbody>
                   {mappings.map(m => (
                     <tr key={m.id} className="border-b hover:bg-muted/30">
-                      <td className="p-2 font-mono">{m.sicoob_singular_id}</td>
+                      <td className="p-2 ">{m.sicoob_singular_id}</td>
                       <td className="p-2 truncate max-w-[150px]">{m.sicoob_user_id}</td>
                       <td className="p-2 truncate max-w-[150px]">{m.sicoob_vendedor_id}</td>
                       <td className="p-2 text-muted-foreground">

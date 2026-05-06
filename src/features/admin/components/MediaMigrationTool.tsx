@@ -143,7 +143,7 @@ export function MediaMigrationTool() {
             {result.details && result.details.length > 0 && (
               <div className="max-h-[300px] overflow-auto rounded-lg border bg-muted/30 p-3">
                 {result.details.map((detail, i) => (
-                  <p key={i} className="text-xs font-mono py-0.5">
+                  <p key={i} className="text-xs  py-0.5">
                     {detail}
                   </p>
                 ))}

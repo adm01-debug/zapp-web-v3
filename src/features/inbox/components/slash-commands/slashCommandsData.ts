@@ -30,8 +30,8 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   { id: 'quick', command: '/quick', label: 'Resposta Rápida', description: 'Usar uma resposta rápida salva', icon: Zap, category: 'templates', color: 'text-success', shortcut: 'K' },
   { id: 'summary', command: '/summary', label: 'Resumo IA', description: 'Gerar resumo da conversa com IA', icon: MessageSquare, category: 'actions', color: 'text-accent', shortcut: 'I' },
   { id: 'produto', command: '/produto', label: 'Catálogo', description: 'Buscar e enviar produto do catálogo', icon: Package, category: 'actions', color: 'text-success', shortcut: 'C' },
-  { id: 'internal-note', command: '/whisper', label: 'Modo Sussurro', description: 'Ativa/Desativa modo de notas internas', icon: EyeOff, category: 'internal', color: 'text-amber-500', shortcut: 'W' },
-  { id: 'internal-file', command: '/files', label: 'Arquivos Equipe', description: 'Abre central de arquivos internos', icon: Share2, category: 'internal', color: 'text-amber-600', shortcut: 'U' },
+  { id: 'internal-note', command: '/whisper', label: 'Modo Sussurro', description: 'Ativa/Desativa modo de notas internas', icon: EyeOff, category: 'internal', color: 'text-warning-foreground', shortcut: 'W' },
+  { id: 'internal-file', command: '/files', label: 'Arquivos Equipe', description: 'Abre central de arquivos internos', icon: Share2, category: 'internal', color: 'text-warning-foreground', shortcut: 'U' },
 ];
 
 export const categoryColors: Record<string, string> = {
@@ -40,7 +40,7 @@ export const categoryColors: Record<string, string> = {
   notes: 'bg-warning/10 text-warning',
   tags: 'bg-info/10 text-info',
   priority: 'bg-warning/10 text-warning',
-  internal: 'bg-amber-100 text-amber-700',
+  internal: 'bg-warning text-warning-foreground',
 };
 
 export const categoryLabels: Record<string, string> = {

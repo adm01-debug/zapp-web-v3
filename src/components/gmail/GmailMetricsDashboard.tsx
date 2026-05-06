@@ -95,9 +95,9 @@ export function EmailMetricsDashboard({ accountId, days = 7 }: EmailMetricsDashb
           icon={Clock}
           color={
             summary?.avg_reply_minutes != null && summary.avg_reply_minutes > 480
-              ? 'text-red-600'
+              ? 'text-destructive-foreground'
               : summary?.avg_reply_minutes != null && summary.avg_reply_minutes > 384
-              ? 'text-amber-600'
+              ? 'text-warning-foreground'
               : 'text-primary'
           }
           subtitle={summary?.avg_reply_minutes != null ? `${Math.round(summary.avg_reply_minutes / 60)}h ${summary.avg_reply_minutes % 60}min` : undefined}
@@ -108,8 +108,8 @@ export function EmailMetricsDashboard({ accountId, days = 7 }: EmailMetricsDashb
           icon={TrendingUp}
           color={
             (summary?.sla_compliance_rate ?? 100) >= 95 ? 'text-primary' :
-            (summary?.sla_compliance_rate ?? 100) >= 80 ? 'text-amber-600' :
-            'text-red-600'
+            (summary?.sla_compliance_rate ?? 100) >= 80 ? 'text-warning-foreground' :
+            'text-destructive-foreground'
           }
           subtitle={`${summary?.total_sla_met ?? 0} OK / ${summary?.total_sla_breached ?? 0} violados`}
         />
@@ -126,8 +126,8 @@ export function EmailMetricsDashboard({ accountId, days = 7 }: EmailMetricsDashb
           </CardHeader>
           <CardContent className="space-y-3">
             <SLABar label="Dentro do prazo" value={slaDash.ok_count} total={slaDash.total} color="bg-primary" />
-            <SLABar label="Atenção (>80% do prazo)" value={slaDash.warning_count} total={slaDash.total} color="bg-amber-500" />
-            <SLABar label="SLA Violado" value={slaDash.breached_count} total={slaDash.total} color="bg-red-500" />
+            <SLABar label="Atenção (>80% do prazo)" value={slaDash.warning_count} total={slaDash.total} color="bg-warning" />
+            <SLABar label="SLA Violado" value={slaDash.breached_count} total={slaDash.total} color="bg-destructive" />
             <SLABar label="Respondido no prazo" value={slaDash.met_count} total={slaDash.total} color="bg-primary" />
           </CardContent>
         </Card>

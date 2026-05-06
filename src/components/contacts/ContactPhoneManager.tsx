@@ -142,12 +142,12 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
               disabled={readonly}
             >
               {phone.is_primary
-                ? <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                ? <Star className="h-3.5 w-3.5 fill-amber-400 text-warning-foreground" />
                 : <StarOff className="h-3.5 w-3.5 text-muted-foreground" />}
             </button>
 
             {/* Number */}
-            <span className="flex-1 font-mono text-sm">
+            <span className="flex-1  text-sm">
               {formatPhone(sanitizeText(phone.number))}
             </span>
 
@@ -195,7 +195,7 @@ export const ContactPhoneManager: React.FC<ContactPhoneManagerProps> = ({
                   setError('');
                 }}
                 autoFocus
-                className="font-mono"
+                className=""
               />
             </div>
 

@@ -157,7 +157,7 @@ export function EmailChatBubble({
                 {message.from_name || message.from_email || '?'}
               </span>
               {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-bold uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
-              {isStarred && <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />}
+              {isStarred && <Star className="h-3.5 w-3.5 text-warning-foreground fill-amber-400" />}
               {slaStatus && <EmailSLABadge status={slaStatus} compact />}
             </div>
             <div className="flex items-center gap-2 shrink-0">

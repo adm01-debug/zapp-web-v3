@@ -275,7 +275,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 </div>
                 {item.attempts?.length > 0 && (
                   <div className="hidden group-hover:block mt-1 pt-1 border-t border-primary/5">
-                    <div className="flex items-center justify-between text-[8px] text-muted-foreground font-mono">
+                    <div className="flex items-center justify-between text-[8px] text-muted-foreground ">
                       <span>{item.attempts.length} {item.attempts.length === 1 ? 'tentativa' : 'tentativas'}</span>
                       {item.attempts[item.attempts.length - 1].duration && (
                         <span>{item.attempts[item.attempts.length - 1].duration}ms</span>
@@ -290,7 +290,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       </AnimatePresence>
       <div className={cn(
         "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0  transition-all duration-500 ease-in-out", 
-        isWhisper && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-t-2 border-amber-500/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
+        isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
         !isWhisper && "focus-within:shadow-[0_-8px_30px_rgba(var(--primary-rgb),0.04)]",
         logic.isMobile && "px-3 py-2 safe-area-bottom"
       )}>
@@ -300,15 +300,15 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="mb-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-lg shadow-rose-500/5 backdrop-blur-md"
+              className="mb-4 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 shadow-lg shadow-rose-500/5 backdrop-blur-md"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
-                  <span className="text-xs font-bold text-rose-500 uppercase tracking-widest">Gravando Áudio</span>
+                  <div className="w-2 h-2 rounded-full bg-destructive animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                  <span className="text-xs font-bold text-destructive uppercase tracking-widest">Gravando Áudio</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
-                  <span className="text-[10px] font-mono font-bold text-rose-500">LIVE</span>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20">
+                  <span className="text-[10px]  font-bold text-destructive">LIVE</span>
                 </div>
               </div>
               <AudioRecorder onSend={onAudioSend} onCancel={onAudioCancel} />
@@ -344,8 +344,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }} 
               className="absolute -top-10 left-8 flex items-center gap-2 z-50"
             >
-              <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-[0.2em] bg-background/90 dark:bg-amber-950/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-amber-500/40 shadow-xl">
+              <div className="w-2 h-2 rounded-full bg-warning shadow-[0_0_12px_rgba(245,158,11,0.8)] animate-pulse" />
+              <span className="text-[10px] font-black text-warning-foreground dark:text-warning-foreground uppercase tracking-[0.2em] bg-background/90 dark:bg-warning/80 backdrop-blur-md px-4 py-1.5 rounded-2xl border border-warning/40 shadow-xl">
                 {typingNotification}
               </span>
             </motion.div>
@@ -415,7 +415,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 "placeholder:text-muted-foreground/30 placeholder:font-normal resize-none transition-all duration-500 ease-out",
                 "focus:ring-4 focus:ring-primary/5 focus:shadow-lg",
                 logic.isMobile ? "px-5 py-3.5 text-[16px] min-h-[48px] max-h-[160px]" : "px-5 py-[14px] min-h-[48px] max-h-[220px]",
-                isWhisper && "bg-amber-500/5 focus:bg-amber-500/10 ring-amber-500/30 border-amber-500/20",
+                isWhisper && "bg-warning/5 focus:bg-warning/10 ring-amber-500/30 border-warning/20",
                 logic.isOverLimit && "text-destructive",
                 isSending && "opacity-60 pointer-events-none"
               )}
@@ -424,7 +424,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               aria-describedby={logic.charCount > 0 ? "char-counter" : undefined}
             />
             {logic.charCount > 100 && (
-              <span id="char-counter" className={cn("absolute bottom-2 right-4 text-[9px] font-mono tracking-tighter select-none pointer-events-none transition-colors",
+              <span id="char-counter" className={cn("absolute bottom-2 right-4 text-[9px]  tracking-tighter select-none pointer-events-none transition-colors",
                 logic.isOverLimit ? "text-destructive font-bold" : logic.isNearLimit ? "text-warning" : "text-muted-foreground/30")}>
                 {logic.charCount}/{logic.CHAR_LIMIT}
               </span>
@@ -499,7 +499,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     className={cn(
                       "inline-flex items-center justify-center rounded-full shrink-0 touch-manipulation transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2",
                       logic.isMicActive
-                        ? "bg-rose-500 text-foreground hover:bg-rose-600 shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
+                        ? "bg-destructive text-foreground hover:bg-destructive shadow-[0_0_24px_rgba(244,63,94,0.7),0_0_48px_rgba(244,63,94,0.45)] scale-110 z-10 ring-2 ring-rose-400/60"
                         : "bg-muted text-muted-foreground hover:bg-muted/80",
                       !logic.isMicActive && (isSending || logic.canSend) && "opacity-50 cursor-not-allowed",
                       logic.isMobile ? "w-11 h-11" : "w-[46px] h-[46px]"
@@ -511,7 +511,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                     <Mic className={cn("w-6 h-6", logic.isMicActive && "animate-pulse")} />
                   </motion.button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-rose-500 text-foreground border-none px-3 py-1.5 rounded-lg shadow-xl">
+                <TooltipContent side="top" className="text-[10px] font-medium max-w-[200px] bg-destructive text-foreground border-none px-3 py-1.5 rounded-lg shadow-xl">
                   {logic.isMicActive 
                     ? "🔴 Gravando... Clique para parar" 
                     : logic.canSend

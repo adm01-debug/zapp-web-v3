@@ -29,7 +29,7 @@ const PERIODS: { value: TimePeriod; label: string }[] = [
 function StatusSemaphore({ connections }: { connections: { status: string }[] }) {
   const all = connections.length;
   const active = connections.filter(c => c.status === 'connected').length;
-  const color = active === all && all > 0 ? 'bg-primary' : active > 0 ? 'bg-amber-500' : 'bg-destructive';
+  const color = active === all && all > 0 ? 'bg-primary' : active > 0 ? 'bg-warning' : 'bg-destructive';
   const label = active === all && all > 0 ? 'Todas conectadas' : active > 0 ? 'Parcialmente conectado' : 'Sem conexões';
 
   return (

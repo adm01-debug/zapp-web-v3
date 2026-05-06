@@ -91,7 +91,7 @@ export class AppErrorBoundary extends Component<Props, State> {
             <AlertDescription className="text-base opacity-90 leading-relaxed mb-6">
               Ocorreu um erro inesperado neste módulo. Nossa equipe foi notificada automaticamente.
               {this.state.errorId && (
-                <div className="mt-4 p-2 bg-destructive/10 rounded font-mono text-xs border border-destructive/20 select-all">
+                <div className="mt-4 p-2 bg-destructive/10 rounded  text-xs border border-destructive/20 select-all">
                   ID do Erro: {this.state.errorId}
                 </div>
               )}

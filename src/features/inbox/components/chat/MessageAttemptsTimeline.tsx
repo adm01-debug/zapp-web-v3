@@ -95,9 +95,9 @@ export function MessageAttemptsTimeline({ messageId, enabled }: MessageAttemptsT
           <Badge variant={meta.variant}>{meta.label}</Badge>
         </div>
         <div className="text-xs text-muted-foreground">
-          Tentativa <span className="font-mono text-foreground">{current}</span>
+          Tentativa <span className=" text-foreground">{current}</span>
           {' / '}
-          <span className="font-mono text-foreground">{total}</span>
+          <span className=" text-foreground">{total}</span>
         </div>
       </div>
 
@@ -107,21 +107,21 @@ export function MessageAttemptsTimeline({ messageId, enabled }: MessageAttemptsT
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs bg-muted/40 rounded-md p-3">
         <div>
           <dt className="text-muted-foreground">Primeiro registro</dt>
-          <dd className="font-mono text-foreground">{fmt(row.created_at)}</dd>
+          <dd className=" text-foreground">{fmt(row.created_at)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Última tentativa</dt>
-          <dd className="font-mono text-foreground">{fmt(row.last_attempt_at)}</dd>
+          <dd className=" text-foreground">{fmt(row.last_attempt_at)}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Próxima tentativa</dt>
-          <dd className="font-mono text-foreground">
+          <dd className=" text-foreground">
             {row.status === 'pending' || row.status === 'retrying' ? fmt(row.next_attempt_at) : '—'}
           </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Concluída em</dt>
-          <dd className="font-mono text-foreground">{fmt(row.succeeded_at)}</dd>
+          <dd className=" text-foreground">{fmt(row.succeeded_at)}</dd>
         </div>
       </dl>
 
@@ -130,12 +130,12 @@ export function MessageAttemptsTimeline({ messageId, enabled }: MessageAttemptsT
         <div className="space-y-1.5 text-xs border border-border/60 rounded-md p-3">
           <div className="flex items-center gap-2 flex-wrap">
             {row.error_code && (
-              <Badge variant="outline" className="font-mono text-[10px]">
+              <Badge variant="outline" className=" text-[10px]">
                 {row.error_code}
               </Badge>
             )}
             {row.http_status && (
-              <Badge variant="outline" className="font-mono text-[10px]">
+              <Badge variant="outline" className=" text-[10px]">
                 HTTP {row.http_status}
               </Badge>
             )}

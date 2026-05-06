@@ -98,13 +98,13 @@ export function ThemeDebugger() {
         </div>
       </div>
       
-      <div className="space-y-2 font-mono text-[10px]">
+      <div className="space-y-2  text-[10px]">
         {Object.entries(tokens).map(([key, data]) => (
           <div key={key} className="flex flex-col border-b border-border/50 pb-1">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">{key}</span>
               <span className={`text-[8px] px-1 rounded ${
-                data.source === 'inline' ? 'bg-orange-500/20 text-orange-500' : 
+                data.source === 'inline' ? 'bg-warning/20 text-warning-foreground' : 
                 data.source === 'css' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
               }`}>
                 {data.source}

@@ -29,9 +29,9 @@ function getFileIcon(mimeType: string | null) {
 function getFileColor(mimeType: string | null): string {
   if (!mimeType) return 'text-muted-foreground';
   if (mimeType.startsWith('image/')) return 'text-primary';
-  if (mimeType.startsWith('video/')) return 'text-purple-500';
-  if (mimeType.includes('pdf')) return 'text-red-500';
-  if (mimeType.includes('zip') || mimeType.includes('tar')) return 'text-amber-500';
+  if (mimeType.startsWith('video/')) return 'text-primary';
+  if (mimeType.includes('pdf')) return 'text-destructive-foreground';
+  if (mimeType.includes('zip') || mimeType.includes('tar')) return 'text-warning-foreground';
   return 'text-muted-foreground';
 }
 

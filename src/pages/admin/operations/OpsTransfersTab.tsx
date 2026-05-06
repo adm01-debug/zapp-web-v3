@@ -70,7 +70,7 @@ export function OpsTransfersTab() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Escalados</CardTitle>
-            <TrendingUp className="h-4 w-4 text-amber-500" />
+            <TrendingUp className="h-4 w-4 text-warning-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totals.escalated}</div>

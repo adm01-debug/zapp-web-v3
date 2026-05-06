@@ -151,7 +151,7 @@ export function DialPad({
             value={number}
             onChange={(e) => setNumber(e.target.value.replace(/[^0-9+*#]/g, ''))}
             placeholder="Digite o número"
-            className="text-center text-xl font-mono tracking-widest h-14 bg-muted/50 border-border pr-10"
+            className="text-center text-xl  tracking-widest h-14 bg-muted/50 border-border pr-10"
           />
           {number && (
             <Button

@@ -302,7 +302,7 @@ export function RetryMetricsPanel() {
                             {timeAgo(row.created_at)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-xs font-mono">{row.action}</TableCell>
+                        <TableCell className="text-xs ">{row.action}</TableCell>
                         <TableCell className="hidden md:table-cell text-xs">{row.instance_name ?? '—'}</TableCell>
                         <TableCell className="text-center">
                           <Badge variant="outline" className="text-[10px]">{row.attempt_count}</Badge>
@@ -313,11 +313,11 @@ export function RetryMetricsPanel() {
                             {row.final_status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="hidden lg:table-cell text-xs font-mono">{row.final_http_status ?? '—'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs ">{row.final_http_status ?? '—'}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {(row.retry_reasons ?? []).slice(0, 2).map((rr, i) => (
-                              <Badge key={i} variant="secondary" className="text-[9px] font-mono">{rr.reason}</Badge>
+                              <Badge key={i} variant="secondary" className="text-[9px] ">{rr.reason}</Badge>
                             ))}
                             {(row.retry_reasons ?? []).length > 2 && (
                               <Badge variant="outline" className="text-[9px]">+{row.retry_reasons.length - 2}</Badge>
@@ -341,7 +341,7 @@ export function RetryMetricsPanel() {
                             <span className="text-[10px] text-muted-foreground">—</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-xs font-mono">
+                        <TableCell className="text-right text-xs ">
                           {row.total_duration_ms ? `${row.total_duration_ms}ms` : '—'}
                         </TableCell>
                       </TableRow>
@@ -350,7 +350,7 @@ export function RetryMetricsPanel() {
                           <TableCell colSpan={9}>
                             <div className="space-y-2 py-2">
                               <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Detalhes do retry</p>
-                              <pre className="text-[10px] font-mono bg-background rounded p-2 overflow-x-auto border max-h-40">
+                              <pre className="text-[10px]  bg-background rounded p-2 overflow-x-auto border max-h-40">
 {JSON.stringify({
   method: row.method,
   retry_reasons: row.retry_reasons,
@@ -390,7 +390,7 @@ function KpiCard({ label, value, subtitle, delta }: KpiCardProps) {
         {typeof delta === 'number' && (
           <span className={cn(
             'text-[10px] font-medium inline-flex items-center gap-0.5',
-            delta > 0 ? 'text-amber-500' : 'text-primary'
+            delta > 0 ? 'text-warning-foreground' : 'text-primary'
           )}>
             {delta > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {Math.abs(delta)}%
@@ -527,13 +527,13 @@ function TopReasonsChart({ reasons, previousReasons = [], compareMode = false, w
             const { tone, pct } = deltaTone(d.current, d.previous);
             const Icon = tone === 'up' ? TrendingUp : tone === 'down' ? TrendingDown : Minus;
             const toneClass =
-              tone === 'up' ? 'text-amber-500'
+              tone === 'up' ? 'text-warning-foreground'
               : tone === 'down' ? 'text-primary'
               : 'text-muted-foreground';
             return (
               <li
                 key={d.reason}
-                className="flex items-center justify-between gap-3 text-[11px] font-mono px-2 py-1 rounded bg-background/50 border border-border/40"
+                className="flex items-center justify-between gap-3 text-[11px]  px-2 py-1 rounded bg-background/50 border border-border/40"
               >
                 <span className="truncate">{d.reason}</span>
                 <span className="flex items-center gap-2 shrink-0">

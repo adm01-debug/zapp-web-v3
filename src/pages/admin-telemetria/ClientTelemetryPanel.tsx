@@ -102,28 +102,28 @@ export function ClientTelemetryPanel() {
                 <tbody>
                   {[...snap.slowEvents].reverse().map((ev, idx) => (
                     <tr key={`${ev.startedAt}-${idx}`} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                      <td className="p-3 text-xs text-muted-foreground whitespace-nowrap font-mono">
+                      <td className="p-3 text-xs text-muted-foreground whitespace-nowrap ">
                         {formatTime(new Date(Date.now() - (performance.now() - ev.startedAt)).toISOString())}
                       </td>
                       <td
-                        className="p-3 text-xs font-mono text-primary"
+                        className="p-3 text-xs  text-primary"
                         title={ev.correlationId ? `Correlation ID: ${ev.correlationId}` : 'sem trace id'}
                       >
                         {ev.correlationId ?? '-'}
                       </td>
-                      <td className="p-3 text-xs font-mono text-muted-foreground">{ev.source}</td>
+                      <td className="p-3 text-xs  text-muted-foreground">{ev.source}</td>
                       <td className="p-3">
-                        <Badge variant="outline" className="text-[10px] font-mono">{ev.operation}</Badge>
+                        <Badge variant="outline" className="text-[10px] ">{ev.operation}</Badge>
                       </td>
-                      <td className="p-3 font-mono text-xs font-medium truncate max-w-[200px]" title={ev.target}>{ev.target}</td>
-                      <td className="p-3 text-right font-mono font-bold tabular-nums">
+                      <td className="p-3  text-xs font-medium truncate max-w-[200px]" title={ev.target}>{ev.target}</td>
+                      <td className="p-3 text-right  font-bold tabular-nums">
                         <span className={ev.durationMs >= 4000 ? 'text-destructive' : ev.durationMs >= 1500 ? 'text-warning' : ''}>
                           {formatDuration(ev.durationMs)}
                         </span>
                       </td>
-                      <td className="p-3 text-right font-mono text-xs tabular-nums">{ev.recordCount ?? '-'}</td>
-                      <td className="p-3 text-right font-mono text-xs tabular-nums text-muted-foreground">{ev.limit ?? '-'}</td>
-                      <td className="p-3 text-right font-mono text-xs tabular-nums text-muted-foreground">{ev.offset ?? '-'}</td>
+                      <td className="p-3 text-right  text-xs tabular-nums">{ev.recordCount ?? '-'}</td>
+                      <td className="p-3 text-right  text-xs tabular-nums text-muted-foreground">{ev.limit ?? '-'}</td>
+                      <td className="p-3 text-right  text-xs tabular-nums text-muted-foreground">{ev.offset ?? '-'}</td>
                       <td className="p-3">{severityBadge(ev.severity)}</td>
                       <td className="p-3 text-xs text-muted-foreground truncate max-w-[200px]" title={ev.errorMessage}>
                         {ev.errorMessage ?? '-'}

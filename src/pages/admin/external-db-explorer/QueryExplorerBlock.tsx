@@ -261,7 +261,7 @@ export const QueryExplorerBlock = forwardRef<QueryExplorerHandle>(function Query
                 onChange={(e) => setRpcParamsText(e.target.value)}
                 rows={8}
                 spellCheck={false}
-                className="w-full font-mono text-xs rounded-md border bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full  text-xs rounded-md border bg-background p-2 focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {paramsError && <p className="text-xs text-destructive mt-1">{paramsError}</p>}
             </div>
@@ -306,7 +306,7 @@ export const QueryExplorerBlock = forwardRef<QueryExplorerHandle>(function Query
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Erro do proxy</AlertTitle>
-                <AlertDescription className="font-mono text-xs">{result.error}</AlertDescription>
+                <AlertDescription className=" text-xs">{result.error}</AlertDescription>
               </Alert>
             )}
 
@@ -330,7 +330,7 @@ export const QueryExplorerBlock = forwardRef<QueryExplorerHandle>(function Query
                           const truncated = display.length > 80 ? display.slice(0, 80) + '…' : display;
                           return (
                             <td key={c} className="p-2 align-top max-w-xs" title={display}>
-                              <span className={isObj ? 'font-mono text-muted-foreground' : ''}>{truncated}</span>
+                              <span className={isObj ? ' text-muted-foreground' : ''}>{truncated}</span>
                             </td>
                           );
                         })}

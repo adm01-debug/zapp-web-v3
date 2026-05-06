@@ -23,7 +23,7 @@ interface Props {
 const STATUS_META: Record<QrAttemptRow['status'], { label: string; icon: typeof CheckCircle2; tone: string }> = {
   connected: { label: 'Conectado', icon: CheckCircle2, tone: 'text-status-online' },
   pending: { label: 'Aguardando', icon: Loader2, tone: 'text-muted-foreground' },
-  expired: { label: 'Expirado', icon: Clock, tone: 'text-amber-500' },
+  expired: { label: 'Expirado', icon: Clock, tone: 'text-warning-foreground' },
   error: { label: 'Erro', icon: XCircle, tone: 'text-destructive' },
 };
 

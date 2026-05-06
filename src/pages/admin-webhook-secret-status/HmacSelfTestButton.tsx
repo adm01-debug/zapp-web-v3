@@ -332,7 +332,7 @@ export function HmacSelfTestButton({ instance }: { instance: string | null }) {
                   )}
                   {result.request_id && (
                     <span
-                      className="text-muted-foreground font-mono text-[10px]"
+                      className="text-muted-foreground  text-[10px]"
                       data-testid="hmac-selftest-request-id"
                     >
                       req: {result.request_id.slice(0, 8)}…

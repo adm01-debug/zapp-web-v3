@@ -24,7 +24,7 @@ export function RetryAlertsBanner({ breaches }: RetryAlertsBannerProps) {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle className="text-sm flex items-center gap-2 flex-wrap">
               <span>
-                Instância <span className="font-mono">{b.instance}</span> degradada
+                Instância <span className="">{b.instance}</span> degradada
               </span>
               {b.hasOverride && (
                 <Badge variant="outline" className="text-[10px] border-destructive/40 bg-background/40 font-normal">
@@ -41,7 +41,7 @@ export function RetryAlertsBanner({ breaches }: RetryAlertsBannerProps) {
                     <li key={i} className="flex items-center gap-2 text-[11px]">
                       <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
                       <span className="font-medium">{reasonMeta[d.kind].label}:</span>
-                      <span className="font-mono">
+                      <span className="">
                         {d.observed}{suffix}
                       </span>
                       <span className="text-muted-foreground/80">

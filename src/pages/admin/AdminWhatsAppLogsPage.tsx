@@ -66,7 +66,7 @@ function modeOfProvider(provider: string | null | undefined): ModeFilter {
 }
 
 function modeBadge(mode: ModeFilter) {
-  if (mode === "official") return <Badge variant="default" className="bg-primary hover:bg-blue-700">Cloud API</Badge>;
+  if (mode === "official") return <Badge variant="default" className="bg-primary hover:bg-primary">Cloud API</Badge>;
   if (mode === "unofficial") return <Badge variant="secondary">Evolution</Badge>;
   return <Badge variant="outline">—</Badge>;
 }
@@ -75,7 +75,7 @@ function statusBadge(s: string) {
   const ok = ["delivered", "read", "sent", "received"].includes(s);
   const warn = ["pending", "queued", "routing"].includes(s);
   if (ok) return <Badge variant="outline" className="border-primary text-primary">{s}</Badge>;
-  if (warn) return <Badge variant="outline" className="border-amber-500 text-amber-700">{s}</Badge>;
+  if (warn) return <Badge variant="outline" className="border-warning text-warning-foreground">{s}</Badge>;
   return <Badge variant="destructive">{s}</Badge>;
 }
 
@@ -161,7 +161,7 @@ export default function AdminWhatsAppLogsPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Logs WhatsApp</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Envios, webhooks e erros de integração. Modo ativo: <span className="font-mono text-foreground">{activeMode}</span>
+            Envios, webhooks e erros de integração. Modo ativo: <span className=" text-foreground">{activeMode}</span>
           </p>
         </div>
         <div className="flex gap-2 items-center flex-wrap">
@@ -235,9 +235,9 @@ export default function AdminWhatsAppLogsPage() {
                         <tr key={r.id} className="border-b hover:bg-muted/50">
                           <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(r.received_at)}</td>
                           <td className="py-2 pr-3">{modeBadge(modeOfProvider(r.provider))}</td>
-                          <td className="py-2 pr-3 font-mono text-xs">{r.instance_name}</td>
+                          <td className="py-2 pr-3  text-xs">{r.instance_name}</td>
                           <td className="py-2 pr-3">{r.direction}</td>
-                          <td className="py-2 pr-3 font-mono text-xs truncate max-w-[180px]">{r.remote_jid}</td>
+                          <td className="py-2 pr-3  text-xs truncate max-w-[180px]">{r.remote_jid}</td>
                           <td className="py-2 pr-3">{statusBadge(r.delivery_status)}</td>
                           <td className="py-2 pr-3">{r.http_status ?? "—"}</td>
                           <td className="py-2 pr-3 text-destructive truncate max-w-[260px]">{r.error_code ?? r.error_message ?? ""}</td>
@@ -281,7 +281,7 @@ export default function AdminWhatsAppLogsPage() {
                         <tr key={p.id} className="border-b hover:bg-muted/50 align-top">
                           <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(p.created_at)}</td>
                           <td className="py-2 pr-3">{kindBadge(p.kind)}</td>
-                          <td className="py-2 pr-3 font-mono text-xs">
+                          <td className="py-2 pr-3  text-xs">
                             <pre className="whitespace-pre-wrap break-all max-w-[600px]">{JSON.stringify(p.meta ?? {}, null, 0)}</pre>
                           </td>
                         </tr>
@@ -326,8 +326,8 @@ export default function AdminWhatsAppLogsPage() {
                         <tr key={r.id} className="border-b hover:bg-muted/50">
                           <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(r.occurred_at)}</td>
                           <td className="py-2 pr-3">{r.channel_type ?? "—"}</td>
-                          <td className="py-2 pr-3 font-mono text-xs">{r.instance_name}</td>
-                          <td className="py-2 pr-3 font-mono text-xs truncate max-w-[180px]">{r.remote_jid ?? "—"}</td>
+                          <td className="py-2 pr-3  text-xs">{r.instance_name}</td>
+                          <td className="py-2 pr-3  text-xs truncate max-w-[180px]">{r.remote_jid ?? "—"}</td>
                           <td className="py-2 pr-3"><Badge variant="destructive">{r.error_code ?? "?"}</Badge></td>
                           <td className="py-2 pr-3">{r.http_status ?? "—"}</td>
                           <td className="py-2 pr-3">{r.retry_count}</td>

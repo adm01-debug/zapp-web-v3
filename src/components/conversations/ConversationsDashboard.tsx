@@ -35,9 +35,9 @@ function formatDuration(seconds: number | null): string {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  urgent: 'bg-red-100 text-red-700',
-  high:   'bg-orange-100 text-orange-700',
-  normal: 'bg-blue-100 text-blue-700',
+  urgent: 'bg-destructive text-destructive-foreground',
+  high:   'bg-warning text-warning-foreground',
+  normal: 'bg-primary text-primary-foreground',
   low:    'bg-muted text-muted-foreground',
 };
 
@@ -113,7 +113,7 @@ export const ConversationsDashboard: React.FC<{
         <Card>
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                 <MessageCircle className="h-4 w-4 text-primary" />
               </div>
               <div>
@@ -144,8 +144,8 @@ export const ConversationsDashboard: React.FC<{
         <Card>
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-amber-600" />
+              <div className="h-8 w-8 rounded-full bg-warning flex items-center justify-center">
+                <Clock className="h-4 w-4 text-warning-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatDuration(stats.avg_first_response_s)}</p>
@@ -158,8 +158,8 @@ export const ConversationsDashboard: React.FC<{
         <Card>
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                <Star className="h-4 w-4 text-purple-600" />
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <Star className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.avg_csat?.toFixed(1) ?? '—'}</p>

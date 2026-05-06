@@ -115,7 +115,7 @@ export function PhoneInput({ value, onChange, placeholder = '+55 11 99999-0000',
       onChange={handleChange}
       onFocus={handleFocus}
       disabled={disabled}
-      className={cn('font-mono tracking-wide', className)}
+      className={cn(' tracking-wide', className)}
     />
   );
 }

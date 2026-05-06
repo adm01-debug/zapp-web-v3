@@ -109,14 +109,14 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
                 color: 'text-primary',
               },
               {
-                icon: <UserX className="h-4 w-4 text-red-500" />,
+                icon: <UserX className="h-4 w-4 text-destructive-foreground" />,
                 label: 'Opt-out', value: stats.opted_out,
-                color: 'text-red-600',
+                color: 'text-destructive-foreground',
               },
               {
-                icon: <AlertTriangle className="h-4 w-4 text-amber-500" />,
+                icon: <AlertTriangle className="h-4 w-4 text-warning-foreground" />,
                 label: 'Sem consentimento', value: stats.without_consent,
-                color: 'text-amber-700',
+                color: 'text-warning-foreground',
               },
             ].map((card) => (
               <div key={card.label} className="rounded-md bg-muted/30 p-3 text-center space-y-1">
@@ -144,10 +144,10 @@ export const LGPDComplianceDashboard: React.FC<LGPDComplianceDashboardProps> = (
 
           {/* Recommendations */}
           {stats.without_consent > 0 && (
-            <Alert className="border-amber-200 bg-amber-50">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-800 text-sm">Ação necessária</AlertTitle>
-              <AlertDescription className="text-amber-700 text-xs">
+            <Alert className="border-warning bg-warning">
+              <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+              <AlertTitle className="text-warning-foreground text-sm">Ação necessária</AlertTitle>
+              <AlertDescription className="text-warning-foreground text-xs">
                 {stats.without_consent.toLocaleString('pt-BR')} contato{stats.without_consent !== 1 ? 's' : ''} sem
                 consentimento LGPD. Colete o consentimento antes de enviar comunicações de marketing.
                 (LGPD Art. 7 — Base legal para tratamento)

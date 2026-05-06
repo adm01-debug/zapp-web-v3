@@ -82,8 +82,8 @@ export function FailedMessageTableRow({
       <TableCell data-testid="failed-message-status">
         <FailedMessageStatusBadge status={row.status} />
       </TableCell>
-      <TableCell className="font-mono text-xs" data-testid="failed-message-instance">{row.instance_name}</TableCell>
-      <TableCell className="font-mono text-xs" data-testid="failed-message-jid">{shortJid(row.remote_jid)}</TableCell>
+      <TableCell className=" text-xs" data-testid="failed-message-instance">{row.instance_name}</TableCell>
+      <TableCell className=" text-xs" data-testid="failed-message-jid">{shortJid(row.remote_jid)}</TableCell>
       <TableCell className="max-w-[280px]" data-testid="failed-message-error">
         <div className="flex flex-col gap-1">
           {(() => {

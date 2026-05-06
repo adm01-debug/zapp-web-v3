@@ -67,7 +67,7 @@ export function AIProviderCard({ provider: p, testing, onTest, onEdit, onDelete,
                       </Badge>
                     ))}
                     {p.model && (
-                      <span className="text-xs text-muted-foreground ml-2 font-mono">
+                      <span className="text-xs text-muted-foreground ml-2 ">
                         {p.model}
                       </span>
                     )}

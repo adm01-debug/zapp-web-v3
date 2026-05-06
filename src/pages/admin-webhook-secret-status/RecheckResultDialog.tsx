@@ -80,7 +80,7 @@ export function RecheckResultDialog({
 
             <dl className="grid grid-cols-3 gap-x-3 gap-y-2 text-xs">
               <dt className="text-muted-foreground">Evento</dt>
-              <dd className="col-span-2 font-mono break-all">{result.event_type ?? '—'}</dd>
+              <dd className="col-span-2  break-all">{result.event_type ?? '—'}</dd>
 
               <dt className="text-muted-foreground">Instância</dt>
               <dd className="col-span-2">{result.instance_name ?? '—'}</dd>
@@ -95,12 +95,12 @@ export function RecheckResultDialog({
               </dd>
 
               <dt className="text-muted-foreground">Assinatura observada</dt>
-              <dd className="col-span-2 font-mono text-[10px] break-all">
+              <dd className="col-span-2  text-[10px] break-all">
                 {result.observed_signature ?? '—'}
               </dd>
 
               <dt className="text-muted-foreground">Assinatura recomputada</dt>
-              <dd className="col-span-2 font-mono text-[10px] break-all">
+              <dd className="col-span-2  text-[10px] break-all">
                 {result.computed_signature ?? '—'}
               </dd>
             </dl>

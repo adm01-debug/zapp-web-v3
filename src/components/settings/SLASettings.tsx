@@ -29,7 +29,7 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="sla_warning" className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <AlertTriangle className="w-4 h-4 text-warning-foreground" />
                 Limite de Risco (minutos)
               </Label>
               <Input
@@ -46,7 +46,7 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
 
             <div className="space-y-2">
               <Label htmlFor="sla_critical" className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-red-500" />
+                <ShieldAlert className="w-4 h-4 text-destructive-foreground" />
                 Limite Crítico/Violação (minutos)
               </Label>
               <Input
@@ -78,9 +78,9 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-amber-200 bg-amber-50/30">
+      <Card className="border-warning bg-warning/30">
         <CardHeader>
-          <div className="flex items-center gap-2 text-amber-600">
+          <div className="flex items-center gap-2 text-warning-foreground">
             <FlaskConical className="w-5 h-5" />
             <CardTitle>Modo de Simulação</CardTitle>
           </div>
@@ -89,7 +89,7 @@ export function SLASettings({ settings, updateSettings }: SLASettingsProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-amber-200">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-warning">
             <div className="space-y-0.5">
               <Label htmlFor="simulation-mode">Habilitar Dados Mock</Label>
               <p className="text-xs text-muted-foreground">

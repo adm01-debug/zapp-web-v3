@@ -236,7 +236,7 @@ export default function AdminEvolutionApiLogsPage() {
               {data?.map(row => (
                 <TableRow key={row.id}>
                   <TableCell className="whitespace-nowrap text-xs">{formatDate(row.created_at)}</TableCell>
-                  <TableCell className="font-mono text-xs">{row.action}</TableCell>
+                  <TableCell className=" text-xs">{row.action}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{row.method}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground">{row.instance_name ?? '—'}</TableCell>
                   <TableCell className="text-center">
@@ -267,7 +267,7 @@ export default function AdminEvolutionApiLogsPage() {
       <Dialog open={!!selected} onOpenChange={o => !o && setSelected(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="font-mono text-base">{selected?.action}</DialogTitle>
+            <DialogTitle className=" text-base">{selected?.action}</DialogTitle>
             <DialogDescription>
               {selected && `${selected.method} · ${formatDate(selected.created_at)} · ${selected.instance_name ?? 'sem instância'}`}
             </DialogDescription>
@@ -295,7 +295,7 @@ export default function AdminEvolutionApiLogsPage() {
                     ? (
                       <div className="space-y-1.5">
                         {selected.retry_reasons.map((r, i) => (
-                          <div key={i} className="text-xs bg-muted/30 rounded p-2 font-mono flex justify-between">
+                          <div key={i} className="text-xs bg-muted/30 rounded p-2  flex justify-between">
                             <span>Tentativa {r.attempt}: <strong>{r.reason}</strong></span>
                             {r.status && <Badge variant="outline" className="text-[10px]">HTTP {r.status}</Badge>}
                           </div>
@@ -305,7 +305,7 @@ export default function AdminEvolutionApiLogsPage() {
                     : <div className="text-xs text-muted-foreground italic">Nenhum retry necessário.</div>}
                 </div>
                 <div className="text-[10px] text-muted-foreground border-t pt-2">
-                  ID: <span className="font-mono">{selected.id}</span>
+                  ID: <span className="">{selected.id}</span>
                 </div>
               </div>
             </ScrollArea>

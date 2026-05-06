@@ -184,7 +184,7 @@ export function EvolutionApiIntegrationView() {
                 placeholder="https://evolution.seudominio.com.br"
                 value={config.evolution_api_url}
                 onChange={(e) => setConfig(prev => ({ ...prev, evolution_api_url: e.target.value }))}
-                className="font-mono text-sm"
+                className=" text-sm"
               />
               <p className="text-[11px] text-muted-foreground">Exemplo: https://evolution.atomicabr.com.br</p>
             </div>
@@ -201,7 +201,7 @@ export function EvolutionApiIntegrationView() {
                   placeholder="429683C4C977415CAAFCCE10F7D57E11"
                   value={config.evolution_api_key}
                   onChange={(e) => setConfig(prev => ({ ...prev, evolution_api_key: e.target.value }))}
-                  className="font-mono text-sm pr-10"
+                  className=" text-sm pr-10"
                 />
                 <Button
                   type="button"
@@ -236,15 +236,15 @@ export function EvolutionApiIntegrationView() {
                 className={`flex items-start gap-2 p-3 rounded-lg border ${
                   testResult === 'success'
                     ? 'bg-primary/5 border-primary/20'
-                    : 'bg-red-500/5 border-red-500/20'
+                    : 'bg-destructive/5 border-destructive/20'
                 }`}
               >
                 {testResult === 'success' ? (
                   <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 ) : (
-                  <XCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                  <XCircle className="w-4 h-4 text-destructive-foreground mt-0.5 shrink-0" />
                 )}
-                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-red-300'}`}>
+                <span className={`text-xs ${testResult === 'success' ? 'text-primary' : 'text-destructive-foreground'}`}>
                   {testMessage}
                 </span>
               </motion.div>

@@ -59,7 +59,7 @@ export function ChatToolPanels({ activeTool, onSetActiveTool, messages, contactI
 
       {activeTool === 'teamFiles' && (
         <Suspense fallback={null}>
-          <ToolPanel isOpen onClose={() => onSetActiveTool('teamFiles')} icon={<Share2 className="w-4 h-4 text-amber-600" />} title="Arquivos da Equipe" subtitle="Compartilhamento interno seguro" className="border-border/10 bg-background">
+          <ToolPanel isOpen onClose={() => onSetActiveTool('teamFiles')} icon={<Share2 className="w-4 h-4 text-warning-foreground" />} title="Arquivos da Equipe" subtitle="Compartilhamento interno seguro" className="border-border/10 bg-background">
             <TeamFiles contactId={contactId} />
           </ToolPanel>
         </Suspense>

@@ -180,7 +180,7 @@ export function ContactCard({
               href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono text-[11px] truncate hover:text-primary hover:underline transition-colors"
+              className=" text-[11px] truncate hover:text-primary hover:underline transition-colors"
               title="Abrir no WhatsApp"
             >
               <HighlightText text={contact.phone} highlight={searchQuery} />

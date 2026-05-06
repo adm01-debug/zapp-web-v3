@@ -167,14 +167,14 @@ export default function RoutePermissionsPage() {
                 <span>• Full System Access</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-bold border-b pb-1 text-red-500">ADMIN</span>
+                <span className="font-bold border-b pb-1 text-destructive-foreground">ADMIN</span>
                 <span>• Gestão de Roles</span>
                 <span>• Permissões Rotas</span>
                 <span>• Config. Globais</span>
                 <span>• Stress Test</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-bold border-b pb-1 text-orange-500">MANAGER</span>
+                <span className="font-bold border-b pb-1 text-warning-foreground">MANAGER</span>
                 <span>• Relatórios Avançados</span>
                 <span>• Gestão Equipes</span>
                 <span>• Dashboard SLA</span>
@@ -264,7 +264,7 @@ export default function RoutePermissionsPage() {
                     return (
                       <TableRow key={row.path}>
                         <TableCell>
-                          <div className="font-mono text-sm">{row.path}</div>
+                          <div className=" text-sm">{row.path}</div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2">
                             {row.description}
                             {row.is_system && (

@@ -174,7 +174,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
           />
 
           {contact.phone && (
-            <p className="text-sm text-muted-foreground font-mono mt-0.5">
+            <p className="text-sm text-muted-foreground  mt-0.5">
               {formatPhoneBR(contact.phone)}
             </p>
           )}

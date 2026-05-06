@@ -19,10 +19,10 @@ interface ContactSLAIndicatorProps {
 
 const SLA_CONFIG: Record<SLAStatus, { label: string; icon: React.ReactNode; colorClass: string }> = {
   within:   { label: 'Dentro do SLA', icon: <CheckCircle2 className="h-3 w-3" />, colorClass: 'text-primary border-primary bg-primary/10 dark:bg-primary/30 dark:text-primary' },
-  warning:  { label: 'SLA próximo',   icon: <Timer className="h-3 w-3" />,        colorClass: 'text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 animate-pulse' },
-  breached: { label: 'SLA estourado', icon: <AlertTriangle className="h-3 w-3" />, colorClass: 'text-red-700 border-red-300 bg-red-50 dark:bg-red-950/30 dark:text-red-400' },
+  warning:  { label: 'SLA próximo',   icon: <Timer className="h-3 w-3" />,        colorClass: 'text-warning-foreground border-warning bg-warning dark:bg-warning/30 dark:text-warning-foreground animate-pulse' },
+  breached: { label: 'SLA estourado', icon: <AlertTriangle className="h-3 w-3" />, colorClass: 'text-destructive-foreground border-destructive bg-destructive dark:bg-destructive/30 dark:text-destructive-foreground' },
   paused:   { label: 'SLA pausado',   icon: <Pause className="h-3 w-3" />,         colorClass: 'text-muted-foreground border-border bg-muted dark:bg-muted/10' },
-  none:     { label: 'Sem SLA',       icon: <Clock className="h-3 w-3" />,         colorClass: 'text-muted-foreground border-gray-200' },
+  none:     { label: 'Sem SLA',       icon: <Clock className="h-3 w-3" />,         colorClass: 'text-muted-foreground border-muted' },
 };
 
 function formatRemaining(minutes: number): string {
@@ -48,7 +48,7 @@ export const ContactSLAIndicator: React.FC<ContactSLAIndicatorProps> = ({
       {config.icon}
       <span>{config.label}</span>
       {remainingMinutes !== undefined && (
-        <span className="font-mono text-[10px]">({formatRemaining(remainingMinutes)})</span>
+        <span className=" text-[10px]">({formatRemaining(remainingMinutes)})</span>
       )}
     </Badge>
   );

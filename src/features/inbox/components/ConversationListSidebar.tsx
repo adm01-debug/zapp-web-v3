@@ -143,7 +143,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               )}>Inbox</h2>
               <span
                 title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
-                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
+                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-destructive shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
                 aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
               />
               <RealtimeContactsIndicator />
@@ -229,7 +229,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             )}
             {!contactSearch && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 opacity-40 group-focus-within:opacity-0 transition-opacity duration-300">
-                <kbd className="h-4 px-1 rounded bg-muted text-[9px] font-mono flex items-center border border-border/50 text-muted-foreground">K</kbd>
+                <kbd className="h-4 px-1 rounded bg-muted text-[9px]  flex items-center border border-border/50 text-muted-foreground">K</kbd>
               </div>
             )}
           </div>
@@ -245,7 +245,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               'shrink-0 relative active:scale-90 transition-all duration-150',
               isMobile ? 'w-8 h-8 rounded-lg' : 'w-7 h-7 rounded-md',
               inbox.statusFilter === 'unread'
-                ? 'bg-orange-500 text-foreground hover:bg-orange-600'
+                ? 'bg-warning text-foreground hover:bg-warning'
                 : 'hover:bg-muted/60 text-muted-foreground'
             )}
             aria-label={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Mostrar apenas não lidas'}
@@ -254,7 +254,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             <MessageCircle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
             {conversationsWithUnreadCount > 0 && inbox.statusFilter !== 'unread' && (
               <span
-                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-orange-500 text-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
+                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-warning text-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
               >
                 {conversationsWithUnreadCount > 99 ? '99+' : conversationsWithUnreadCount}
               </span>

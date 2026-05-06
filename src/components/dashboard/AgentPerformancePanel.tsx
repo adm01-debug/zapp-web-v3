@@ -107,7 +107,7 @@ export function AgentPerformancePanel() {
                 transition={{ delay: i * 0.05 }}
                 className={cn(
                   "p-3 rounded-lg border hover:shadow-md transition-all",
-                  i === 0 && "bg-gradient-to-r from-warning/5 to-transparent border-yellow-500/30",
+                  i === 0 && "bg-gradient-to-r from-warning/5 to-transparent border-warning/30",
                   i === 1 && "bg-gradient-to-r from-gray-400/5 to-transparent border-border/20",
                   i === 2 && "bg-gradient-to-r from-warning/5 to-transparent border-warning/20"
                 )}

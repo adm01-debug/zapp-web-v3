@@ -124,7 +124,7 @@ const ContactRow = memo(({
 
       {/* Contact Details */}
       <div className="hidden md:flex flex-col min-w-[140px] max-w-[200px]">
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground ">
           <Phone className="w-3 h-3" />
           <HighlightText text={contact.phone} highlight={searchQuery} />
         </div>

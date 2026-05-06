@@ -42,7 +42,7 @@ export function SearchInsightsTables({ data }: Props) {
               <TableBody>
                 {data.top_queries.slice(0, 20).map((q) => (
                   <TableRow key={q.query}>
-                    <TableCell className="font-mono text-xs max-w-[280px] truncate" title={q.query}>{q.query}</TableCell>
+                    <TableCell className=" text-xs max-w-[280px] truncate" title={q.query}>{q.query}</TableCell>
                     <TableCell className="text-right tabular-nums">{q.count}</TableCell>
                     <TableCell className="text-right tabular-nums">{q.avg_results.toFixed(1)}</TableCell>
                   </TableRow>
@@ -79,7 +79,7 @@ export function SearchInsightsTables({ data }: Props) {
               <TableBody>
                 {data.zero_result_queries.slice(0, 20).map((q) => (
                   <TableRow key={q.query}>
-                    <TableCell className="font-mono text-xs max-w-[280px] truncate" title={q.query}>{q.query}</TableCell>
+                    <TableCell className=" text-xs max-w-[280px] truncate" title={q.query}>{q.query}</TableCell>
                     <TableCell className="text-right tabular-nums">{q.count}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">{safeDate(q.last_at)}</TableCell>
                   </TableRow>

@@ -272,7 +272,7 @@ export default function AdminAutomationLogsPage() {
                     {new Date(r.created_at).toLocaleString()}
                   </TableCell>
                   <TableCell className="font-medium">{ruleName}</TableCell>
-                  <TableCell className="text-xs font-mono truncate max-w-[180px]">
+                  <TableCell className="text-xs  truncate max-w-[180px]">
                     {r.remote_jid}
                   </TableCell>
                   <TableCell><Badge variant="outline" className="text-xs">{triggerType}</Badge></TableCell>
@@ -393,7 +393,7 @@ function KV({ k, v, mono = false }: { k: string; v: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-3 text-xs">
       <span className="text-muted-foreground">{k}</span>
-      <span className={mono ? "font-mono truncate max-w-[280px]" : "truncate max-w-[280px]"}>{v}</span>
+      <span className={mono ? " truncate max-w-[280px]" : "truncate max-w-[280px]"}>{v}</span>
     </div>
   );
 }

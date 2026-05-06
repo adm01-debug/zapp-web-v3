@@ -347,7 +347,7 @@ export default function HmacSelfTestPage() {
                   <div className="text-muted-foreground">
                     {PHASE_LABEL[result.failed_phase]}.
                     {result.request_id && (
-                      <> Use <code className="font-mono">req={result.request_id.slice(0, 8)}…</code> para correlacionar nos logs.</>
+                      <> Use <code className="">req={result.request_id.slice(0, 8)}…</code> para correlacionar nos logs.</>
                     )}
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function HmacSelfTestPage() {
             {lastRunAt && (
               <div className="text-xs text-muted-foreground" data-testid="hmac-selftest-last-run">
                 Última execução: {lastRunAt.toLocaleString('pt-BR')}
-                {result.request_id && <> · req <code className="font-mono">{result.request_id.slice(0, 8)}</code></>}
+                {result.request_id && <> · req <code className="">{result.request_id.slice(0, 8)}</code></>}
               </div>
             )}
           </CardContent>

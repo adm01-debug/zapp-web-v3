@@ -344,7 +344,7 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
                   onClick={() => setWhatsappMode('evolution')}
                 >
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2", whatsappMode === 'evolution' ? "bg-primary/20" : "bg-muted")}>
-                    <Globe className="w-5 h-5 text-green-500" />
+                    <Globe className="w-5 h-5 text-success-foreground" />
                   </div>
                   <p className="text-xs font-bold">Não-Oficial</p>
                   <p className="text-[10px] text-muted-foreground text-center mt-1">Conexão via QR Code</p>
@@ -413,11 +413,11 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
                 </div>
               )}
 
-              <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 flex gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
+              <div className="rounded-xl border border-warning/20 bg-warning/5 p-3 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-yellow-700">Atenção sobre API Oficial</p>
-                  <p className="text-[10px] text-yellow-600 leading-relaxed">
+                  <p className="text-xs font-bold text-warning">Atenção sobre API Oficial</p>
+                  <p className="text-[10px] text-warning leading-relaxed">
                     A API Oficial requer aprovação do Facebook Business Manager. O uso indevido pode resultar no banimento do número. 
                     Recomendamos iniciar com o modo Não-Oficial para testes.
                   </p>

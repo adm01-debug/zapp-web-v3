@@ -473,7 +473,7 @@ export default function AdminStressTestPage() {
               checked={simulateTokenExpiration} 
               onChange={(e) => setSimulateTokenExpiration(e.target.checked)}
               disabled={isRunning}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-muted text-primary focus:ring-primary"
             />
             <Label htmlFor="token-sim" className="cursor-pointer">
               Simular Expiração de Tokens (Mídias Privadas)
@@ -615,7 +615,7 @@ export default function AdminStressTestPage() {
             {results.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-12">Nenhum envio ainda.</p>
             ) : (
-              <ul className="space-y-1 font-mono text-xs">
+              <ul className="space-y-1  text-xs">
                 {results.map((r) => (
                   <li
                     key={`${r.idx}-${r.ts}`}
@@ -656,7 +656,7 @@ export default function AdminStressTestPage() {
                 Você está prestes a enviar <strong>{total} mensagens reais</strong> para o número{' '}
                 <strong>{phone}</strong> via instância <strong>{instance}</strong>.
               </span>
-              <span className="block text-amber-600 dark:text-amber-400">
+              <span className="block text-warning-foreground dark:text-warning-foreground">
                 Risco: bloqueio anti-spam da Meta na instância. Tempo estimado: ~{etaMin} min.
               </span>
               <span className="block pt-2">
@@ -723,7 +723,7 @@ export default function AdminStressTestPage() {
 
             <div className="p-4 bg-background rounded-lg border">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-yellow-500" /> Recomendações Estratégicas
+                <ShieldAlert className="h-4 w-4 text-warning" /> Recomendações Estratégicas
               </h4>
               <ul className="text-sm space-y-2 list-disc pl-5 text-muted-foreground">
                 {results.filter(r => r.status === 'fail').length > results.length * 0.1 ? (

@@ -27,11 +27,11 @@ interface Note {
 
 const NOTE_TYPES = [
   { value: 'general',  label: '📝 Geral',     color: 'bg-muted text-muted-foreground' },
-  { value: 'call',     label: '📞 Ligação',   color: 'bg-blue-100 text-blue-700' },
-  { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-purple-100 text-purple-700' },
+  { value: 'call',     label: '📞 Ligação',   color: 'bg-primary text-primary-foreground' },
+  { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-primary text-primary' },
   { value: 'email',    label: '📧 E-mail',    color: 'bg-primary text-primary' },
-  { value: 'task',     label: '✅ Tarefa',    color: 'bg-amber-100 text-amber-700' },
-  { value: 'lgpd',     label: '⚖️ LGPD',      color: 'bg-red-100 text-red-700' },
+  { value: 'task',     label: '✅ Tarefa',    color: 'bg-warning text-warning-foreground' },
+  { value: 'lgpd',     label: '⚖️ LGPD',      color: 'bg-destructive text-destructive-foreground' },
 ];
 
 const TYPE_COLOR: Record<string, string> = Object.fromEntries(NOTE_TYPES.map((t) => [t.value, t.color]));
@@ -145,13 +145,13 @@ export const ContactNotesPanel: React.FC<{ contactId: string }> = ({ contactId }
         {notes.map((note) => (
           <div
             key={note.id}
-            className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${note.is_pinned ? 'bg-amber-50 border-amber-200' : 'bg-muted/20'}`}
+            className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${note.is_pinned ? 'bg-warning border-warning' : 'bg-muted/20'}`}
           >
             <div className="flex items-center gap-2">
               <Badge className={`text-xs px-1.5 py-0 h-4 ${TYPE_COLOR[note.note_type] ?? 'bg-muted'}`}>
                 {TYPE_LABEL[note.note_type] ?? note.note_type}
               </Badge>
-              {note.is_pinned && <span title="Nota fixada" className="inline-flex"><Pin className="h-3 w-3 text-amber-600" /></span>}
+              {note.is_pinned && <span title="Nota fixada" className="inline-flex"><Pin className="h-3 w-3 text-warning-foreground" /></span>}
               <span className="ml-auto text-muted-foreground/60">
                 {new Date(note.created_at).toLocaleDateString('pt-BR', {
                   day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',

@@ -69,7 +69,7 @@ export function MonitoringSLAPanel({ uptime, instanceUptimes }: Props) {
               <p className="text-[10px] text-muted-foreground">Total Checks</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/30 text-center">
-              <Zap className="w-4 h-4 mx-auto text-amber-500 mb-1" />
+              <Zap className="w-4 h-4 mx-auto text-warning-foreground mb-1" />
               <p className="text-xl font-bold">{uptime.totalChecks - uptime.healthyChecks}</p>
               <p className="text-[10px] text-muted-foreground">Falhas</p>
             </div>
@@ -122,7 +122,7 @@ export function MonitoringSLAPanel({ uptime, instanceUptimes }: Props) {
                         <p className={cn(
                           'text-sm font-bold',
                           inst.avgLatency < 300 ? 'text-primary' :
-                          inst.avgLatency < 800 ? 'text-amber-500' : 'text-destructive'
+                          inst.avgLatency < 800 ? 'text-warning-foreground' : 'text-destructive'
                         )}>
                           {inst.avgLatency}ms
                         </p>

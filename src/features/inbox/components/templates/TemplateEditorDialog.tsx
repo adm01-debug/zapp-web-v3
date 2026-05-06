@@ -130,7 +130,7 @@ export function TemplateEditorDialog({ open, onOpenChange, template, onSave }: T
           </div>
           <div className="space-y-2">
             <Label>Conteúdo</Label>
-            <Textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Digite sua mensagem... Use {{variavel}} para inserir dados dinâmicos" rows={6} className="font-mono text-sm" />
+            <Textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Digite sua mensagem... Use {{variavel}} para inserir dados dinâmicos" rows={6} className=" text-sm" />
             <p className="text-xs text-muted-foreground">Variáveis detectadas: {extractVariables(content).length > 0 ? extractVariables(content).map(v => `{{${v}}}`).join(', ') : 'Nenhuma'}</p>
           </div>
           {content && (

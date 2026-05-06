@@ -225,7 +225,7 @@ export default function AdminWhatsAppModePage() {
             <div className="space-y-2">
               <Label>Callback URL do Webhook</Label>
               <div className="flex gap-2">
-                <Input readOnly value={webhookUrl} className="font-mono text-xs" />
+                <Input readOnly value={webhookUrl} className=" text-xs" />
                 <Button variant="outline" size="icon" onClick={() => copy(webhookUrl)}>
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -274,7 +274,7 @@ export default function AdminWhatsAppModePage() {
                   <div className="flex items-center gap-2">
                     {verify.handshake.status === "pass" && <CheckCircle2 className="h-4 w-4 text-primary" />}
                     {verify.handshake.status === "fail" && <XCircle className="h-4 w-4 text-destructive" />}
-                    {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                    {verify.handshake.status === "skip" && <AlertTriangle className="h-4 w-4 text-warning-foreground" />}
                     <span className="text-sm font-medium">1. Handshake do Verify Token</span>
                   </div>
                   <Badge variant={verify.handshake.status === "pass" ? "default" : verify.handshake.status === "skip" ? "secondary" : "destructive"}>
@@ -302,7 +302,7 @@ export default function AdminWhatsAppModePage() {
                   <div className="flex items-center gap-2">
                     {verify.delivery.status === "pass"
                       ? <CheckCircle2 className="h-4 w-4 text-primary" />
-                      : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                      : <AlertTriangle className="h-4 w-4 text-warning-foreground" />}
                     <span className="text-sm font-medium">2. Recebimento de eventos (últimas 24h)</span>
                   </div>
                   <div className="flex gap-1.5 flex-wrap">
@@ -330,7 +330,7 @@ export default function AdminWhatsAppModePage() {
                   <summary className="text-xs font-medium cursor-pointer">Atividade recente (últimos 10 pings)</summary>
                   <ul className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                     {verify.delivery.recent.map((p, i) => (
-                      <li key={i} className="text-[11px] flex items-center justify-between gap-2 font-mono">
+                      <li key={i} className="text-[11px] flex items-center justify-between gap-2 ">
                         <span className="flex items-center gap-2">
                           <Badge
                             variant={p.kind === "event" ? "default" : p.kind.startsWith("invalid") ? "destructive" : "secondary"}

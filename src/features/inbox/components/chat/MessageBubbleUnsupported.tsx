@@ -60,7 +60,7 @@ export function MessageBubbleUnsupported({
           <span className="font-semibold">{extracted.label}</span>
           <code
             className={cn(
-              'text-[10px] px-1 py-px rounded font-mono',
+              'text-[10px] px-1 py-px rounded ',
               isSent ? 'bg-primary-foreground/15' : 'bg-muted',
             )}
           >
@@ -77,7 +77,7 @@ export function MessageBubbleUnsupported({
         </p>
         {rawContent ? (
           <pre className={cn(
-            'mt-1.5 max-h-24 overflow-auto whitespace-pre-wrap break-words text-[11px] font-mono px-2 py-1 rounded',
+            'mt-1.5 max-h-24 overflow-auto whitespace-pre-wrap break-words text-[11px]  px-2 py-1 rounded',
             isSent ? 'bg-primary-foreground/10' : 'bg-background/60 border border-border/30',
           )}>
             {rawContent.length > 240 ? `${rawContent.slice(0, 240)}…` : rawContent}

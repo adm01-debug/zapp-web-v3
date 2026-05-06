@@ -69,7 +69,7 @@ export function AgentRecentSendsPopover({ agentName, sends }: Props) {
             {sends.map((s) => (
               <li key={s.idem_key} className="p-3 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-mono text-muted-foreground tabular-nums">
+                  <span className="text-xs  text-muted-foreground tabular-nums">
                     {formatTime(s.created_at)}
                   </span>
                   <div className="flex items-center gap-1.5">
@@ -88,7 +88,7 @@ export function AgentRecentSendsPopover({ agentName, sends }: Props) {
                         type="button"
                         onClick={() => copyKey(s.idem_key)}
                         className={cn(
-                          'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-mono',
+                          'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ',
                           'bg-muted/40 hover:bg-muted text-muted-foreground transition-colors',
                           'truncate max-w-[220px]',
                         )}
@@ -98,7 +98,7 @@ export function AgentRecentSendsPopover({ agentName, sends }: Props) {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p className="text-xs font-mono">{s.idem_key}</p>
+                      <p className="text-xs ">{s.idem_key}</p>
                       <p className="text-[10px] text-muted-foreground">Clique para copiar</p>
                     </TooltipContent>
                   </Tooltip>

@@ -302,7 +302,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
             <motion.div
               animate={isPaused ? { scale: 1 } : { scale: [1, 1.2, 1] }}
               transition={{ duration: 1, repeat: isPaused ? 0 : Infinity }}
-              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-amber-500" : "bg-rose-500")}
+              className={cn("w-3 h-3 rounded-full shrink-0 shadow-lg", isPaused ? "bg-warning" : "bg-destructive")}
             />
             <div className="flex-1 flex items-center gap-3">
               {/* Waveform Visualization Grid */}
@@ -325,7 +325,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                     }}
                     className={cn(
                       "w-1 rounded-full transition-colors", 
-                      isPaused ? "bg-amber-500/60" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]"
+                      isPaused ? "bg-warning/60" : "bg-destructive shadow-[0_0_8px_rgba(244,63,94,0.4)]"
                     )}
                   />
                 ))}
@@ -345,8 +345,8 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               {/* Timer & Status */}
               <div className="flex flex-col items-end min-w-[80px]">
                 <span className={cn(
-                  "text-lg font-mono font-black tabular-nums tracking-tight",
-                  isPaused ? "text-amber-600" : "text-rose-600"
+                  "text-lg  font-black tabular-nums tracking-tight",
+                  isPaused ? "text-warning-foreground" : "text-destructive"
                 )}>
                   {formatDuration(duration)}
                 </span>
@@ -392,7 +392,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
                 </motion.div>
               </div>
-              <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums min-w-[90px] text-right">
+              <span className="text-xs  font-bold text-muted-foreground tabular-nums min-w-[90px] text-right">
                 {formatDuration(Math.floor(currentTime))} / {formatDuration(duration)}
               </span>
               <AudioVolumeControl volume={volume} onChange={setVolume} size="sm" />
@@ -454,7 +454,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       <span className="text-sm font-bold uppercase tracking-widest text-primary">Enviando Áudio...</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-primary">{uploadProgress}%</span>
+                    <span className="text-xs  font-bold text-primary">{uploadProgress}%</span>
                   </div>
                   <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
                     <motion.div 
@@ -479,8 +479,8 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
               className={cn(
                 "h-9 w-9 border-2",
                 isPaused 
-                  ? "border-amber-500 text-amber-500 hover:bg-amber-50" 
-                  : "border-rose-500 text-rose-500 hover:bg-rose-50"
+                  ? "border-warning text-warning-foreground hover:bg-warning" 
+                  : "border-destructive text-destructive hover:bg-destructive"
               )}
               onClick={isPaused ? resumeRecording : pauseRecording}
               aria-label={isPaused ? "Retomar gravação" : "Pausar gravação"}
@@ -492,7 +492,7 @@ export function AudioRecorder({ onSend, onCancel }: AudioRecorderProps) {
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               size="icon"
-              className="bg-rose-600 hover:bg-rose-700 shadow-md h-9 w-9"
+              className="bg-destructive hover:bg-destructive shadow-md h-9 w-9"
               onClick={stopRecording}
               disabled={isUploading}
               aria-label="Concluir gravação"

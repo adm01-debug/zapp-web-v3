@@ -54,7 +54,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           Tentar novamente
         </button>
         {import.meta.env.DEV && (
-          <pre className="mt-4 p-3 bg-muted text-destructive rounded-lg overflow-auto text-xs font-mono">
+          <pre className="mt-4 p-3 bg-muted text-destructive rounded-lg overflow-auto text-xs ">
             {String(error?.toString?.() ?? error)}
           </pre>
         )}

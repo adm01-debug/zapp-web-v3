@@ -43,7 +43,7 @@ export function InstanceStatusCards({
                   locale: ptBR,
                 })}
               </div>
-              <div className="text-xs text-muted-foreground mt-1 font-mono truncate">
+              <div className="text-xs text-muted-foreground mt-1  truncate">
                 {status.lastEvent.type}
               </div>
             </>

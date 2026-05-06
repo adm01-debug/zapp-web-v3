@@ -252,7 +252,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
           <h4 className="text-sm font-semibold text-foreground">Alterar Voz</h4>
           {isConverting && (
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-[10px] font-mono text-primary">{conversionProgress}%</span>
+              <span className="text-[10px]  text-primary">{conversionProgress}%</span>
               <Loader2 className="w-3 h-3 text-primary animate-spin" />
             </div>
           )}
@@ -265,18 +265,18 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="p-3 bg-amber-500/10 border-b border-amber-500/20"
+              className="p-3 bg-warning/10 border-b border-warning/20"
             >
               <Alert variant="default" className="bg-transparent border-none p-0">
-                <ShieldAlert className="h-4 w-4 text-amber-600" />
-                <AlertTitle className="text-xs font-bold text-amber-700">Aviso de Voz Clonada</AlertTitle>
-                <AlertDescription className="text-[10px] leading-relaxed text-amber-800">
+                <ShieldAlert className="h-4 w-4 text-warning-foreground" />
+                <AlertTitle className="text-xs font-bold text-warning-foreground">Aviso de Voz Clonada</AlertTitle>
+                <AlertDescription className="text-[10px] leading-relaxed text-warning-foreground">
                   Esta voz parece ser uma voz clonada ou celebridade. Certifique-se de ter autorização legal para uso comercial ou pessoal desta imagem/voz.
                 </AlertDescription>
               </Alert>
               <div className="flex gap-2 mt-2">
                 <Button size="sm" variant="outline" className="h-6 text-[9px] flex-1" onClick={() => setShowCloneWarning(false)}>Cancelar</Button>
-                <Button size="sm" className="h-6 text-[9px] flex-1 bg-amber-600 hover:bg-amber-700" onClick={proceedWithClonedVoice}>Eu tenho autorização</Button>
+                <Button size="sm" className="h-6 text-[9px] flex-1 bg-warning hover:bg-warning" onClick={proceedWithClonedVoice}>Eu tenho autorização</Button>
               </div>
             </motion.div>
           )}

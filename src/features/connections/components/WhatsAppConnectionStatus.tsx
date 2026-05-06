@@ -33,7 +33,7 @@ export function WhatsAppConnectionStatus() {
         {issues > 0 ? (
           <Badge 
             variant="outline" 
-            className="h-5 px-1.5 border-red-500/20 bg-red-500/5 text-red-500 gap-1 hover:bg-red-500/10 transition-colors"
+            className="h-5 px-1.5 border-destructive/20 bg-destructive/5 text-destructive-foreground gap-1 hover:bg-destructive/10 transition-colors"
             title={`${issues} conexão(ões) com problema`}
           >
             <AlertCircle className="w-3 h-3" />
