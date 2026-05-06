@@ -2,17 +2,17 @@
  * Utilitários de criptografia leve para o frontend.
  */
 export async function buildFileHash(content: string | Blob): Promise<string> {
-  let msgUint8: Uint8Array;
+  let arrayBuffer: ArrayBuffer;
   
   if (content instanceof Blob) {
-    const arrayBuffer = await content.arrayBuffer();
-    msgUint8 = new Uint8Array(arrayBuffer);
+    arrayBuffer = await content.arrayBuffer();
   } else {
-    msgUint8 = new TextEncoder().encode(content);
+    arrayBuffer = new TextEncoder().encode(content).buffer;
   }
   
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
 
