@@ -16,7 +16,7 @@ import { useRealtimeContacts } from '@/features/inbox';
 import { useRealtimeFallbackRefetch } from '@/features/inbox';
 import { useSLAAlerts } from '@/features/sla/hooks/useSLAAlerts';
 import { useDepartmentAgents } from '@/features/auth';
-import { useEvolutionAutoReconnection } from '@/hooks/useEvolutionAutoReconnection';
+import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
 import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
