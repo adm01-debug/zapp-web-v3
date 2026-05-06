@@ -46,7 +46,7 @@ async function fetchOwnerJid(baseUrl: string, key: string, instanceName: string,
     // pode vir como array ou objeto
     const entry: FetchInstanceShape = Array.isArray(data) ? data[0] : data;
     if (!entry) return null;
-    const owner = entry.instance?.owner ?? entry.owner ?? null;
+    const owner = entry.instance?.ownerJid ?? entry.instance?.owner ?? entry.ownerJid ?? entry.owner ?? null;
     return owner && typeof owner === 'string' && owner.length > 0 ? owner : null;
   } catch (e) {
     log.warn('fetchInstances threw', { instanceName, error: e instanceof Error ? e.message : String(e) });
