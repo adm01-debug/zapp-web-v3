@@ -15,7 +15,7 @@ O Zap Webb é um CRM WhatsApp multi-atendente. O frontend precisa de DUAS conex�
 | Conexão | URL | Para quê |
 |---------|-----|----------|
 | **Supabase** (leitura + Realtime) | `https://supabase.atomicabr.com.br` | Ler contatos, conversas, mensagens, receber updates em tempo real |
-| **Evolution API** (escrita) | `https://evo.atomicabr.com.br` | Enviar mensagens, mídia, status de leitura |
+| **Evolution API** (escrita) | `https://evolution.atomicabr.com.br` | Enviar mensagens, mídia, status de leitura |
 
 ---
 
@@ -31,8 +31,8 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iL
 ### Evolution API (envio de mensagens)
 
 ```
-EVOLUTION_API_URL=https://evo.atomicabr.com.br
-EVOLUTION_API_KEY=(será fornecida separadamente)
+EVOLUTION_API_URL=https://evolution.atomicabr.com.br
+EVOLUTION_API_KEY=429683C4C977415CAAFCCE10F7D57E11
 INSTANCE_NAME=wpp2  (instância principal de produção)
 ```
 
@@ -373,12 +373,12 @@ Para ENVIAR mensagens, o frontend chama a Evolution API diretamente via HTTP:
 
 ```typescript
 const response = await fetch(
-  'https://evo.atomicabr.com.br/message/sendText/wpp2',
+  'https://evolution.atomicabr.com.br/message/sendText/wpp2',
   {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': EVOLUTION_API_KEY
+      'apikey': '429683C4C977415CAAFCCE10F7D57E11'
     },
     body: JSON.stringify({
       number: '5562998001001',    // telefone SEM @s.whatsapp.net
@@ -391,9 +391,9 @@ const response = await fetch(
 ### 3.2 — Enviar imagem
 
 ```typescript
-await fetch('https://evo.atomicabr.com.br/message/sendMedia/wpp2', {
+await fetch('https://evolution.atomicabr.com.br/message/sendMedia/wpp2', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+  headers: { 'Content-Type': 'application/json', 'apikey': '429683C4C977415CAAFCCE10F7D57E11' },
   body: JSON.stringify({
     number: '5562998001001',
     mediatype: 'image',
@@ -406,9 +406,9 @@ await fetch('https://evo.atomicabr.com.br/message/sendMedia/wpp2', {
 ### 3.3 — Enviar áudio (PTT voice note)
 
 ```typescript
-await fetch('https://evo.atomicabr.com.br/message/sendWhatsAppAudio/wpp2', {
+await fetch('https://evolution.atomicabr.com.br/message/sendWhatsAppAudio/wpp2', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+  headers: { 'Content-Type': 'application/json', 'apikey': '429683C4C977415CAAFCCE10F7D57E11' },
   body: JSON.stringify({
     number: '5562998001001',
     audio: 'https://url-do-audio.com/audio.ogg'  // URL pública do áudio
@@ -419,9 +419,9 @@ await fetch('https://evo.atomicabr.com.br/message/sendWhatsAppAudio/wpp2', {
 ### 3.4 — Enviar documento
 
 ```typescript
-await fetch('https://evo.atomicabr.com.br/message/sendMedia/wpp2', {
+await fetch('https://evolution.atomicabr.com.br/message/sendMedia/wpp2', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+  headers: { 'Content-Type': 'application/json', 'apikey': '429683C4C977415CAAFCCE10F7D57E11' },
   body: JSON.stringify({
     number: '5562998001001',
     mediatype: 'document',
@@ -435,9 +435,9 @@ await fetch('https://evo.atomicabr.com.br/message/sendMedia/wpp2', {
 ### 3.5 — Marcar conversa como lida
 
 ```typescript
-await fetch('https://evo.atomicabr.com.br/chat/markChatUnread/wpp2', {
+await fetch('https://evolution.atomicabr.com.br/chat/markChatUnread/wpp2', {
   method: 'PUT',
-  headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+  headers: { 'Content-Type': 'application/json', 'apikey': '429683C4C977415CAAFCCE10F7D57E11' },
   body: JSON.stringify({
     number: '5562998001001',
     unread: false  // false = marcar como lida
