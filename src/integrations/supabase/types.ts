@@ -5059,6 +5059,33 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_outbox: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       evolution_retry_metrics: {
         Row: {
           action: string
@@ -6734,6 +6761,7 @@ export type Database = {
           retry_attempt: number | null
           retry_total: number | null
           sender: string
+          sequence_number: number
           status: string | null
           status_updated_at: string | null
           transcription: string | null
@@ -6761,6 +6789,7 @@ export type Database = {
           retry_attempt?: number | null
           retry_total?: number | null
           sender: string
+          sequence_number?: number
           status?: string | null
           status_updated_at?: string | null
           transcription?: string | null
@@ -6788,6 +6817,7 @@ export type Database = {
           retry_attempt?: number | null
           retry_total?: number | null
           sender?: string
+          sequence_number?: number
           status?: string | null
           status_updated_at?: string | null
           transcription?: string | null
@@ -7696,6 +7726,7 @@ export type Database = {
           theme_config: Json | null
           updated_at: string
           user_id: string
+          version: number | null
         }
         Insert: {
           access_level?: string | null
@@ -7723,6 +7754,7 @@ export type Database = {
           theme_config?: Json | null
           updated_at?: string
           user_id: string
+          version?: number | null
         }
         Update: {
           access_level?: string | null
@@ -7750,6 +7782,7 @@ export type Database = {
           theme_config?: Json | null
           updated_at?: string
           user_id?: string
+          version?: number | null
         }
         Relationships: [
           {
@@ -14965,6 +14998,7 @@ export type Database = {
           theme_config: Json | null
           updated_at: string
           user_id: string
+          version: number | null
         }
         SetofOptions: {
           from: "*"

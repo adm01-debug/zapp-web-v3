@@ -38,14 +38,14 @@ export const ContactSidebarPanel: React.FC<Props> = ({ contact, onEdit, onOpenCh
 
   // Provide defaults for potentially missing fields to avoid crashes when passed partial data
   const safeContact = {
-    tags: [],
-    lead_status: 'novo',
-    lead_score: 0,
-    version: 1,
-    created_at: new Date().toISOString(),
-    instance_name: 'default',
-    remote_jid: '',
-    ...contact
+    ...contact,
+    tags: contact.tags || [],
+    lead_status: contact.lead_status || 'novo',
+    lead_score: contact.lead_score || 0,
+    version: contact.version || 1,
+    created_at: contact.created_at || new Date().toISOString(),
+    instance_name: contact.instance_name || 'default',
+    remote_jid: contact.remote_jid || '',
   };
 
   return (

@@ -43,7 +43,16 @@ export function CampaignABTesting({ campaignId }: CampaignABTestingProps) {
       .select('*')
       .eq('campaign_id', campaignId)
       .order('created_at');
-    if (data) setVariants(data);
+    if (data) {
+      const typedVariants: ABVariant[] = (data as any[]).map(v => ({
+        ...v,
+        send_count: v.send_count || 0,
+        delivered_count: v.delivered_count || 0,
+        read_count: v.read_count || 0,
+        response_count: v.response_count || 0
+      }));
+      setVariants(typedVariants);
+    }
     setLoading(false);
   };
 
