@@ -658,6 +658,66 @@ export default function AdminStressTestPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {(status === 'completed' || status === 'failed' || status === 'aborted') && results.length > 0 && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" /> Relatório para Time Comercial
+            </CardTitle>
+            <CardDescription>Análise agregada de falhas e eventos do teste.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Custo Estimado Desperdiçado</p>
+                <p className="text-2xl font-bold text-destructive">
+                  R$ {(results.filter(r => r.status === 'fail').length * 0.15).toFixed(2)}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">Baseado em R$ 0,15 por tentativa falha (WA API + Hub)</p>
+              </div>
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Ponto de Estrangulamento</p>
+                <p className="text-xl font-bold">
+                  {results.filter(r => r.status === 'fail').length > 0 
+                    ? results.find(r => r.status === 'fail')?.type === 'image' || results.find(r => r.status === 'fail')?.type === 'video'
+                      ? 'Processamento de Mídia'
+                      : 'Latência de Rede / Instância'
+                    : 'Nenhum Detectado'}
+                </p>
+              </div>
+              <div className="p-4 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase">Confiabilidade Mídia</p>
+                <p className="text-2xl font-bold text-primary">
+                  {results.filter(r => r.accessibility).length > 0
+                    ? `${Math.round((results.filter(r => r.accessibility?.reachable).length / results.filter(r => r.accessibility).length) * 100)}%`
+                    : '100%'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-background rounded-lg border">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-yellow-500" /> Recomendações Estratégicas
+              </h4>
+              <ul className="text-sm space-y-2 list-disc pl-5 text-muted-foreground">
+                {results.filter(r => r.status === 'fail').length > results.length * 0.1 ? (
+                  <li className="text-destructive font-medium">Urgente: Taxa de erro acima de 10%. Reduzir volume de outbound ou trocar instância.</li>
+                ) : (
+                  <li>Instância estável para o volume atual. Possibilidade de escalar em 20%.</li>
+                )}
+                {results.filter(r => r.accessibility && !r.accessibility.reachable).length > 0 && (
+                  <li>Detectada falha em {results.filter(r => r.accessibility && !r.accessibility.reachable).length} arquivos de mídia. Verificar permissões do bucket privado.</li>
+                )}
+                <li>Manter intervalo de {intervalSec}s para evitar flagging de spam.</li>
+              </ul>
+            </div>
+            
+            <Button onClick={downloadReport} className="w-full gap-2">
+              <Download className="h-4 w-4" /> Exportar Relatório Consolidado para Comercial
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
