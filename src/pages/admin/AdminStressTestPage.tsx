@@ -300,7 +300,38 @@ export default function AdminStressTestPage() {
     } else {
       toast.error(`Teste interrompido: ${summary.abortReason ?? 'falha'}`);
     }
-  }, [dispatch, failurePolicy, instance, intervalSec, persistRun, phone, total]);
+  }, [dispatch, failurePolicy, instance, intervalSec, persistRun, phone, total, agentCount]);
+
+  const downloadReport = useCallback(() => {
+    if (results.length === 0) return;
+    
+    const reportData = results.map(r => ({
+      Timestamp: new Date(r.ts).toISOString(),
+      Index: r.idx + 1,
+      Type: STRESS_TYPE_LABEL[r.type],
+      Status: r.status,
+      LatencyMs: r.ms,
+      MessageId: r.messageId || '',
+      Accessibility: r.accessibility?.reachable ? 'OK' : (r.accessibility ? 'FAIL' : 'N/A'),
+      AccLatencyMs: r.accessibility?.latencyMs || '',
+      Error: r.error || '',
+      Detail: r.detail || ''
+    }));
+
+    const csvRows = [
+      Object.keys(reportData[0]).join(','),
+      ...reportData.map(row => Object.values(row).map(v => `"${v}"`).join(','))
+    ];
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `stress-test-report-${new Date().toISOString()}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Relatório gerado com sucesso');
+  }, [results]);
 
   const handleStop = () => {
     abortRef.current?.abort();
