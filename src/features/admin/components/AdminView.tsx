@@ -41,7 +41,7 @@ export function AdminView() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
   const [savingUser, setSavingUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent' as AppRole, email: '', dropboxEmail: '' });
+  const [newUser, setNewUser] = useState({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent' as AppRole, dropboxEmail: '' });
   const [newUserAvatarFile, setNewUserAvatarFile] = useState<File | null>(null);
   const [newUserGoogleServices, setNewUserGoogleServices] = useState({ google_sheets: false, google_docs: false, google_calendar: false, google_drive: false });
   const [creatingUser, setCreatingUser] = useState(false);
@@ -70,7 +70,7 @@ export function AdminView() {
     setCreatingUser(false);
     if (ok) {
       setIsAddDialogOpen(false);
-      setNewUser({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent', email: '', dropboxEmail: '' });
+      setNewUser({ name: '', nickname: '', signature: '', jobTitle: '', email: '', password: '', role: 'agent', dropboxEmail: '' });
       setNewUserAvatarFile(null);
       setNewUserGoogleServices({ google_sheets: false, google_docs: false, google_calendar: false, google_drive: false });
     }
