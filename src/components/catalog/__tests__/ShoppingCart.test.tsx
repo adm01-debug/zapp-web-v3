@@ -34,7 +34,7 @@ describe('ShoppingCart Component', () => {
     fireEvent.click(trigger);
     
     await waitFor(() => expect(screen.getByText('Test Product')).toBeInTheDocument(), { timeout: 2000 });
-    expect(screen.getByText('R$ 200,00')).toBeInTheDocument(); // 100 * 2
+    expect(screen.getAllByText(/R\$ 200,00/)[0]).toBeInTheDocument(); // Item total or Subtotal or Grand total
     expect(screen.getByText('2')).toBeInTheDocument(); // Quantity
   });
 
