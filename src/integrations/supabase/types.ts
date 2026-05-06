@@ -12549,6 +12549,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_get_my_unread_summary: {
+        Args: never
+        Returns: {
+          instance_name: string
+          unread_transfers: number
+          unread_urgent: number
+        }[]
+      }
       fn_mark_transfer_as_read: {
         Args: { p_transfer_id: string }
         Returns: undefined
