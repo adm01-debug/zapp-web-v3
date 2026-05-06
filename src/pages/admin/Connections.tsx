@@ -207,7 +207,7 @@ export default function AdminConnectionsPage() {
         }
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-4 w-full md:w-[600px] mb-8">
           <TabsTrigger value="external-db" className="gap-2">
             <Database className="w-4 h-4" /> Banco Externo
