@@ -20,6 +20,10 @@ import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
 import { ConnectionAuditDialog } from './ConnectionAuditDialog';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { WhatsAppConnection } from '@/features/connections';
 
 /** Human-friendly status — no jargon. */
@@ -69,6 +73,7 @@ export function ConnectionCard({
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const { restartInstance, connectInstance } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
@@ -145,6 +150,7 @@ export function ConnectionCard({
   };
 
   return (
+    <>
     <motion.div whileHover={{ y: -2, boxShadow: '0 8px 30px hsl(var(--primary) / 0.08)' }}>
       <Card className={cn(
         'border transition-all overflow-hidden',
@@ -262,7 +268,12 @@ export function ConnectionCard({
               )}
               {connection.status === 'connected' && !isPhantomLike && (
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button variant="outline" size="sm" className="text-muted-foreground" onClick={() => onDisconnect(connection)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                    onClick={() => setConfirmDisconnect(true)}
+                  >
                     <WifiOff className="w-4 h-4 mr-1.5" />Desconectar
                   </Button>
                 </motion.div>
@@ -376,5 +387,25 @@ export function ConnectionCard({
         />
       )}
     </motion.div>
+      <AlertDialog open={confirmDisconnect} onOpenChange={setConfirmDisconnect}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desconectar "{connection.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação encerrará a sessão do WhatsApp. Você precisará escanear o QR Code novamente para reconectar e poderá perder o recebimento de novas mensagens até lá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDisconnect(connection)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, desconectar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
