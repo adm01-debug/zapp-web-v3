@@ -4073,6 +4073,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dev_diagnostic_logs: {
+        Row: {
+          action: string
+          category: string
+          created_at: string | null
+          created_by: string | null
+          details: Json | null
+          id: string
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          id?: string
+        }
+        Relationships: []
+      }
       dispatch_error_logs: {
         Row: {
           agent_email: string | null

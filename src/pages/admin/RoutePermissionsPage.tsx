@@ -155,7 +155,46 @@ export default function RoutePermissionsPage() {
           <p className="text-muted-foreground text-sm mt-1">
             Controle quais papéis podem acessar cada rota do sistema. Sem papéis marcados = qualquer usuário autenticado.
             <br />
-            <span className="text-xs">Usuários com papel <strong>dev</strong> sempre têm acesso a todas as rotas.</span>
+            <span className="text-xs">Usuários com papel <strong>dev</strong> sempre têm acesso a todas as rotas configuradas, exceto as exclusivas de sistema.</span>
+            <br />
+            <span className="text-xs font-semibold text-primary">Matriz de Acesso por Role:</span>
+            <div className="mt-2 p-3 bg-secondary/50 rounded-md border text-[10px] grid grid-cols-2 md:grid-cols-5 gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="font-bold border-b pb-1">DEV</span>
+                <span>• Diagnóstico Raw</span>
+                <span>• Logs de Auditoria</span>
+                <span>• DB Explorer</span>
+                <span>• Full System Access</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold border-b pb-1 text-red-500">ADMIN</span>
+                <span>• Gestão de Roles</span>
+                <span>• Permissões Rotas</span>
+                <span>• Config. Globais</span>
+                <span>• Stress Test</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold border-b pb-1 text-orange-500">MANAGER</span>
+                <span>• Relatórios Avançados</span>
+                <span>• Gestão Equipes</span>
+                <span>• Dashboard SLA</span>
+                <span>• Supervisão Chat</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold border-b pb-1 text-blue-500">SUPERVISOR</span>
+                <span>• Monitoramento</span>
+                <span>• Canais & Filas</span>
+                <span>• Logs WhatsApp</span>
+                <span>• Histórico SLA</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold border-b pb-1 text-gray-500">AGENT</span>
+                <span>• Inbox (Chat)</span>
+                <span>• Contatos</span>
+                <span>• SLA Alert (Rec.)</span>
+                <span>• Histórico Básico</span>
+              </div>
+            </div>
           </p>
         </div>
         <Dialog open={newOpen} onOpenChange={setNewOpen}>

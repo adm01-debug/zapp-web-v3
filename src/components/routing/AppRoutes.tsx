@@ -58,6 +58,7 @@ const AdminWhatsAppLogsPage = lazyWithRetry(() => import("@/pages/admin/AdminWha
 const AdminGmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailStatusPage"));
 const AdminGmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminGmailAuditPage"));
 const AuditEvidenceDashboard = lazyWithRetry(() => import("@/pages/admin/AuditEvidenceDashboard"));
+const AdminDevDiagnosticsPage = lazyWithRetry(() => import("@/pages/admin/AdminDevDiagnosticsPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
@@ -128,6 +129,7 @@ export function AppRoutes() {
         <Route path="/admin/gmail-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailStatusPage /></ProtectedRoute>} />
         <Route path="/admin/gmail-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminGmailAuditPage /></ProtectedRoute>} />
         <Route path="/admin/audit-evidence" element={<ProtectedRoute requiredRoles={['admin']}><AuditEvidenceDashboard /></ProtectedRoute>} />
+        <Route path="/admin/dev-diagnostics" element={<ProtectedRoute requiredRoles={['dev']}><AdminDevDiagnosticsPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
 
       </Routes>
