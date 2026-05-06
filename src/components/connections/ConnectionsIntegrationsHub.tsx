@@ -10,7 +10,7 @@ import { BridgeSupabaseView } from '@/components/connections/BridgeSupabaseView'
  * Substitui as duas entradas separadas no sidebar por uma única view com abas.
  */
 export function ConnectionsIntegrationsHub() {
-  const [tab, setTab] = useState<'connections' | 'integrations'>('connections');
+  const [tab, setTab] = useState<'connections' | 'integrations' | 'bridge'>('connections');
 
   return (
     <div className="flex flex-col h-full">
@@ -19,7 +19,7 @@ export function ConnectionsIntegrationsHub() {
           Conexões & Integrações
         </h1>
         <p className="text-muted-foreground text-sm mb-4">
-          Gerencie canais de WhatsApp e integrações com ferramentas externas em um único lugar.
+          Gerencie canais de WhatsApp, integrações externas e a ponte Supabase ↔ Evolution API.
         </p>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="w-full">
@@ -32,12 +32,18 @@ export function ConnectionsIntegrationsHub() {
               <Plug className="w-4 h-4" />
               Integrações
             </TabsTrigger>
+            <TabsTrigger value="bridge" className="gap-2">
+              <Database className="w-4 h-4" />
+              Ponte Supabase
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       <div className="flex-1 overflow-auto">
-        {tab === 'connections' ? <ConnectionsView /> : <IntegrationsHub />}
+        {tab === 'connections' && <ConnectionsView />}
+        {tab === 'integrations' && <IntegrationsHub />}
+        {tab === 'bridge' && <BridgeSupabaseView />}
       </div>
     </div>
   );
