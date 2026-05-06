@@ -7,7 +7,48 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
+import tailwind from "eslint-plugin-tailwindcss";
+
 export default tseslint.config({ ignores: ["dist", "supabase/functions/**"] }, {
+  extends: [js.configs.recommended, ...tseslint.configs.recommended],
+  files: ["**/*.{ts,tsx}"],
+  languageOptions: {
+    ecmaVersion: 2020,
+    globals: globals.browser,
+  },
+  plugins: {
+    "react-hooks": reactHooks,
+    "react-refresh": reactRefresh,
+    "tailwindcss": tailwind,
+  },
+  rules: {
+    ...reactHooks.configs.recommended.rules,
+    "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-console": ["error", { allow: ["warn", "error"] }],
+    // Tailwind specific rules
+    "tailwindcss/no-arbitrary-value": "error",
+    "tailwindcss/classnames-order": "warn",
+    "tailwindcss/enforce-shorthand": "warn",
+    "tailwindcss/no-custom-classname": "off",
+    // Estratégia gradual de strict typing — Fase 1
+    // `any` explícito vira warn em todo o código (visível em PRs sem
+    // quebrar a build). Será promovido a `error` em fases futuras à
+    // medida que os hotspots forem migrados (ver docs/TYPESCRIPT_STRICT_MIGRATION.md).
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/ban-ts-comment": [
+      "error",
+      { "ts-ignore": true, "ts-expect-error": "allow-with-description" },
+    ],
+  },
+  settings: {
+    tailwindcss: {
+      callees: ["cn", "cva", "clsx"],
+      config: "tailwind.config.ts",
+    },
+  },
+}, // DOMAIN BOUNDARY ENFORCEMENT — Bloqueia importações diretas entre domínios.
   extends: [js.configs.recommended, ...tseslint.configs.recommended],
   files: ["**/*.{ts,tsx}"],
   languageOptions: {
