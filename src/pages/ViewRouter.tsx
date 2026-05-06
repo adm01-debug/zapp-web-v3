@@ -125,6 +125,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any
   'email-status': Views.AdminEmailStatusPage,
   'email-audit': Views.AdminEmailAuditPage,
   'sla-history': Views.SLAHistory,
+  'admin-connections': Views.AdminConnectionsPage,
 };
 
 // Views that need custom props

@@ -125,6 +125,7 @@ export const systemNav: readonly NavItemConfig[] = [
   { id: 'security', icon: Shield, label: 'Segurança' },
   { id: 'privacy', icon: ShieldCheck, label: 'LGPD' },
   { id: 'admin', icon: UserCog, label: 'Admin' },
+  { id: 'admin-connections', icon: Link2, label: 'BD Externo', requiredRoles: ['admin'] },
   { id: 'themes', icon: Palette, label: 'Skins' },
   { id: 'docs', icon: BookOpen, label: 'Documentação' },
 ] as const;
