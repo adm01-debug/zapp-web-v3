@@ -14,6 +14,17 @@ export async function syncContacts(
 
   if (!contactsResponse.ok) {
     const errText = await contactsResponse.text();
+    await supabase.from('audit_logs').insert({
+      action: 'contact_sync_failure',
+      entity_type: 'whatsapp_connection',
+      details: { instance_id: instanceName, status: contactsResponse.status, error: errText }
+    });
+    await supabase.from('warroom_alerts').insert({
+      alert_type: 'warning',
+      title: `Falha na sincronização: ${instanceName}`,
+      message: `Erro ao buscar contatos da Evolution API: ${errText.slice(0, 100)}`,
+      source: 'evolution_sync'
+    });
     throw new Error(`Evolution API error [${contactsResponse.status}]: ${errText}`);
   }
 
@@ -152,8 +163,23 @@ export async function syncAllMessages(
           });
           if (!insertError) totalSynced++;
         }
-      } catch { totalErrors++; }
+      } catch (err) { 
+        totalErrors++; 
+        await supabase.from('audit_logs').insert({
+          action: 'message_sync_batch_failure',
+          entity_type: 'whatsapp_connection',
+          details: { instance_id: instanceName, error: err instanceof Error ? err.message : String(err) }
+        });
+      }
     }
+  }
+
+  if (totalSynced > 0 || totalErrors > 0) {
+    await supabase.from('audit_logs').insert({
+      action: 'message_sync_completed',
+      entity_type: 'whatsapp_connection',
+      details: { instance_id: instanceName, totalSynced, totalErrors, totalSkipped }
+    });
   }
 
   return jsonRes({ success: true, totalSynced, totalSkipped, totalErrors, totalContacts: allContacts.length }, corsHeaders);

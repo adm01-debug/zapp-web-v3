@@ -10,7 +10,7 @@ import {
   Smartphone, MoreVertical, Trash2, Copy, QrCode, Wifi, WifiOff,
   Star, Clock, Loader2, RefreshCw, History, Link2, Settings, Boxes,
   BatteryCharging, BatteryLow, BatteryMedium, BatteryFull, ShieldCheck, Zap,
-  AlertTriangle, Activity,
+  AlertTriangle, Activity, ListChecks
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { BusinessHoursIndicator } from './BusinessHoursIndicator';
 import { OfficialApiConfigDialog } from './OfficialApiConfigDialog';
+import { ConnectionAuditDialog } from './ConnectionAuditDialog';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import type { WhatsAppConnection } from '@/features/connections';
 
@@ -31,12 +32,14 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
 
 /** Human-friendly health reason labels. */
 const HEALTH_REASON_LABEL: Record<string, { short: string; long: string; severe: boolean }> = {
-  phantom_session: { short: 'Precisa reconectar', long: 'A sessão perdeu vínculo com o WhatsApp. Escaneie o QR Code novamente.', severe: true },
-  webhook_silent: { short: 'Sem atividade recente', long: 'Nenhuma mensagem recebida nos últimos 30 minutos.', severe: false },
-  stale_session: { short: 'Sessão expirada', long: 'Sem mensagens há mais de 6 horas — reconecte.', severe: true },
-  socket_closed: { short: 'Precisa reconectar', long: 'A conexão com o WhatsApp foi perdida.', severe: true },
-  http_error: { short: 'Erro na conexão', long: 'O servidor não está respondendo corretamente.', severe: true },
-  timeout: { short: 'Sem resposta', long: 'O servidor não respondeu a tempo.', severe: true },
+  phantom_session: { short: 'Sessão Fantasma', long: 'O servidor Evolution diz que está "open", mas o WhatsApp não reconhece a sessão. Reconecte.', severe: true },
+  webhook_silent: { short: 'Instância Silenciosa', long: 'Nenhuma mensagem recebida nos últimos 30 minutos. Verifique o celular.', severe: false },
+  stale_session: { short: 'Sessão Obsoleta', long: 'Sem mensagens há mais de 6 horas. A conexão pode estar "dormindo".', severe: true },
+  socket_closed: { short: 'Socket Fechado', long: 'A conexão com o servidor de mensagens foi encerrada.', severe: true },
+  http_error: { short: 'Erro de API', long: 'Falha ao comunicar com a Evolution API. Verifique as credenciais.', severe: true },
+  timeout: { short: 'Timeout', long: 'O servidor demorou demais para responder o health-check.', severe: true },
+  auth_failure: { short: 'Falha de Auth', long: 'A API Key da Evolution parece inválida ou expirou.', severe: true },
+  rate_limit: { short: 'Rate Limit', long: 'Muitas requisições em pouco tempo. Aguarde um momento.', severe: false },
 };
 
 interface ConnectionCardProps {
@@ -63,6 +66,7 @@ export function ConnectionCard({
   const status = statusConfig[connection.status] || statusConfig.disconnected;
   const isOfficial = (connection.api_type ?? 'evolution') === 'official';
   const [officialConfigOpen, setOfficialConfigOpen] = useState(false);
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const { restartInstance, getInstanceStatus } = useEvolutionApi();
@@ -299,6 +303,9 @@ export function ConnectionCard({
 
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Avançado</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setAuditDialogOpen(true)}>
+                    <ListChecks className="w-4 h-4 mr-2" />Log de Auditoria
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onCopyId(connection.id)}>
                     <Copy className="w-4 h-4 mr-2" />Copiar ID
                   </DropdownMenuItem>
@@ -340,6 +347,14 @@ export function ConnectionCard({
           connectionId={connection.id}
           connectionName={connection.name}
           instanceId={connection.instance_id}
+        />
+      )}
+      {connection.instance_id && (
+        <ConnectionAuditDialog
+          open={auditDialogOpen}
+          onOpenChange={setAuditDialogOpen}
+          instanceId={connection.instance_id}
+          connectionName={connection.name}
         />
       )}
     </motion.div>

@@ -285,17 +285,40 @@ async function persistResult(
   });
 
   // Status DB transition?
-  if (evalResult.dbStatus !== conn.status) {
-    await supabase.from('whatsapp_connections')
-      .update({ status: evalResult.dbStatus, updated_at: new Date().toISOString() })
-      .eq('id', conn.id);
-    if (evalResult.dbStatus === 'disconnected' && conn.status === 'connected') {
-      alertsToCreate.push({
-        connection_id: conn.id,
+  if (evalResult.dbStatus !== conn.status || evalResult.healthStatus !== conn.health_status) {
+    const isStatusChange = evalResult.dbStatus !== conn.status;
+    const isHealthChange = evalResult.healthStatus !== conn.health_status;
+
+    await supabase.from('audit_logs').insert({
+      action: isStatusChange ? 'connection_status_change' : 'connection_health_change',
+      entity_type: 'whatsapp_connection',
+      entity_id: conn.id,
+      details: {
         instance_id: conn.instance_id,
         phone: conn.phone_number,
-        reason: (evalResult.reason as any) || 'disconnected',
-      });
+        previous_status: conn.status,
+        new_status: evalResult.dbStatus,
+        previous_health: conn.health_status,
+        new_health: evalResult.healthStatus,
+        reason: evalResult.reason,
+        response_time_ms: responseTime,
+        error: errorMessage
+      },
+    }).then(({ error }: { error: { message: string } | null }) => { if (error) log.warn('audit insert failed', { error: error.message }); });
+
+    if (isStatusChange) {
+      await supabase.from('whatsapp_connections')
+        .update({ status: evalResult.dbStatus, updated_at: new Date().toISOString() })
+        .eq('id', conn.id);
+      
+      if (evalResult.dbStatus === 'disconnected' && conn.status === 'connected') {
+        alertsToCreate.push({
+          connection_id: conn.id,
+          instance_id: conn.instance_id,
+          phone: conn.phone_number,
+          reason: (evalResult.reason as any) || 'disconnected',
+        });
+      }
     }
   }
 
@@ -316,18 +339,6 @@ async function persistResult(
       phone: conn.phone_number,
       reason: (evalResult.reason as any) || 'degraded',
     });
-    await supabase.from('audit_logs').insert({
-      action: 'connection_degraded',
-      entity_type: 'whatsapp_connection',
-      entity_id: conn.id,
-      details: {
-        instance_id: conn.instance_id,
-        phone: conn.phone_number,
-        response_time_ms: responseTime,
-        reason: evalResult.reason,
-        previous_health: conn.health_status ?? null,
-      },
-    }).then(({ error }: { error: { message: string } | null }) => { if (error) log.warn('audit insert failed', { error: error.message }); });
   }
 
   await supabase.from('whatsapp_connections').update(updatePayload).eq('id', conn.id);
