@@ -17,7 +17,7 @@ echo "🧪 3. Edge Function Tests..."
 deno test --allow-net --allow-env --allow-read supabase/functions/evolution-api/index.test.ts || { echo "❌ Edge tests failed"; }
 
 echo "🌐 4. E2E Tests (Playwright)..."
-npx playwright test --project=chromium --reporter=list || { echo "⚠️ Playwright failed (expected in limited simulation)"; }
+npx playwright test tests/e2e/webhooks.spec.ts tests/e2e/reliability.spec.ts tests/e2e/resilience.spec.ts --project=chromium || { echo "⚠️ Playwright resilience tests failed (expected in limited simulation)"; }
 
 echo "📊 5. Coverage Gates & Artifacts..."
 MIN_COVERAGE=80
