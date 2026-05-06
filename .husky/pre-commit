@@ -1,1 +1,1 @@
-npm run types:gen
+bun run lint-staged

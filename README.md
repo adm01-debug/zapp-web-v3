@@ -106,7 +106,7 @@ bun run dev
 │  │ Auth │ │ DB │ │ Storage │ │ Real │  │
 │  └──────┘ └────┘ └─────────┘ │ time │  │
 │  ┌────────────────────────┐  └──────┘  │
-│  │   Edge Functions (20)  │            │
+│  │   Edge Functions (106) │            │
 │  └───────────┬────────────┘            │
 └──────────────┼─────────────────────────┘
                │
@@ -123,8 +123,11 @@ bun run dev
 Veja `docs/decisions/` para decisões documentadas:
 - **ADR-001**: React Query como gerenciador de estado do servidor
 - **ADR-002**: RLS como camada primária de autorização
-- **ADR-003**: Lazy loading de todas as rotas
+- **ADR-003**: CSS modularização
 - **ADR-004**: Evolution API webhook bridge
+- **ADR-005**: Audit & Recovery Model (FATOR X)
+- **ADR-006**: Two-Backend Boundary & Communication
+- **ADR-008**: Error Tracking & Monitoring Strategy
 
 ---
 
@@ -151,13 +154,13 @@ src/
 └── i18n/               # Internacionalização
 
 supabase/
-├── functions/          # 20 Edge Functions
+├── functions/          # 106 Edge Functions
 │   ├── _shared/        # Utilitários compartilhados (validação, CORS, logger)
 │   ├── ai-*/           # Funções de IA (suggest-reply, summary, analysis, etc.)
 │   ├── evolution-*/    # Integração WhatsApp
 │   ├── elevenlabs-*/   # Integração de áudio
 │   └── ...
-├── migrations/         # 55 Migrations SQL versionadas
+├── migrations/         # 453 Migrations SQL versionadas
 └── config.toml         # Configuração do projeto
 
 docs/
