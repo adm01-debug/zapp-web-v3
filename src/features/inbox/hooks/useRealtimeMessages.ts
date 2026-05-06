@@ -229,14 +229,13 @@ export function useRealtimeMessages() {
         event: 'INSERT', 
         schema: 'public', 
         table: dbTable('messages'),
-        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}` 
       },
         wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
         table: dbTable('messages'),
-        filter: `instance_name=eq.${DEFAULT_WHATSAPP_INSTANCE}`
+        
       },
         wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
       .subscribe((status) => { log.debug('Subscription status', { status }); });
