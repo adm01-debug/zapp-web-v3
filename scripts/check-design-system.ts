@@ -95,25 +95,32 @@ function scanDir(dir: string, results: Violation[]) {
       const lines = content.split('\n');
 
       lines.forEach((line, index) => {
+        if (line.includes('// @ds-ignore')) return;
+
         FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
           const matches = line.matchAll(new RegExp(pattern, 'g'));
           for (const match of matches) {
-            if (!line.includes('// @ds-ignore')) {
-              const { suggestion, priority, replacement } = getSuggestion(label, match[0]);
-              // For Literal Color, only add if it's NOT in whitelist
-              if (label === 'Literal Color' && WHITELIST.colors.some(c => match[0].endsWith(`-${c}`))) continue;
-              
-              if (suggestion || priority === 'High') {
-                results.push({
-                  file: fullPath,
-                  line: index + 1,
-                  match: match[0],
-                  label,
-                  suggestion,
-                  replacement,
-                  priority
-                });
-              }
+            const rawMatch = match[0].trim().replace(/^['"`]|['"`]$/g, '');
+            if (!rawMatch) continue;
+
+            const { suggestion, priority, replacement } = getSuggestion(label, rawMatch);
+            
+            // Refined check for Literal Color whitelist
+            if (label === 'Literal Color') {
+              const cleanMatch = rawMatch.replace(/^(?:dark:|hover:|focus:|active:|disabled:|peer-.*:|group-.*:)+/, '');
+              if (WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
+            }
+            
+            if (suggestion || priority === 'High') {
+              results.push({
+                file: fullPath,
+                line: index + 1,
+                match: rawMatch,
+                label,
+                suggestion,
+                replacement,
+                priority
+              });
             }
           }
         });
