@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
-  AlertCircle, CheckCircle2, Clock, ShieldCheck, Database, 
+  AlertCircle, CheckCircle2, Clock, ShieldCheck, Database as DatabaseIcon, 
   Search, RefreshCcw, AlertTriangle, ChevronLeft, ChevronRight,
   Filter, History as HistoryIcon
 } from 'lucide-react';
@@ -14,7 +14,7 @@ import { emailHealthService } from '@/services/email/emailHealthService';
 import type { EmailHealthInfo, EmailFailure } from '@/services/email/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { emailApi } from '@/services/email/emailApi';
+import { emailApi, type EmailHealthSummary, type EmailRevalidationJob } from '@/services/email/emailApi';
 
 export default function AdminEmailStatusPage() {
   const { accounts, schemaStatus, lastRequestId } = useEmail();
@@ -31,17 +31,6 @@ export default function AdminEmailStatusPage() {
   const loadHealth = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('email-health', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: {}, // Use body for params as queryParams isn't in type
-        method: 'GET'
-      });
-      
-      // Since type doesn't support queryParams, we'll construct URL manually for filters if needed, 
-      // but for status we can just call basic invoke.
-      // Re-invoking with full URL to support filters:
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
       const functionUrl = `${projectUrl}/functions/v1/email-health?page=${filters.page}&pageSize=5${filters.requestId ? `&requestId=${filters.requestId}` : ''}${filters.resource ? `&resource=${filters.resource}` : ''}${filters.operation ? `&operation=${filters.operation}` : ''}`;
       
@@ -56,7 +45,7 @@ export default function AdminEmailStatusPage() {
       if (!fetchResponse.ok) throw new Error(dataFull.error || 'Erro na Edge Function');
       
       setHealth({
-        status: dataFull.status as any,
+        status: dataFull.status as EmailHealthSummary['status'],
         lastValidation: dataFull.last_validation ? new Date(dataFull.last_validation) : null,
         cacheExpiration: null,
         recentFailures: dataFull.failuresResult?.items || [],
@@ -72,11 +61,12 @@ export default function AdminEmailStatusPage() {
       toast.error('O serviço de telemetria do Email está indisponível.');
       
       try {
-        const { data: summary } = await emailApi.getHealthSummary();
+        const { data: summary, error: summaryError } = await emailApi.getHealthSummary();
+        if (summaryError) throw summaryError;
           
         if (summary) {
           setHealth({
-            status: summary.status as any,
+            status: summary.status as EmailHealthSummary['status'],
             lastValidation: summary.last_validation ? new Date(summary.last_validation) : null,
             cacheExpiration: null,
             recentFailures: [],
@@ -93,19 +83,42 @@ export default function AdminEmailStatusPage() {
 
   useEffect(() => {
     loadHealth();
-    const interval = setInterval(async () => {
-      try {
-        const projectUrl = import.meta.env.VITE_SUPABASE_URL;
-        await fetch(`${projectUrl}/functions/v1/email-health?action=auto_check`, {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          }
-        });
-      } catch (e) {
-        console.warn('Auto-check falhou');
-      }
-    }, 300000);
-    return () => clearInterval(interval);
+
+    // Configurar Realtime
+    const channel = supabase
+      .channel('email-admin-status')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'email_health_summary' },
+        (payload) => {
+          console.log('Update de saúde em tempo real:', payload);
+          const newSummary = payload.new as EmailHealthSummary;
+          setHealth(prev => prev ? {
+            ...prev,
+            status: newSummary.status as EmailHealthSummary['status'],
+            lastValidation: newSummary.last_validation ? new Date(newSummary.last_validation) : prev.lastValidation,
+            stats: {
+              ...prev.stats,
+              failedCalls: newSummary.failure_count_60m
+            }
+          } : null);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'email_revalidation_jobs' },
+        (payload) => {
+          const newJob = payload.new as EmailRevalidationJob;
+          toast.info(`Nova solicitação de revalidação: ${newJob.status}`);
+          // Recarregar saúde após um pequeno delay para o worker processar
+          setTimeout(loadHealth, 3000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [filters]);
 
   const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
@@ -131,8 +144,6 @@ export default function AdminEmailStatusPage() {
       success: 'Revalidação agendada com sucesso!',
       error: 'Erro ao solicitar revalidação'
     });
-    
-    setTimeout(loadHealth, 2000);
   };
 
   const handleAction = async (action: 'markRead' | 'rpc_test', id: string) => {
@@ -158,7 +169,7 @@ export default function AdminEmailStatusPage() {
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'healthy': return <CheckCircle2 className="w-5 h-5 text-primary" />;
-      case 'degraded': return <AlertTriangle className="w-5 h-5 text-warning" />;
+      case 'degraded': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
       case 'error': return <AlertCircle className="w-5 h-5 text-destructive" />;
       default: return <Clock className="w-5 h-5 text-muted-foreground" />;
     }
