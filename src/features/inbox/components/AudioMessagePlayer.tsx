@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Loader2, FileText, Volume2, RefreshCw, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Play, Pause, Loader2, FileText, Volume2, RefreshCw, Sparkles, CheckCircle2, AlertCircle, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -10,6 +10,7 @@ import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { AudioVolumeControl } from './AudioVolumeControl';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { VoiceChanger } from './VoiceChanger';
 
 interface AudioMessagePlayerProps {
   audioUrl: string;
