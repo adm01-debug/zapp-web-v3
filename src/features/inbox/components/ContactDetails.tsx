@@ -106,7 +106,7 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
       transition={{ duration: 0.3, ease: 'easeOut' }} ref={panelRef} role="complementary" aria-label="Detalhes do contato"
       data-contact-details data-contact-id={contact.id}
       tabIndex={-1}
-      className="w-80 h-full min-h-0 shrink-0 bg-background dark:bg-background border-l border-border/40 flex flex-col overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/20 font-sans"
+      className="w-80 h-full min-h-0 shrink-0 bg-background dark:bg-background border-l border-border/40 flex flex-col overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/20 "
     >
       <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card/30 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-2.5">

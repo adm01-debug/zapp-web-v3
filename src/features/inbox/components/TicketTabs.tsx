@@ -131,7 +131,7 @@ export function TicketTabs({
     <div className={cn("transition-all duration-300", isCompact ? "space-y-1" : "space-y-2")}>
       {/* Main Tabs */}
       <div className={cn(
-        "flex items-center gap-1 bg-muted/30 dark:bg-muted/10 rounded-2xl border border-border/20 shadow-sm font-sans transition-all",
+        "flex items-center gap-1 bg-muted/30 dark:bg-muted/10 rounded-2xl border border-border/20 shadow-sm  transition-all",
         isCompact ? "p-0.5" : "p-1"
       )}>
         {mainTabs.map(tab => {
@@ -192,7 +192,7 @@ export function TicketTabs({
                 key={tab.id}
                 onClick={() => onSubTabChange(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 font-bold transition-all duration-300 border shadow-sm font-sans relative overflow-hidden',
+                  'flex items-center gap-2 font-bold transition-all duration-300 border shadow-sm  relative overflow-hidden',
                   isCompact ? 'px-2.5 py-1 text-[10px] rounded-lg' : 'px-4 py-2 text-[11px] rounded-full',
                   isActive
                     ? 'bg-primary/5 text-primary border-primary/20 shadow-primary/5'

@@ -55,6 +55,13 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
   }
 
   if (label === 'Literal Font') {
+    if (cleanMatch === 'font-sans') {
+      return { cleanMatch, prefix, suggestion: 'Remove redundant font-sans; inherits from global', priority: 'High', replacement: '' };
+    }
+    if (cleanMatch === 'font-mono') {
+      // Often used for technical data, but let's flag as Medium to ensure it's intentional
+      return { cleanMatch, prefix, suggestion: 'Check if font-mono is intentional or should inherit global typography', priority: 'Medium' };
+    }
     return { cleanMatch, prefix, suggestion: 'Remove literal font; use global typography', priority: 'Low' };
   }
   return { cleanMatch, prefix, suggestion: 'Check design system tokens', priority: 'Low' };
@@ -79,6 +86,10 @@ export function scanContent(content: string, fileName: string, results: Violatio
         if (!rawMatch) continue;
 
         const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
+        
+        // Safety check: Skip matches that are part of a CSS variable (e.g., --font-sans)
+        const matchStart = match.index;
+        if (matchStart > 1 && line.substring(matchStart - 2, matchStart) === '--') continue;
         
         // Skip if whitelisted
         if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
@@ -186,10 +197,11 @@ if (require.main === module) {
     Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
       console.log(`\n📄 ${file}:`);
       fileViolations.forEach(v => {
-        const status = v.replacement ? '🔧 [Fixable]' : '⚠️ [Manual]';
-        console.log(`  Line ${v.line.toString().padEnd(4)} | ${status.padEnd(11)} | Match: ${v.match.padEnd(20)} | Suggestion: ${v.replacement || v.suggestion}`);
-        if (v.replacement) {
-          console.log(`               | Clean: ${v.cleanMatch.padEnd(20)} | Patch: ${v.replacement}`);
+        const isFixable = v.replacement !== undefined;
+        const status = isFixable ? '🔧 [Fixable]' : '⚠️ [Manual]';
+        console.log(`  Line ${v.line.toString().padEnd(4)} | ${status.padEnd(11)} | Match: ${v.match.padEnd(20)} | Suggestion: ${v.replacement !== undefined ? v.replacement : v.suggestion}`);
+        if (isFixable) {
+          console.log(`               | Clean: ${v.cleanMatch.padEnd(20)} | Patch: ${v.replacement === '' ? '(remove)' : v.replacement}`);
         }
       });
     });
@@ -222,7 +234,7 @@ if (require.main === module) {
       // Sort violations by line descending to avoid offset issues if we were adding lines, 
       // but here we just replace content within same line.
       fileViolations.forEach(v => {
-        if (v.replacement && lines[v.line-1].includes(v.match)) {
+        if (v.replacement !== undefined && lines[v.line-1].includes(v.match)) {
           const oldLine = lines[v.line-1];
           lines[v.line-1] = oldLine.replace(v.match, v.replacement);
           

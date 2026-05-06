@@ -74,7 +74,7 @@ export function ConversationList({
   });
 
   return (
-    <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden ">
       {/* Header */}
       <div className={cn(
         "border-b border-border bg-background shrink-0",

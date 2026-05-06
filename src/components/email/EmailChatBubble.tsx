@@ -153,7 +153,7 @@ export function EmailChatBubble({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className={cn('font-sans text-[16px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
+              <span className={cn(' text-[16px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
                 {message.from_name || message.from_email || '?'}
               </span>
               {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-bold uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
@@ -164,7 +164,7 @@ export function EmailChatBubble({
               {sentAt && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="font-sans text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
+                    <span className=" text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
                       {formatDistanceToNow(sentAt, { locale: ptBR, addSuffix: true })}
                     </span>
                   </TooltipTrigger>
@@ -178,11 +178,11 @@ export function EmailChatBubble({
           </div>
 
           {!expanded && (
-            <p className="font-sans text-[12px] text-muted-foreground/70 truncate mt-0.5 font-medium">{message.snippet}</p>
+            <p className=" text-[12px] text-muted-foreground/70 truncate mt-0.5 font-medium">{message.snippet}</p>
           )}
 
           {expanded && (
-            <div className="flex items-center gap-1.5 font-sans text-[10px] font-bold text-muted-foreground/50 mt-1 uppercase tracking-wider">
+            <div className="flex items-center gap-1.5  text-[10px] font-bold text-muted-foreground/50 mt-1 uppercase tracking-wider">
               <span className="text-primary/60">Para:</span>
               <span className="truncate max-w-[300px]">{message.to_emails.join(', ')}</span>
               {message.cc_emails.length > 0 && (
@@ -244,12 +244,12 @@ export function EmailChatBubble({
               {hasHtml ? (
                 <div
                   ref={contentRef}
-                  className="prose prose-sm dark:prose-invert max-w-none text-[14px] leading-relaxed overflow-hidden font-sans text-foreground/90 selection:bg-primary/20"
+                  className="prose prose-sm dark:prose-invert max-w-none text-[14px] leading-relaxed overflow-hidden  text-foreground/90 selection:bg-primary/20"
                   style={{ maxHeight: showFullHtml ? 'none' : '500px' }}
                   dangerouslySetInnerHTML={{ __html: displayHtml }}
                 />
               ) : (
-                <p className="text-[14px] whitespace-pre-wrap leading-relaxed font-sans text-foreground/90 selection:bg-primary/20">{displayHtml}</p>
+                <p className="text-[14px] whitespace-pre-wrap leading-relaxed  text-foreground/90 selection:bg-primary/20">{displayHtml}</p>
               )}
 
               {/* Mostrar citação */}

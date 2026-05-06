@@ -45,7 +45,7 @@ if (import.meta.env.DEV) {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <SentryErrorBoundary
     fallback={({ error, resetError }) => (
-      <div role="alert" className="p-6 font-sans max-w-2xl mx-auto my-10 bg-card rounded-2xl border border-border shadow-xl">
+      <div role="alert" className="p-6  max-w-2xl mx-auto my-10 bg-card rounded-2xl border border-border shadow-xl">
         <h1 className="text-2xl font-bold mb-3 text-foreground">Algo deu errado</h1>
         <p className="text-muted-foreground mb-4">
           O erro foi registrado e nossa equipe foi notificada. Você pode tentar de novo:

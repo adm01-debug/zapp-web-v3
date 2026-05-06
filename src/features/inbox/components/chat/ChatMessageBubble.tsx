@@ -327,7 +327,7 @@ export function ChatMessageBubble({
                   Sussurro Interno
                 </div>
               )}
-              <TextWithLinks text={message.content} className={cn("font-sans text-[13.5px] font-normal tracking-normal whitespace-pre-wrap leading-[1.35]", message.isWhisper && "italic")} maxPreviews={2} />
+              <TextWithLinks text={message.content} className={cn(" text-[13.5px] font-normal tracking-normal whitespace-pre-wrap leading-[1.35]", message.isWhisper && "italic")} maxPreviews={2} />
             </div>
           )}
 
