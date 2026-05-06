@@ -101,21 +101,62 @@ export {
 
 // deno-lint-ignore no-explicit-any
 export async function handleConnectionUpdate(supabase: any, instance: string, baseData: Record<string, unknown>) {
-  // Lê estado de várias chaves possíveis (Evolution varia entre status/state/connectionStatus,
-  // direto ou aninhado em .data). qrcode reset agora é responsabilidade da RPC central.
+  // Lê estado de várias chaves possíveis
   const evoState = (baseData.state ?? baseData.status ?? baseData.connectionStatus
     ?? (baseData.data as Record<string,unknown>)?.state
     ?? (baseData.data as Record<string,unknown>)?.status
     ?? (baseData.data as Record<string,unknown>)?.connectionStatus) as string | undefined;
 
+  const reasonCode = (baseData.reason ?? (baseData.data as Record<string, unknown>)?.reason) as number | string | undefined;
+
   const { data: prevConn } = await supabase.from('whatsapp_connections')
     .select('status, phone_number').eq('instance_name', instance).maybeSingle();
 
+  // Registrar logs específicos de causa (timeline)
+  if (evoState === 'close' || evoState === 'disconnected') {
+    let action = 'instance_disconnected';
+    let cause = 'Desconexão genérica';
+    
+    // Mapear códigos de erro comuns do Baileys/Evolution
+    if (reasonCode === 401 || reasonCode === '401') {
+      action = 'device_removed';
+      cause = 'Dispositivo removido pelo celular';
+    } else if (reasonCode === 409 || reasonCode === '409') {
+      action = 'session_conflict';
+      cause = 'Conflito de sessão (WhatsApp aberto em outro lugar)';
+    } else if (reasonCode === 411 || reasonCode === '411') {
+      action = 'session_expired';
+      cause = 'Sessão expirada';
+    }
+
+    await supabase.from('audit_logs').insert({
+      action,
+      entity_type: 'whatsapp_connection',
+      details: { 
+        instance_id: instance, 
+        cause, 
+        reason_code: reasonCode,
+        source: 'evolution-webhook'
+      }
+    });
+  } else if (evoState === 'open' || evoState === 'connected') {
+    if (prevConn?.status !== 'connected') {
+      await supabase.from('audit_logs').insert({
+        action: 'instance_reconnected',
+        entity_type: 'whatsapp_connection',
+        details: { 
+          instance_id: instance, 
+          source: 'evolution-webhook',
+          previous_status: prevConn?.status
+        }
+      });
+    }
+  }
+
   // Delega ao RPC autoritário público.fn_apply_connection_update (single-source-of-truth):
-  // ele faz mapping open→connected/connecting/close, popula instance_id/phone/owner_jid,
-  // ajusta health_status, e dispara trigger de history com source=webhook_push.
   const event = { instance, data: { ...baseData, state: evoState } };
   const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_apply_connection_update', { p_event: event });
+  
   if (rpcErr) {
     console.error(`[connection.update] rpc_error instance=${instance} err=${rpcErr.message ?? rpcErr.code}`);
   } else {
