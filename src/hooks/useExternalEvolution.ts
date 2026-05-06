@@ -490,7 +490,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
       // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
       const evoMessages = await dedupedFetch(
-        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}`,
+        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
         { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
       );
@@ -539,7 +539,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        `inbox:poll:${remoteJid}:${afterDate}`,
+        `inbox:poll:${remoteJid}:${afterDate}:${DEFAULT_INSTANCE}`,
         () => fetchMessagesAfter(remoteJid, afterDate),
         { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
       );
@@ -580,7 +580,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: mesma janela (jid + cursor) compartilhada via
       // localStorage lock + BroadcastChannel. Evita N abas chamando o mesmo
       // page de mensagens antigas em paralelo.
-      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}`;
+      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`;
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
@@ -637,7 +637,7 @@ export function useExternalMessages(remoteJid: string | null) {
   useEffect(() => {
     if (!remoteJid) return;
     const jidPrefixes = [
-      `inbox:initial:${remoteJid}:`,
+      `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`,
       `inbox:poll:${remoteJid}:`,
       `older:${remoteJid}:`,
     ];
