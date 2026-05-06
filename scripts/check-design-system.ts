@@ -162,9 +162,9 @@ if (require.main === module) {
   // Markdown Report
   let mdReport = `# Design System Audit\nGenerated on: ${new Date().toLocaleString()}\n\n`;
   Object.entries(groupedViolations).forEach(([file, fileViolations]) => {
-    mdReport += `## ${file}\n| Priority | Line | Type | Raw Match | Variant | Clean Match | Suggestion |\n|---|---|---|---|---|---|---|\n`;
+    mdReport += `## ${file}\n| Priority | Line | Type | Raw Match | Variant | Clean Match | Suggestion | Patch |\n|---|---|---|---|---|---|---|---|\n`;
     fileViolations.forEach(v => {
-      mdReport += `| ${v.priority} | ${v.line} | ${v.label} | \`${v.match}\` | \`${v.prefix}\` | \`${v.cleanMatch}\` | ${v.suggestion} |\n`;
+      mdReport += `| ${v.priority} | ${v.line} | ${v.label} | \`${v.match}\` | \`${v.prefix}\` | \`${v.cleanMatch}\` | ${v.suggestion} | ${v.replacement ? `\`${v.replacement}\`` : '-'} |\n`;
     });
     mdReport += '\n';
   });
@@ -183,6 +183,7 @@ if (require.main === module) {
       .high { color: #ef4444; font-weight: bold; }
       .medium { color: #f59e0b; font-weight: bold; }
       code { background: #f1f1f1; padding: 2px 4px; border-radius: 4px; }
+      .patch { color: #10b981; font-weight: bold; }
     </style>
   </head>
   <body>
@@ -195,10 +196,12 @@ if (require.main === module) {
             <tr>
               <th>Priority</th>
               <th>Line</th>
+              <th>Type</th>
               <th>Raw Match</th>
               <th>Variant</th>
               <th>Clean Match</th>
               <th>Suggestion</th>
+              <th>Patch</th>
             </tr>
           </thead>
           <tbody>
@@ -206,10 +209,12 @@ if (require.main === module) {
               <tr>
                 <td class="${v.priority.toLowerCase()}">${v.priority}</td>
                 <td>${v.line}</td>
+                <td>${v.label}</td>
                 <td><code>${v.match}</code></td>
                 <td><code>${v.prefix}</code></td>
                 <td><code>${v.cleanMatch}</code></td>
                 <td>${v.suggestion}</td>
+                <td class="patch">${v.replacement ? `<code>${v.replacement}</code>` : '-'}</td>
               </tr>
             `).join('')}
           </tbody>
