@@ -20,7 +20,7 @@ import { getLogger } from '@/lib/logger';
 import { parseEvolutionError } from '@/features/inbox';
 import { dbInsert } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
-import { calculateFileHash } from '@/lib/utils/fileHash';
+import { buildFileHash as calculateFileHash } from '@/lib/crypto';
 
 const log = getLogger('externalMessageSender');
 const DEFAULT_INSTANCE = 'wpp2';
@@ -170,7 +170,7 @@ export async function sendExternalText(
 export async function sendExternalAudio(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string; conversationId?: string } = {},
+  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string; conversationId?: string; conversation_id?: string } = {},
 ): Promise<SendExternalResult> {
   const startTime = Date.now();
   const phone = jidToPhone(remoteJid);
@@ -178,13 +178,23 @@ export async function sendExternalAudio(
   
   const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
   const localAudioUrl = URL.createObjectURL(blob);
+  const convId = opts.conversationId || opts.conversation_id;
 
   const optimistic = makeOptimisticBubble(remoteJid, '[Áudio]', {
     messageType: 'audio',
     mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
-    media_meta: { ptt: opts.isPtt ?? true, conversation_id: opts.conversationId },
+    media_meta: { ptt: opts.isPtt ?? true, conversation_id: convId },
   });
+
+  if (convId) {
+    void supabase.from('conversation_audit_logs').insert({
+      conversation_id: convId,
+      event_type: 'send_attempt',
+      status: 'starting',
+      metadata: { messageType: 'audio', isPtt: opts.isPtt ?? true }
+    });
+  }
 
   const formData = new FormData();
   formData.append('action', 'send-audio');
@@ -256,6 +266,16 @@ export async function sendExternalAudio(
 
   optimistic.external_id = externalId;
   optimistic.status = 'sent';
+
+  if (convId) {
+    void supabase.from('conversation_audit_logs').insert({
+      conversation_id: convId,
+      event_type: 'delivered',
+      status: 'success',
+      metadata: { external_id: externalId }
+    });
+  }
+
   return { optimistic, externalId };
 }
 
