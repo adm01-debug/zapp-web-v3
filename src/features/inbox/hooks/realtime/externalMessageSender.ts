@@ -211,7 +211,7 @@ export async function sendExternalAudio(
     messageType: 'audio',
     mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
-    media_meta: { ptt: opts.isPtt ?? true } // Store PTT intent in optimistic bubble for telemetry
+    media_meta: { ptt: opts.isPtt ?? true }, // Store PTT intent in optimistic bubble for telemetry
   });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {

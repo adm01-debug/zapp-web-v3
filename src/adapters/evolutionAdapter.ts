@@ -30,6 +30,14 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
     content = '[Mensagem Interativa]';
   }
 
+  // Enriquecimento de metadados para telemetria (ex: PTT detection)
+  const mediaMeta: any = Array.isArray(evo.media_meta) ? {} : (evo.media_meta || {});
+  if (evo.message_type === 'audioMessage' || evo.message_type === 'audio') {
+    if (mediaMeta.ptt === undefined && (evo as any).ptt !== undefined) {
+      mediaMeta.ptt = (evo as any).ptt;
+    }
+  }
+
   return {
     id: evo.id,
     contact_id: evo.contact_id || evo.remote_jid,

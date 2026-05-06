@@ -136,9 +136,17 @@ export function reconcileOptimistic(
         patch.status_updated_at = promoted.status_updated_at;
         if (!can.media_url && m.media_url) patch.media_url = m.media_url;
         if (can.reactions && can.reactions.length > 0) patch.reactions = can.reactions;
+
+        // Telemetria enriquecida para áudio (PTT vs Gravado)
+        let messageType = m.message_type;
+        if (messageType === 'audio') {
+          const isPtt = (m as any).media_meta?.ptt === true;
+          messageType = isPtt ? 'audio_ptt' : 'audio_recorded';
+        }
+
         recordMatch({
           strategy: 'external_id',
-          messageType: m.message_type,
+          messageType,
           optimisticId: m.id,
           canonicalId: can.id,
         });
@@ -166,9 +174,17 @@ export function reconcileOptimistic(
         patch.status_updated_at = promoted.status_updated_at;
         if (!match.media_url && m.media_url) patch.media_url = m.media_url;
         if (match.reactions && match.reactions.length > 0) patch.reactions = match.reactions;
+
+        // Telemetria enriquecida para áudio fallback
+        let messageType = m.message_type;
+        if (messageType === 'audio') {
+          const isPtt = (m as any).media_meta?.ptt === true;
+          messageType = isPtt ? 'audio_ptt' : 'audio_recorded';
+        }
+
         recordMatch({
           strategy: 'media_fallback',
-          messageType: m.message_type,
+          messageType,
           optimisticId: m.id,
           canonicalId: match.id,
           deltaMs: Math.abs(new Date(match.created_at).getTime() - optTime),

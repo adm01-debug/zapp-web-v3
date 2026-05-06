@@ -363,6 +363,8 @@ export function useRealtimeInbox() {
           const { sendExternalAudio } = await import('..');
           const { optimistic } = await sendExternalAudio(contactId, attachments[0], { 
             contactAvatar: currentAvatar,
+            isPtt: !attachments[0].name.endsWith('.mp3'),
+            conversationInstance: (resolvedSelectedConversation as any)?.instance_name || (resolvedSelectedConversation?.contact as any)?.instance_name,
             onProgress: (p) => { messageQueue.updateProgress(item.id, p); }
           });
           if (optimistic.external_id) item.externalId = optimistic.external_id;
