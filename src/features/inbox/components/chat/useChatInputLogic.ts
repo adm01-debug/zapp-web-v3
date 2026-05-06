@@ -22,10 +22,12 @@ interface UseChatInputLogicParams {
   fileUploaderRef: React.RefObject<FileUploaderRef | null>;
   onSend: (attachments?: File[]) => void;
   onPasteFiles?: (files: File[]) => void;
+  isRecordingAudio?: boolean;
 }
 
 export function useChatInputLogic({
   inputValue, contactId, editingMessage, inputRef, fileUploaderRef, onSend, onPasteFiles,
+  isRecordingAudio,
 }: UseChatInputLogicParams) {
   const [showRichToolbar, setShowRichToolbar] = useState(false);
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
@@ -162,6 +164,9 @@ export function useChatInputLogic({
     }
   }, [hasText, attachments, isOverLimit, isSendingFiles, contactId, isMobile, onSend, editingMessage, fileUploaderRef]);
 
+  const canSend = hasText || attachments.length > 0 || !!editingMessage;
+  const isMicActive = !!isRecordingAudio;
+
   return {
     showRichToolbar, setShowRichToolbar,
     showMarkdownPreview, setShowMarkdownPreview,
@@ -170,6 +175,7 @@ export function useChatInputLogic({
     CHAR_LIMIT,
     attachments, removeAttachment, handleFileSelect,
     handlePaste, handleVoiceDictation, handleSendWithAnimation,
+    canSend, isMicActive,
   };
 }
 
