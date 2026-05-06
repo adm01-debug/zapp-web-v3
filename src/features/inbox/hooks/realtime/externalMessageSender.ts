@@ -187,22 +187,23 @@ export async function sendExternalAudio(
   }
 
   if (opts.onProgress) opts.onProgress(50); // Simulation midpoint
-  if (uploadError) {
-    log.error('audio upload failed', uploadError);
-    throw new Error(uploadError.message || 'Falha no upload do áudio');
-  }
-
+  
   const { data: signed, error: signError } = await supabase.storage
     .from('audio-messages')
     .createSignedUrl(fileName, 3600);
+    
   if (signError || !signed?.signedUrl) {
     log.error('audio signed url failed', signError);
     throw new Error(signError?.message || 'Falha ao gerar URL do áudio');
   }
 
+  // Use URL.createObjectURL for the optimistic bubble to avoid relying on a 1h signed URL
+  // that might expire before reconciliation or if the message is revisited.
+  const localAudioUrl = URL.createObjectURL(blob);
+
   const optimistic = makeOptimisticBubble(remoteJid, '[Áudio]', {
     messageType: 'audio',
-    mediaUrl: signed.signedUrl,
+    mediaUrl: localAudioUrl,
     contactAvatar: opts.contactAvatar,
   });
 
@@ -212,6 +213,7 @@ export async function sendExternalAudio(
       instanceName: instance,
       number: phone,
       audio: signed.signedUrl,
+      encoding: true, // Aligned with architecture doc stage 3
     },
   });
 
