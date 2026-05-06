@@ -9,6 +9,7 @@
  * 401 auth issues and rate-limit spikes.
  */
 import { useMemo, useState } from 'react';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { useQuery } from '@tanstack/react-query';
 import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -199,7 +200,7 @@ export default function AdminEvolutionApiLogsPage() {
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Instância</label>
-            <Input value={instanceFilter} onChange={e => setInstanceFilter(e.target.value)} placeholder="ex: wpp2" />
+            <Input value={instanceFilter} onChange={e => setInstanceFilter(e.target.value)} placeholder={`ex: ${DEFAULT_WHATSAPP_INSTANCE}`} />
           </div>
         </CardContent>
       </Card>
