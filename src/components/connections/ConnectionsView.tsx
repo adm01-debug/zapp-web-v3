@@ -38,6 +38,8 @@ import { useEvolutionAutoSync } from '@/hooks/useEvolutionAutoSync';
 import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
 
 export function ConnectionsView() {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const {
     connections, loading,
     isAddDialogOpen, setIsAddDialogOpen,
