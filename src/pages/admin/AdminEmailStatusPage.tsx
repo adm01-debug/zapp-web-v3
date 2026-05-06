@@ -16,8 +16,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { emailApi, type EmailHealthSummary, type EmailRevalidationJob } from '@/services/email/emailApi';
 
-const castStatus = (status: any): EmailHealthInfo['status'] => {
-  if (['healthy', 'degraded', 'error'].includes(status)) {
+const castStatus = (status: string | null): EmailHealthInfo['status'] => {
+  if (status && ['healthy', 'degraded', 'error'].includes(status)) {
     return status as EmailHealthInfo['status'];
   }
   return 'error';
