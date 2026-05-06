@@ -973,6 +973,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_webhooks: {
+        Row: {
+          auth_token: string | null
+          created_at: string | null
+          events_subscribed: string[] | null
+          id: string
+          is_active: boolean | null
+          name: string
+          target_app_name: string | null
+          webhook_url: string
+        }
+        Insert: {
+          auth_token?: string | null
+          created_at?: string | null
+          events_subscribed?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          target_app_name?: string | null
+          webhook_url: string
+        }
+        Update: {
+          auth_token?: string | null
+          created_at?: string | null
+          events_subscribed?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          target_app_name?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
       audio_memes: {
         Row: {
           audio_url: string
@@ -10506,6 +10539,39 @@ export type Database = {
           },
         ]
       }
+      system_connections: {
+        Row: {
+          config: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          provider: Database["public"]["Enums"]["connection_provider"]
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          provider: Database["public"]["Enums"]["connection_provider"]
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          provider?: Database["public"]["Enums"]["connection_provider"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_event_keys: {
         Row: {
           created_at: string
@@ -13593,6 +13659,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      fn_log_system_connection_event: {
+        Args: {
+          p_connection_id: string
+          p_event_type: string
+          p_message: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       fn_mark_conversation_as_read: {
         Args: { p_conversation_id: string; p_last_message_id: string }
         Returns: undefined
@@ -14954,6 +15029,12 @@ export type Database = {
         | "messenger"
         | "webchat"
         | "email"
+      connection_provider:
+        | "supabase_external"
+        | "bitrix24"
+        | "n8n"
+        | "generic_webhook"
+        | "mcp_claude"
       conversion_status: "pending" | "processing" | "completed" | "failed"
       provider_type: "evolution" | "wppconnect" | "baileys" | "custom"
       scan_verdict: "clean" | "infected" | "suspicious" | "pending" | "error"
@@ -15135,6 +15216,13 @@ export const Constants = {
         "messenger",
         "webchat",
         "email",
+      ],
+      connection_provider: [
+        "supabase_external",
+        "bitrix24",
+        "n8n",
+        "generic_webhook",
+        "mcp_claude",
       ],
       conversion_status: ["pending", "processing", "completed", "failed"],
       provider_type: ["evolution", "wppconnect", "baileys", "custom"],
