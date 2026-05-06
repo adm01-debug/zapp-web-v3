@@ -24,6 +24,8 @@ export type MainTab = 'open' | 'resolved' | 'search' | 'unread';
 export type SubTab = 'attending' | 'waiting';
 
 
+export type InboxScope = 'mine' | 'department' | 'all';
+
 interface TicketTabsProps {
   conversations: ConversationWithMessages[];
   mainTab: MainTab;
@@ -32,6 +34,8 @@ interface TicketTabsProps {
   onSubTabChange: (tab: SubTab) => void;
   showAll: boolean;
   onShowAllChange: (value: boolean) => void;
+  scope?: InboxScope;
+  onScopeChange?: (scope: InboxScope) => void;
   selectedQueueId: string | null;
   onQueueChange: (queueId: string | null) => void;
 }
@@ -44,11 +48,13 @@ export function TicketTabs({
   onSubTabChange,
   showAll,
   onShowAllChange,
+  scope = 'mine',
+  onScopeChange,
   selectedQueueId,
   onQueueChange,
 }: TicketTabsProps) {
-  const { user } = useAuth();
-  const { isSupervisor } = useUserRole();
+  const { user, profile } = useAuth();
+  const { isSupervisor, isManager, isAdmin } = useUserRole();
   const { queues } = useQueues();
   const { density } = useDensity();
   const isCompact = density === 'compact' || density === 'dense';
@@ -56,6 +62,10 @@ export function TicketTabs({
   const isMobile = useIsMobile();
   // Operação ampla — supervisor+ vê todos os tickets (admin e dev incluídos por hierarquia).
   const canShowAll = isSupervisor;
+  // Coordenador de departamento (supervisor) vê o próprio depto.
+  // Gestor geral / admin / dev veem TODOS os departamentos.
+  const canSeeDepartment = isSupervisor && !!profile?.department_id;
+  const canSeeAllDepartments = isManager || isAdmin;
 
   // Conta tickets pelo overlay real (open/in_progress/resolved). Quando
   // um contato ainda não tem registro, assumimos `open` (bootstrap).
