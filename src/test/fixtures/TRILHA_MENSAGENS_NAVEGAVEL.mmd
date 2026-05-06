@@ -47,6 +47,7 @@ flowchart LR
     UEM["useEvolutionMonitoring"]
     AMP["AudioMessagePlayer"]
     URRA["useRetryResolutionAlerts"]
+    CMA["ChatMessagesArea"]
   end
 
   subgraph RENDER["6. Render"]
@@ -116,6 +117,7 @@ flowchart LR
   DB -.->|INSERT health| UEM
   DB -.->|UPDATE media_url| AMP
   DB -.->|UPDATE retry_attempt/status| URRA
+  DB -.->|INSERT/UPDATE| CMA
 
   %% Pipeline interno do realtime principal
   URM --> BATCH
