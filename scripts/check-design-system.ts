@@ -93,14 +93,13 @@ function scanDir(dir: string, results: Violation[]) {
       if (line.includes('@ds-ignore')) return;
 
       FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
-        // Build a regex that includes multiple variants
         const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
-        // Ensure word boundaries or quote boundaries
-        const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
+        // Pattern inside quotes or delimiters
+        const fullPattern = new RegExp(`(?<=['"\`\\s])${variantsPart}${pattern.source}(?=['"\`\\s])|(?<=['"\`\\s])${variantsPart}${pattern.source}$|^${variantsPart}${pattern.source}(?=['"\`\\s])|^${variantsPart}${pattern.source}$`, 'g');
         const matches = line.matchAll(fullPattern);
         
         for (const match of matches) {
-          const rawMatch = match[0].trim().replace(/^['"`]|['"`]$/g, '');
+          const rawMatch = match[0].trim();
           if (!rawMatch) continue;
 
           const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
