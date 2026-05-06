@@ -90,7 +90,7 @@ export function AudioMemePicker({ onSendAudioMeme, disabled }: AudioMemePickerPr
   const [showFavorites, setShowFavorites] = useState(false);
 
   const {
-    memes, loading, uploading, playingId, pendingUpload, fileInputRef,
+    memes, loading, syncing, syncError, uploading, playingId, pendingUpload, fileInputRef,
     handlePreview, handleFileSelect, handleConfirmUpload, handleCancelUpload,
     handleSend, toggleFavorite, handleCategoryChange, handleDelete, cleanup,
   } = useAudioMemes(open);
