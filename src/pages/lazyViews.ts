@@ -12,6 +12,7 @@ export const QueuesView = lazyWithRetry(() => import('@/components/queues/Queues
 // (Todos/Duplicados/Lixeira) foi mantido no repositório como fallback.
 export const ContactsView = lazyWithRetry(() => import('@/components/contacts/ContactsRichView').then(m => ({ default: m.ContactsRichView })));
 export const ConnectionsView = lazyWithRetry(() => import('@/components/connections/ConnectionsView').then(m => ({ default: m.ConnectionsView })));
+export const ConnectionsIntegrationsHub = lazyWithRetry(() => import('@/components/connections/ConnectionsIntegrationsHub').then(m => ({ default: m.ConnectionsIntegrationsHub })));
 export const TagsView = lazyWithRetry(() => import('@/components/tags/TagsView').then(m => ({ default: m.TagsView })));
 export const SettingsView = lazyWithRetry(() => import('@/components/settings/SettingsView').then(m => ({ default: m.SettingsView })));
 export const ClientWalletView = lazyWithRetry(() => import('@/components/wallet/ClientWalletView').then(m => ({ default: m.ClientWalletView })));
