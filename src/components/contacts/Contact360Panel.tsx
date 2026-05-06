@@ -30,7 +30,7 @@ import {
   History, Clock, RefreshCw,
 } from 'lucide-react';
 import { sanitizeText } from '@/lib/sanitize';
-import { formatPhoneBR } from '@/lib/normalizePhoneBR';
+import { formatPhoneForDisplay as formatPhoneBR } from '@/lib/phoneUtils';
 import { SafeHtml } from './SafeHtml';
 import { ContactConsentManager, ConsentData } from './ContactConsentManager';
 import { AuditLogPanel } from './AuditLogPanel';
