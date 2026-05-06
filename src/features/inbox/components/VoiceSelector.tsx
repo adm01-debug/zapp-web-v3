@@ -30,7 +30,7 @@ export const ELEVENLABS_VOICES: ElevenLabsVoice[] = [
   { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Amigável e calorosa', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Laura, uma voz amigável e calorosa.' },
   { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie', description: 'Casual e jovem', gender: 'male', accent: 'Australiano', sampleText: 'Olá! Eu sou o Charlie, uma voz casual e jovem.' },
   { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Autoritário e confiante', gender: 'male', accent: 'Britânico', sampleText: 'Olá! Eu sou o George, uma voz autoritária e confiante.' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', description: 'Acolhedora e gentil', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Matilda, uma voz acolhedora e gentil.' },
+  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda (Vovó)', description: 'Acolhedora e gentil', gender: 'female', accent: 'Americano', sampleText: 'Olá! Eu sou a Matilda, uma voz acolhedora e gentil.' },
   { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', description: 'Elegante e sofisticada', gender: 'female', accent: 'Britânico', sampleText: 'Olá! Eu sou a Lily, uma voz elegante e sofisticada.' },
   { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'Narrando e envolvente', gender: 'male', accent: 'Britânico', sampleText: 'Olá! Eu sou o Daniel, uma voz envolvente para narração.' },
   { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Profundo e cativante', gender: 'male', accent: 'Americano', sampleText: 'Olá! Eu sou o Brian, uma voz profunda e cativante.' },
