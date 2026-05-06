@@ -121,7 +121,7 @@ export function EmailStatusPanel() {
                   <div key={`${failure.requestId}-${i}`} className="p-4 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono text-[10px]">{failure.requestId}</Badge>
+                        <Badge variant="outline" className=" text-[10px]">{failure.requestId}</Badge>
                         <Badge variant="secondary" className="uppercase text-[10px]">{failure.operation}</Badge>
                         <span className="text-sm font-semibold">{failure.resource}</span>
                       </div>

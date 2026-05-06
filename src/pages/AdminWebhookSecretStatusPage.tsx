@@ -363,7 +363,7 @@ export default function AdminWebhookSecretStatusPage() {
                   <ShieldCheck className="h-5 w-5 text-success" />
                   <Badge variant="success">Configurado</Badge>
                 </div>
-                <div className="text-xs text-muted-foreground mt-2 font-mono">
+                <div className="text-xs text-muted-foreground mt-2 ">
                   {secret.length} chars · #{secret.hashPrefix}
                 </div>
               </>
@@ -518,11 +518,11 @@ export default function AdminWebhookSecretStatusPage() {
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Tamanho do secret</span>
-              <span className="font-mono">{secret?.length ?? 0} caracteres</span>
+              <span className="">{secret?.length ?? 0} caracteres</span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Hash prefix (SHA-256)</span>
-              <span className="font-mono">{secret?.hashPrefix ? `${secret.hashPrefix}…` : '—'}</span>
+              <span className="">{secret?.hashPrefix ? `${secret.hashPrefix}…` : '—'}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Último check</span>
@@ -537,11 +537,11 @@ export default function AdminWebhookSecretStatusPage() {
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Eventos sem assinatura</span>
-              <span className="font-mono">{unsigned}</span>
+              <span className="">{unsigned}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Eventos com erro</span>
-              <span className="font-mono">{errored}</span>
+              <span className="">{errored}</span>
             </div>
           </div>
         </CardContent>
@@ -622,7 +622,7 @@ export default function AdminWebhookSecretStatusPage() {
                         </td>
                       )}
                       {prefs.visibleColumns.event && (
-                        <td className="py-2 pr-4 font-mono text-xs">{e.event_type}</td>
+                        <td className="py-2 pr-4  text-xs">{e.event_type}</td>
                       )}
                       {prefs.visibleColumns.instance && (
                         <td className="py-2 pr-4 text-xs">{e.instance_name ?? '—'}</td>

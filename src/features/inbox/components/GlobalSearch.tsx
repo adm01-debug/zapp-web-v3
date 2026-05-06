@@ -109,15 +109,15 @@ export function GlobalSearch({ open, onOpenChange, onSelectResult }: GlobalSearc
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Command className="h-3 w-3" />
               <span>Pressione</span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Ctrl</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] ">Ctrl</kbd>
               <span>+</span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">K</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] ">K</kbd>
               <span>para abrir a busca</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">↑↓</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] ">↑↓</kbd>
               <span>navegar</span>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] ">Enter</kbd>
               <span>selecionar</span>
             </div>
           </div>

@@ -45,29 +45,29 @@ export function TelemetryTable({ rows, isLoading }: TelemetryTableProps) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-xs text-muted-foreground whitespace-nowrap font-mono">
+                    <td className="p-3 text-xs text-muted-foreground whitespace-nowrap ">
                       {formatTime(row.created_at)}
                     </td>
                     <td className="p-3">
-                      <Badge variant="outline" className="text-[10px] font-mono">
+                      <Badge variant="outline" className="text-[10px] ">
                         {row.operation}
                       </Badge>
                     </td>
-                    <td className="p-3 font-mono text-xs font-medium">
+                    <td className="p-3  text-xs font-medium">
                       {row.rpc_name || row.table_name || "-"}
                     </td>
-                    <td className="p-3 text-right font-mono font-bold tabular-nums">
+                    <td className="p-3 text-right  font-bold tabular-nums">
                       <span className={row.duration_ms >= 8000 ? "text-destructive" : row.duration_ms >= 3000 ? "text-warning" : ""}>
                         {formatDuration(row.duration_ms)}
                       </span>
                     </td>
-                    <td className="p-3 text-right font-mono text-xs tabular-nums">
+                    <td className="p-3 text-right  text-xs tabular-nums">
                       {row.record_count ?? "-"}
                     </td>
-                    <td className="p-3 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                    <td className="p-3 text-right  text-xs tabular-nums text-muted-foreground">
                       {row.query_limit ?? "-"}
                     </td>
-                    <td className="p-3 text-right font-mono text-xs tabular-nums text-muted-foreground">
+                    <td className="p-3 text-right  text-xs tabular-nums text-muted-foreground">
                       {row.query_offset ?? "-"}
                     </td>
                     <td className="p-3 text-xs text-muted-foreground">

@@ -70,7 +70,7 @@ export const VirusTotalConfig = () => {
               placeholder="Cole sua chave aqui..."
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="font-mono"
+              className=""
             />
             <Button 
               onClick={handleTestConnection} 

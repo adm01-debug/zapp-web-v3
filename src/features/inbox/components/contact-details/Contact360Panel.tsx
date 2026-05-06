@@ -121,7 +121,7 @@ export const Contact360Panel: React.FC<Contact360PanelProps> = ({
               {phones.map((p, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
                   <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  <span className="font-mono">{formatPhoneForDisplay(p.number)}</span>
+                  <span className="">{formatPhoneForDisplay(p.number)}</span>
                   {p.is_primary && <Badge variant="outline" className="text-xs h-4 px-1">Principal</Badge>}
                   {p.is_whatsapp && <span title="WhatsApp"><MessageCircle className="h-3 w-3 text-primary" /></span>}
                   <button

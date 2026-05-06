@@ -615,7 +615,7 @@ export default function AdminStressTestPage() {
             {results.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-12">Nenhum envio ainda.</p>
             ) : (
-              <ul className="space-y-1 font-mono text-xs">
+              <ul className="space-y-1  text-xs">
                 {results.map((r) => (
                   <li
                     key={`${r.idx}-${r.ts}`}
@@ -723,7 +723,7 @@ export default function AdminStressTestPage() {
 
             <div className="p-4 bg-background rounded-lg border">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-yellow-500" /> Recomendações Estratégicas
+                <ShieldAlert className="h-4 w-4 text-warning" /> Recomendações Estratégicas
               </h4>
               <ul className="text-sm space-y-2 list-disc pl-5 text-muted-foreground">
                 {results.filter(r => r.status === 'fail').length > results.length * 0.1 ? (

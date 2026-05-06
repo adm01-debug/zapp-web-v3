@@ -183,7 +183,7 @@ export function EmailThreadView({
                   className="h-8 w-8"
                   onClick={() => onStar?.(thread.id, !thread.is_starred)}
                 >
-                  <Star className={`h-4 w-4 ${thread.is_starred ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}`} />
+                  <Star className={`h-4 w-4 ${thread.is_starred ? 'text-warning fill-yellow-500' : 'text-muted-foreground'}`} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{thread.is_starred ? 'Remover favorito' : 'Favoritar'}</TooltipContent>

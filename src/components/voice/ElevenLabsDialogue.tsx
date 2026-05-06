@@ -108,7 +108,7 @@ export function ElevenLabsDialogue() {
           <div className="space-y-3 pr-2">
             {lines.map((line, idx) => (
               <div key={line.id} className="flex items-start gap-2 p-3 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground font-mono mt-2 w-6">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground  mt-2 w-6">
                   {idx + 1}
                 </div>
                 <div className="flex-1 space-y-2">

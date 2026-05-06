@@ -39,8 +39,8 @@ const LEAD_STATUS_EMOJIS: Record<string, string> = {
 };
 
 const LEAD_STATUS_COLORS: Record<string, string> = {
-  novo: 'bg-primary text-primary-foreground', em_contato: 'bg-cyan-100 text-cyan-700',
-  qualificado: 'bg-primary text-primary', proposta: 'bg-purple-100 text-purple-700',
+  novo: 'bg-primary text-primary-foreground', em_contato: 'bg-info text-info',
+  qualificado: 'bg-primary text-primary', proposta: 'bg-primary text-primary',
   negociacao: 'bg-warning text-warning-foreground', fechado: 'bg-primary text-primary',
   perdido: 'bg-destructive text-destructive-foreground',
 };

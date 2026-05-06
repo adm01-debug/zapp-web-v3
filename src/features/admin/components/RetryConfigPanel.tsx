@@ -206,7 +206,7 @@ export function RetryConfigPanel() {
           <Info className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
           <div>
             <div className="font-medium mb-0.5">Comportamento resultante</div>
-            <div className="font-mono text-muted-foreground">{buildPreview(draft)}</div>
+            <div className=" text-muted-foreground">{buildPreview(draft)}</div>
           </div>
         </div>
 

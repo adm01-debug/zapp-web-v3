@@ -184,10 +184,10 @@ function AuditPanel() {
                       <Badge variant="secondary">{r.entity_type}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">{r.action}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className=" text-xs">
                       {r.entity_id?.slice(0, 8) ?? "—"}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className=" text-xs">
                       {r.user_id?.slice(0, 8) ?? "system"}
                     </TableCell>
                   </TableRow>

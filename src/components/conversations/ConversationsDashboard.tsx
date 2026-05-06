@@ -158,8 +158,8 @@ export const ConversationsDashboard: React.FC<{
         <Card>
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                <Star className="h-4 w-4 text-purple-600" />
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <Star className="h-4 w-4 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.avg_csat?.toFixed(1) ?? '—'}</p>

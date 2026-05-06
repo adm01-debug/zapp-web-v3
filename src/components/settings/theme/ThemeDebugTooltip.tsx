@@ -15,12 +15,12 @@ export function ThemeDebugTooltip() {
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-mono text-primary cursor-help animate-pulse">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px]  text-primary cursor-help animate-pulse">
             <Info className="w-3 h-3" />
             DEBUG: {debug.presetName}
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="w-64 p-3 font-mono text-[10px] space-y-2">
+        <TooltipContent side="bottom" className="w-64 p-3  text-[10px] space-y-2">
           <div className="flex justify-between border-b border-border/10 pb-1">
             <span className="text-muted-foreground">Preset:</span>
             <span className="text-foreground">{debug.presetId}</span>

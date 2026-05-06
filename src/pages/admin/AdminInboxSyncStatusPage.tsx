@@ -344,7 +344,7 @@ export default function AdminInboxSyncStatusPage() {
             Status de sincronização do Inbox
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Verifica o pipeline FATOR X (<code className="font-mono">evolution_messages</code>)
+            Verifica o pipeline FATOR X (<code className="">evolution_messages</code>)
             que alimenta o Inbox em tempo real. Atualiza a cada 15s.
           </p>
         </div>
@@ -386,7 +386,7 @@ export default function AdminInboxSyncStatusPage() {
           <BellRing className="h-4 w-4" />
           <AlertTitle>Sem mensagens inbound há {health.ageMinutes ?? '—'} min</AlertTitle>
           <AlertDescription>
-            O cursor externo (<code className="font-mono">evolution_messages</code>) não recebe
+            O cursor externo (<code className="">evolution_messages</code>) não recebe
             mensagens da instância <strong>{INSTANCE}</strong> há mais de{' '}
             <strong>{alertThresholdMin} min</strong>. Verifique o webhook em{' '}
             <Link to="/admin/webhook-overview" className="underline">
@@ -444,7 +444,7 @@ export default function AdminInboxSyncStatusPage() {
               Inbound (recebida)
             </div>
             <p className="text-2xl font-semibold mt-1 tabular-nums">{timeAgo(lastEvents.inboundAt)}</p>
-            <p className="text-xs text-muted-foreground font-mono mt-0.5">
+            <p className="text-xs text-muted-foreground  mt-0.5">
               {lastEvents.inboundAt ?? '—'}
             </p>
           </div>
@@ -454,7 +454,7 @@ export default function AdminInboxSyncStatusPage() {
               Outbound (enviada)
             </div>
             <p className="text-2xl font-semibold mt-1 tabular-nums">{timeAgo(lastEvents.outboundAt)}</p>
-            <p className="text-xs text-muted-foreground font-mono mt-0.5">
+            <p className="text-xs text-muted-foreground  mt-0.5">
               {lastEvents.outboundAt ?? '—'}
             </p>
           </div>
@@ -486,12 +486,12 @@ export default function AdminInboxSyncStatusPage() {
             <ul className="divide-y">
               {topConversations.map((c, idx) => (
                 <li key={c.remote_jid} className="py-2 flex items-center gap-3">
-                  <span className="text-sm font-mono w-6 text-muted-foreground">#{idx + 1}</span>
+                  <span className="text-sm  w-6 text-muted-foreground">#{idx + 1}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {c.push_name || c.remote_jid.split('@')[0]}
                     </p>
-                    <p className="text-xs text-muted-foreground font-mono truncate">
+                    <p className="text-xs text-muted-foreground  truncate">
                       {c.remote_jid}
                     </p>
                   </div>
@@ -565,7 +565,7 @@ export default function AdminInboxSyncStatusPage() {
                   {audit.map((a) => (
                     <li key={a.id} className="rounded-md border bg-muted/30 p-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono font-medium">{a.action ?? '—'}</span>
+                        <span className=" font-medium">{a.action ?? '—'}</span>
                         <span className="text-muted-foreground">{timeAgo(a.created_at)}</span>
                       </div>
                       <p className="text-muted-foreground mt-0.5">

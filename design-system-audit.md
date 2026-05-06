@@ -7,217 +7,217 @@
 ## src/components/AppErrorBoundary.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 94 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 94 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/CommandPalette.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 123 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 123 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/a11y/a11yComponents.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 86 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 86 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/calls/CallDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 198 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 198 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/calls/DialPad.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 154 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 154 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/campaigns/CampaignsView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 158 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 158 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/catalog/ProductManagement.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 122 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 122 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/chatbot/ChatbotFlowsView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 205 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 205 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/chatbot/ChatbotNodeDialogs.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 17 | `border-purple-500` | `border-purple-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 18 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 17 | `border-purple-500` | `border-purple-500` | border-primary | `border-primary` |
+| Medium | 18 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/compliance/PrivacyAuditTrail.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 77 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 77 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/connections/IdempotencyMissBanner.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 81 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 109 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 133 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 81 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 109 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 133 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/connections/OfficialApiConfigDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 127 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 127 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ActivityTimeline.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 22 | `bg-pink-100` | `bg-pink-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 22 | `text-pink-800` | `text-pink-800` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 22 | `bg-pink-100` | `bg-pink-100` | bg-accent | `bg-accent` |
+| Medium | 22 | `text-pink-800` | `text-pink-800` | text-accent | `text-accent` |
 ## src/components/contacts/AuditLogPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 30 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 30 | `text-purple-800` | `text-purple-800` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 30 | `border-purple-300` | `border-purple-300` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 30 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 30 | `text-purple-800` | `text-purple-800` | text-primary | `text-primary` |
+| Medium | 30 | `border-purple-300` | `border-purple-300` | border-primary | `border-primary` |
 ## src/components/contacts/Contact360Panel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 177 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 177 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactActivityFeed.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 29 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 29 | `text-purple-600` | `text-purple-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 30 | `bg-yellow-100` | `bg-yellow-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 30 | `text-yellow-600` | `text-yellow-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 29 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 29 | `text-purple-600` | `text-purple-600` | text-primary | `text-primary` |
+| Medium | 30 | `bg-yellow-100` | `bg-yellow-100` | bg-warning | `bg-warning` |
+| Medium | 30 | `text-yellow-600` | `text-yellow-600` | text-warning | `text-warning` |
 ## src/components/contacts/ContactAnalyticsDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 183 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 183 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactAuditLogPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 33 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 33 | `text-purple-800` | `text-purple-800` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 33 | `border-purple-300` | `border-purple-300` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 33 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 33 | `text-purple-800` | `text-purple-800` | text-primary | `text-primary` |
+| Medium | 33 | `border-purple-300` | `border-purple-300` | border-primary | `border-primary` |
 ## src/components/contacts/ContactBitrix24Panel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 86 | `bg-indigo-100` | `bg-indigo-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 86 | `text-indigo-700` | `text-indigo-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 86 | `bg-indigo-100` | `bg-indigo-100` | bg-primary | `bg-primary` |
+| Medium | 86 | `text-indigo-700` | `text-indigo-700` | text-primary | `text-primary` |
 ## src/components/contacts/ContactCard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 183 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 183 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactDialogs.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 120 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 120 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactDuplicatesPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 193 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 193 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactErrorBoundary.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 74 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 74 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactFormV3.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 257 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 257 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactListItem.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 130 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 130 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactMergeDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 278 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 278 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactMergePanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 139 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 139 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactNotesPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 31 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 31 | `text-purple-700` | `text-purple-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 31 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 31 | `text-purple-700` | `text-purple-700` | text-primary | `text-primary` |
 ## src/components/contacts/ContactPhoneManager.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 150 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 198 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 150 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 198 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactQuickPeek.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 88 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 88 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactQuickView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 142 | `bg-purple-500` | `bg-purple-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 142 | `bg-purple-500` | `bg-purple-500` | bg-primary | `bg-primary` |
 ## src/components/contacts/ContactResultsSummary.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 46 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 47 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 48 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 46 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 47 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 48 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactRow.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 24 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 24 | `text-purple-700` | `text-purple-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 24 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 24 | `text-purple-700` | `text-purple-700` | text-primary | `text-primary` |
 ## src/components/contacts/ContactSLAIndicator.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 51 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 51 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactSidebarPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 27 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 27 | `text-purple-700` | `text-purple-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 123 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 125 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 130 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 27 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 27 | `text-purple-700` | `text-purple-700` | text-primary | `text-primary` |
+| Medium | 123 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 125 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 130 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactStatsDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 42 | `bg-cyan-100` | `bg-cyan-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 42 | `text-cyan-700` | `text-cyan-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 43 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 43 | `text-purple-700` | `text-purple-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 42 | `bg-cyan-100` | `bg-cyan-100` | bg-info | `bg-info` |
+| Medium | 42 | `text-cyan-700` | `text-cyan-700` | text-info | `text-info` |
+| Medium | 43 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 43 | `text-purple-700` | `text-purple-700` | text-primary | `text-primary` |
 ## src/components/contacts/ContactsRichView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 250 | `text-yellow-400` | `text-yellow-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 538 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 542 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 546 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 554 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 558 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 562 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 566 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 570 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 576 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 250 | `text-yellow-400` | `text-yellow-400` | text-warning | `text-warning` |
+| Medium | 538 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 542 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 546 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 554 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 558 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 562 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 566 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 570 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 576 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactsStatsBar.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 88 | `border-pink-400` | `border-pink-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 88 | `text-pink-700` | `text-pink-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 88 | `bg-pink-50` | `bg-pink-50` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 88 | `dark:text-pink-400` | `text-pink-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 88 | `dark:bg-pink-950` | `bg-pink-950` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 88 | `border-pink-400` | `border-pink-400` | border-accent | `border-accent` |
+| Medium | 88 | `text-pink-700` | `text-pink-700` | text-accent | `text-accent` |
+| Medium | 88 | `bg-pink-50` | `bg-pink-50` | bg-accent | `bg-accent` |
+| Medium | 88 | `dark:text-pink-400` | `text-pink-400` | dark:text-accent | `dark:text-accent` |
+| Medium | 88 | `dark:bg-pink-950` | `bg-pink-950` | dark:bg-accent | `dark:bg-accent` |
 ## src/components/contacts/ContactsTable.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 189 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 189 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactsTableVirtual.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 127 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 127 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/ContactsViewV3.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 89 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 89 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/contacts/DuplicateContactsPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 204 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 204 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/conversations/ConversationsDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 161 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 162 | `text-purple-600` | `text-purple-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 161 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 162 | `text-purple-600` | `text-purple-600` | text-primary | `text-primary` |
 ## src/components/dashboard/AgentPerformancePanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 110 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 110 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/dashboard/ConversationHeatmap.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -239,154 +239,154 @@
 ## src/components/dashboard/PlatformHealthDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 108 | `bg-purple-100` | `bg-purple-100` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 108 | `text-purple-600` | `text-purple-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 108 | `bg-purple-100` | `bg-purple-100` | bg-primary | `bg-primary` |
+| Medium | 108 | `text-purple-600` | `text-purple-600` | text-primary | `text-primary` |
 ## src/components/dashboard/metrics/AnimatedMetricCard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 57 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 57 | `hover:border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 57 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
+| Medium | 57 | `hover:border-yellow-500` | `border-yellow-500` | hover:border-warning | `hover:border-warning` |
 ## src/components/debug/ThemeDebugger.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 101 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 101 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/effects/EasterEggs.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 240 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 240 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/email/EmailContactPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 28 | `bg-violet-500` | `bg-violet-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 28 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 28 | `bg-violet-500` | `bg-violet-500` | bg-primary | `bg-primary` |
+| Medium | 28 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
 ## src/components/email/EmailAttachmentPreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 32 | `text-purple-500` | `text-purple-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 32 | `text-purple-500` | `text-purple-500` | text-primary | `text-primary` |
 ## src/components/errors/ErrorBoundary.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 156 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 156 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/gamification/AchievementsSystem.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 34 | `border-purple-500` | `border-purple-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 35 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 34 | `border-purple-500` | `border-purple-500` | border-primary | `border-primary` |
+| Medium | 35 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/gmail/GmailThreadView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 186 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 186 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
 ## src/components/gmail/GmailAccountSelector.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 82 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 82 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
 ## src/components/gmail/GmailStatusPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/gmail/GmailInboxView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 248 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 248 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
 ## src/components/integrations/EvolutionApiIntegrationView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 187 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 204 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 187 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 204 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/knowledge/KnowledgeBaseView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 96 | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 126 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 96 | `border-yellow-400` | `border-yellow-400` | border-warning | `border-warning` |
+| Medium | 126 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/layout/AppShell.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 129 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 129 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/layout/Sidebar.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 68 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 78 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 101 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 103 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 68 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 78 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 101 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 103 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/layout/SidebarNavItem.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 128 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 128 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/meta-capi/MetaCAPIView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 150 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 150 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/CrossTabDedupePanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 129 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 129 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/DLQAuditHistory.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 60 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 69 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 74 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 160 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 169 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 60 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 69 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 74 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 160 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 169 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/DLQPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 151 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 214 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 215 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 223 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 259 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 265 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 269 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 151 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 214 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 215 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 223 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 259 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 265 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 269 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/MonitoringWebhookPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 105 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 108 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 215 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 105 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 108 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 215 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/RetryAlertsBanner.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 27 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 44 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 27 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 44 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/RetryMetricsPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 305 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 316 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 320 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 344 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 353 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 536 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 305 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 316 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 320 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 344 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 353 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 536 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/monitoring/RetrySchedulePreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 66 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 69 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 72 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 75 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 89 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 95 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 101 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 120 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 121 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 127 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 66 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 69 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 72 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 75 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 89 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 95 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 101 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 120 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 121 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 127 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/notifications/NotificationSettingsPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 93 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 93 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/notifications/NotificationTypeCards.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 176 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 179 | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 197 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 176 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 179 | `border-yellow-400` | `border-yellow-400` | border-warning | `border-warning` |
+| Medium | 197 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/pipeline/DealCard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 28 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 28 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/queues/CreateQueueDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -401,82 +401,82 @@
 ## src/components/security/BlockedIPDialogs.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 87 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 87 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/security/BlockedIPsPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 64 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 64 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/security/IPWhitelistPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 195 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 273 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 195 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 273 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/security/RateLimitConfigPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 195 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 195 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/security/RateLimitRealtimeAlerts.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 138 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 138 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/security/SecurityNotificationsPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 49 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 95 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 49 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
+| Medium | 95 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/security/SecurityOverview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 103 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 103 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/security/SecurityPanels.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 31 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 31 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
 ## src/components/security/VirusTotalConfig.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 73 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 73 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/ConnectionTestPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 117 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 117 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/IntegrationKeysSection.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 192 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 264 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 268 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 272 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 276 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 301 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 192 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 264 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 268 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 272 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 276 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 301 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/ai-providers/AIProviderCard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 70 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 70 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/ai-providers/AIProviderFormDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 134 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 149 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 134 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 149 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/ai-providers/AIProviderHealthPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 170 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 170 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/sla/SLARuleRow.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 56 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 56 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/theme/BorderRadiusControl.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 19 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 27 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 36 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 19 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 27 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 36 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/theme/ThemeDebugTooltip.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 18 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 23 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 18 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 23 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/settings/theme/presets.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -501,18 +501,18 @@
 ## src/components/talkx/TalkXCampaignEditor.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 79 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 93 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 150 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 156 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 79 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 93 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 150 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 156 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/team-chat/DepartmentManagementDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 416 | `border-yellow-500` | `border-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 416 | `bg-yellow-500` | `bg-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 417 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 419 | `text-yellow-700` | `text-yellow-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 420 | `text-yellow-600` | `text-yellow-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 416 | `border-yellow-500` | `border-yellow-500` | border-warning | `border-warning` |
+| Medium | 416 | `bg-yellow-500` | `bg-yellow-500` | bg-warning | `bg-warning` |
+| Medium | 417 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
+| Medium | 419 | `text-yellow-700` | `text-yellow-700` | text-warning | `text-warning` |
+| Medium | 420 | `text-yellow-600` | `text-yellow-600` | text-warning | `text-warning` |
 ## src/components/team-chat/ParticipantStatsGraph.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -522,9 +522,9 @@
 ## src/components/team-chat/TeamPerformancePanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 106 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 155 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 158 | `text-yellow-400` | `text-yellow-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 106 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
+| Medium | 155 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 158 | `text-yellow-400` | `text-yellow-400` | text-warning | `text-warning` |
 ## src/components/ui/micro-interactions/buttons.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -545,40 +545,40 @@
 | Low | 48 | `#ccc` | `#ccc` | Check design system tokens | - |
 | Low | 48 | `#ccc` | `#ccc` | Check design system tokens | - |
 | High | 48 | `#fff` | `#fff` | bg-background | - |
-| Medium | 212 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 212 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/ui/command-palette.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 115 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 116 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 117 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 119 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 151 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 182 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 115 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 116 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 117 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 119 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 151 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 182 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/ui/phone-input.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 118 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 118 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/ui/skip-link.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 91 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 91 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/ui/tooltip.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 78 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 78 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/voice/ElevenLabsDialogue.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 111 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 111 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/voice/VoiceSearchOverlay.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 131 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 131 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/components/whatsapp-flows/WhatsAppProviderConfig.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 129 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 129 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
 ## src/features/admin/components/AIUsageDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -589,53 +589,53 @@
 |---|---|---|---|---|---|
 | Low | 53 | `#666` | `#666` | Check design system tokens | - |
 | Low | 53 | `#666` | `#666` | Check design system tokens | - |
-| Medium | 58 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 58 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/AdminCRMDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 76 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 76 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/FailedMessageTableRow.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 85 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 86 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 85 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 86 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/MediaMigrationTool.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 146 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 146 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/PublicApiDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 120 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 136 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 158 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 120 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 136 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 158 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/RetryConfigPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 209 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 209 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/SicoobBridgeDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 131 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 135 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 209 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 131 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 135 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 209 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/instance-pauses/AuthEventTrendChart.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 242 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 242 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/instance-pauses/IncidentDetailDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 122 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 150 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 204 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 209 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 257 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 258 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 122 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 150 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 204 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 209 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 257 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 258 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/components/GmailWebhookMonitor.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 180 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 180 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/admin/hooks/useAIUsageDashboard.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -648,67 +648,67 @@
 ## src/features/auth/components/mfa/MFABackupCodes.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 82 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 82 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/auth/components/mfa/MFAEnroll.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 135 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 172 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 135 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 172 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/auth/components/mfa/MFAVerify.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 89 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 89 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/AudioRecorder.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 305 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 328 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 348 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 349 | `text-rose-600` | `text-rose-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 395 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 457 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 483 | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 483 | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 483 | `hover:bg-rose-50` | `bg-rose-50` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 495 | `bg-rose-600` | `bg-rose-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 495 | `hover:bg-rose-700` | `bg-rose-700` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 305 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 328 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 348 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 349 | `text-rose-600` | `text-rose-600` | text-destructive | `text-destructive` |
+| Medium | 395 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 457 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 483 | `border-rose-500` | `border-rose-500` | border-destructive | `border-destructive` |
+| Medium | 483 | `text-rose-500` | `text-rose-500` | text-destructive | `text-destructive` |
+| Medium | 483 | `hover:bg-rose-50` | `bg-rose-50` | hover:bg-destructive | `hover:bg-destructive` |
+| Medium | 495 | `bg-rose-600` | `bg-rose-600` | bg-destructive | `bg-destructive` |
+| Medium | 495 | `hover:bg-rose-700` | `bg-rose-700` | hover:bg-destructive | `hover:bg-destructive` |
 ## src/features/inbox/components/BulkActionsToolbar.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/ConversationHealth.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 122 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 126 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 130 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 122 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 126 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 130 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/ConversationListSidebar.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 146 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 232 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 146 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 232 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/GlobalSearch.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 112 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 114 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 118 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 120 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 112 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 114 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 118 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 120 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/InboxEmptyChat.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 37 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 38 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 43 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 48 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 37 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 38 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 43 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 48 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/LocationMessage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 144 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 144 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/LocationPicker.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 70 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 70 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/MediaPreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -720,26 +720,26 @@
 ## src/features/inbox/components/MessagePreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 136 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 136 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/SLAIndicator.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 25 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 25 | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 25 | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 25 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 25 | `text-rose-500` | `text-rose-500` | text-destructive | `text-destructive` |
+| Medium | 25 | `border-rose-500` | `border-rose-500` | border-destructive | `border-destructive` |
 ## src/features/inbox/components/SlashCommands.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/TeamFiles.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 168 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 168 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/TemplatesWithVariables.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 23 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 97 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 23 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 97 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/VisualValidationChecklist.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -748,93 +748,93 @@
 ## src/features/inbox/components/VoiceChanger.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 255 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 255 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/agents-ops/AgentRecentSendsPopover.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 72 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 91 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 101 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 72 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 91 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 101 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/ChatInputArea.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 278 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 303 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 303 | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 307 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 308 | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 310 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 310 | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 311 | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 311 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 427 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 502 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 502 | `hover:bg-rose-600` | `bg-rose-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 514 | `bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 278 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 303 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 303 | `border-rose-500` | `border-rose-500` | border-destructive | `border-destructive` |
+| Medium | 307 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 308 | `text-rose-500` | `text-rose-500` | text-destructive | `text-destructive` |
+| Medium | 310 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 310 | `border-rose-500` | `border-rose-500` | border-destructive | `border-destructive` |
+| Medium | 311 | `text-rose-500` | `text-rose-500` | text-destructive | `text-destructive` |
+| Medium | 311 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 427 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 502 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
+| Medium | 502 | `hover:bg-rose-600` | `bg-rose-600` | hover:bg-destructive | `hover:bg-destructive` |
+| Medium | 514 | `bg-rose-500` | `bg-rose-500` | bg-destructive | `bg-destructive` |
 ## src/features/inbox/components/chat/ChatInputToolbars.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 197 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 197 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/InputPreviewBars.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 42 | `text-rose-500` | `text-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 42 | `hover:text-rose-600` | `text-rose-600` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 42 | `hover:bg-rose-500` | `bg-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 42 | `border-rose-500` | `border-rose-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 42 | `text-rose-500` | `text-rose-500` | text-destructive | `text-destructive` |
+| Medium | 42 | `hover:text-rose-600` | `text-rose-600` | hover:text-destructive | `hover:text-destructive` |
+| Medium | 42 | `hover:bg-rose-500` | `bg-rose-500` | hover:bg-destructive | `hover:bg-destructive` |
+| Medium | 42 | `border-rose-500` | `border-rose-500` | border-destructive | `border-destructive` |
 ## src/features/inbox/components/chat/MarkdownPreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 17 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 17 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/MessageAttemptsTimeline.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 98 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 100 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 110 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 114 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 118 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 133 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 138 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 98 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 100 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 110 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 114 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 118 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 133 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 138 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/MessageBubbleUnsupported.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 63 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 80 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 63 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 80 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/MessageSendHistorySheet.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 126 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 236 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 279 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 283 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 302 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 332 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 126 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 236 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 279 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 283 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 302 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 332 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/MessageStatusPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 267 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 267 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/chat/SendErrorBanner.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 84 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 84 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/contact-details/Contact360Helpers.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 112 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 112 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/contact-details/Contact360Panel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/contact-details/ContactHeaderSection.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 139 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 139 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/contact-details/ContactInfoSection.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 121 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 121 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/inbox/components/contact-details/EditContactDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -861,15 +861,15 @@
 ## src/features/inbox/components/quick-replies/QuickReplyCardList.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 75 | `border-yellow-400` | `border-yellow-400` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 75 | `border-yellow-400` | `border-yellow-400` | border-warning | `border-warning` |
 ## src/features/inbox/components/templates/TemplateEditorDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 133 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 133 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/features/sla/components/SLADeliveryHistoryDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 122 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 122 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/hooks/useQueues.ts
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -896,55 +896,55 @@
 ## src/main.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 57 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 57 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminDispatchErrorsHistoryPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 142 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 143 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 146 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 142 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 143 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 146 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminEvolutionApiLogsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 239 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 270 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 298 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 308 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 239 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 270 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 298 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 308 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminInstancePausesPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 196 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 204 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 259 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 264 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 196 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 204 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 259 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 264 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminWebhookEventsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 316 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 440 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 444 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 447 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 588 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 316 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 440 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 444 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 447 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 588 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminWebhookOverviewPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 356 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 375 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 385 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 438 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 356 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 375 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 385 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 438 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/AdminWebhookSecretStatusPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 366 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 521 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 525 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 540 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 544 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 625 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 366 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 521 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 525 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 540 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 544 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 625 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/Auth.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 92 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 92 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 | Low | 162 | `#4285F4` | `#4285F4` | Check design system tokens | - |
 | Low | 163 | `#34A853` | `#34A853` | Check design system tokens | - |
 | Low | 164 | `#FBBC05` | `#FBBC05` | Check design system tokens | - |
@@ -952,104 +952,104 @@
 ## src/pages/NotFound.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 47 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 74 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 47 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 74 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/RealtimeFanoutDebug.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 142 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 161 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 173 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 175 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 205 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 207 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 208 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 142 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 161 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 173 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 175 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 205 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 207 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 208 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/SLAAlertHistory.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 76 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 76 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/SendStatusBusDebug.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 85 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 85 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-realtime-monitor/DispatchErrorsBlock.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 63 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 107 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 63 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 107 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-realtime-monitor/EventsLiveBlock.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 125 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 125 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-search-insights/SearchInsightsTables.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 45 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 82 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 45 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 82 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-telemetria/ClientTelemetryPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 105 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 109 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 114 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 116 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 118 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 119 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 124 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 125 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 126 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 105 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 109 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 114 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 116 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 118 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 119 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 124 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 125 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 126 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-telemetria/TelemetryTable.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 48 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 52 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 56 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 59 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 64 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 67 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 70 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 48 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 52 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 56 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 59 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 64 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 67 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 70 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-telemetria/TelemetryTopOffenders.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 30 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 30 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-overview/CallCorrelationView.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 110 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 137 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 153 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 202 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 110 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 137 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 153 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 202 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-secret-status/HmacSelfTestButton.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 335 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 335 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-secret-status/InstanceBreakdownTable.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 108 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 109 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 112 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 115 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 108 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 109 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 112 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 115 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-secret-status/InstanceStatusCards.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 46 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 46 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-secret-status/RecheckResultDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 83 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 98 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 103 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 83 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 98 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 103 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin-webhook-secret-status/WebhookAlertHistoryPanel.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 163 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 175 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 163 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 175 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminAutomationLogsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 275 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 396 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 275 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 396 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminChannelsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -1059,27 +1059,27 @@
 ## src/pages/admin/AdminDevDiagnosticsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 158 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 158 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminFailedAuthMessagesPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 205 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 205 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminInboxSyncStatusPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 347 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 389 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 447 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 457 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 489 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 494 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 568 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 347 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 389 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 447 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 457 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 489 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 494 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 568 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminProvidersPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 128 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 186 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 193 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 128 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 186 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 193 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminQueuesPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -1089,81 +1089,81 @@
 ## src/pages/admin/AdminStressTestPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 618 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 726 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
+| Medium | 618 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 726 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
 ## src/pages/admin/AdminWhatsAppLogsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 164 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 238 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 240 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 284 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 329 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 330 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 164 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 238 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 240 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 284 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 329 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 330 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminWhatsAppModePage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 228 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 333 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 228 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 333 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AuditEvidenceDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 38 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 62 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 38 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 62 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/FeatureFlags.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 185 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 199 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 239 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 267 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 185 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 199 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 239 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 267 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/HmacSelfTestPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 350 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 415 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 350 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 415 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/RateLimitDashboard.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 191 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 217 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 266 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 269 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 191 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 217 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 266 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 269 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/RoutePermissionsPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 267 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 267 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/external-db-explorer/QueryExplorerBlock.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 264 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 309 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 333 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 264 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 309 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 333 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/operations/OpsLogsTab.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 187 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 190 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 187 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 190 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/admin/AdminEmailStatusPage.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 167 | `text-yellow-500` | `text-yellow-500` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 202 | `bg-yellow-50` | `bg-yellow-50` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 202 | `border-yellow-200` | `border-yellow-200` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 202 | `text-yellow-800` | `text-yellow-800` | Use semantic tokens (destructive, muted, primary, etc.) | - |
-| Medium | 279 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 328 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 167 | `text-yellow-500` | `text-yellow-500` | text-warning | `text-warning` |
+| Medium | 202 | `bg-yellow-50` | `bg-yellow-50` | bg-warning | `bg-warning` |
+| Medium | 202 | `border-yellow-200` | `border-yellow-200` | border-warning | `border-warning` |
+| Medium | 202 | `text-yellow-800` | `text-yellow-800` | text-warning | `text-warning` |
+| Medium | 279 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 328 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/failed-messages/FailedMessageDetailsSheet.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 34 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 83 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 91 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
-| Medium | 114 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 34 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 83 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 91 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
+| Medium | 114 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/pages/failed-messages/FailedMessagesErrorCodeChart.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Medium | 31 | `font-mono` | `font-mono` | Check if font-mono is intentional or should inherit global typography | - |
+| Medium | 31 | `font-mono` | `font-mono` | Remove literal font; inherit from global typography | - |
 ## src/styles/components.css
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|

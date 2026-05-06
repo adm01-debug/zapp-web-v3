@@ -98,7 +98,7 @@ export function ThemeDebugger() {
         </div>
       </div>
       
-      <div className="space-y-2 font-mono text-[10px]">
+      <div className="space-y-2  text-[10px]">
         {Object.entries(tokens).map(([key, data]) => (
           <div key={key} className="flex flex-col border-b border-border/50 pb-1">
             <div className="flex justify-between items-center">

@@ -353,7 +353,7 @@ export default function AdminWebhookOverviewPage() {
                       <TableRow>
                         <TableHead className="w-[220px]">Tipo</TableHead>
                         {matrix.instances.map((i) => (
-                          <TableHead key={i} className="text-center font-mono text-xs">
+                          <TableHead key={i} className="text-center  text-xs">
                             {i}
                           </TableHead>
                         ))}
@@ -372,7 +372,7 @@ export default function AdminWebhookOverviewPage() {
                         );
                         return (
                           <TableRow key={t}>
-                            <TableCell className="font-mono text-xs">{t}</TableCell>
+                            <TableCell className=" text-xs">{t}</TableCell>
                             {matrix.instances.map((i) => {
                               const count = matrix.matrix[t]?.[i] ?? 0;
                               const intensity = count === 0 ? 0 : Math.min(1, count / max);
@@ -382,7 +382,7 @@ export default function AdminWebhookOverviewPage() {
                               return (
                                 <TableCell
                                   key={i}
-                                  className="p-0 text-center text-xs font-mono"
+                                  className="p-0 text-center text-xs "
                                   style={cellStyle}
                                 >
                                   {count > 0 ? (
@@ -435,7 +435,7 @@ export default function AdminWebhookOverviewPage() {
                     const high = pct > 5;
                     return (
                       <TableRow key={row.type}>
-                        <TableCell className="font-mono text-xs">{row.type}</TableCell>
+                        <TableCell className=" text-xs">{row.type}</TableCell>
                         <TableCell className="text-right font-semibold">{row.total}</TableCell>
                         <TableCell className="text-right text-success">{row.processed}</TableCell>
                         <TableCell className={cn('text-right', row.errored > 0 && 'text-destructive')}>

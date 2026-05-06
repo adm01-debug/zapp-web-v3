@@ -119,15 +119,15 @@ export function ConversationHealth({ conversation, messages, className }: Conver
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/20">
             <div className="flex flex-col">
               <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Tempo Resposta</span>
-              <span className="text-xs font-mono">{metrics.details.responseTime.toFixed(1)} min</span>
+              <span className="text-xs ">{metrics.details.responseTime.toFixed(1)} min</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Msg / min</span>
-              <span className="text-xs font-mono">{metrics.details.msgPerMin.toFixed(1)}</span>
+              <span className="text-xs ">{metrics.details.msgPerMin.toFixed(1)}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Taxa Falha</span>
-              <span className={cn("text-xs font-mono", metrics.details.failureRate > 10 ? 'text-destructive' : 'text-foreground')}>
+              <span className={cn("text-xs ", metrics.details.failureRate > 10 ? 'text-destructive' : 'text-foreground')}>
                 {metrics.details.failureRate.toFixed(1)}%
               </span>
             </div>

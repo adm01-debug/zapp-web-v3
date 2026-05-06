@@ -54,7 +54,7 @@ export function AnimatedMetricCard({
   const variantStyles = {
     default: { container: 'bg-card border-border hover:border-primary/30', icon: 'bg-primary/10 text-primary', value: 'text-foreground' },
     success: { container: 'bg-success/5 border-success/20 hover:border-success/40', icon: 'bg-success/10 text-success', value: 'text-success' },
-    warning: { container: 'bg-warning/5 border-yellow-500/20 hover:border-yellow-500/40', icon: 'bg-warning/10 text-warning', value: 'text-warning' },
+    warning: { container: 'bg-warning/5 border-warning/20 hover:border-warning/40', icon: 'bg-warning/10 text-warning', value: 'text-warning' },
     danger: { container: 'bg-destructive/5 border-destructive/20 hover:border-destructive/40', icon: 'bg-destructive/10 text-destructive', value: 'text-destructive' },
     info: { container: 'bg-info/5 border-info/20 hover:border-info/40', icon: 'bg-info/10 text-info', value: 'text-info' },
   };

@@ -39,7 +39,7 @@ export function InputPreviewBars({ replyToMessage, editingMessage, onCancelReply
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border border-rose-500/20 rounded-full transition-all shrink-0"
+                className="h-8 px-3 text-xs font-bold text-destructive hover:text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-full transition-all shrink-0"
                 onClick={onCancelEdit}
               >
                 <X className="w-3.5 h-3.5 mr-1" />

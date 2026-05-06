@@ -254,7 +254,7 @@ export const ContactFormV3: React.FC<ContactFormV3Props> = ({
             onChange={(e) => update('phone', e.target.value)}
             onBlur={handlePhoneBlur}
             placeholder="(11) 99999-9999"
-            className={`font-mono ${hasDuplicates && duplicates.some((d) => d.match_field === 'phone') ? 'border-warning' : ''}`}
+            className={` ${hasDuplicates && duplicates.some((d) => d.match_field === 'phone') ? 'border-warning' : ''}`}
             autoComplete="tel"
           />
           {checking && (

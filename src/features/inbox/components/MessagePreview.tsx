@@ -133,7 +133,7 @@ export function MessagePreview({ content, className }: MessagePreviewProps) {
                 return <em key={index} className="italic">{part.content}</em>;
               case 'code':
                 return (
-                  <code key={index} className="px-1 py-0.5 bg-primary/10 text-primary rounded text-[11px] font-mono">
+                  <code key={index} className="px-1 py-0.5 bg-primary/10 text-primary rounded text-[11px] ">
                     {part.content}
                   </code>
                 );

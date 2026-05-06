@@ -44,7 +44,7 @@ const NotFound = () => {
           transition={{ delay: 0.3 }}
           className="text-muted-foreground mt-3 mb-8"
         >
-          A rota <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{location.pathname}</code> não existe.
+          A rota <code className="text-xs bg-muted px-2 py-1 rounded ">{location.pathname}</code> não existe.
         </motion.p>
 
         <motion.div
@@ -71,7 +71,7 @@ const NotFound = () => {
           transition={{ delay: 0.6 }}
           className="text-xs text-muted-foreground/60 mt-8"
         >
-          Dica: use <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border border-border/50">⌘K</kbd> para navegar rapidamente
+          Dica: use <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px]  border border-border/50">⌘K</kbd> para navegar rapidamente
         </motion.p>
       </motion.div>
     </div>

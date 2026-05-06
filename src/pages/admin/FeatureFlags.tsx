@@ -182,7 +182,7 @@ export function FeatureFlagsAdmin() {
                         onChange={(e) => updateFlag(flag.key, { ...flag.value, percentage: parseInt(e.target.value) })}
                         className="flex-1 accent-primary"
                       />
-                      <span className="font-mono font-bold w-8">{flag.value.percentage || 0}%</span>
+                      <span className=" font-bold w-8">{flag.value.percentage || 0}%</span>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -196,7 +196,7 @@ export function FeatureFlagsAdmin() {
                         const segments = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
                         updateFlag(flag.key, { ...flag.value, segments });
                       }}
-                      className="w-full bg-muted/50 border-none rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 ring-primary/20 outline-none"
+                      className="w-full bg-muted/50 border-none rounded-lg px-3 py-2 text-sm  focus:ring-2 ring-primary/20 outline-none"
                     />
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export function FeatureFlagsAdmin() {
                   <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 text-xs border border-border/30">
                     <span className="font-medium">{res.service}</span>
                     <div className="flex items-center gap-2">
-                      {res.latency && <span className="text-[9px] text-muted-foreground font-mono">{res.latency}ms</span>}
+                      {res.latency && <span className="text-[9px] text-muted-foreground ">{res.latency}ms</span>}
                       {res.status === 'ok' ? (
                         <CheckCircle2 className="w-4 h-4 text-success-foreground" />
                       ) : (
@@ -264,7 +264,7 @@ export function FeatureFlagsAdmin() {
                       <span className="text-[10px] font-bold text-primary">{new Date(log.created_at).toLocaleString()}</span>
                       <span className="text-[10px] bg-primary/10 text-primary px-1.5 rounded uppercase font-bold">{log.action}</span>
                     </div>
-                    <div className="text-[11px] font-mono break-all line-clamp-2">
+                    <div className="text-[11px]  break-all line-clamp-2">
                       <span className="font-bold text-foreground">{(log.details as any)?.new?.key?.replace('feature_', '')}</span>
                       <p className="text-muted-foreground mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
                         {JSON.stringify((log.details as any)?.new?.value)}

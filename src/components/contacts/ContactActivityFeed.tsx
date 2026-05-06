@@ -26,8 +26,8 @@ const ICONS: Record<string, React.FC<{ className?: string }>> = {
 const COLORS: Record<string, string> = {
   conversation_open: 'bg-primary text-primary', conversation_closed: 'bg-muted text-muted-foreground',
   edit: 'bg-primary text-primary', lgpd: 'bg-primary text-primary',
-  merge: 'bg-purple-100 text-purple-600', delete: 'bg-destructive text-destructive-foreground',
-  restore: 'bg-warning text-warning-foreground', note: 'bg-yellow-100 text-yellow-600',
+  merge: 'bg-primary text-primary', delete: 'bg-destructive text-destructive-foreground',
+  restore: 'bg-warning text-warning-foreground', note: 'bg-warning text-warning',
 };
 
 export const ContactActivityFeed: React.FC<{ contactId: string; maxItems?: number }> = ({ contactId, maxItems = 20 }) => {

@@ -93,7 +93,7 @@ export function KnowledgeBaseView() {
                   <p className="text-xs text-muted-foreground line-clamp-3 mb-3">{article.content}</p>
                   <div className="flex items-center gap-1 flex-wrap">
                     {article.tags.slice(0, 3).map(tag => <Badge key={tag} variant="secondary" className="text-[10px] h-4">{tag}</Badge>)}
-                    {!article.is_published && <Badge variant="outline" className="text-[10px] h-4 text-warning border-yellow-400/30">Rascunho</Badge>}
+                    {!article.is_published && <Badge variant="outline" className="text-[10px] h-4 text-warning border-warning/30">Rascunho</Badge>}
                   </div>
                 </CardContent></Card>
               </motion.div>
@@ -123,7 +123,7 @@ export function KnowledgeBaseView() {
               <div><Label>Categoria</Label><Select value={formCategory} onValueChange={setFormCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{CATEGORY_LABELS[c]}</SelectItem>)}</SelectContent></Select></div>
               <div><Label>Tags (separadas por vírgula)</Label><Input value={formTags} onChange={(e) => setFormTags(e.target.value)} placeholder="tag1, tag2" /></div>
             </div>
-            <div><Label>Conteúdo *</Label><Textarea value={formContent} onChange={(e) => setFormContent(e.target.value)} rows={12} placeholder="Escreva o conteúdo do artigo..." className="font-mono text-sm" /></div>
+            <div><Label>Conteúdo *</Label><Textarea value={formContent} onChange={(e) => setFormContent(e.target.value)} rows={12} placeholder="Escreva o conteúdo do artigo..." className=" text-sm" /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setShowEditor(false)}>Cancelar</Button><Button onClick={save}>{editingId ? 'Salvar' : 'Criar'}</Button></DialogFooter>
         </DialogContent>

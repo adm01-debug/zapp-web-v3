@@ -30,7 +30,7 @@ const ACTION_CONFIG = {
   INSERT:  { label: 'Criado',    color: 'bg-primary text-primary-foreground border-primary' },
   UPDATE:  { label: 'Editado',   color: 'bg-primary text-primary-foreground border-primary' },
   DELETE:  { label: 'Excluído',  color: 'bg-destructive text-destructive-foreground border-destructive' },
-  RESTORE: { label: 'Restaurado', color: 'bg-purple-100 text-purple-800 border-purple-300' },
+  RESTORE: { label: 'Restaurado', color: 'bg-primary text-primary border-primary' },
 };
 
 const FIELD_LABELS: Record<string, string> = {

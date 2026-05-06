@@ -189,7 +189,7 @@ export function IntegrationKeysSection() {
                     type={isVisible ? 'text' : 'password'}
                     value={currentValue}
                     readOnly
-                    className="h-8 text-sm font-mono bg-muted/30"
+                    className="h-8 text-sm  bg-muted/30"
                   />
                   <Button
                     variant="ghost"
@@ -261,19 +261,19 @@ export function IntegrationKeysSection() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-success/10">
                     <div className="space-y-0.5">
                       <p className="text-[10px] uppercase tracking-wider opacity-60">Instâncias</p>
-                      <p className="font-mono text-xs">{testResult.details.instances}</p>
+                      <p className=" text-xs">{testResult.details.instances}</p>
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-[10px] uppercase tracking-wider opacity-60">Status</p>
-                      <p className="font-mono text-xs">{testResult.details.status}</p>
+                      <p className=" text-xs">{testResult.details.status}</p>
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-[10px] uppercase tracking-wider opacity-60">Versão API</p>
-                      <p className="font-mono text-xs">{testResult.details.version}</p>
+                      <p className=" text-xs">{testResult.details.version}</p>
                     </div>
                     <div className="space-y-0.5">
                       <p className="text-[10px] uppercase tracking-wider opacity-60">Auto-Sync</p>
-                      <p className="font-mono text-xs text-success">Habilitado</p>
+                      <p className=" text-xs text-success">Habilitado</p>
                     </div>
                   </div>
                 )}
@@ -298,7 +298,7 @@ export function IntegrationKeysSection() {
                           )} />
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-foreground">{name}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">{number}</span>
+                            <span className="text-[10px] text-muted-foreground ">{number}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

@@ -155,7 +155,7 @@ export default function AdminDevDiagnosticsPage() {
                 </TableHeader>
                 <TableBody>
                   {logs.map(log => (
-                    <TableRow key={log.id} className="font-mono text-xs">
+                    <TableRow key={log.id} className=" text-xs">
                       <TableCell className="whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString()}
                       </TableCell>

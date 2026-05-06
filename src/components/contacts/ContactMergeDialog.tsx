@@ -275,7 +275,7 @@ export const ContactMergeDialog: React.FC<ContactMergeDialogProps> = ({
               <Zap className="h-4 w-4 text-primary" />
               <span className="text-sm font-bold tracking-tight">Score de Confiança</span>
             </div>
-            <Badge variant={confidenceScore > 60 ? "default" : "secondary"} className="font-mono">
+            <Badge variant={confidenceScore > 60 ? "default" : "secondary"} className="">
               {confidenceScore}%
             </Badge>
           </div>

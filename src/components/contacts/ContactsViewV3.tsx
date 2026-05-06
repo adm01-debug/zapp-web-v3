@@ -86,7 +86,7 @@ export const ContactsViewV3: React.FC<ContactsViewV3Props> = ({ workspaceId }) =
       <div className="flex items-center justify-between gap-3 p-4 border-b shrink-0">
         <div className="flex items-center gap-2">
           <h1 className="font-semibold text-lg">Contatos</h1>
-          <Badge variant="outline" className="text-xs font-mono">
+          <Badge variant="outline" className="text-xs ">
             {total.toLocaleString('pt-BR')}
           </Badge>
         </div>

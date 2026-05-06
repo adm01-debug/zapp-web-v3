@@ -245,7 +245,7 @@ export function EmailInboxView({ onSelectThread }: EmailInboxViewProps) {
                           <TooltipTrigger asChild>
                             <button
                               onClick={e => { e.stopPropagation(); starThread(thread.id, !thread.is_starred); }}
-                              className={`p-1 rounded hover:bg-muted ${thread.is_starred ? 'text-yellow-500' : 'text-muted-foreground'}`}
+                              className={`p-1 rounded hover:bg-muted ${thread.is_starred ? 'text-warning' : 'text-muted-foreground'}`}
                               aria-label={thread.is_starred ? 'Remover favorito' : 'Adicionar favorito'}
                             >
                               <Star className="h-3.5 w-3.5" fill={thread.is_starred ? 'currentColor' : 'none'} />

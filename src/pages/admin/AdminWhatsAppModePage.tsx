@@ -225,7 +225,7 @@ export default function AdminWhatsAppModePage() {
             <div className="space-y-2">
               <Label>Callback URL do Webhook</Label>
               <div className="flex gap-2">
-                <Input readOnly value={webhookUrl} className="font-mono text-xs" />
+                <Input readOnly value={webhookUrl} className=" text-xs" />
                 <Button variant="outline" size="icon" onClick={() => copy(webhookUrl)}>
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -330,7 +330,7 @@ export default function AdminWhatsAppModePage() {
                   <summary className="text-xs font-medium cursor-pointer">Atividade recente (últimos 10 pings)</summary>
                   <ul className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                     {verify.delivery.recent.map((p, i) => (
-                      <li key={i} className="text-[11px] flex items-center justify-between gap-2 font-mono">
+                      <li key={i} className="text-[11px] flex items-center justify-between gap-2 ">
                         <span className="flex items-center gap-2">
                           <Badge
                             variant={p.kind === "event" ? "default" : p.kind.startsWith("invalid") ? "destructive" : "secondary"}

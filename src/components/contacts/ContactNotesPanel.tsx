@@ -28,7 +28,7 @@ interface Note {
 const NOTE_TYPES = [
   { value: 'general',  label: '📝 Geral',     color: 'bg-muted text-muted-foreground' },
   { value: 'call',     label: '📞 Ligação',   color: 'bg-primary text-primary-foreground' },
-  { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-purple-100 text-purple-700' },
+  { value: 'meeting',  label: '🤝 Reunião',   color: 'bg-primary text-primary' },
   { value: 'email',    label: '📧 E-mail',    color: 'bg-primary text-primary' },
   { value: 'task',     label: '✅ Tarefa',    color: 'bg-warning text-warning-foreground' },
   { value: 'lgpd',     label: '⚖️ LGPD',      color: 'bg-destructive text-destructive-foreground' },

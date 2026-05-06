@@ -264,7 +264,7 @@ export const MessageStatusPanel = memo(function MessageStatusPanel({
             role="alert"
           >
             {message.error_code && (
-              <p className="font-mono text-[11px] opacity-80">
+              <p className=" text-[11px] opacity-80">
                 {message.error_code}
               </p>
             )}

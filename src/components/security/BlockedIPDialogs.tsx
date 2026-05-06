@@ -84,7 +84,7 @@ export function UnblockIPDialog({ ip, onClose, onSuccess }: UnblockIPDialogProps
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Desbloquear IP?</AlertDialogTitle>
-          <AlertDialogDescription>O IP <code className="font-mono">{ip?.ip_address}</code> poderá acessar o sistema novamente.</AlertDialogDescription>
+          <AlertDialogDescription>O IP <code className="">{ip?.ip_address}</code> poderá acessar o sistema novamente.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={updating}>Cancelar</AlertDialogCancel>

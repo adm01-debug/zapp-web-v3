@@ -239,7 +239,7 @@ export function AuthEventTrendChart() {
                 <tbody>
                   {summary.top_instances.map((row) => (
                     <tr key={row.instance_name} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-2 pr-4 font-mono text-xs">{row.instance_name}</td>
+                      <td className="py-2 pr-4  text-xs">{row.instance_name}</td>
                       <td className="py-2 pr-4 text-right">
                         <Badge variant="subtle">{row.total}</Badge>
                       </td>

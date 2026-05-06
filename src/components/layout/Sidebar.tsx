@@ -65,7 +65,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
             <button onClick={toggle} className="w-[28px] h-[28px] rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Recolher menu">
               <PanelLeftClose className="w-[15px] h-[15px]" />
             </button>
-          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Recolher <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
+          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Recolher <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] ">⌘B</kbd></TooltipContent></Tooltip>
         )}
       </div>
 
@@ -75,7 +75,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
             <button onClick={toggle} className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all border border-border/40 hover:border-border focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="Expandir menu">
               <PanelLeftOpen className="w-[16px] h-[16px]" />
             </button>
-          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Expandir <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘B</kbd></TooltipContent></Tooltip>
+          </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">Expandir <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] ">⌘B</kbd></TooltipContent></Tooltip>
         </div>
       )}
 
@@ -98,9 +98,9 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
             className={cn('rounded-lg flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-all border border-dashed border-border/60 hover:border-border', collapsed ? 'w-[40px] h-[30px] justify-center' : 'w-full h-[32px] px-3')} aria-label="Buscar módulo (Ctrl+K)">
             <Search className="w-[14px] h-[14px] shrink-0" />
             {!collapsed && <span className="text-xs text-muted-foreground">Buscar...</span>}
-            {!collapsed && <kbd className="ml-auto px-1 py-0.5 rounded bg-muted/20 text-[9px] font-mono text-muted-foreground">⌘K</kbd>}
+            {!collapsed && <kbd className="ml-auto px-1 py-0.5 rounded bg-muted/20 text-[9px]  text-muted-foreground">⌘K</kbd>}
           </button>
-        </TooltipTrigger>{collapsed && <TooltipContent side="right" sideOffset={8} className="text-xs">Buscar <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">⌘K</kbd></TooltipContent>}</Tooltip>
+        </TooltipTrigger>{collapsed && <TooltipContent side="right" sideOffset={8} className="text-xs">Buscar <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] ">⌘K</kbd></TooltipContent>}</Tooltip>
       </div>
 
       {/* Favorites */}

@@ -86,7 +86,7 @@ export function MFAVerify({
               setError('');
               setCode(e.target.value.replace(/\D/g, ''));
             }}
-            className={`text-center text-2xl tracking-widest font-mono ${error ? 'border-destructive' : ''}`}
+            className={`text-center text-2xl tracking-widest  ${error ? 'border-destructive' : ''}`}
             disabled={verifying || loading}
             autoFocus
           />

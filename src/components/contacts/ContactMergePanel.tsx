@@ -136,7 +136,7 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
                       </Avatar>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate">{contact.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{contact.phone}</p>
+                        <p className="text-xs text-muted-foreground ">{contact.phone}</p>
                       </div>
                       {idx === 0 && <Badge variant="default" className="ml-auto text-[10px]">Principal</Badge>}
                     </CardContent>

@@ -188,7 +188,7 @@ export default function RateLimitDashboard() {
                     <div key={endpoint.endpoint} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{i + 1}.</span>
-                        <code className="text-sm font-mono">{endpoint.endpoint}</code>
+                        <code className="text-sm ">{endpoint.endpoint}</code>
                       </div>
                       <Badge variant="secondary">{endpoint.count}</Badge>
                     </div>
@@ -214,7 +214,7 @@ export default function RateLimitDashboard() {
                     <div key={ip.ip} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{i + 1}.</span>
-                        <code className="text-sm font-mono">{ip.ip}</code>
+                        <code className="text-sm ">{ip.ip}</code>
                         {ip.blocked && (
                           <Badge variant="destructive" className="text-xs">Bloqueado</Badge>
                         )}
@@ -263,10 +263,10 @@ export default function RateLimitDashboard() {
                     {logs.slice(0, 20).map((log) => (
                       <TableRow key={log.id}>
                         <TableCell>
-                          <code className="font-mono text-sm">{log.ip_address}</code>
+                          <code className=" text-sm">{log.ip_address}</code>
                         </TableCell>
                         <TableCell>
-                          <code className="font-mono text-sm">{log.endpoint}</code>
+                          <code className=" text-sm">{log.endpoint}</code>
                         </TableCell>
                         <TableCell>{log.request_count}</TableCell>
                         <TableCell>

@@ -264,7 +264,7 @@ export default function RoutePermissionsPage() {
                     return (
                       <TableRow key={row.path}>
                         <TableCell>
-                          <div className="font-mono text-sm">{row.path}</div>
+                          <div className=" text-sm">{row.path}</div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2">
                             {row.description}
                             {row.is_system && (

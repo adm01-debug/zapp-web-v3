@@ -79,7 +79,7 @@ export function EmailAccountSelector({
               <span className={cn('absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background shadow-sm',
                 activeStatus === 'valid' && 'bg-success',
                 activeStatus === 'expiring' && 'bg-warning',
-                activeStatus === 'expired' && 'bg-rose-500',
+                activeStatus === 'expired' && 'bg-destructive',
                 (activeStatus === 'loading' || activeStatus === 'disconnected') && 'bg-muted',
               )} />
             </div>

@@ -83,7 +83,7 @@ export function KeyboardShortcut({ keys, description, className }: KeyboardShort
       <div className="flex items-center gap-1">
         {keys.map((key, i) => (
           <span key={i}>
-            <kbd className="px-2 py-1 text-xs font-mono bg-muted border border-border rounded shadow-sm">{formatKey(key)}</kbd>
+            <kbd className="px-2 py-1 text-xs  bg-muted border border-border rounded shadow-sm">{formatKey(key)}</kbd>
             {i < keys.length - 1 && <span className="mx-0.5 text-muted-foreground">+</span>}
           </span>
         ))}

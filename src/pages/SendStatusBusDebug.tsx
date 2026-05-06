@@ -82,7 +82,7 @@ function HistoryEntryRow({ entry }: { entry: SendStatusHistoryEntry }) {
   const style = STATUS_STYLES[entry.status];
   return (
     <li className="flex items-start gap-3 py-1.5 text-xs">
-      <span className="font-mono text-[10px] text-muted-foreground w-[88px] shrink-0 mt-0.5">
+      <span className=" text-[10px] text-muted-foreground w-[88px] shrink-0 mt-0.5">
         {format(new Date(entry.updatedAt), 'HH:mm:ss.SSS', { locale: ptBR })}
       </span>
       <Badge

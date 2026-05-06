@@ -48,7 +48,7 @@ export const ContactSLAIndicator: React.FC<ContactSLAIndicatorProps> = ({
       {config.icon}
       <span>{config.label}</span>
       {remainingMinutes !== undefined && (
-        <span className="font-mono text-[10px]">({formatRemaining(remainingMinutes)})</span>
+        <span className=" text-[10px]">({formatRemaining(remainingMinutes)})</span>
       )}
     </Badge>
   );

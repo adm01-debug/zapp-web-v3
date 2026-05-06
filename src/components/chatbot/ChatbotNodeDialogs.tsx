@@ -14,8 +14,8 @@ import { cn } from '@/lib/utils';
 export const nodeTypes: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   start: { label: 'Início', icon: Zap, color: 'border-success bg-success/10' },
   message: { label: 'Mensagem', icon: MessageSquare, color: 'border-info bg-info/10' },
-  question: { label: 'Pergunta', icon: HelpCircle, color: 'border-purple-500 bg-primary/10' },
-  condition: { label: 'Condição', icon: GitBranch, color: 'border-yellow-500 bg-warning/10' },
+  question: { label: 'Pergunta', icon: HelpCircle, color: 'border-primary bg-primary/10' },
+  condition: { label: 'Condição', icon: GitBranch, color: 'border-warning bg-warning/10' },
   action: { label: 'Ação', icon: Zap, color: 'border-warning bg-warning/10' },
   delay: { label: 'Aguardar', icon: Clock, color: 'border-info bg-info/10' },
   transfer: { label: 'Transferir', icon: Users, color: 'border-destructive bg-destructive/10' },

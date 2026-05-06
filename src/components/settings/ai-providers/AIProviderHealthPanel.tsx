@@ -167,7 +167,7 @@ export function AIProviderHealthPanel() {
                     {providerType}{isFallback && ' → fallback'}
                   </span>
                   {log.model && (
-                    <span className="font-mono text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
+                    <span className=" text-[10px] text-muted-foreground/70 truncate max-w-[120px]">
                       {log.model}
                     </span>
                   )}

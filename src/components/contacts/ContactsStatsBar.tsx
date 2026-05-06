@@ -85,7 +85,7 @@ export const ContactsStatsBar: React.FC<ContactsStatsBarProps> = ({
               >
                 <Badge
                   variant="outline"
-                  className="gap-1 py-0 text-[10.5px] border-pink-400/30 text-pink-700 bg-pink-50 dark:text-pink-400 dark:bg-pink-950/20"
+                  className="gap-1 py-0 text-[10.5px] border-accent/30 text-accent bg-accent dark:text-accent dark:bg-accent/20"
                 >
                   <Cake className="h-3 w-3" />
                   {stats.birthdayToday} aniversário{stats.birthdayToday !== 1 ? 's' : ''} hoje

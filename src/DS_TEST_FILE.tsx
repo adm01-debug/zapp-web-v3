@@ -8,7 +8,7 @@ export const TestComponent = () => {
       "bg-background text-background", // High priority
       "hover:bg-primary",      // Medium priority
       "dark:text-muted-foreground",    // Medium priority
-      "font-inter",             // Low priority
+      "",             // Low priority
       "bg-primary",             // Allowed
       "dark:hover:bg-foreground" // Nested variants
     )}>

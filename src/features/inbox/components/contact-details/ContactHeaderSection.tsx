@@ -136,7 +136,7 @@ export function ContactHeaderSection({ contact, enrichedData, conversation, onQu
         {enrichedData?.job_title && <p className={`text-${companyName ? '[10px]' : '[11px]'} text-muted-foreground ${!companyName ? 'flex items-center gap-1' : ''} mt-0.5`}>
           {!companyName && <Briefcase className="w-3 h-3" />}{enrichedData.job_title}
         </p>}
-        <p className="text-[11px] text-muted-foreground mt-0.5 font-mono tracking-tight">{contact.phone}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5  tracking-tight">{contact.phone}</p>
 
         {/* Badges */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5">

@@ -90,7 +90,7 @@ export function NotificationSettingsPanel() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <Label className="text-sm font-medium">Volume</Label>
-                <Badge variant="secondary" className="font-mono">{settings.soundVolume}%</Badge>
+                <Badge variant="secondary" className="">{settings.soundVolume}%</Badge>
               </div>
               <Slider value={[settings.soundVolume]} onValueChange={([value]) => updateSettings({ soundVolume: value })} min={10} max={100} step={5} />
             </div>

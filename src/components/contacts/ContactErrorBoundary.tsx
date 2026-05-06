@@ -71,7 +71,7 @@ export class ContactErrorBoundary extends Component<Props, State> {
               <Alert variant="destructive" className="text-xs">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Erro de desenvolvimento</AlertTitle>
-                <AlertDescription className="font-mono break-all">
+                <AlertDescription className=" break-all">
                   {this.state.error.message}
                 </AlertDescription>
               </Alert>

@@ -143,7 +143,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               )}>Inbox</h2>
               <span
                 title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
-                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
+                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-destructive shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
                 aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
               />
               <RealtimeContactsIndicator />
@@ -229,7 +229,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             )}
             {!contactSearch && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 opacity-40 group-focus-within:opacity-0 transition-opacity duration-300">
-                <kbd className="h-4 px-1 rounded bg-muted text-[9px] font-mono flex items-center border border-border/50 text-muted-foreground">K</kbd>
+                <kbd className="h-4 px-1 rounded bg-muted text-[9px]  flex items-center border border-border/50 text-muted-foreground">K</kbd>
               </div>
             )}
           </div>

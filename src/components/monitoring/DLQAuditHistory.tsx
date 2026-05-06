@@ -57,7 +57,7 @@ function summary(entry: DlqAuditEntry): React.ReactNode {
       const abandoned = Number(d.abandoned ?? 0);
       if (processed === 0) return <span className="text-muted-foreground">Nenhum item pendente.</span>;
       return (
-        <span className="font-mono text-[11px]">
+        <span className=" text-[11px]">
           {processed} processado(s) · <span className="text-primary">✓{succeeded}</span> · <span className="text-warning-foreground">↻{failed}</span> · <span className="text-destructive">⚠{abandoned}</span>
         </span>
       );
@@ -66,12 +66,12 @@ function summary(entry: DlqAuditEntry): React.ReactNode {
       return <span className="text-muted-foreground">origem: {String(d.source ?? 'panel')}</span>;
     case 'dlq_retry_now':
     case 'dlq_abandon':
-      return <span className="font-mono text-[11px] text-muted-foreground">id: {entry.entity_id?.slice(0, 8)}…</span>;
+      return <span className=" text-[11px] text-muted-foreground">id: {entry.entity_id?.slice(0, 8)}…</span>;
     case 'dlq_bulk_retry':
     case 'dlq_bulk_abandon': {
       const count = Number(d.count ?? (Array.isArray(d.ids) ? d.ids.length : 0));
       return (
-        <span className="font-mono text-[11px]">
+        <span className=" text-[11px]">
           {count} item(s){d.reason ? ` · motivo: ${String(d.reason)}` : ''}
         </span>
       );
@@ -157,7 +157,7 @@ export function DLQAuditHistory() {
                             </p>
                             <div className="flex flex-wrap gap-1 max-h-32 overflow-auto">
                               {ids.map(id => (
-                                <code key={id} className="text-[10px] font-mono bg-muted/50 border rounded px-1.5 py-0.5">
+                                <code key={id} className="text-[10px]  bg-muted/50 border rounded px-1.5 py-0.5">
                                   {id.slice(0, 8)}…
                                 </code>
                               ))}
@@ -166,7 +166,7 @@ export function DLQAuditHistory() {
                         )}
                         <div>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Payload</p>
-                          <pre className="text-[10px] font-mono bg-background border rounded p-2 max-h-40 overflow-auto whitespace-pre-wrap">
+                          <pre className="text-[10px]  bg-background border rounded p-2 max-h-40 overflow-auto whitespace-pre-wrap">
                             {JSON.stringify(entry.details ?? {}, null, 2)}
                           </pre>
                         </div>

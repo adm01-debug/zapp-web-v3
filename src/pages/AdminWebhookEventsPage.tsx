@@ -313,7 +313,7 @@ export default function AdminWebhookEventsPage() {
               value={remoteJidFilter}
               onChange={(e) => setRemoteJidFilter(e.target.value)}
               placeholder="Ex: 5511999"
-              className="w-[200px] font-mono"
+              className="w-[200px] "
               data-testid="filter-webhook-remote-jid"
             />
           </FilterField>
@@ -437,14 +437,14 @@ export default function AdminWebhookEventsPage() {
                         {formatDate(row.created_at)}
                       </TableCell>
                       <TableCell data-testid="webhook-event-event-type">
-                        <Badge variant="outline" className="font-mono text-xs">
+                        <Badge variant="outline" className=" text-xs">
                           {row.event_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs" data-testid="webhook-event-instance">{row.instance_name}</TableCell>
+                      <TableCell className=" text-xs" data-testid="webhook-event-instance">{row.instance_name}</TableCell>
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
-                          <span className="font-mono" data-testid="webhook-event-jid">{shortJid(row.remote_jid)}</span>
+                          <span className="" data-testid="webhook-event-jid">{shortJid(row.remote_jid)}</span>
                           {row.push_name && (
                             <span
                               className="text-muted-foreground truncate max-w-[200px]"
@@ -585,7 +585,7 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn('font-medium break-all', mono && 'font-mono text-xs')}>{value}</p>
+      <p className={cn('font-medium break-all', mono && ' text-xs')}>{value}</p>
     </div>
   );
 }

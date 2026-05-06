@@ -126,7 +126,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
       )}
 
       {!isMobile && (
-        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px] font-mono text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
+        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px]  text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
           <Info className="w-2.5 h-2.5 opacity-40" />
           <span>{appVersion}</span>
           <span className="w-1 h-1 rounded-full bg-success/40" />

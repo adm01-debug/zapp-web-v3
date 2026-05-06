@@ -60,7 +60,7 @@ export function DispatchErrorsBlock({ windowHours }: Props) {
                   <TableBody>
                     {byAgent.slice(0, 10).map((a) => (
                       <TableRow key={a.agent}>
-                        <TableCell className="text-xs font-mono truncate max-w-[180px]" title={a.agent}>
+                        <TableCell className="text-xs  truncate max-w-[180px]" title={a.agent}>
                           {a.agent}
                         </TableCell>
                         <TableCell className="text-right text-xs">
@@ -104,7 +104,7 @@ export function DispatchErrorsBlock({ windowHours }: Props) {
                   <TableBody>
                     {byChannel.slice(0, 10).map((c) => (
                       <TableRow key={c.instance}>
-                        <TableCell className="text-xs font-mono">{c.instance}</TableCell>
+                        <TableCell className="text-xs ">{c.instance}</TableCell>
                         <TableCell className="text-right text-xs">
                           {c.total} <span className="text-muted-foreground">({c.pct}%)</span>
                         </TableCell>

@@ -201,7 +201,7 @@ export const DuplicateContactsPanel: React.FC<Props> = ({
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground ">
                   {formatPhoneForDisplay(g.phone_normalized) || 'Sem número'}
                 </span>
                 <Badge variant="outline" className="text-xs text-warning-foreground border-warning">

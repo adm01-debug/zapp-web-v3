@@ -190,7 +190,7 @@ export const ContactDuplicatesPanel: React.FC<ContactDuplicatesPanelProps> = ({ 
                 <div className="space-y-1 flex-1 min-w-0">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Phone className="h-3 w-3" />
-                    <span className="font-mono">{group.phone_normalized}</span>
+                    <span className="">{group.phone_normalized}</span>
                     <Badge variant="outline" className="text-xs ml-1">
                       {group.contact_ids.length} contatos
                     </Badge>

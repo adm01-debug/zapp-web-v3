@@ -126,7 +126,7 @@ export default function WhatsAppProviderConfig() {
             <ul className="text-sm space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Sem custos de setup</li>
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Ativação instantânea</li>
-              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-yellow-500" /> Maior risco de banimento</li>
+              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-warning" /> Maior risco de banimento</li>
             </ul>
           </CardContent>
         </Card>

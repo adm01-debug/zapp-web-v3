@@ -103,7 +103,7 @@ export function TeamPerformancePanel({ conversationId }: Props) {
           </CardHeader>
           <CardContent className="p-4 pt-2">
             <div className="text-2xl font-bold">{avgRender.toFixed(1)}ms</div>
-            <p className={avgRender > 16 ? "text-[10px] text-yellow-500" : "text-[10px] text-success-foreground"}>
+            <p className={avgRender > 16 ? "text-[10px] text-warning" : "text-[10px] text-success-foreground"}>
               {avgRender > 16 ? "Melhorar (Jank)" : "Fluido (60fps)"}
             </p>
           </CardContent>
@@ -152,10 +152,10 @@ export function TeamPerformancePanel({ conversationId }: Props) {
             <FileJson className="w-3 h-3" /> Logs Estruturados de Performance
           </h4>
         </div>
-        <div className="bg-foreground/20 rounded-lg p-3 font-mono text-[10px] space-y-1 max-h-32 overflow-y-auto">
+        <div className="bg-foreground/20 rounded-lg p-3  text-[10px] space-y-1 max-h-32 overflow-y-auto">
           <p className="text-primary-foreground">[INFO] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: LCP detected at 1240ms</p>
           <p className="text-success-foreground">[SUCCESS] {format(new Date(), 'HH:mm:ss.SSS')} - useTeamMessages: Cache hit for page 1</p>
-          <p className="text-yellow-400">[WARN] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: Slow render detected (32.4ms)</p>
+          <p className="text-warning">[WARN] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: Slow render detected (32.4ms)</p>
           <p className="text-primary-foreground">[INFO] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: Interaction (click) processed in 45ms</p>
           <p className="text-primary-foreground">[INFO] {format(new Date(), 'HH:mm:ss.SSS')} - TeamChatPanel: Virtualized list overscan: 10 rows</p>
         </div>

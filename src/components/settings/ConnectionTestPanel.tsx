@@ -114,7 +114,7 @@ export function ConnectionTestPanel() {
                 {result.checks.length} verificações em {result.durationMs} ms
               </span>
               <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-mono truncate max-w-[260px]" title={result.webhookUrl}>
+                <span className=" truncate max-w-[260px]" title={result.webhookUrl}>
                   {result.webhookUrl}
                 </span>
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={copyWebhook}>

@@ -124,7 +124,7 @@ export function OfficialApiConfigDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-md bg-muted/50 px-3 py-2 text-xs font-mono break-all flex items-center justify-between gap-2">
+        <div className="rounded-md bg-muted/50 px-3 py-2 text-xs  break-all flex items-center justify-between gap-2">
           <span>{webhookUrl}</span>
           <Button
             variant="ghost" size="icon" className="h-6 w-6 shrink-0"

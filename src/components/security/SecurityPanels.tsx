@@ -28,7 +28,7 @@ interface Device {
 const getSeverityColor = (severity: string) => {
   switch (severity) {
     case 'high': case 'critical': return 'bg-destructive/10 text-destructive border-destructive/20';
-    case 'medium': return 'bg-warning/10 text-warning border-yellow-500/20';
+    case 'medium': return 'bg-warning/10 text-warning border-warning/20';
     default: return 'bg-info/10 text-info border-info/20';
   }
 };

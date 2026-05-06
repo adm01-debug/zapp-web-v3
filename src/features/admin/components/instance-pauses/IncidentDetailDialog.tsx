@@ -119,7 +119,7 @@ export function IncidentDetailDialog({ pause, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-warning" />
-            Incidente de autenticação — <span className="font-mono text-base">{pause.instance_name}</span>
+            Incidente de autenticação — <span className=" text-base">{pause.instance_name}</span>
           </DialogTitle>
           <DialogDescription>
             Resumo do incidente, requisições afetadas e marcação de investigação.
@@ -147,7 +147,7 @@ export function IncidentDetailDialog({ pause, onClose }: Props) {
             </div>
             <div className="rounded-lg border p-3">
               <div className="text-xs text-muted-foreground">Gatilhos</div>
-              <div className="mt-1 text-xl font-bold font-mono">{pause.trigger_count}</div>
+              <div className="mt-1 text-xl font-bold ">{pause.trigger_count}</div>
             </div>
             <div className="rounded-lg border p-3">
               <div className="text-xs text-muted-foreground">Investigado</div>
@@ -201,12 +201,12 @@ export function IncidentDetailDialog({ pause, onClose }: Props) {
             <div className="flex flex-wrap gap-2">
               {Object.entries(reasonCounts).map(([k, v]) => (
                 <Badge key={k} variant="outline" className="text-xs">
-                  {reasonLabel[k as keyof typeof reasonLabel] ?? k}: <span className="ml-1 font-mono">{v}</span>
+                  {reasonLabel[k as keyof typeof reasonLabel] ?? k}: <span className="ml-1 ">{v}</span>
                 </Badge>
               ))}
               {Object.entries(sourceCounts).map(([k, v]) => (
                 <Badge key={k} variant="subtle" className="text-xs gap-1">
-                  <Globe className="h-3 w-3" />{k}: <span className="font-mono">{v}</span>
+                  <Globe className="h-3 w-3" />{k}: <span className="">{v}</span>
                 </Badge>
               ))}
               {events.length === 0 && !eventsQuery.isLoading && (
@@ -254,8 +254,8 @@ export function IncidentDetailDialog({ pause, onClose }: Props) {
                                 {ev.reason}
                               </span>
                             </td>
-                            <td className="px-2 py-1.5 font-mono">{ev.http_status ?? '—'}</td>
-                            <td className="px-2 py-1.5 font-mono truncate max-w-[260px]" title={ev.detail ?? ''}>
+                            <td className="px-2 py-1.5 ">{ev.http_status ?? '—'}</td>
+                            <td className="px-2 py-1.5  truncate max-w-[260px]" title={ev.detail ?? ''}>
                               {ev.detail ?? '—'}
                             </td>
                           </tr>

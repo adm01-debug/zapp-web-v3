@@ -35,7 +35,7 @@ const AuditEvidenceDashboard = () => {
           <ShieldCheck className="w-8 h-8 text-primary" />
           Dashboard de Evidências de Auditoria
         </h1>
-        <Badge variant="outline" className="text-sm font-mono">V5.0.0-PROD</Badge>
+        <Badge variant="outline" className="text-sm ">V5.0.0-PROD</Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -59,7 +59,7 @@ const AuditEvidenceDashboard = () => {
                     {ev.path}
                   </code>
                 </div>
-                <div className="text-xs font-mono bg-muted text-muted-foreground p-3 rounded">
+                <div className="text-xs  bg-muted text-muted-foreground p-3 rounded">
                   {ev.snippet}
                 </div>
                 <button className="w-full flex items-center justify-center gap-2 text-xs text-primary hover:underline">

@@ -192,7 +192,7 @@ export function IPWhitelistPanel() {
                         <Check className="w-4 h-4 text-success dark:text-success" />
                       </div>
                       <div>
-                        <code className="font-mono font-medium">{ip.ip_address}</code>
+                        <code className=" font-medium">{ip.ip_address}</code>
                         {ip.description && (
                           <p className="text-sm text-muted-foreground">{ip.description}</p>
                         )}
@@ -270,7 +270,7 @@ export function IPWhitelistPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remover da Whitelist?</AlertDialogTitle>
             <AlertDialogDescription>
-              O IP <code className="font-mono">{ipToRemove?.ip_address}</code> passará a ser monitorado pelo rate limiting.
+              O IP <code className="">{ipToRemove?.ip_address}</code> passará a ser monitorado pelo rate limiting.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

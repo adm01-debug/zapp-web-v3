@@ -89,7 +89,7 @@ export default function Auth() {
                                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                                   <motion.div initial={{ width: '100%' }} animate={{ width: '0%' }} transition={{ duration: lockStatus.remainingTime, ease: 'linear' }} className="h-full bg-destructive rounded-full" />
                                 </div>
-                                <span className="text-sm font-mono text-destructive min-w-[60px] text-right">
+                                <span className="text-sm  text-destructive min-w-[60px] text-right">
                                   {Math.floor(lockStatus.remainingTime / 60)}:{(lockStatus.remainingTime % 60).toString().padStart(2, '0')}
                                 </span>
                               </div>

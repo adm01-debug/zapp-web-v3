@@ -165,7 +165,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-medium text-warning-foreground truncate" title={file.file_name}>{file.file_name}</p>
-                <p className="text-[9px] text-warning-foreground/60 font-mono uppercase">
+                <p className="text-[9px] text-warning-foreground/60  uppercase">
                   {formatSize(file.file_size || 0)} • {format(new Date(file.created_at), 'dd MMM HH:mm', { locale: ptBR })}
                 </p>
               </div>

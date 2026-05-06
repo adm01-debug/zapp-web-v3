@@ -83,7 +83,7 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
   const stageColor: Record<string, string> = {
     unknown: 'bg-muted text-muted-foreground',
     lead: 'bg-primary text-primary-foreground',
-    prospect: 'bg-indigo-100 text-indigo-700',
+    prospect: 'bg-primary text-primary',
     customer: 'bg-primary text-primary',
     advocate: 'bg-primary text-primary',
     churned: 'bg-destructive text-destructive-foreground',

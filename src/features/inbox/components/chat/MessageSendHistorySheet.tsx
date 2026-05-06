@@ -123,7 +123,7 @@ export function MessageSendHistorySheet({ message, open, onOpenChange }: Props) 
                 <RefreshCw className="w-4 h-4 text-muted-foreground" />
                 Histórico de envio
               </SheetTitle>
-              <SheetDescription className="text-[11px] mt-1 truncate font-mono">
+              <SheetDescription className="text-[11px] mt-1 truncate ">
                 {message.id}
               </SheetDescription>
             </div>
@@ -233,7 +233,7 @@ export function MessageSendHistorySheet({ message, open, onOpenChange }: Props) 
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-semibold">Tentativa #{r.attempt}</span>
                                   {typeof r.status === 'number' && (
-                                    <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1 ">
                                       HTTP {r.status}
                                     </Badge>
                                   )}
@@ -276,11 +276,11 @@ export function MessageSendHistorySheet({ message, open, onOpenChange }: Props) 
                   {data.auditEntries.map((e) => (
                     <li key={e.id} className="rounded border border-border/40 bg-muted/10 p-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium font-mono text-[11px]">{e.action}</span>
+                        <span className="font-medium  text-[11px]">{e.action}</span>
                         <span className="text-[10px] text-muted-foreground tabular-nums">{fmtDate(e.createdAt)}</span>
                       </div>
                       {Boolean(e.details) && (
-                        <pre className="mt-1 text-[10px] text-muted-foreground whitespace-pre-wrap break-words font-mono max-h-24 overflow-auto">
+                        <pre className="mt-1 text-[10px] text-muted-foreground whitespace-pre-wrap break-words  max-h-24 overflow-auto">
                           {JSON.stringify(e.details, null, 2)}
                         </pre>
                       )}
@@ -299,7 +299,7 @@ export function MessageSendHistorySheet({ message, open, onOpenChange }: Props) 
                     <ChevronDown className="w-3.5 h-3.5 transition-transform data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <pre className="mt-2 text-[10px] bg-muted/30 border border-border/50 rounded p-2 overflow-auto max-h-64 font-mono whitespace-pre-wrap break-all">
+                    <pre className="mt-2 text-[10px] bg-muted/30 border border-border/50 rounded p-2 overflow-auto max-h-64  whitespace-pre-wrap break-all">
                       {JSON.stringify(data.metric.rawJson, null, 2)}
                     </pre>
                   </CollapsibleContent>
@@ -329,7 +329,7 @@ function RowKV({
         <Icon className="w-3 h-3" />
         {label}
       </span>
-      <span className={cn('text-foreground text-right min-w-0', mono && 'font-mono text-[11px]', truncate && 'truncate')}>
+      <span className={cn('text-foreground text-right min-w-0', mono && ' text-[11px]', truncate && 'truncate')}>
         {value}
       </span>
     </div>

@@ -73,7 +73,7 @@ function HistoryRow({ entry, onResolve, isResolving }: { entry: SLAAlertHistoryE
           {entry.contactPhone && <span>{entry.contactPhone}</span>}
           <span className="text-foreground/40">·</span>
           <span>
-            Thread ID: <span className="text-foreground/80 font-medium font-mono text-[10px]">{entry.threadId.slice(0, 8)}...</span>
+            Thread ID: <span className="text-foreground/80 font-medium  text-[10px]">{entry.threadId.slice(0, 8)}...</span>
           </span>
         </div>
       </div>

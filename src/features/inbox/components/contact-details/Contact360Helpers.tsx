@@ -109,7 +109,7 @@ export function CompanyCard({ company }: { company: Contact360Company }) {
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm truncate">{displayName}</p>
           {company.razao_social && company.razao_social !== displayName && <p className="text-[10px] text-muted-foreground truncate">{company.razao_social}</p>}
-          {company.cnpj && <p className="text-[10px] text-muted-foreground font-mono">{company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')}</p>}
+          {company.cnpj && <p className="text-[10px] text-muted-foreground ">{company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')}</p>}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-1.5 text-xs">

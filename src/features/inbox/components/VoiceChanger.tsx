@@ -252,7 +252,7 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled, me
           <h4 className="text-sm font-semibold text-foreground">Alterar Voz</h4>
           {isConverting && (
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-[10px] font-mono text-primary">{conversionProgress}%</span>
+              <span className="text-[10px]  text-primary">{conversionProgress}%</span>
               <Loader2 className="w-3 h-3 text-primary animate-spin" />
             </div>
           )}

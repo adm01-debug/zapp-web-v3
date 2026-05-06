@@ -147,7 +147,7 @@ export function MetaCAPIView() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <Zap className="w-3.5 h-3.5" /> Pixel ID
             </div>
-            <p className="text-sm font-mono truncate">{pixelId || 'Não configurado'}</p>
+            <p className="text-sm  truncate">{pixelId || 'Não configurado'}</p>
           </CardContent>
         </Card>
         <Card className="bg-card/50 border-border/30">

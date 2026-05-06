@@ -61,7 +61,7 @@ export function BlockedIPsPanel() {
                       <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center"><Globe className="w-5 h-5 text-muted-foreground" /></div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <code className="font-mono font-medium">{ip.ip_address}</code>
+                          <code className=" font-medium">{ip.ip_address}</code>
                           {ip.is_permanent ? <Badge variant="destructive">Permanente</Badge>
                           : isExpired(ip.expires_at) ? <Badge variant="secondary">Expirado</Badge>
                           : <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Expira {formatDistanceToNow(new Date(ip.expires_at!), { addSuffix: true, locale: ptBR })}</Badge>}

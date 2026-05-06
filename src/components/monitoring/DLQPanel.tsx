@@ -148,7 +148,7 @@ export function DLQPanel() {
                   type="button"
                   onClick={() => setErrorCodeFilter(isActive ? null : r.code)}
                   className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-mono transition-colors',
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]  transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-muted/40 hover:bg-muted border-border',
@@ -211,8 +211,8 @@ export function DLQPanel() {
                               </Button>
                             </CollapsibleTrigger>
                           </TableCell>
-                          <TableCell className="font-mono text-xs">{row.instance_name}</TableCell>
-                          <TableCell className="font-mono text-xs truncate max-w-[140px]" title={row.remote_jid ?? ''}>
+                          <TableCell className=" text-xs">{row.instance_name}</TableCell>
+                          <TableCell className=" text-xs truncate max-w-[140px]" title={row.remote_jid ?? ''}>
                             {row.remote_jid ?? '—'}
                           </TableCell>
                           <TableCell className="text-xs">{deriveType(row.payload)}</TableCell>
@@ -220,7 +220,7 @@ export function DLQPanel() {
                             {row.retry_count}/{row.max_retries}
                           </TableCell>
                           <TableCell>{statusBadge(row.status)}</TableCell>
-                          <TableCell className="text-center text-xs font-mono">
+                          <TableCell className="text-center text-xs ">
                             {row.http_status ?? '—'}
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground truncate max-w-[180px]" title={row.error_message ?? ''}>
@@ -256,17 +256,17 @@ export function DLQPanel() {
                               <div className="grid md:grid-cols-2 gap-3">
                                 <div>
                                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Payload</p>
-                                  <pre className="text-[10px] font-mono bg-background border rounded p-2 max-h-48 overflow-auto">
+                                  <pre className="text-[10px]  bg-background border rounded p-2 max-h-48 overflow-auto">
                                     {JSON.stringify(row.payload, null, 2)}
                                   </pre>
                                 </div>
                                 <div>
                                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Erro completo</p>
-                                  <pre className="text-[10px] font-mono bg-background border rounded p-2 max-h-48 overflow-auto whitespace-pre-wrap">
+                                  <pre className="text-[10px]  bg-background border rounded p-2 max-h-48 overflow-auto whitespace-pre-wrap">
                                     {row.error_message ?? '—'}
                                   </pre>
                                   <p className="text-[10px] text-muted-foreground mt-2">
-                                    Criado em {fmtDate(row.created_at)} · ID <span className="font-mono">{row.id}</span>
+                                    Criado em {fmtDate(row.created_at)} · ID <span className="">{row.id}</span>
                                   </p>
                                 </div>
                               </div>

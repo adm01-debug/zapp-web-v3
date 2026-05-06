@@ -102,10 +102,10 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                 {secretStatus.configured && (
                   <>
                     <span className="text-xs text-muted-foreground">
-                      Comprimento: <span className="font-mono">{secretStatus.length}</span>
+                      Comprimento: <span className="">{secretStatus.length}</span>
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      Hash SHA-256: <span className="font-mono">{secretStatus.hashPrefix}…</span>
+                      Hash SHA-256: <span className="">{secretStatus.hashPrefix}…</span>
                     </span>
                   </>
                 )}
@@ -212,7 +212,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-xs font-mono break-all">{webhookConfig.url}</p>
+                    <p className="text-xs  break-all">{webhookConfig.url}</p>
                   </div>
                 )}
 

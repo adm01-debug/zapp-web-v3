@@ -119,7 +119,7 @@ export const SLADeliveryHistoryDashboard = () => {
                 <TableCell className="font-medium text-xs">
                   {format(new Date(v.detected_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                 </TableCell>
-                <TableCell className="text-xs font-mono opacity-70">
+                <TableCell className="text-xs  opacity-70">
                   {v.contact_id}
                 </TableCell>
                 <TableCell>

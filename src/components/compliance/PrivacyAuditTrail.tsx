@@ -74,7 +74,7 @@ export function PrivacyAuditTrail() {
                   <p className="text-sm font-medium text-foreground">{describeAction(entry.action)}</p>
                   {entry.entity_type && (
                     <p className="text-xs text-muted-foreground">
-                      Entidade: <span className="font-mono">{entry.entity_type}</span>
+                      Entidade: <span className="">{entry.entity_type}</span>
                       {entry.entity_id ? ` · ${entry.entity_id.slice(0, 8)}…` : ''}
                     </p>
                   )}

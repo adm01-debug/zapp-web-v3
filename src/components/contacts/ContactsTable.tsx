@@ -186,7 +186,7 @@ export function ContactsTable({
                 <td className="p-3">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Phone className="w-3.5 h-3.5 shrink-0" />
-                    <HighlightText text={contact.phone} highlight={searchQuery} className="font-mono text-[11px]" />
+                    <HighlightText text={contact.phone} highlight={searchQuery} className=" text-[11px]" />
                   </div>
                 </td>
                 <td className="p-3">

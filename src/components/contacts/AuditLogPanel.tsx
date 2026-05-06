@@ -27,7 +27,7 @@ const ACTION_COLORS: Record<string, string> = {
   UPDATE:    'bg-primary text-primary-foreground border-primary',
   DELETE:    'bg-destructive text-destructive-foreground border-destructive',
   RESTORE:   'bg-warning text-warning-foreground border-warning',
-  MERGE:     'bg-purple-100 text-purple-800 border-purple-300',
+  MERGE:     'bg-primary text-primary border-primary',
 };
 
 const ACTION_LABELS: Record<string, string> = {

@@ -202,7 +202,7 @@ export default function AdminFailedAuthMessagesPage() {
                       <TableCell className="text-muted-foreground">
                         {format(new Date(r.last_attempt_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                       </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
+                      <TableCell className="text-muted-foreground  text-xs">
                         {r.ip_address ?? "—"}
                       </TableCell>
                       <TableCell>

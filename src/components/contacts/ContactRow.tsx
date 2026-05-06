@@ -21,7 +21,7 @@ const LEAD_STATUS_COLORS: Record<string, string> = {
   novo:        'bg-muted text-muted-foreground',
   em_contato:  'bg-primary text-primary-foreground',
   qualificado: 'bg-primary text-primary',
-  proposta:    'bg-purple-100 text-purple-700',
+  proposta:    'bg-primary text-primary',
   negociacao:  'bg-warning text-warning-foreground',
   fechado:     'bg-primary text-primary',
   perdido:     'bg-destructive text-destructive-foreground',

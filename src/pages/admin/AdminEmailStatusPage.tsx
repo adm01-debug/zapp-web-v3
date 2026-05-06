@@ -164,7 +164,7 @@ export default function AdminEmailStatusPage() {
   const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'healthy': return <CheckCircle2 className="w-5 h-5 text-primary" />;
-      case 'degraded': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      case 'degraded': return <AlertTriangle className="w-5 h-5 text-warning" />;
       case 'error': return <AlertCircle className="w-5 h-5 text-destructive" />;
       default: return <Clock className="w-5 h-5 text-muted-foreground" />;
     }
@@ -199,7 +199,7 @@ export default function AdminEmailStatusPage() {
       </div>
 
       {health?.status && health.status !== 'healthy' && (
-        <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : ''}>
+        <Alert variant={health.status === 'error' ? 'destructive' : 'default'} className={health.status === 'degraded' ? 'bg-warning border-warning text-warning' : ''}>
           {health.status === 'error' ? <AlertCircle className="h-4 h-4" /> : <AlertTriangle className="h-4 h-4" />}
           <AlertTitle>Status do Email: {getStatusLabel(health.status)}</AlertTitle>
           <AlertDescription>
@@ -276,7 +276,7 @@ export default function AdminEmailStatusPage() {
             Histórico de Falhas Operacionais
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono">Total: {failuresData.total}</Badge>
+            <Badge variant="outline" className="">Total: {failuresData.total}</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -325,7 +325,7 @@ export default function AdminEmailStatusPage() {
                 <tbody className="divide-y">
                   {failuresData.items.length > 0 ? failuresData.items.map((failure, idx) => (
                     <tr key={`${failure.requestId}-${idx}`} className="hover:bg-muted/30">
-                      <td className="px-4 py-2"><Badge variant="outline" className="font-mono">{failure.requestId}</Badge></td>
+                      <td className="px-4 py-2"><Badge variant="outline" className="">{failure.requestId}</Badge></td>
                       <td className="px-4 py-2">
                         <div className="flex flex-col">
                           <span className="font-medium">{failure.resource}</span>

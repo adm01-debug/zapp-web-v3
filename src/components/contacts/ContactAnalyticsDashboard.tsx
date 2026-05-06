@@ -180,7 +180,7 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
                   className="flex-1 rounded-t bg-primary/50 hover:bg-primary/70 transition-colors relative group cursor-default"
                   title={`${day.date}: ${day.count} contatos`}
                 >
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-foreground bg-popover border border-border rounded px-1 py-0.5 whitespace-nowrap z-10 pointer-events-none">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px]  text-foreground bg-popover border border-border rounded px-1 py-0.5 whitespace-nowrap z-10 pointer-events-none">
                     {day.count}
                   </div>
                 </motion.div>

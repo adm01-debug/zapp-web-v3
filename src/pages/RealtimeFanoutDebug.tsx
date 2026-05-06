@@ -139,7 +139,7 @@ export default function RealtimeFanoutDebug() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={cn("font-mono text-sm font-semibold", !isActive && "text-muted-foreground")}>
+                      <span className={cn(" text-sm font-semibold", !isActive && "text-muted-foreground")}>
                         {c.name}
                       </span>
                       {c.events.map((e) => {
@@ -158,7 +158,7 @@ export default function RealtimeFanoutDebug() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
                     {c.sub?.bind.filter && (
-                      <p className="text-[11px] font-mono text-muted-foreground/80 mt-0.5 truncate">
+                      <p className="text-[11px]  text-muted-foreground/80 mt-0.5 truncate">
                         filter: {c.sub.bind.filter}
                       </p>
                     )}
@@ -170,9 +170,9 @@ export default function RealtimeFanoutDebug() {
                           <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5", eventBadgeVariant(last.eventType).className)}>
                             {eventBadgeVariant(last.eventType).label}
                           </Badge>
-                          <span className="font-mono text-muted-foreground">{relativeTime(last.receivedAt)}</span>
+                          <span className=" text-muted-foreground">{relativeTime(last.receivedAt)}</span>
                         </div>
-                        <div className="font-mono text-[10px] text-muted-foreground/80 mt-0.5 truncate max-w-[180px]">
+                        <div className=" text-[10px] text-muted-foreground/80 mt-0.5 truncate max-w-[180px]">
                           id={last.rowId ?? "—"}
                         </div>
                       </>
@@ -202,10 +202,10 @@ export default function RealtimeFanoutDebug() {
                     const v = eventBadgeVariant(ev.eventType);
                     return (
                       <div key={`${ev.receivedAt}-${i}`} className="px-3 py-2 text-xs flex items-center gap-2">
-                        <span className="font-mono text-muted-foreground tabular-nums">{formatTime(ev.receivedAt)}</span>
+                        <span className=" text-muted-foreground tabular-nums">{formatTime(ev.receivedAt)}</span>
                         <Badge variant="outline" className={cn("text-[10px] h-4 px-1.5", v.className)}>{v.label}</Badge>
-                        <span className="font-mono font-semibold text-primary truncate flex-1">{ev.hookName}</span>
-                        <span className="font-mono text-muted-foreground/80 truncate max-w-[120px]">id={ev.rowId ?? "—"}</span>
+                        <span className=" font-semibold text-primary truncate flex-1">{ev.hookName}</span>
+                        <span className=" text-muted-foreground/80 truncate max-w-[120px]">id={ev.rowId ?? "—"}</span>
                       </div>
                     );
                   })

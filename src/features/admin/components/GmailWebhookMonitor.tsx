@@ -177,7 +177,7 @@ export function EmailWebhookMonitor() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-muted/50 rounded-lg p-4 font-mono text-xs space-y-2 border">
+          <div className="bg-muted/50 rounded-lg p-4  text-xs space-y-2 border">
             <p className="text-muted-foreground">Endpoint:</p>
             <p className="pl-4 text-foreground/80 break-all">
               {import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-webhook

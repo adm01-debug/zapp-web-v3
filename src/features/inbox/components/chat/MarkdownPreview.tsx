@@ -14,7 +14,7 @@ export function formatWhatsAppText(text: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
     // Code blocks (```...```) — must come before inline
-    .replace(/```([\s\S]*?)```/g, '<code class="bg-muted/50 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
+    .replace(/```([\s\S]*?)```/g, '<code class="bg-muted/50 px-1.5 py-0.5 rounded text-xs ">$1</code>')
     // Bold (*...*) — not greedy, avoid matching ** 
     .replace(/\*([^\*]+)\*/g, '<strong>$1</strong>')
     // Italic (_..._)

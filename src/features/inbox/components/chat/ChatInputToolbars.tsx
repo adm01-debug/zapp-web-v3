@@ -194,7 +194,7 @@ export function TertiaryToolsMenu({
         onClick={() => onQuickReply(reply)}
       >
         <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
-        <span className="font-mono text-primary/80">/{reply.shortcut}</span>
+        <span className=" text-primary/80">/{reply.shortcut}</span>
         <span className="truncate">{reply.content}</span>
       </Button>
     ))

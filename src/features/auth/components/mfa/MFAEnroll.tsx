@@ -132,7 +132,7 @@ export function MFAEnroll({ onSuccess, onCancel }: MFAEnrollProps) {
                 Ou insira manualmente:
               </Label>
               <div className="flex gap-2">
-                <code className="flex-1 p-2 bg-muted rounded text-xs font-mono break-all">
+                <code className="flex-1 p-2 bg-muted rounded text-xs  break-all">
                   {enrollmentData.totp.secret}
                 </code>
                 <Button size="sm" variant="outline" onClick={handleCopySecret}>
@@ -169,7 +169,7 @@ export function MFAEnroll({ onSuccess, onCancel }: MFAEnrollProps) {
                 placeholder="000000"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                className="text-center text-2xl tracking-widest font-mono"
+                className="text-center text-2xl tracking-widest "
                 disabled={verifying}
                 autoFocus
               />
