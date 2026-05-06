@@ -268,12 +268,7 @@ export function useMessagesCursor({
         (payload) => {
           const raw = payload.new;
           if (!raw || !raw.id) return;
-          const rawMapped = toEvolutionMessageLite(raw);
-          // Patch reactions from raw if not in lite projector yet
-          const m = {
-            ...rawMapped,
-            reactions: Array.isArray((raw as any).reactions) ? (raw as any).reactions : rawMapped.reactions,
-          };
+          const m = toEvolutionMessageLite(raw);
           setPages((prev) =>
             prev.map((page) => page.map((x) => (x.id === m.id ? { ...x, ...m } : x))),
           );
