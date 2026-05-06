@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
+import { MemoryRouter } from 'react-router-dom';
+import React from 'react';
 
 // Mocking dependencies
 vi.mock('@/integrations/supabase/client', () => ({
@@ -16,6 +18,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('@/features/inbox', () => ({
   useAllTicketStates: vi.fn(() => ({})),
   useFailureMetricsBatch: vi.fn(() => ({ data: {} })),
+  filterByContactType: vi.fn((list) => list), // mock helper
 }));
 
 const mockConversations = [
@@ -36,54 +39,52 @@ const mockConversations = [
   }
 ];
 
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <MemoryRouter>{children}</MemoryRouter>
+);
+
 describe('useInboxFilters - Scope Logic', () => {
   it('filters by "mine" scope correctly', () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
       profileId: 'agent-1' 
-    }));
+    }), { wrapper });
     
-    // Default is scope='mine'
     expect(result.current.scope).toBe('mine');
     const filtered = result.current.filteredConversations;
     expect(filtered).toHaveLength(1);
     expect(filtered[0].contact.id).toBe('c1');
   });
 
-  it('filters by "department" scope correctly', () => {
+  it('filters by "department" scope correctly', async () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
       profileId: 'agent-1' 
-    }));
+    }), { wrapper });
     
-    vi.stubGlobal('localStorage', { getItem: vi.fn(), setItem: vi.fn() });
-
-    // Act
-    result.current.setScope('department');
-    result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+    await act(async () => {
+      result.current.setScope('department');
+      result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+    });
     
-    // The filter logic in useInboxFilters uses these values
-    // Note: In a real test we might need to wait for re-render if using effects, 
-    // but here we check the filtered output based on memo deps.
     const filtered = result.current.filteredConversations;
-    // agent-1 and agent-2 are in the same department
     expect(filtered.some(c => c.contact.id === 'c1')).toBe(true);
     expect(filtered.some(c => c.contact.id === 'c2')).toBe(true);
     expect(filtered.length).toBe(2);
   });
 
-  it('filters by "all" scope correctly', () => {
+  it('filters by "all" scope correctly', async () => {
     const { result } = renderHook(() => useInboxFilters({ 
       conversations: mockConversations as any, 
       profileId: 'agent-1' 
-    }));
+    }), { wrapper });
     
-    result.current.setScope('all');
+    await act(async () => {
+      result.current.setScope('all');
+    });
     
     const filtered = result.current.filteredConversations;
-    // In subTab='attending', scope='all' shows everything that is not 'waiting' (assigned is not null)
-    // Actually, in the current implementation, it shows everything if mainTab='open' and subTab='attending'
-    // unless it's explicitly waiting.
-    expect(filtered.length).toBe(2); // c1, c2 (assigned)
+    // In subTab='attending', scope='all' shows all assigned conversations
+    expect(filtered.length).toBe(2); // c1, c2
   });
 });
