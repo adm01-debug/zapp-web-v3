@@ -346,7 +346,7 @@ export function useExternalConversations(enabled = true) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
+    queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT, DEFAULT_INSTANCE],
     queryFn: async () => {
       if (USE_MOCKS) {
         const { MOCK_CONVERSATIONS } = await import('@/features/inbox/components/conversation-list/__mocks__/mockConversations');
