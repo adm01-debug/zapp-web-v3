@@ -180,15 +180,23 @@ export function useConnectionsManager() {
         });
       }
 
-      // 2. Call disconnect API
-      await disconnectInstance(connection.instance_id);
+      // 2. Update local state immediately for UX (Optimistic)
+      setConnections(prev => prev.map(c => 
+        c.id === connection.id ? { ...c, status: 'disconnecting' } : c
+      ));
 
-      // 3. Update local state immediately for UX
+      // 3. Call disconnect API
+      const response = await disconnectInstance(connection.instance_id);
+      
+      if (response && response.success === false) {
+        throw new Error(response.reason || 'Falha na API Evolution ao desconectar');
+      }
+
+      // 4. Update local state and repository to final state
       setConnections(prev => prev.map(c => 
         c.id === connection.id ? { ...c, status: 'disconnected', qr_code: null } : c
       ));
 
-      // 4. Update repository
       await whatsappConnectionRepository.updateConnection(connection.id, { 
         status: 'disconnected', 
         qr_code: null 
@@ -199,17 +207,21 @@ export function useConnectionsManager() {
         description: `A instância "${connection.name}" foi desconectada com sucesso.` 
       });
 
-      // 5. Guided Flow: Auto-open QR dialog
-      // Wait a tiny bit for the UI to settle
+      // 5. Guided Flow: Auto-open QR dialog with progress
       setTimeout(() => {
         handleShowQrCode({ ...connection, status: 'disconnected', qr_code: null });
       }, 500);
 
     } catch (error: any) {
+      // 6. Error Recovery: Restore state if failed
+      setConnections(prev => prev.map(c => 
+        c.id === connection.id ? { ...c, status: 'connected' } : c
+      ));
+
       log.error('Error in handleDisconnect:', error);
       toast({ 
         title: 'Erro ao desconectar', 
-        description: error.message, 
+        description: error.message || 'Não foi possível encerrar a sessão. Tente novamente.', 
         variant: 'destructive' 
       });
       throw error;
