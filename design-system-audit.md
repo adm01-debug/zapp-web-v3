@@ -60,14 +60,6 @@
 | Low | 120 | `#8884d8` | `#8884d8` | Check design system tokens | - |
 | Low | 121 | `#82ca9d` | `#82ca9d` | Check design system tokens | - |
 | Low | 122 | `#ffc658` | `#ffc658` | Check design system tokens | - |
-## src/components/ui/badge.tsx
-| Priority | Line | Raw Match | Clean | Suggestion | Patch |
-|---|---|---|---|---|---|
-| Low | 19 | `bg-[#25D366]` | `bg-[#25D366]` | Check design system tokens | - |
-| Low | 19 | `hover:bg-[#25D366]` | `bg-[#25D366]` | Check design system tokens | - |
-| Low | 19 | `#25D366` | `#25D366` | Check design system tokens | - |
-| Low | 19 | `#25D366` | `#25D366` | Check design system tokens | - |
-| Low | 19 | `#25D366` | `#25D366` | Check design system tokens | - |
 ## src/components/ui/chart.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
@@ -98,16 +90,16 @@
 ## src/features/inbox/components/MediaPreview.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
-| Low | 16 | `text-[#f1592a]` | `text-[#f1592a]` | Check design system tokens | - |
-| Low | 16 | `#f1592a` | `#f1592a` | Check design system tokens | - |
-| Low | 17 | `text-[#2b72c4]` | `text-[#2b72c4]` | Check design system tokens | - |
-| Low | 17 | `#2b72c4` | `#2b72c4` | Check design system tokens | - |
-| Low | 18 | `text-[#1d6f42]` | `text-[#1d6f42]` | Check design system tokens | - |
-| Low | 18 | `#1d6f42` | `#1d6f42` | Check design system tokens | - |
-| Low | 19 | `text-[#d24726]` | `text-[#d24726]` | Check design system tokens | - |
-| Low | 19 | `#d24726` | `#d24726` | Check design system tokens | - |
-| Low | 20 | `text-[#f8bc34]` | `text-[#f8bc34]` | Check design system tokens | - |
-| Low | 20 | `#f8bc34` | `#f8bc34` | Check design system tokens | - |
+| Low | 16 | `text-[#f1592a]` | `text-[#f1592a]` | VALID: PDF brand color | - |
+| Low | 16 | `#f1592a` | `#f1592a` | VALID: PDF brand color | - |
+| Low | 17 | `text-[#2b72c4]` | `text-[#2b72c4]` | VALID: Microsoft Word brand color | - |
+| Low | 17 | `#2b72c4` | `#2b72c4` | VALID: Microsoft Word brand color | - |
+| Low | 18 | `text-[#1d6f42]` | `text-[#1d6f42]` | VALID: Microsoft Excel brand color | - |
+| Low | 18 | `#1d6f42` | `#1d6f42` | VALID: Microsoft Excel brand color | - |
+| Low | 19 | `text-[#d24726]` | `text-[#d24726]` | VALID: Microsoft PowerPoint brand color | - |
+| Low | 19 | `#d24726` | `#d24726` | VALID: Microsoft PowerPoint brand color | - |
+| Low | 20 | `text-[#f8bc34]` | `text-[#f8bc34]` | VALID: Archive/Zip file color | - |
+| Low | 20 | `#f8bc34` | `#f8bc34` | VALID: Archive/Zip file color | - |
 ## src/features/inbox/components/contact-details/EditContactDialog.tsx
 | Priority | Line | Raw Match | Clean | Suggestion | Patch |
 |---|---|---|---|---|---|
