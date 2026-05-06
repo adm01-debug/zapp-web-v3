@@ -1,4 +1,5 @@
 import { handleCors, errorResponse, getCorsHeaders, Logger, requireEnv } from "../_shared/validation.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const VOICE_PRESETS: Record<string, { voiceId: string; label: string; isCloned?: boolean }> = {
   // Masculinas
