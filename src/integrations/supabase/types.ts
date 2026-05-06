@@ -9975,12 +9975,59 @@ export type Database = {
         }
         Relationships: []
       }
+      stress_test_metrics: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          latency_ms: number
+          queue_id: string | null
+          run_id: string | null
+          status: string
+          task_type: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms: number
+          queue_id?: string | null
+          run_id?: string | null
+          status: string
+          task_type: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number
+          queue_id?: string | null
+          run_id?: string | null
+          status?: string
+          task_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stress_test_metrics_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "stress_test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stress_test_runs: {
         Row: {
           abort_reason: string | null
+          concurrent_agents: number | null
           ended_at: string | null
           id: string
           instance_name: string
+          metrics_summary: Json | null
+          queue_id: string | null
           results: Json
           started_at: string
           started_by: string
@@ -9992,9 +10039,12 @@ export type Database = {
         }
         Insert: {
           abort_reason?: string | null
+          concurrent_agents?: number | null
           ended_at?: string | null
           id?: string
           instance_name?: string
+          metrics_summary?: Json | null
+          queue_id?: string | null
           results?: Json
           started_at?: string
           started_by: string
@@ -10006,9 +10056,12 @@ export type Database = {
         }
         Update: {
           abort_reason?: string | null
+          concurrent_agents?: number | null
           ended_at?: string | null
           id?: string
           instance_name?: string
+          metrics_summary?: Json | null
+          queue_id?: string | null
           results?: Json
           started_at?: string
           started_by?: string
@@ -12911,6 +12964,10 @@ export type Database = {
       cleanup_old_instance_auth_events: { Args: never; Returns: number }
       cleanup_old_qr_attempts: { Args: never; Returns: undefined }
       cleanup_old_send_failures: { Args: never; Returns: undefined }
+      cleanup_old_stress_metrics: {
+        Args: { days_to_keep?: number }
+        Returns: undefined
+      }
       cleanup_proxy_metrics: { Args: never; Returns: undefined }
       cleanup_wa_cloud_pings: { Args: never; Returns: undefined }
       cleanup_webhook_deliveries: { Args: never; Returns: undefined }
