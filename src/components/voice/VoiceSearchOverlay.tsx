@@ -97,7 +97,7 @@ export function VoiceSearchOverlay({
     <AnimatePresence mode="wait">
       {isOpen && <motion.div key="voice-overlay" className="fixed inset-0 z-[9999] flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: prefersReduced ? 0.1 : 0.3 }} role="dialog" aria-modal="true" aria-label="Assistente de voz">
         <motion.div className="absolute inset-0" style={{ backdropFilter: 'blur(24px) saturate(1.2)', WebkitBackdropFilter: 'blur(24px) saturate(1.2)' }}
-          animate={prefersReduced ? { backgroundColor: 'rgba(8, 8, 20, 0.75)' } : { backgroundColor: ['rgba(12, 12, 30, 0.55)', 'rgba(4, 4, 12, 0.82)', 'rgba(12, 12, 30, 0.55)'] }}
+          animate={prefersReduced ? { backgroundColor: 'rgba(var(--background), 0.75)' } : { backgroundColor: ['rgba(var(--background), 0.55)', 'rgba(var(--background), 0.82)', 'rgba(var(--background), 0.55)'] }}
           transition={prefersReduced ? {} : { duration: 8, repeat: Infinity, ease: 'easeInOut' }} onClick={onClose}
         />
         <motion.div className="absolute inset-0 pointer-events-none"
@@ -106,7 +106,7 @@ export function VoiceSearchOverlay({
         />
         {!prefersReduced && <FloatingParticles phase={phase} />}
 
-        <motion.div className="relative z-10 flex flex-col items-center gap-5 p-8 rounded-3xl max-w-[340px] w-full mx-4 overflow-visible" style={{ background: 'transparent' }}
+        <motion.div className="relative z-10 flex flex-col items-center gap-5 p-8 rounded-3xl max-w-[340px] w-full mx-4 overflow-visible bg-background/95 border border-border shadow-2xl"
           initial={prefersReduced ? {} : { scale: 0.9, y: 20 }} animate={prefersReduced ? {} : { scale: 1, y: 0 }} transition={prefersReduced ? {} : { duration: 0.4, ease: 'easeOut' }}
         >
           <motion.div className="absolute -inset-6 rounded-[36px] pointer-events-none" style={{ filter: 'blur(28px)', background: `radial-gradient(ellipse at center, ${colors.glow1.replace('hsl(', 'hsla(').replace(')', ', 0.25)')}, ${colors.glow2.replace('hsl(', 'hsla(').replace(')', ', 0.15)')}, transparent 70%)` }}
@@ -114,7 +114,6 @@ export function VoiceSearchOverlay({
             transition={prefersReduced ? {} : { duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           />
           <div className="absolute -inset-[1px] rounded-3xl pointer-events-none" style={{ border: `1px solid ${colors.glow1.replace('hsl(', 'hsla(').replace(')', ', 0.18)')}`, boxShadow: `0 0 30px 8px ${colors.glow1.replace('hsl(', 'hsla(').replace(')', ', 0.3)')}, 0 0 80px 20px ${colors.glow2.replace('hsl(', 'hsla(').replace(')', ', 0.18)')}, inset 0 0 30px 4px ${colors.glow1.replace('hsl(', 'hsla(').replace(')', ', 0.06)')}` }} />
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ background: 'rgba(8, 8, 18, 0.92)' }} />
 
           <div className="relative z-10 flex flex-col items-center gap-5 w-full">
             <div className="text-center">
