@@ -40,12 +40,6 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
     '#f29900': 'Google UI Warning',
     '#e37400': 'Google UI Orange',
     '#d93025': 'Google UI Error',
-    '#ec4899': 'Chart Pink',
-    '#06b6d4': 'Chart Cyan',
-    '#84cc16': 'Chart Lime',
-    '#f97316': 'Chart Orange',
-    '#22c55e': 'Chart Emerald',
-    '#6366f1': 'Chart Indigo',
     '#ccc': 'Canvas/Chart Neutral',
     '#888': 'Log/Technical Neutral',
     '#666': 'Log/Technical Dimmed',
@@ -55,25 +49,8 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
     '#00c49f': 'Metric Success',
     '#ffbb28': 'Metric Warning',
     '#ff8042': 'Metric Danger',
-    '#f0fdf4': 'Heatmap Level 1',
-    '#86efac': 'Heatmap Level 2',
-    '#22c55e': 'Heatmap Level 3',
-    '#15803d': 'Heatmap Level 4',
-    '#14532d': 'Heatmap Level 5',
-    '#fef9c3': 'Heatmap Amber 1',
-    '#fde047': 'Heatmap Amber 2',
-    '#facc15': 'Heatmap Amber 3',
-    '#eab308': 'Heatmap Amber 4',
-    '#ca8a04': 'Heatmap Amber 5',
-    '#fef2f2': 'Heatmap Red 1',
-    '#fecaca': 'Heatmap Red 2',
-    '#f87171': 'Heatmap Red 3',
-    '#ef4444': 'Heatmap Red 4',
-    '#dc2626': 'Heatmap Red 5',
     '#9e9e9e': 'Gmail Muted Label',
     '#777777': 'Gmail Dimmed Label',
-    '#16a34a': 'Log Success',
-    '#d97706': 'Log Warning',
     '#251f33': 'Theme Background Constant',
   };
 
@@ -81,9 +58,8 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
   const justification = technicalCases[lookupMatch];
   
   if (justification) {
-    // Exception: If it's OLED black, only justify if in CSS or if explicitly intentional
     if (lookupMatch === '000000' && fileName && !fileName.endsWith('.css') && !fileName.includes('tailwind')) {
-       // Proceed to mapping logic below for normal files
+       // Proceed to mapping
     } else {
        return { cleanMatch, prefix, suggestion: `VALID: ${justification}`, priority: 'Low' };
     }
@@ -97,13 +73,11 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
   const isWhite = cleanMatch.includes('white') || cleanMatch.includes('#ffffff') || cleanMatch.includes('#fff');
   const isBlack = cleanMatch.includes('black') || cleanMatch.includes('#000000') || cleanMatch.includes('#000');
 
-  // Logic to determine base semantic tokens based on intent
   if (label === 'Raw Hex' || label === 'Arbitrary Color' || label === 'Literal Color') {
     const isBg = cleanMatch.startsWith('bg-') || cleanMatch.startsWith('hover:bg-');
     const isText = cleanMatch.startsWith('text-') || cleanMatch.startsWith('hover:text-');
     const isBorder = cleanMatch.startsWith('border-') || cleanMatch.startsWith('hover:border-');
 
-    // Handle Hex values by mapping them to closest tokens
     if (label === 'Raw Hex' || (label === 'Arbitrary Color' && cleanMatch.includes('#'))) {
       const hex = (cleanMatch.match(/#[0-9a-fA-F]{3,6}/) || [])[0]?.toLowerCase();
       
@@ -112,7 +86,6 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
       const isActuallyBorder = cleanMatch.startsWith('border-');
 
       if (hex) {
-        // Special case for white/black hex
         if (['#fff', '#ffffff'].includes(hex)) {
            const baseReplacement = isActuallyBg ? 'bg-background' : (isActuallyText ? 'text-foreground' : (isActuallyBorder ? 'border-border' : undefined));
            if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
@@ -122,7 +95,6 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
            if (baseReplacement) return { cleanMatch, prefix, suggestion: baseReplacement, priority: 'High', replacement: `${prefix}${baseReplacement}` };
         }
 
-        // Generic hex to semantic color mapping
         const hexMap: Record<string, string> = {
           '#ef4444': 'destructive', '#dc2626': 'destructive', '#f87171': 'destructive', '#fecaca': 'destructive', '#fef2f2': 'destructive',
           '#f59e0b': 'warning', '#eab308': 'warning', '#facc15': 'warning', '#fde047': 'warning', '#fef9c3': 'warning',
@@ -157,7 +129,6 @@ export function getSuggestion(label: string, match: string, fileName?: string): 
        return { cleanMatch, prefix, suggestion: `${prefix}${baseReplacement || 'bg-foreground'}`, priority: 'High', replacement };
     }
 
-    // Mapping logic for standard literal colors to semantic tokens
     const semanticMap: Record<string, string> = {
       'red': 'destructive', 'rose': 'destructive', 'pink': 'destructive',
       'amber': 'warning', 'yellow': 'warning', 'orange': 'warning',
