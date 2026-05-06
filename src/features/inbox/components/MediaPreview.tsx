@@ -109,7 +109,14 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
     }
 
     if (refresh.failed) {
-...
+      return (
+        <div
+          ref={ref}
+          role="alert"
+          className="max-w-[300px] rounded-lg border border-destructive/30 bg-destructive/5 p-4 flex flex-col items-center gap-2 text-center"
+        >
+          <VideoOff className="w-8 h-8 text-destructive" aria-hidden="true" />
+          <p className="text-sm font-medium text-foreground">Vídeo indisponível</p>
           <p className="text-xs text-muted-foreground">
             {refresh.error?.message ?? 'Não foi possível recuperar este vídeo.'}
           </p>
@@ -141,14 +148,16 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            <video
-              key={effectiveUrl}
-              src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
-              onLoadedData={() => setIsLoaded(true)}
-              onError={refresh.onError}
-              onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
-              onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; setIsPlaying(false); }}
-            />
+            {effectiveUrl && (
+              <video
+                key={effectiveUrl}
+                src={effectiveUrl} className="w-full max-h-[400px] object-cover rounded-md" muted={isMuted} loop playsInline
+                onLoadedData={() => setIsLoaded(true)}
+                onError={refresh.onError}
+                onMouseEnter={(e) => { e.currentTarget.play(); setIsPlaying(true); }}
+                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; setIsPlaying(false); }}
+              />
+            )}
             <AnimatePresence>
               {!isPlaying && isLoaded && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-background/30 flex items-center justify-center">
@@ -165,7 +174,7 @@ export const VideoPreview = forwardRef<HTMLDivElement, VideoPreviewProps>(
           {caption && <p className={cn("text-sm", isSent ? "text-primary-foreground" : "text-foreground")}>{caption}</p>}
         </div>
         <AnimatePresence>
-          {showFullscreen && <VideoFullscreen url={effectiveUrl} onClose={() => setShowFullscreen(false)} />}
+          {showFullscreen && effectiveUrl && <VideoFullscreen url={effectiveUrl} onClose={() => setShowFullscreen(false)} />}
         </AnimatePresence>
       </div>
     );
