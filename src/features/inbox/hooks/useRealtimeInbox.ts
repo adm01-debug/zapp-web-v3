@@ -204,7 +204,9 @@ export function useRealtimeInbox() {
     if (USE_EXTERNAL_DB) { setSelectedContactFallback(null); return; }
     let cancelled = false;
     const loadSelectedContact = async () => {
-      const { data, error } = await dbFrom('contacts')
+      const client = externalSupabase || supabase;
+      const { data, error } = await client
+        .from('contacts')
         .select('*')
         .eq('id', selectedContactId)
         .maybeSingle();
