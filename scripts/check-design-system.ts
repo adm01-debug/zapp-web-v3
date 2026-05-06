@@ -140,6 +140,9 @@ const htmlReport = `<!DOCTYPE html>
         .label { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
         .label-Hex-Color { background: #fee2e2; color: #991b1b; }
         .label-Literal-Color { background: #ffedd5; color: #9a3412; }
+        .priority-High { color: #ef4444; font-weight: bold; }
+        .priority-Medium { color: #f59e0b; font-weight: bold; }
+        .priority-Low { color: #6b7280; }
         code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }
     </style>
 </head>
