@@ -49,15 +49,15 @@ export const AGENT_STATUS_LABELS: Record<string, string> = {
 };
 
 export const AGENT_STATUS_COLORS: Record<string, string> = {
-  draft:        'bg-muted text-gray-700',
-  configured:   'bg-blue-100 text-blue-700',
-  testing:      'bg-yellow-100 text-yellow-700',
-  staging:      'bg-orange-100 text-orange-700',
-  review:       'bg-purple-100 text-purple-700',
-  production:   'bg-primary text-primary',
-  monitoring:   'bg-teal-100 text-teal-700',
-  deprecated:   'bg-amber-100 text-amber-700',
-  archived:     'bg-muted text-gray-500',
+  draft:        'bg-muted text-muted-foreground',
+  configured:   'bg-primary/20 text-primary',
+  testing:      'bg-accent text-accent-foreground',
+  staging:      'bg-secondary text-secondary-foreground',
+  review:       'bg-primary/10 text-primary/80',
+  production:   'bg-primary text-primary-foreground',
+  monitoring:   'bg-emerald-500/10 text-emerald-500',
+  deprecated:   'bg-destructive/10 text-destructive',
+  archived:     'bg-muted text-muted-foreground/50',
 };
 
 // ── Hook ───────────────────────────────────────────────────────────────────
