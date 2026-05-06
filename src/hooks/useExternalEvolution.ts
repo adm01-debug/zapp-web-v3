@@ -135,6 +135,7 @@ export function reconcileOptimistic(
         patch.status = promoted.status;
         patch.status_updated_at = promoted.status_updated_at;
         if (!can.media_url && m.media_url) patch.media_url = m.media_url;
+        if (can.reactions && can.reactions.length > 0) patch.reactions = can.reactions;
         recordMatch({
           strategy: 'external_id',
           messageType: m.message_type,
