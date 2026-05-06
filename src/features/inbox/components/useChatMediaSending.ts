@@ -261,11 +261,10 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     }
   }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, getSafePhone, updateMessageStatus]);
 
-  const handleSendAudioMeme = useCallback(async (audioUrl: string) => {
+  const handleSendAudioMeme = useCallback(async (meme: any) => {
     const inst = await ensureInstance();
     if (!inst) return;
 
-    // BUG 2 FIX
     const phone = getSafePhone();
     if (!phone) {
       toast.error('Telefone do contato não disponível.');
@@ -273,37 +272,59 @@ export function useChatMediaSending(contactId: string, contactPhone: string | un
     }
 
     try {
+      const audioUrl = meme.audio_url || meme;
+      const memeId = meme.id || null;
       const normalizedAudioUrl = normalizeMediaUrl(audioUrl);
       const trace = newRequestId('audio');
 
+      // DOC ARCHITECTURE COMPLIANCE:
+      // We still insert into local 'messages' (Lovable Cloud) for UI persistence,
+      // but if we have a memeId, the backend (FATOR X) will handle use_count++ and audio_meme_id linkage
+      // when we invoke the edge function.
+      
       const apiPromise = supabase.functions.invoke('evolution-api', {
-        body: { action: 'send-audio', instanceName: inst, number: phone, audioUrl: normalizedAudioUrl },
+        body: { 
+          action: 'send-audio', 
+          instanceName: inst, 
+          number: phone, 
+          audio: normalizedAudioUrl, // Use 'audio' as per evolution-api index.ts
+          encoding: true, 
+          isPtt: true, // Audio memes MUST appear as voice notes (green waveform)
+          audio_meme_id: memeId
+        },
         headers: trace.headers,
       });
 
       const dbPromise = dbFrom('messages').insert({
-        contact_id: contactId, whatsapp_connection_id: whatsappConnectionId,
-        content: '[Áudio Meme]', message_type: 'audio',
-        media_url: normalizedAudioUrl, sender: 'agent', status: 'sending',
+        contact_id: contactId, 
+        whatsapp_connection_id: whatsappConnectionId,
+        content: '[Áudio Meme]', 
+        message_type: 'audio',
+        media_url: normalizedAudioUrl, 
+        sender: 'agent', 
+        status: 'sending',
         request_id: trace.requestId,
-      }).select('id').single();
+        // If your local 'messages' table has audio_meme_id, propagate it
+        ...(memeId ? { audio_meme_id: memeId } : {})
+      } as any).select('id').single();
 
       const [apiResult, dbResult] = await Promise.all([apiPromise, dbPromise]);
       const messageId = dbResult?.data?.id;
 
       if (apiResult?.error || !apiResult?.data?.key?.id) {
+        log.error('Audio meme send failed', apiResult?.error);
         if (messageId) await updateMessageStatus(messageId, 'failed');
         toast.error('Erro ao enviar áudio meme');
         return;
       }
 
       const externalId = apiResult.data.key.id;
-      // FIX: proper await instead of fire-and-forget
       if (messageId) {
         await updateMessageStatus(messageId, 'sent', externalId);
       }
       toast.success('🔊 Áudio meme enviado!');
-    } catch {
+    } catch (err) {
+      log.error('handleSendAudioMeme error', err);
       toast.error('Erro ao enviar áudio meme');
     }
   }, [ensureInstance, contactId, contactPhone, whatsappConnectionId, getSafePhone, updateMessageStatus]);
