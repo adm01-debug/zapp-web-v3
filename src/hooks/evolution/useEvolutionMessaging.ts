@@ -15,19 +15,21 @@ export function useEvolutionMessaging(
     number: string,
     text: string,
     options?: SendTextOptions,
-  ) => callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
+  ) => callApi('send-text', { instanceName, number, text, ...options }, { 
+    idempotencyKey: options?.idempotencyKey 
+  }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-media', params), [callApi]);
+    callApi('send-media', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
 
   const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number; idempotencyKey?: string }) =>
-    callApi('send-audio', { instanceName, number, mediaUrl, ...options }), [callApi]);
+    callApi('send-audio', { instanceName, number, mediaUrl, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
 
   const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string, options?: { idempotencyKey?: string }) =>
-    callApi('send-sticker', { instanceName, number, sticker, ...options }), [callApi]);
+    callApi('send-sticker', { instanceName, number, sticker, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
 
   const sendLocationMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-location', params), [callApi]);
+    callApi('send-location', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
 
   const sendContactMessage = useCallback((instanceName: string, number: string, contact: ContactCard[]) =>
     callApi('send-contact', { instanceName, number, contact }), [callApi]);
