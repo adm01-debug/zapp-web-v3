@@ -56,6 +56,49 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     return () => { supabase.removeChannel(channel); };
   }, [messageId]);
 
+  // Realtime subscription for voice conversion status
+  useEffect(() => {
+    const channel = supabase
+      .channel(`voice-conversion-${messageId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'voice_conversion_queue', 
+        filter: `message_id=eq.${messageId}` 
+      }, (payload) => {
+        const newData = payload.new as any;
+        if (newData.status) setVoiceStatus(newData.status);
+        if (newData.error_message) setVoiceError(newData.error_message);
+        
+        if (newData.status === 'completed' && newData.output_audio_url && onVoiceChange) {
+          // If it's a new audio, we might want to refresh?
+          // For now just show it's done
+          toast({ title: 'Conversão concluída', description: 'A voz do áudio foi alterada com sucesso.' });
+        }
+      })
+      .subscribe();
+      
+    // Initial fetch for current status
+    const fetchStatus = async () => {
+      const { data } = await supabase
+        .from('voice_conversion_queue')
+        .select('status, error_message')
+        .eq('message_id', messageId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        setVoiceStatus(data.status);
+        setVoiceError(data.error_message);
+      }
+    };
+    
+    fetchStatus();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [messageId, onVoiceChange]);
+
   const handleTranscribe = async () => {
     if (isTranscribing || transcriptionStatus === 'processing') return;
     setIsTranscribing(true); setTranscriptionStatus('processing'); setShowTranscription(true);
