@@ -28,6 +28,8 @@ export interface PendingUpload {
 export function useAudioMemes(open: boolean) {
   const [memes, setMemes] = useState<AudioMemeItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
