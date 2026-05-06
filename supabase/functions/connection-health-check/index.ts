@@ -102,7 +102,9 @@ function evaluateHealth(a: EvalArgs): EvalResult {
   if (a.lastActivityAt) {
     const age = a.now.getTime() - a.lastActivityAt.getTime();
     if (age > ACTIVITY_STALE_MS) {
-      return { healthStatus: 'disconnected', dbStatus: 'disconnected', reason: 'stale_session' };
+      // Socket aberto + owner ok há 24h sem mensagens é apenas um aviso,
+      // não um erro. A conexão continua "connected" no DB.
+      return { healthStatus: 'degraded', dbStatus: 'connected', reason: 'stale_session' };
     }
     if (age > ACTIVITY_DEGRADED_MS) {
       return { healthStatus: 'degraded', dbStatus: 'connected', reason: 'webhook_silent' };
