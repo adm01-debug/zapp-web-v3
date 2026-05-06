@@ -220,13 +220,13 @@ export function VoiceChanger({ audioBlob, onVoiceChanged, disabled }: VoiceChang
 
         {/* Voice list */}
         <div className="max-h-[280px] overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-muted">
-          {ELEVENLABS_VOICES.map((voice) => {
+          {ELEVENLABS_VOICES.map((voice, idx) => {
             const isSelected = selectedVoice?.id === voice.id;
             const isLoading = isConverting && isSelected;
 
             return (
               <motion.button
-                key={voice.id}
+                key={`${voice.id}-${idx}`}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => !isConverting && handleConvert(voice)}
                 disabled={isConverting}
