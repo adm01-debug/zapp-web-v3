@@ -43,6 +43,7 @@ import {
   deriveInstances,
   type SecretStatusEvent,
 } from './admin-webhook-secret-status/instanceAggregations';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
 interface SecretStatus {
   configured: boolean;
@@ -312,7 +313,7 @@ export default function AdminWebhookSecretStatusPage() {
           <HmacSelfTestButton instance={selectedInstance} />
           <Button variant="ghost" size="sm" asChild data-testid="hmac-selftest-open-page">
             <Link
-              to={`/admin/hmac-selftest?instance=${encodeURIComponent(selectedInstance ?? 'wpp2')}`}
+              to={`/admin/hmac-selftest?instance=${encodeURIComponent(selectedInstance ?? DEFAULT_WHATSAPP_INSTANCE)}`}
               aria-label="Abrir página do HMAC self-test"
             >
               <ExternalLink className="h-4 w-4 mr-1" />

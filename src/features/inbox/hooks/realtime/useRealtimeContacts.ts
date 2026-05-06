@@ -4,6 +4,7 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import type { EvolutionContact } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { setRealtimeContactsStatus } from './realtimeContactsStatusStore';
 
 const log = getLogger('RealtimeContacts');
@@ -92,7 +93,7 @@ function mergeContact<T extends Partial<EvolutionContact>>(
  * - Soft delete (deleted_at != null) treated as DELETE on the list.
  */
 export function useRealtimeContacts(options: UseRealtimeContactsOptions = {}) {
-  const { instance = 'wpp2', enabled = true } = options;
+  const { instance = DEFAULT_WHATSAPP_INSTANCE, enabled = true } = options;
   const queryClient = useQueryClient();
   const pendingRef = useRef<Map<string, ContactChange>>(new Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

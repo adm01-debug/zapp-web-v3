@@ -22,11 +22,12 @@ import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/
 import type { EvolutionMessage, EvolutionMessageLite } from '@/types/evolutionExternal';
 import { toEvolutionMessageLite } from '@/types/evolutionExternal';
 import { getLogger } from '@/lib/logger';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
 const log = getLogger('useMessagesCursor');
 
 const DEFAULT_PAGE_SIZE = 50;
-const DEFAULT_INSTANCE = 'wpp2';
+const DEFAULT_INSTANCE = DEFAULT_WHATSAPP_INSTANCE;
 
 export interface UseMessagesCursorOptions {
   remoteJid: string | null;

@@ -13,10 +13,12 @@ import { queryExternalProxy } from '@/lib/externalProxy';
 import {
   buildExternalConversations,
   evolutionToRealtimeMessage,
+  jidToPhone,
 } from '@/adapters/evolutionAdapter';
 import type { EvolutionMessage } from '@/types/evolutionExternal';
 import type { RealtimeMessage } from '@/features/inbox';
 import { getLogger } from '@/lib/logger';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { dedupedFetch, subscribeDedupe } from '@/lib/realtime/crossTabDedupe';
 import { playerStateStore } from '@/features/inbox';
 import { recordMatch } from '@/features/inbox';
@@ -249,7 +251,7 @@ export function applyReconciliation(
 }
 
 const POLL_INTERVAL = 5000; // 5s polling
-const DEFAULT_INSTANCE = 'wpp2';
+const DEFAULT_INSTANCE = DEFAULT_WHATSAPP_INSTANCE;
 const SIDEBAR_DAYS_BACK = 7;
 const SIDEBAR_LIMIT = 200;
 const CONVERSATION_PAGE_SIZE = 100;
@@ -345,7 +347,7 @@ export function useExternalConversations(enabled = true) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT],
+    queryKey: ['external-evolution', 'conversations', SIDEBAR_DAYS_BACK, SIDEBAR_LIMIT, DEFAULT_INSTANCE],
     queryFn: async () => {
       if (USE_MOCKS) {
         const { MOCK_CONVERSATIONS } = await import('@/features/inbox/components/conversation-list/__mocks__/mockConversations');
@@ -353,7 +355,7 @@ export function useExternalConversations(enabled = true) {
       }
       
       const messages = await dedupedFetch(
-        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}`,
+        `inbox:sidebar:${SIDEBAR_DAYS_BACK}:${SIDEBAR_LIMIT}:${DEFAULT_INSTANCE}`,
         () => fetchRecentMessagesWindow(),
         { lockTtl: 8_000, resultTtl: POLL_INTERVAL - 500, waitTimeout: 6_000 },
       );
@@ -489,7 +491,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: trocar para o mesmo contato em N abas só dispara
       // 1 fetch — as demais reaproveitam via BroadcastChannel/cache.
       const evoMessages = await dedupedFetch(
-        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}`,
+        `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE),
         { lockTtl: 10_000, resultTtl: 15_000, waitTimeout: 8_000 },
       );
@@ -538,7 +540,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe: várias abas pollando o mesmo jid+cursor compartilham 1 fetch
       // (TTL curto = poll seguinte ainda dispara normalmente).
       const newOnes = await dedupedFetch(
-        `inbox:poll:${remoteJid}:${afterDate}`,
+        `inbox:poll:${remoteJid}:${afterDate}:${DEFAULT_INSTANCE}:${jidToPhone(remoteJid)}`,
         () => fetchMessagesAfter(remoteJid, afterDate),
         { lockTtl: 4_000, resultTtl: POLL_INTERVAL - 1_000, waitTimeout: 3_000 },
       );
@@ -579,7 +581,7 @@ export function useExternalMessages(remoteJid: string | null) {
       // Dedupe cross-aba: mesma janela (jid + cursor) compartilhada via
       // localStorage lock + BroadcastChannel. Evita N abas chamando o mesmo
       // page de mensagens antigas em paralelo.
-      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}`;
+      const dedupeKey = `older:${remoteJid}:${oldest}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`;
       const older = await dedupedFetch(
         dedupeKey,
         () => fetchMessagesByJid(remoteJid, CONVERSATION_PAGE_SIZE, oldest, controller.signal),
@@ -636,7 +638,7 @@ export function useExternalMessages(remoteJid: string | null) {
   useEffect(() => {
     if (!remoteJid) return;
     const jidPrefixes = [
-      `inbox:initial:${remoteJid}:`,
+      `inbox:initial:${remoteJid}:${CONVERSATION_PAGE_SIZE}:${DEFAULT_INSTANCE}`,
       `inbox:poll:${remoteJid}:`,
       `older:${remoteJid}:`,
     ];

@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Server } from 'lucide-react';
+import { SELECTABLE_WHATSAPP_INSTANCES } from '@/lib/constants/whatsappInstances';
 
 interface InstanceFilterSelectProps {
   instances: string[];
@@ -34,11 +35,19 @@ export function InstanceFilterSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={ALL_VALUE}>Todas as instâncias</SelectItem>
-        {instances.map((inst) => (
+        {SELECTABLE_WHATSAPP_INSTANCES.map((inst) => (
           <SelectItem key={inst} value={inst}>
             {inst}
           </SelectItem>
         ))}
+        {/* Dynamic instances from logs that might not be in the core list yet */}
+        {instances
+          .filter((inst) => !(SELECTABLE_WHATSAPP_INSTANCES as readonly string[]).includes(inst))
+          .map((inst) => (
+            <SelectItem key={inst} value={inst}>
+              {inst} (Log)
+            </SelectItem>
+          ))}
       </SelectContent>
     </Select>
   );
