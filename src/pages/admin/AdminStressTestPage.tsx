@@ -260,7 +260,7 @@ export default function AdminStressTestPage() {
     const latencies = metrics?.map(m => m.latency_ms).sort((a, b) => a - b) || [];
     const avgLatency = latencies.length > 0 ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
     const p95Latency = latencies[Math.floor(latencies.length * 0.95)] || 0;
-          const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - start) / 1000)).toFixed(2)) : 0;
+    const throughput = latencies.length > 0 ? Number((latencies.length / ((performance.now() - start) / 1000)).toFixed(2)) : 0;
 
     await persistRun(id, {
       status: summary.status,
