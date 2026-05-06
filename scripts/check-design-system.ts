@@ -203,7 +203,7 @@ export function scanContent(content: string, fileName: string, results: Violatio
         const rawMatch = match[0].trim();
         if (!rawMatch) continue;
 
-        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName);
+        const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch, fileName, line);
         
         const matchStart = match.index;
         if (matchStart > 1 && line.substring(matchStart - 2, matchStart) === '--') continue;
