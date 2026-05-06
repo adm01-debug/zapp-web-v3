@@ -10,6 +10,7 @@ import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { eventBus } from '@/lib/eventBus';
+import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
