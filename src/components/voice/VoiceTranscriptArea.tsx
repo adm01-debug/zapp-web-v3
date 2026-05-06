@@ -35,7 +35,7 @@ export function VoiceTranscriptArea({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center text-sm text-white/50 italic"
+            className="text-center text-sm text-muted-foreground/50 italic"
           >
             "{partialTranscript}"
           </motion.div>
@@ -46,7 +46,7 @@ export function VoiceTranscriptArea({
             key="final"
             initial={{ opacity: 0, y: prefersReduced ? 0 : 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center text-sm text-white/80 font-medium"
+            className="text-center text-sm text-foreground/80 font-medium"
           >
             🎤 "{finalTranscript}"
           </motion.div>
@@ -61,7 +61,7 @@ export function VoiceTranscriptArea({
             style={{
               background: `linear-gradient(135deg, ${colors.primary.replace('hsl(', 'hsla(').replace(')', ', 0.08)')}, ${colors.secondary.replace('hsl(', 'hsla(').replace(')', ', 0.08)')})`,
               border: `1px solid ${colors.primary.replace('hsl(', 'hsla(').replace(')', ', 0.15)')}`,
-              color: 'rgba(255,255,255,0.85)',
+              color: 'var(--foreground)',
             }}
           >
             <MessageCircle className="w-3 h-3 inline-block mr-1.5 opacity-60" />
@@ -74,7 +74,7 @@ export function VoiceTranscriptArea({
             key="processing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 text-white/40 text-xs"
+            className="flex items-center justify-center gap-2 text-muted-foreground/40 text-xs"
           >
             <Loader2 className="w-3 h-3 animate-spin" />
             Processando com IA...
@@ -86,7 +86,7 @@ export function VoiceTranscriptArea({
             key="booting"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 text-white/40 text-xs"
+            className="flex items-center justify-center gap-2 text-muted-foreground/40 text-xs"
           >
             <Loader2 className="w-3 h-3 animate-spin" />
             Conectando microfone...
@@ -105,7 +105,7 @@ export function VoiceTranscriptArea({
               <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
               {error}
             </div>
-            <span className="text-[10px] text-white/30">Toque no orbe para tentar novamente</span>
+            <span className="text-[10px] text-muted-foreground/30">Toque no orbe para tentar novamente</span>
           </motion.div>
         )}
       </AnimatePresence>

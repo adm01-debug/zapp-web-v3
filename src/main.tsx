@@ -45,16 +45,16 @@ if (import.meta.env.DEV) {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <SentryErrorBoundary
     fallback={({ error, resetError }) => (
-      <div role="alert" style={{ padding: 24, fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '40px auto' }}>
-        <h1 style={{ fontSize: 24, marginBottom: 12 }}>Algo deu errado</h1>
-        <p style={{ color: '#64748b', marginBottom: 16 }}>
+      <div role="alert" className="p-6 font-sans max-w-2xl mx-auto my-10 bg-card rounded-2xl border border-border shadow-xl">
+        <h1 className="text-2xl font-bold mb-3 text-foreground">Algo deu errado</h1>
+        <p className="text-muted-foreground mb-4">
           O erro foi registrado e nossa equipe foi notificada. Você pode tentar de novo:
         </p>
-        <button onClick={resetError} style={{ padding: '8px 16px', borderRadius: 8, background: '#10b981', color: '#fff', border: 0, cursor: 'pointer' }}>
+        <button onClick={resetError} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
           Tentar novamente
         </button>
         {import.meta.env.DEV && (
-          <pre style={{ marginTop: 16, padding: 12, background: '#1e293b', color: '#fca5a5', borderRadius: 8, overflow: 'auto', fontSize: 12 }}>
+          <pre className="mt-4 p-3 bg-muted text-destructive rounded-lg overflow-auto text-xs font-mono">
             {String(error?.toString?.() ?? error)}
           </pre>
         )}

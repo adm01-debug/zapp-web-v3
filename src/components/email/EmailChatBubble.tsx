@@ -56,12 +56,12 @@ function getInitials(name: string | null, email: string | null): string {
 
 function getAvatarColor(email: string | null): string {
   const colors = [
-    'bg-blue-600 shadow-[0_0_10px_-2px_rgba(37,99,235,0.4)]',
     'bg-primary shadow-[0_0_10px_-2px_rgba(var(--primary),0.4)]',
-    'bg-violet-600 shadow-[0_0_10px_-2px_rgba(124,58,237,0.4)]',
-    'bg-amber-600 shadow-[0_0_10px_-2px_rgba(217,119,6,0.4)]',
-    'bg-rose-600 shadow-[0_0_10px_-2px_rgba(225,29,72,0.4)]',
-    'bg-cyan-600 shadow-[0_0_10px_-2px_rgba(8,145,178,0.4)]'
+    'bg-primary/90 shadow-[0_0_10px_-2px_rgba(var(--primary),0.3)]',
+    'bg-secondary shadow-[0_0_10px_-2px_rgba(var(--secondary),0.4)]',
+    'bg-accent shadow-[0_0_10px_-2px_rgba(var(--accent),0.4)]',
+    'bg-destructive shadow-[0_0_10px_-2px_rgba(var(--destructive),0.4)]',
+    'bg-muted shadow-[0_0_10px_-2px_rgba(var(--muted),0.4)]'
   ];
   const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   return colors[code % colors.length];
@@ -144,7 +144,7 @@ export function EmailChatBubble({
         {/* Avatar com Animação */}
         <motion.div whileHover={{ scale: 1.1 }} className="relative shrink-0">
           <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-border">
-            <AvatarFallback className={cn('text-white text-[11px] font-black uppercase tracking-wider', getAvatarColor(message.from_email))}>
+            <AvatarFallback className={cn('text-primary-foreground text-[11px] font-black uppercase tracking-wider', getAvatarColor(message.from_email))}>
               {getInitials(message.from_name, message.from_email)}
             </AvatarFallback>
           </Avatar>
