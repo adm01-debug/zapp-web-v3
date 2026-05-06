@@ -311,6 +311,7 @@ export async function sendExternalMedia(
 
 /**
  * sendExternalPtv — envia vídeo-nota circular (ptv) no modo FATOR X.
+ * Inclui retry automático para falhas de upload/sign.
  */
 export async function sendExternalPtv(
   remoteJid: string,
@@ -324,28 +325,39 @@ export async function sendExternalPtv(
   const safeKey = remoteJid.replace(/[^a-zA-Z0-9._-]/g, '_');
   const fileName = `${safeKey}/${Date.now()}.mp4`;
 
-  const { error: uploadError } = await supabase.storage
-    .from('whatsapp-media')
-    .upload(fileName, blob, { contentType: 'video/mp4', upsert: false });
-  if (uploadError) {
-    log.error('ptv upload failed', uploadError);
-    throw new Error(uploadError.message || 'Falha no upload do vídeo');
+  let signedUrl: string | null = null;
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      const { error: uploadError } = await supabase.storage
+        .from('whatsapp-media')
+        .upload(fileName, blob, { contentType: 'video/mp4', upsert: true });
+        
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signError } = await supabase.storage
+        .from('whatsapp-media')
+        .createSignedUrl(fileName, 3600);
+        
+      if (signError || !signed?.signedUrl) throw signError || new Error('Falha ao gerar URL assinada');
+      
+      signedUrl = signed.signedUrl;
+      break;
+    } catch (err) {
+      log.warn(`Tentativa ${attempts} de upload/sign PTV falhou`, err);
+      if (attempts >= maxAttempts) throw err;
+      await new Promise(r => setTimeout(r, 1000 * attempts));
+    }
   }
 
   if (opts.onProgress) opts.onProgress(50);
 
-  const { data: signed, error: signError } = await supabase.storage
-    .from('whatsapp-media')
-    .createSignedUrl(fileName, 3600);
-    
-  if (signError || !signed?.signedUrl) {
-    log.error('ptv signed url failed', signError);
-    throw new Error(signError?.message || 'Falha ao gerar URL do vídeo');
-  }
-
   const localVideoUrl = URL.createObjectURL(blob);
   const optimistic = makeOptimisticBubble(remoteJid, '[Vídeo-nota]', {
-    messageType: 'video', // Map to video internally for bubble logic
+    messageType: 'video', 
     mediaUrl: localVideoUrl,
     contactAvatar: opts.contactAvatar,
   });
@@ -355,7 +367,7 @@ export async function sendExternalPtv(
       action: 'send-ptv',
       instanceName: instance,
       number: phone,
-      video: signed.signedUrl,
+      video: signedUrl,
     },
   });
 
