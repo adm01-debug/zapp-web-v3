@@ -30,8 +30,26 @@ export default function AdminConnectionsPage() {
   const [draftKey, setDraftKey] = useState(DEFAULT_EXTERNAL_KEY);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
-  useEffect(() => { fetchConnections(); }, []);
+  useEffect(() => {
+    fetchConnections();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id ?? null);
+      if (user?.id) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+      } else {
+        setIsAdmin(false);
+      }
+    })();
+  }, []);
 
   async function fetchConnections() {
     setLoading(true);
