@@ -1,7 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Copy, Palette, Type, Layout, MousePointer2, Settings, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Copy, Palette, Type, Layout, MousePointer2, Settings, ExternalLink, MoreVertical, ShieldCheck, Database, Table as TableIcon } from "lucide-react";
 
 export default function DesignSystem() {
   return (
@@ -117,6 +135,99 @@ export default function DesignSystem() {
             <label className="text-sm font-medium">Error State</label>
             <Input error placeholder="Email inválido" defaultValue="contato@errado" />
           </div>
+        </Card>
+      </section>
+
+      {/* Badges */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <ShieldCheck className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-semibold italic">Badges & Status</h2>
+        </div>
+        <Card variant="glass" padding="lg">
+          <div className="flex flex-wrap gap-4">
+            <Badge>Default</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+            <Badge variant="outline">Outline</Badge>
+            <Badge variant="destructive">Destructive</Badge>
+            <Badge variant="success">Success</Badge>
+            <Badge variant="warning">Warning</Badge>
+            <Badge variant="info">Info</Badge>
+            <Badge variant="whatsapp">WhatsApp</Badge>
+            <Badge variant="glowPurple">Neon</Badge>
+          </div>
+        </Card>
+      </section>
+
+      {/* Dropdowns */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <Database className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-semibold italic">Dropdowns & Menus</h2>
+        </div>
+        <Card variant="glass" padding="lg">
+          <div className="flex gap-8 items-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Open Menu</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Perfil</DropdownMenuItem>
+                <DropdownMenuItem>Configurações</DropdownMenuItem>
+                <DropdownMenuItem>Assinatura</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive">Sair</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Editar</DropdownMenuItem>
+                <DropdownMenuItem>Duplicar</DropdownMenuItem>
+                <DropdownMenuItem>Excluir</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </Card>
+      </section>
+
+      {/* Tables */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <TableIcon className="w-6 h-6 text-primary" />
+          <h2 className="text-2xl font-semibold italic">Tabelas & Dados</h2>
+        </div>
+        <Card variant="glass" padding="none" className="overflow-hidden border-border">
+          <Table>
+            <TableCaption>Exemplo de listagem padronizada.</TableCaption>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead className="w-[100px]">ID</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Método</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-mono">#INV-001</TableCell>
+                <TableCell><Badge variant="success">Pago</Badge></TableCell>
+                <TableCell>Cartão de Crédito</TableCell>
+                <TableCell className="text-right">$250.00</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-mono">#INV-002</TableCell>
+                <TableCell><Badge variant="warning">Pendente</Badge></TableCell>
+                <TableCell>PayPal</TableCell>
+                <TableCell className="text-right">$150.00</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </Card>
       </section>
 
