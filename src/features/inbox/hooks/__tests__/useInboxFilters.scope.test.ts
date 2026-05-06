@@ -97,6 +97,6 @@ describe('useInboxFilters - Scope Logic', () => {
     });
     
     const filtered = result.current.filteredConversations;
-    expect(filtered.length).toBe(2);
+    expect(filtered.length).toBe(3); // Mostra tudo (mine, dept, waiting) na aba abertos em scope='all'
   });
 });
