@@ -50,9 +50,9 @@ export function FontValidationExamples() {
       </section>
 
       {/* 5. Intentional font-sans override (Should be VALID) */}
-      <section className="space-y-2 font-mono p-4 bg-muted/50 rounded">
+      <section className="space-y-2 p-4 bg-muted/50 rounded font-mono">
         <p>Container font-mono</p>
-        <p className="font-sans p-2 bg-background rounded">Este texto volta para font-sans dentro de um container mono.</p>
+        <p className="font-sans p-2 bg-background rounded">Este texto volta para font-sans dentro de um container mono (mesma linha para detecção).</p>
       </section>
 
       {/* 6. Invalid font-mono (Should be FLAGGED) */}
