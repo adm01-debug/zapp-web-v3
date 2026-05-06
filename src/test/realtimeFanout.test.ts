@@ -20,14 +20,15 @@ const MMD_PATH = resolve(__dirname, 'fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd');
 // Allowlist canônica — extraída dos comentários %% no rodapé do .mmd.
 // Ao alterar consumidores realtime de 'messages', atualize AMBOS: diagrama e esta lista.
 const EXPECTED_REALTIME_CONSUMERS: string[] = [
-  'src/hooks/useRealtimeMessages.ts',
-  'src/hooks/useMessages.ts',
-  'src/hooks/useMessageStatus.ts',
+  'src/features/inbox/hooks/useRealtimeMessages.ts',
+  'src/features/inbox/hooks/useMessages.ts',
+  'src/features/inbox/hooks/useMessageStatus.ts',
   'src/hooks/useTranscriptionNotifications.ts',
   'src/hooks/useRealtimeDashboard.ts',
   'src/components/monitoring/hooks/useEvolutionMonitoring.ts',
-  'src/components/inbox/AudioMessagePlayer.tsx',
-  'src/hooks/realtime/useRetryResolutionAlerts.ts',
+  'src/features/inbox/components/AudioMessagePlayer.tsx',
+  'src/features/inbox/hooks/realtime/useRetryResolutionAlerts.ts',
+  'src/features/inbox/components/chat/ChatMessagesArea.tsx',
 ];
 
 const UPDATE_HINT = 'Atualize src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd (e a cópia em /mnt/documents/).';
