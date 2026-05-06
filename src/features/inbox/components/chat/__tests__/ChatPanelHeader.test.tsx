@@ -22,6 +22,7 @@ vi.mock('../..', () => ({
   TypingIndicatorInline: () => null,
   RealtimeCollaboration: () => null,
   KeyboardShortcutsHelp: () => null,
+  SLAIndicatorForContact: () => <div data-testid="sla-indicator">SLA</div>
 }));
 
 const mockConversation = {
