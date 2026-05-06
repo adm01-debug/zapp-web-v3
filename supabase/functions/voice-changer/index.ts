@@ -104,11 +104,14 @@ Deno.serve(async (req) => {
     const audioBuffer = await response.arrayBuffer();
     log.done(200, { outputSize: audioBuffer.byteLength });
 
+    // Stream encoding (Simulated progressive chunks for real feel if needed, but arrayBuffer is standard)
     return new Response(audioBuffer, {
       status: 200,
       headers: {
         ...getCorsHeaders(req),
         'Content-Type': 'audio/mpeg',
+        'X-Conversion-Status': 'completed',
+        'X-Conversion-Progress': '100',
         'Content-Length': audioBuffer.byteLength.toString(),
       },
     });
