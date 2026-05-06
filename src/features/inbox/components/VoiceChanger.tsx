@@ -85,7 +85,8 @@ export function VoiceChanger({ audioBlob, audioUrl, onVoiceChanged, disabled }: 
           input_audio_url: 'blob-input', 
           voice_preset: voice.id,
           status: 'pending',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          // If we have a message context, add it here (passed via props)
         })
         .select()
         .single();
