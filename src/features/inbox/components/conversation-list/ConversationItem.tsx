@@ -152,10 +152,17 @@ export function ConversationItem({
   const company = contact?.company;
   const avatarUrl = contact?.avatar || contact?.avatar_url;
   
-  // Datas
-  const displayDate = conversation.updatedAt || 
-                     (lastMessage?.created_at ? new Date(lastMessage.created_at) : null) || 
-                     (contact?.updated_at ? new Date(contact.updated_at) : new Date());
+  // Datas — sempre normalizar para Date válido (formatDistanceToNow lança em valores inválidos)
+  const toValidDate = (v: unknown): Date | null => {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v as string | number);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const displayDate =
+    toValidDate(conversation.updatedAt) ||
+    toValidDate(lastMessage?.created_at) ||
+    toValidDate(contact?.updated_at) ||
+    new Date();
 
   const StatusIcon = statusIcons[status as keyof typeof statusIcons] || AlertCircle;
   const sentiment: SentimentLevel | null = conversation.sentiment ||
