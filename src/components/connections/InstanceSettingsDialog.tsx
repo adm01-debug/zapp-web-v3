@@ -161,12 +161,78 @@ export function InstanceSettingsDialog({ open, onOpenChange, instanceName, conne
           <DialogDescription>Gerencie configurações, perfil, privacidade e etiquetas da instância</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="settings" onValueChange={(v) => { if (v === 'labels') loadLabels(); }}>
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-1" /> Config</TabsTrigger>
             <TabsTrigger value="profile"><User className="w-4 h-4 mr-1" /> Perfil</TabsTrigger>
-            <TabsTrigger value="privacy"><Shield className="w-4 h-4 mr-1" /> Privacidade</TabsTrigger>
-            <TabsTrigger value="labels"><Tag className="w-4 h-4 mr-1" /> Etiquetas</TabsTrigger>
+            <TabsTrigger value="privacy"><Shield className="w-4 h-4 mr-1" /> Privacid.</TabsTrigger>
+            <TabsTrigger value="audit" onClick={loadAuditLogs}><History className="w-4 h-4 mr-1" /> Auditoria</TabsTrigger>
+            <TabsTrigger value="labels"><Tag className="w-4 h-4 mr-1" /> Tags</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="audit" className="space-y-4 mt-4">
+            <div className="rounded-xl border border-border/20 p-4 bg-muted/5">
+              <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
+                <RotateCcw className="w-4 h-4 text-primary" /> Política de Reconexão
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Intervalo (segundos)</Label>
+                  <Input 
+                    type="number" 
+                    value={reconnectConfig.interval} 
+                    onChange={(e) => setReconnectConfig(p => ({...p, interval: parseInt(e.target.value)}))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Máximo de Tentativas</Label>
+                  <Input 
+                    type="number" 
+                    value={reconnectConfig.maxAttempts} 
+                    onChange={(e) => setReconnectConfig(p => ({...p, maxAttempts: parseInt(e.target.value)}))}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4 p-2 bg-background/50 rounded-lg">
+                <div className="space-y-0.5">
+                  <Label>Proteção contra Loop</Label>
+                  <p className="text-[10px] text-muted-foreground">Pausa automática se houver muitas quedas seguidas</p>
+                </div>
+                <Switch 
+                  checked={reconnectConfig.loopProtection} 
+                  onCheckedChange={(v) => setReconnectConfig(p => ({...p, loopProtection: v}))}
+                />
+              </div>
+              <Button onClick={saveReconnectConfig} size="sm" className="w-full mt-4 h-8 text-xs">Salvar Política</Button>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold">Histórico de Tentativas</h4>
+              <ScrollArea className="h-[200px] w-full rounded-md border border-border/20 p-2 bg-muted/5">
+                {loadingTab === 'audit' ? (
+                  <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+                ) : auditLogs.length === 0 ? (
+                  <p className="text-center py-8 text-xs text-muted-foreground">Nenhuma tentativa registrada.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className="p-2 rounded-lg border border-border/10 bg-background text-[11px] flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                          <Badge variant={log.result === 'success' ? 'default' : 'destructive'} className="text-[9px] h-4">
+                            {log.result === 'success' ? 'Sucesso' : 'Falha'}
+                          </Badge>
+                          <span className="text-muted-foreground">
+                            {format(new Date(log.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground">Tentativa #{log.attempt_number}</p>
+                        {log.error_message && <p className="text-destructive font-mono truncate">{log.error_message}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </TabsContent>
 
           <TabsContent value="settings">
             <SettingsTabContent settingsData={settingsData} settingsItems={SETTINGS_ITEMS} onChange={(k, v) => setSettingsData(p => ({ ...p, [k]: v }))}
