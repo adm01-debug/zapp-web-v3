@@ -239,7 +239,7 @@ export function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          'font-sans font-semibold text-[14px] leading-[1.2] truncate block min-w-0',
+                          ' font-semibold text-[14px] leading-[1.2] truncate block min-w-0',
                           isSelected ? 'text-primary' : 'text-foreground'
                         )}
                       >
@@ -250,11 +250,11 @@ export function ConversationItem({
                   {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className="font-sans text-[11px] font-normal text-muted-foreground tabular-nums">
+                  <span className=" text-[11px] font-normal text-muted-foreground tabular-nums">
                     {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
                   {conversation.unreadCount > 0 && (
-                    <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-sans text-[10px] font-medium bg-primary text-primary-foreground">
+                    <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center  text-[10px] font-medium bg-primary text-primary-foreground">
                       {conversation.unreadCount}
                     </span>
                   )}
@@ -267,7 +267,7 @@ export function ConversationItem({
                 <p
                   data-testid="conversation-preview"
                   className={cn(
-                    'font-sans text-[12px] truncate leading-[1.35] min-w-0',
+                    ' text-[12px] truncate leading-[1.35] min-w-0',
                     conversation.lastMessage
                       ? conversation.unreadCount > 0
                         ? 'text-foreground font-medium'
@@ -287,7 +287,7 @@ export function ConversationItem({
                         {(ref) => (
                           <Badge
                             variant="outline"
-                            className="font-sans text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[90px] overflow-hidden"
+                            className=" text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[90px] overflow-hidden"
                           >
                             <span ref={ref} className="truncate block">{tag}</span>
                           </Badge>
@@ -297,7 +297,7 @@ export function ConversationItem({
                     {hiddenTagsCount > 0 && (
                       <Tooltip delayDuration={300}>
                         <TooltipTrigger asChild>
-                          <Badge variant="outline" className="font-sans text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
+                          <Badge variant="outline" className=" text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
                             +{hiddenTagsCount}
                           </Badge>
                         </TooltipTrigger>
@@ -414,7 +414,7 @@ export function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          'font-sans font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate block min-w-0 transition-colors duration-200',
+                          ' font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate block min-w-0 transition-colors duration-200',
                           isSelected ? 'text-primary' : 'text-foreground'
                         )}
                       >
@@ -425,7 +425,7 @@ export function ConversationItem({
                   {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className="font-sans text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
+                  <span className=" text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
                     {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
                   <Tooltip>
@@ -450,7 +450,7 @@ export function ConversationItem({
                   <p
                     data-testid="conversation-preview"
                     className={cn(
-                      'font-sans text-[13.5px] leading-[1.35] truncate pr-2 min-w-0 transition-colors duration-300',
+                      ' text-[13.5px] leading-[1.35] truncate pr-2 min-w-0 transition-colors duration-300',
                       lastMessage
                         ? unreadCount > 0
                           ? isSelected ? 'text-primary/90 font-bold' : 'text-foreground font-bold'
@@ -465,7 +465,7 @@ export function ConversationItem({
                   <motion.span
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center font-sans text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-foreground shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
+                    className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center  text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-foreground shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
                   >
                     {conversation.unreadCount}
                   </motion.span>
@@ -480,7 +480,7 @@ export function ConversationItem({
                         {(ref) => (
                           <Badge
                             variant="outline"
-                            className="font-sans text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[110px] overflow-hidden"
+                            className=" text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[110px] overflow-hidden"
                           >
                             <span ref={ref} className="truncate block">{tag}</span>
                           </Badge>
@@ -490,7 +490,7 @@ export function ConversationItem({
                     {hiddenTagsCount > 0 && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="outline" className="font-sans text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
+                          <Badge variant="outline" className=" text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
                             +{hiddenTagsCount}
                           </Badge>
                         </TooltipTrigger>

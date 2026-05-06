@@ -122,7 +122,7 @@ export function MessageBubble({
         data-testid={`message-bubble-${message.id}`}
         data-message-id={message.id}
         className={cn(
-          'flex group gap-2 transition-all duration-300 focus-visible:outline-none font-sans',
+          'flex group gap-2 transition-all duration-300 focus-visible:outline-none ',
           isSent ? 'justify-end' : 'justify-start',
           density === 'comfortable' ? 'mb-2' : density === 'compact' ? 'mb-1.5' : 'mb-1',
           highlightedMessageIds?.has(message.id) && 'relative',

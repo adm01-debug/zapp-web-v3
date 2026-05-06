@@ -29,7 +29,7 @@ export function ChatQuickRepliesPopover({ show, replies, onSelect, onClose, sele
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 15, scale: 0.98 }}
           transition={{ duration: 0.2, ease: [0.19, 1, 0.22, 1] }}
-          className="absolute bottom-20 left-4 right-4 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl p-1 z-50 overflow-hidden font-sans"
+          className="absolute bottom-20 left-4 right-4 bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl p-1 z-50 overflow-hidden "
         >
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/10 bg-muted/20">
             <div className="flex items-center gap-2">

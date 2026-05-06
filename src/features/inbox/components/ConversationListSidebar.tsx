@@ -138,7 +138,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className={cn(
-                "font-extrabold text-foreground tracking-tight font-sans bg-clip-text transition-all",
+                "font-extrabold text-foreground tracking-tight  bg-clip-text transition-all",
                 density === 'compact' ? "text-[15px]" : "text-[18px]"
               )}>Inbox</h2>
               <span
@@ -216,7 +216,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               value={contactSearch}
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
-                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/10 focus:border-primary/30 rounded-2xl font-sans text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
+                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/10 focus:border-primary/30 rounded-2xl  text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
                 isMobile ? "h-[46px] text-[16px]" : (density === 'compact' ? "h-[34px] text-[12px]" : "h-[40px] text-[13px]")
               )}
               aria-label="Buscar conversa"

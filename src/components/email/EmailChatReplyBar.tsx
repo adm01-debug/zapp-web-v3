@@ -150,8 +150,8 @@ export function EmailChatReplyBar({
         {/* Header: Para + CC/BCC toggle */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="shrink-0 font-sans text-[10px] font-bold text-primary/60 uppercase tracking-widest">Para:</span>
-            <span className="font-sans text-[12px] font-semibold text-muted-foreground truncate">{toEmails.join(', ')}</span>
+            <span className="shrink-0  text-[10px] font-bold text-primary/60 uppercase tracking-widest">Para:</span>
+            <span className=" text-[12px] font-semibold text-muted-foreground truncate">{toEmails.join(', ')}</span>
           </div>
           <button
             className="shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
@@ -192,7 +192,7 @@ export function EmailChatReplyBar({
             value={bodyHtml.replace(/<[^>]*>/g, '')}
             onChange={e => setBody(e.target.value)}
             placeholder="Escreva sua resposta comercial..."
-            className="min-h-[160px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[16px] font-medium leading-relaxed font-sans placeholder:text-muted-foreground/30 selection:bg-primary/20 scrollbar-thin scrollbar-thumb-primary/10"
+            className="min-h-[160px] resize-none border-0 bg-transparent px-0 focus-visible:ring-0 text-[16px] font-medium leading-relaxed  placeholder:text-muted-foreground/30 selection:bg-primary/20 scrollbar-thin scrollbar-thumb-primary/10"
           />
         </div>
 

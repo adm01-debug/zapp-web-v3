@@ -289,7 +289,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
         )}
       </AnimatePresence>
       <div className={cn(
-        "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0 font-sans transition-all duration-500 ease-in-out", 
+        "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0  transition-all duration-500 ease-in-out", 
         isWhisper && "bg-amber-500/[0.04] dark:bg-amber-500/[0.08] border-t-2 border-amber-500/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
         !isWhisper && "focus-within:shadow-[0_-8px_30px_rgba(var(--primary-rgb),0.04)]",
         logic.isMobile && "px-3 py-2 safe-area-bottom"
@@ -411,7 +411,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
               placeholder={editingMessage ? "Editar mensagem..." : replyToMessage ? "Digite sua resposta..." : isWhisper ? "Sussurro interno (apenas agentes)..." : "Escreva sua mensagem..."}
               rows={1}
               className={cn(
-                "w-full bg-muted/30 hover:bg-muted/50 focus:bg-background border border-border/10 focus:border-primary/20 rounded-[24px] outline-none font-sans text-[15px] font-semibold tracking-normal text-foreground shadow-sm",
+                "w-full bg-muted/30 hover:bg-muted/50 focus:bg-background border border-border/10 focus:border-primary/20 rounded-[24px] outline-none  text-[15px] font-semibold tracking-normal text-foreground shadow-sm",
                 "placeholder:text-muted-foreground/30 placeholder:font-normal resize-none transition-all duration-500 ease-out",
                 "focus:ring-4 focus:ring-primary/5 focus:shadow-lg",
                 logic.isMobile ? "px-5 py-3.5 text-[16px] min-h-[48px] max-h-[160px]" : "px-5 py-[14px] min-h-[48px] max-h-[220px]",

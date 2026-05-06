@@ -60,17 +60,17 @@ export function EmailChatThread({
           )}
 
           <div className="flex-1 min-w-0">
-            <h2 className="font-sans font-bold text-[15px] text-foreground truncate tracking-tight leading-tight">
+            <h2 className=" font-bold text-[15px] text-foreground truncate tracking-tight leading-tight">
               {thread.subject || '(sem assunto)'}
             </h2>
             <div className="flex items-center h-4 mt-0.5">
-              <span className="font-sans text-[11px] text-[hsl(var(--muted-foreground))] font-semibold uppercase tracking-[0.04em]">
+              <span className=" text-[11px] text-[hsl(var(--muted-foreground))] font-semibold uppercase tracking-[0.04em]">
                 {thread.message_count} {thread.message_count === 1 ? 'mensagem' : 'mensagens'}
               </span>
               {(thread as any).participant_emails?.length > 0 && (
                 <>
                   <span className="mx-1.5 w-1 h-1 rounded-full bg-border" />
-                  <span className="font-sans text-[11px] text-[hsl(var(--muted-foreground))] font-semibold truncate max-w-md uppercase tracking-[0.04em]">
+                  <span className=" text-[11px] text-[hsl(var(--muted-foreground))] font-semibold truncate max-w-md uppercase tracking-[0.04em]">
                     {(thread as any).participant_emails.join(', ')}
                   </span>
                 </>
