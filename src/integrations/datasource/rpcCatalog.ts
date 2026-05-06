@@ -200,51 +200,51 @@ export const RPC = {
   // ── Reads ────────────────────────────────────────────────────────────────
   listContacts: def<ListContactsParams, EvolutionContact[]>({
     name: 'rpc_list_contacts',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   getContact: def<GetContactParams, EvolutionContact>({
     name: 'rpc_get_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listMessages: def<ListMessagesParams, EvolutionMessage[]>({
     name: 'rpc_list_messages',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listMessagesLite: def<ListMessagesLiteParams, EvolutionMessage[]>({
     name: 'rpc_list_messages_lite',
-    client: 'lovable',
+    client: 'external',
   }),
   listConversations: def<ListConversationsParams, EvolutionConversation[]>({
     name: 'rpc_list_conversations',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listCalls: def<ListCallsParams, unknown[]>({
     name: 'rpc_list_calls',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   listAuditLog: def<ListAuditLogParams, unknown[]>({
     name: 'rpc_list_audit_log',
-    client: 'lovable',
+    client: 'external',
   }),
 
   // ── Writes ───────────────────────────────────────────────────────────────
   insertMessage: def<InsertMessageParams, EvolutionMessage>({
     name: 'rpc_insert_message',
-    client: 'lovable',
+    client: 'external',
   }),
   upsertContact: def<UpsertContactParams, EvolutionContact>({
     name: 'rpc_upsert_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
   deleteContact: def<DeleteContactParams, boolean>({
     name: 'rpc_delete_contact',
-    client: 'lovable',
+    client: 'external',
     defaults: DEFAULT_INSTANCE,
   }),
 
