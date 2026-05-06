@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
 import { useGlobalKeyboard } from '@/components/keyboard/GlobalKeyboardProvider';
 import { User } from '@supabase/supabase-js';
