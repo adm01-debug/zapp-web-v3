@@ -69,7 +69,7 @@ export function ConnectionCard({
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
   const [recheckingHealth, setRecheckingHealth] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
-  const { restartInstance, getInstanceStatus } = useEvolutionApi();
+  const { restartInstance, connectInstance } = useEvolutionApi();
   const isConnected = connection.status === 'connected';
 
   const reasonInfo = connection.health_reason ? HEALTH_REASON_LABEL[connection.health_reason] : null;
@@ -84,7 +84,7 @@ export function ConnectionCard({
       await restartInstance(connection.instance_id);
       
       // 2. Aguardar um pouco para o restart processar
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise(r => setTimeout(r, 4000));
       
       // 3. Forçar um health check para atualizar o status no painel
       const { data, error } = await supabase.functions.invoke('connection-health-check', {
@@ -93,13 +93,20 @@ export function ConnectionCard({
       
       if (error) throw error;
       
-      const isStillClosed = data?.connections?.[0]?.socket_state === 'close';
+      const isStillClosed = data?.connections?.[0]?.socket_state === 'close' || 
+                           data?.connections?.[0]?.status === 'disconnected';
+                           
       if (isStillClosed) {
         toast({ 
-          title: 'Instância Reiniciada', 
-          description: 'A instância foi reiniciada, mas ainda aparece como desconectada. Você pode precisar gerar um novo QR Code.',
-          variant: 'default'
+          title: 'Ação automática', 
+          description: 'A instância ainda está desconectada. Gerando novo QR Code...',
         });
+        
+        // 4. Se ainda estiver desconectado, dispara automaticamente o connect para gerar QR
+        await connectInstance(connection.instance_id);
+        
+        // Abre o modal de QR code automaticamente
+        onShowQrCode(connection);
       } else {
         toast({ title: 'Sucesso', description: 'Instância reconectada e operacional.' });
       }
