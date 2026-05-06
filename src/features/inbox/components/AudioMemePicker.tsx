@@ -10,7 +10,7 @@ import { Music, Search, Plus, Star, Trash2, Loader2, Upload, X, Play, Pause, Vol
 import { useAudioMemes, formatDuration, type AudioMemeItem, type PendingUpload } from '@/hooks/useAudioMemes';
 
 interface AudioMemePickerProps {
-  onSendAudio: (audioUrl: string) => void;
+  onSendAudioMeme: (meme: any) => void;
   disabled?: boolean;
 }
 
