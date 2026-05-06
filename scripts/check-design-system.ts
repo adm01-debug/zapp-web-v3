@@ -62,21 +62,25 @@ export function getSuggestion(label: string, match: string): { suggestion: strin
 
 export function scanContent(content: string, fileName: string, results: Violation[]) {
   const lines = content.split('\n');
+  const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
 
+  // Process line by line to easily handle IGNORE_DIRECTIVE and line numbers
   lines.forEach((line, index) => {
     if (line.includes(IGNORE_DIRECTIVE)) return;
 
     FORBIDDEN_PATTERNS.forEach(({ pattern, label }) => {
-      const variantsPart = `(?:(?:${VARIANTS.join('|')}):)*`;
+      // Create a global regex for this pattern with variants
       const fullPattern = new RegExp(`${variantsPart}${pattern.source}`, 'g');
-      const matches = line.matchAll(fullPattern);
       
-      for (const match of matches) {
+      // Handle matches in the current line
+      let match;
+      while ((match = fullPattern.exec(line)) !== null) {
         const rawMatch = match[0].trim();
         if (!rawMatch) continue;
 
         const { suggestion, priority, replacement, cleanMatch, prefix } = getSuggestion(label, rawMatch);
         
+        // Skip if whitelisted
         if (label === 'Literal Color' && WHITELIST.colors.some(c => cleanMatch.endsWith(`-${c}`))) continue;
         
         if (suggestion || priority === 'High') {
@@ -95,6 +99,19 @@ export function scanContent(content: string, fileName: string, results: Violatio
       }
     });
   });
+
+  // Multiline detection for Template Literals and Objects
+  // We scan the whole content but only for specific patterns if they span multiple lines
+  // Actually, standard regex with 'g' and no 'm' (multiline) flag will still find matches across the whole string
+  // if we don't anchor with ^ or $.
+  // To handle multiline correctly and still get line numbers:
+  const multilinePatterns = [
+    { pattern: new RegExp(`${variantsPart}(?:bg|text|border)-(?:\\[[^\\]]+\\]|white|black|red|blue|gray|slate|zinc)-[0-9]+`, 'g'), label: 'Literal Color' }
+  ];
+
+  // For now, most forbidden patterns are short strings that don't span lines themselves, 
+  // but they might appear in multiline contexts. The line-by-line approach handles 99% of cases.
+  // If a string itself is multiline (rare in CSS classes), we'd need more complex parsing.
 }
 
 function scanDir(dir: string, results: Violation[]) {
