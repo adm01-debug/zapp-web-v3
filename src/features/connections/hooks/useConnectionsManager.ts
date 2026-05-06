@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
+import { externalClient } from '@/integrations/supabase/externalClient';
 import { toast } from '@/hooks/use-toast';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { whatsappConnectionRepository } from '@/features/connections/data-access/whatsappConnectionRepository';
