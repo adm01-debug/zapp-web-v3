@@ -55,7 +55,7 @@ export const AGENT_STATUS_COLORS: Record<string, string> = {
   staging:      'bg-secondary text-secondary-foreground',
   review:       'bg-primary/10 text-primary/80',
   production:   'bg-primary text-primary-foreground',
-  monitoring:   'bg-emerald-500/10 text-emerald-500',
+  monitoring:   'bg-success/10 text-success',
   deprecated:   'bg-destructive/10 text-destructive',
   archived:     'bg-muted text-muted-foreground/50',
 };
