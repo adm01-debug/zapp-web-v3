@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link2, Plug } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Link2, Plug, Database } from 'lucide-react';
 import { ConnectionsView } from '@/components/connections/ConnectionsView';
 import { IntegrationsHub } from '@/components/integrations/IntegrationsHub';
+import { BridgeSupabaseView } from '@/components/connections/BridgeSupabaseView';
 
 /**
  * Hub unificado de Conexões + Integrações.
