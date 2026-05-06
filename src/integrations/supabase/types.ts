@@ -5638,6 +5638,8 @@ export type Database = {
           operator_phone: string | null
           operator_since: string | null
           phone_number: string | null
+          queue_id: string | null
+          service_channel: string | null
           sla_first_response_minutes: number | null
           sla_resolution_hours: number | null
           slot_name: string | null
@@ -5667,6 +5669,8 @@ export type Database = {
           operator_phone?: string | null
           operator_since?: string | null
           phone_number?: string | null
+          queue_id?: string | null
+          service_channel?: string | null
           sla_first_response_minutes?: number | null
           sla_resolution_hours?: number | null
           slot_name?: string | null
@@ -5696,6 +5700,8 @@ export type Database = {
           operator_phone?: string | null
           operator_since?: string | null
           phone_number?: string | null
+          queue_id?: string | null
+          service_channel?: string | null
           sla_first_response_minutes?: number | null
           sla_resolution_hours?: number | null
           slot_name?: string | null
@@ -12962,6 +12968,7 @@ export type Database = {
         Args: { p_transfer_id: string }
         Returns: undefined
       }
+      fn_process_escalations: { Args: never; Returns: undefined }
       fn_register_sticky_assignment: {
         Args: {
           p_agent_profile_id: string
