@@ -397,12 +397,29 @@ export function ConnectionCard({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDisconnecting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => onDisconnect(connection)}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsDisconnecting(true);
+                try {
+                  await onDisconnect(connection);
+                  setConfirmDisconnect(false);
+                } finally {
+                  setIsDisconnecting(false);
+                }
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDisconnecting}
             >
-              Sim, desconectar
+              {isDisconnecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Desconectando...
+                </>
+              ) : (
+                'Sim, desconectar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
