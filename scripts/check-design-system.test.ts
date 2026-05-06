@@ -75,4 +75,24 @@ describe("Design System Auditor", () => {
     expect(violations[0].match).toBe("dark:hover:bg-white");
     expect(violations[0].prefix).toBe("dark:hover:");
   });
+
+  it("should detect classes inside cn() with objects", () => {
+    const content = 'const classes = cn({ "bg-[#ffffff]": isActive, "text-slate-500": !isActive });';
+    const violations: Violation[] = [];
+    scanContent(content, "test.tsx", violations);
+    
+    expect(violations.length).toBe(2);
+    expect(violations.some(v => v.match === "bg-[#ffffff]")).toBe(true);
+    expect(violations.some(v => v.match === "text-slate-500")).toBe(true);
+  });
+
+  it("should detect classes inside clsx() with arrays", () => {
+    const content = 'const classes = clsx(["bg-black", condition && "text-white"]);';
+    const violations: Violation[] = [];
+    scanContent(content, "test.tsx", violations);
+    
+    expect(violations.length).toBe(2);
+    expect(violations.some(v => v.match === "bg-black")).toBe(true);
+    expect(violations.some(v => v.match === "text-white")).toBe(true);
+  });
 });
