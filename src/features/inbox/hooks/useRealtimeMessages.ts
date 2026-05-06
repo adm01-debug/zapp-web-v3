@@ -272,7 +272,8 @@ export function useRealtimeMessages() {
   };
 
   const markAsRead = async (contactId: string) => {
-    const { error } = await dbFrom('messages')
+    const client = externalSupabase || supabase;
+    const { error } = await client.from('messages')
       .update({ is_read: true })
       .eq('contact_id', contactId)
       .eq('sender', 'contact')
