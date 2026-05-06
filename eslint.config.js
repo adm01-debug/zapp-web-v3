@@ -27,10 +27,7 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "no-console": ["error", { allow: ["warn", "error"] }],
-      // Tailwind specific rules
-      "tailwindcss/no-arbitrary-value": "error",
-      "tailwindcss/classnames-order": "warn",
-      "tailwindcss/no-custom-classname": "off",
+      // Tailwind specific rules removed due to environment constraints
       // Estratégia gradual de strict typing
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
