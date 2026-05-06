@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Input } from "../input";
-import { Search, Mail, Lock, User } from "lucide-react";
+import { Search, User, Mail, AlertCircle, CheckCircle } from "lucide-react";
 
 const meta: Meta<typeof Input> = {
   title: "UI/Input",
@@ -31,47 +31,44 @@ export const Default: Story = {
   },
 };
 
-export const WithLeftIcon: Story = {
+export const WithIcon: Story = {
   args: {
-    placeholder: "Search...",
+    placeholder: "Search components...",
     leftIcon: Search,
   },
 };
 
-export const WithRightIcon: Story = {
+export const WithRightElement: Story = {
   args: {
-    placeholder: "Email address",
-    rightIcon: Mail,
+    placeholder: "Enter username",
+    rightIcon: User,
   },
 };
 
-export const LoginField: Story = {
+export const ErrorState: Story = {
   args: {
-    placeholder: "Password",
-    type: "password",
-    leftIcon: Lock,
-  },
-};
-
-export const Glow: Story = {
-  args: {
-    placeholder: "Glow variant",
+    placeholder: "Invalid email",
     variant: "glow",
-  },
-};
-
-export const Error: Story = {
-  args: {
-    placeholder: "Invalid input",
     error: true,
-    defaultValue: "Wrong value",
+    defaultValue: "wrong-email",
+    leftIcon: Mail,
+    rightIcon: AlertCircle,
   },
 };
 
-export const Success: Story = {
+export const SuccessState: Story = {
   args: {
-    placeholder: "Correct input",
+    placeholder: "Valid input",
+    variant: "glow",
     success: true,
     defaultValue: "Correct value",
+    rightIcon: CheckCircle,
+  },
+};
+
+export const Underline: Story = {
+  args: {
+    placeholder: "Underline variant",
+    variant: "underline",
   },
 };

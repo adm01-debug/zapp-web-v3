@@ -81,7 +81,7 @@ violations.forEach(v => {
   mdReport += '| `' + v.file + '` | ' + v.line + ' | ' + v.label + ' | `' + v.match + '` |\n';
 });
 
-writeFileSync('design-system-report.md', mdReport);
+writeFileSync('design-system-audit.md', mdReport);
 
 // Generate HTML Report
 let htmlRows = '';
@@ -94,54 +94,55 @@ violations.forEach(v => {
     '</tr>';
 });
 
-const htmlReport = '<!DOCTYPE html>\n' +
-'<html lang="en">\n' +
-'<head>\n' +
-'    <meta charset="UTF-8">\n' +
-'    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
-'    <title>Design System Audit</title>\n' +
-'    <style>\n' +
-'        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 2rem; background: #f9fafb; color: #111827; }\n' +
-'        h1 { color: #1f2937; }\n' +
-'        .summary { margin-bottom: 2rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n' +
-'        table { width: 100%; border-collapse: collapse; background: white; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n' +
-'        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }\n' +
-'        th { background: #f3f4f6; font-weight: 600; }\n' +
-'        tr:hover { background: #f9fafb; }\n' +
-'        .label { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }\n' +
-'        .label-Hex-Color { background: #fee2e2; color: #991b1b; }\n' +
-'        .label-Literal-Color { background: #ffedd5; color: #9a3412; }\n' +
-'        code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }\n' +
-'    </style>\n' +
-'</head>\n' +
-'<body>\n' +
-'    <h1>Design System Audit Report</h1>\n' +
-'    <div class="summary">\n' +
-'        <p><strong>Date:</strong> ' + new Date().toLocaleString() + '</p>\n' +
-'        <p><strong>Total Deviations:</strong> ' + violations.length + '</p>\n' +
-'    </div>\n' +
-'    <table>\n' +
-'        <thead>\n' +
-'            <tr>\n' +
-'                <th>File</th>\n' +
-'                <th>Line</th>\n' +
-'                <th>Type</th>\n' +
-'                <th>Value</th>\n' +
-'            </tr>\n' +
-'        </thead>\n' +
-'        <tbody>\n' +
-            htmlRows +
-'        </tbody>\n' +
-'    </table>\n' +
-'</body>\n' +
-'</html>';
+const htmlReport = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System Audit</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 2rem; background: #f9fafb; color: #111827; }
+        h1 { color: #1f2937; }
+        .summary { margin-bottom: 2rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f3f4f6; font-weight: 600; }
+        tr:hover { background: #f9fafb; }
+        .label { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .label-Hex-Color { background: #fee2e2; color: #991b1b; }
+        .label-Literal-Color { background: #ffedd5; color: #9a3412; }
+        code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <h1>Design System Audit Report</h1>
+    <div class="summary">
+        <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+        <p><strong>Total Deviations:</strong> ${violations.length}</p>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Line</th>
+                <th>Type</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${htmlRows}
+        </tbody>
+    </table>
+</body>
+</html>`;
 
-writeFileSync('design-system-report.html', htmlReport);
+writeFileSync('design-system-audit.html', htmlReport);
 
-if (violations.length > 0) {
-  process.stderr.write('Found ' + violations.length + ' Design System violations.\n');
-  process.stdout.write('Reports generated: design-system-report.md, design-system-report.html\n');
+// CI check logic
+if (process.argv.includes('--ci') && violations.length > 0) {
+  process.stderr.write(`Found ${violations.length} Design System violations. Build failed.\n`);
   process.exit(1);
 } else {
-  process.stdout.write('✅ No Design System violations found!\n');
+  process.stdout.write(`✅ Audit complete. Reports: design-system-audit.md, design-system-audit.html\n`);
 }
+

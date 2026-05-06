@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw } from 'lucide-react';
+import { MessageCircle, Check, CheckCheck, MoreHorizontal, Star, AlertCircle, Clock, Trash2, Reply, RefreshCw, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { type Message } from '@/hooks/useMessages';
 
 interface MessageItemProps {
@@ -59,6 +60,8 @@ const MessageItem = memo(({
     return 'Status desconhecido';
   };
 
+  const isError = msg.status === 0 || msg.status === 'failed';
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -74,16 +77,17 @@ const MessageItem = memo(({
         isMe ? "ml-auto items-end" : "mr-auto items-start"
       )}>
       <div className={cn(
-        "relative px-4 py-2 rounded-2xl shadow-md border transition-all duration-200",
+        "relative px-4 py-2 rounded-2xl shadow-sm border transition-all duration-200",
         isMe 
-          ? "bg-[hsl(var(--chat-bubble-sent))] text-[hsl(var(--chat-bubble-sent-foreground))] rounded-tr-none border-primary/20 shadow-primary/10" 
-          : "bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))] rounded-tl-none border-white/5 shadow-black/20",
-        isPending && "opacity-70 italic bg-primary/80",
+          ? "bg-primary text-primary-foreground rounded-tr-none border-primary/20 shadow-glow-primary/5" 
+          : "bg-muted text-foreground rounded-tl-none border-border shadow-sm",
+        isPending && "opacity-70 italic",
+        isError && "border-destructive/30 bg-destructive/5 text-destructive-foreground",
         searchTerm && msg.content?.toLowerCase().includes(searchTerm.toLowerCase()) && "ring-2 ring-primary/30"
       )}>
         {/* Quoted Message Preview */}
         {msg.quoted_message_id && (
-          <div className="mb-1 p-2 rounded bg-muted/40 border-l-4 border-l-primary/50 text-[11px] opacity-80">
+          <div className="mb-1 p-2 rounded bg-background/20 border-l-4 border-l-primary/50 text-[11px] opacity-80">
             {quotedMessageContent || 'Mensagem citada'}
           </div>
         )}
@@ -93,10 +97,19 @@ const MessageItem = memo(({
           {msg.content}
         </div>
 
+        {/* Error Details */}
+        {isError && (
+          <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase text-destructive">
+            <AlertTriangle className="h-3 w-3" />
+            Falha no envio
+          </div>
+        )}
+
         {/* Footer: Time + Indicators */}
         <div className={cn(
           "flex items-center justify-end gap-1.5 mt-1 select-none",
-          isMe ? "text-primary-foreground/70" : "text-muted-foreground/60"
+          isMe ? "text-primary-foreground/70" : "text-muted-foreground/60",
+          isError && "text-destructive/80"
         )}>
           {isPending ? (
             <>
@@ -106,7 +119,7 @@ const MessageItem = memo(({
               {msg.status === 'sending' ? (
                 <RefreshCw className="h-3 w-3 animate-spin" />
               ) : msg.status === 'failed' ? (
-                <AlertCircle className="h-3 w-3 text-red-300" />
+                <AlertCircle className="h-3 w-3" />
               ) : (
                 <Clock className="h-3 w-3" />
               )}
@@ -124,12 +137,12 @@ const MessageItem = memo(({
                         <AnimatePresence mode="wait">
                           {msg.status === 1 && (
                             <motion.div key="check1" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                              <Check className="h-3 w-3 text-primary-foreground/40" />
+                              <Check className="h-3 w-3 opacity-60" />
                             </motion.div>
                           )}
                           {msg.status === 2 && (
                             <motion.div key="check2" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                              <CheckCheck className="h-3 w-3 text-primary-foreground/40" />
+                              <CheckCheck className="h-3 w-3 opacity-60" />
                             </motion.div>
                           )}
                           {msg.status >= 3 && (
@@ -139,13 +152,13 @@ const MessageItem = memo(({
                           )}
                           {msg.status === 0 && (
                             <motion.div key="fail" initial={{ rotate: 90 }} animate={{ rotate: 0 }}>
-                              <AlertCircle className="h-3 w-3 text-red-300" />
+                              <AlertCircle className="h-3 w-3 text-destructive" />
                             </motion.div>
                           )}
                         </AnimatePresence>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent variant="neon" size="sm">
+                    <TooltipContent variant="default" size="sm">
                       <p>{getStatusText(msg.status)}</p>
                     </TooltipContent>
                   </Tooltip>
