@@ -9,8 +9,8 @@
 | Low | 15 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Low | 17 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Low | 20 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
-| Medium | 25 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
-| Medium | 27 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
+| Low | 25 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
+| Low | 27 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Low | 34 | `font-mono` | `font-mono` | VALID: Technical data (ID/Metric/Log) | - |
 | Medium | 38 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
 | Medium | 42 | `font-mono` | `font-mono` | Ensure font-mono is only for technical data (IDs, logs, metrics) | - |
