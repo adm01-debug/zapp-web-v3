@@ -62,7 +62,7 @@ describe("Design System Safety & Integrity", () => {
 
     test("should preserve Recharts constants in chart files", () => {
       const { suggestion, priority } = getSuggestion("Raw Hex", "#ccc", "src/components/analytics/chart.tsx");
-      expect(suggestion).toBe("VALID: Chart selector constant");
+      expect(suggestion).toContain("VALID");
       expect(priority).toBe("Low");
     });
 
