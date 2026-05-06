@@ -1,65 +1,19 @@
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Database, CheckCircle2, XCircle, RefreshCw, Activity, Webhook } from 'lucide-react';
-import { externalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { log } from '@/lib/logger';
-
-type HealthRow = {
-  window_label?: string | null;
-  events_total?: number | null;
-  events_ok?: number | null;
-  events_failed?: number | null;
-  avg_latency_ms?: number | null;
-  last_event_at?: string | null;
-};
-
-type Status = 'idle' | 'checking' | 'online' | 'offline';
+import { Database, RefreshCw, Webhook } from 'lucide-react';
+import { isExternalConfigured } from '@/integrations/supabase/externalClient';
+import { useBridgeHealth } from '@/hooks/connections/useBridgeHealth';
+import { BridgeStatusBadge } from './bridge/BridgeStatusBadge';
+import { BridgeInfoRow } from './bridge/BridgeInfoRow';
+import { BridgeStatCard } from './bridge/BridgeStatCard';
 
 /**
  * Painel da ponte Supabase ↔ Evolution API (FATOR X).
- * Mostra status da conexão com o backend externo que intermedia
- * todas as mensagens com a Evolution API via webhook.
+ * Refatorado: lógica extraída para useBridgeHealth, subcomponentes modularizados.
  */
 export function BridgeSupabaseView() {
-  const [status, setStatus] = useState<Status>('idle');
-  const [health, setHealth] = useState<HealthRow | null>(null);
-  const [checkedAt, setCheckedAt] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
+  const { status, health, checkedAt, error, runCheck } = useBridgeHealth();
   const externalUrl = import.meta.env.VITE_EXTERNAL_SUPABASE_URL as string | undefined;
-
-  const runCheck = async () => {
-    if (!externalSupabase) {
-      setStatus('offline');
-      setError('Cliente externo não configurado.');
-      return;
-    }
-    setStatus('checking');
-    setError(null);
-    try {
-      const { data, error: qErr } = await externalSupabase
-        .from('v_webhook_health')
-        .select('*')
-        .limit(1);
-
-      if (qErr) throw qErr;
-      setHealth((data?.[0] as HealthRow) ?? null);
-      setStatus('online');
-    } catch (e) {
-      log.error('[BridgeSupabase] health check failed', e);
-      setError(e instanceof Error ? e.message : 'Falha ao verificar.');
-      setStatus('offline');
-    } finally {
-      setCheckedAt(new Date());
-    }
-  };
-
-  useEffect(() => {
-    runCheck();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div className="p-6 space-y-4">
@@ -91,23 +45,7 @@ export function BridgeSupabaseView() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            {!isExternalConfigured ? (
-              <Badge variant="destructive" className="gap-1">
-                <XCircle className="w-3 h-3" /> Não configurado
-              </Badge>
-            ) : status === 'online' ? (
-              <Badge className="gap-1 bg-emerald-500/15 text-emerald-500 border-emerald-500/30">
-                <CheckCircle2 className="w-3 h-3" /> Online
-              </Badge>
-            ) : status === 'offline' ? (
-              <Badge variant="destructive" className="gap-1">
-                <XCircle className="w-3 h-3" /> Offline
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="gap-1">
-                <Activity className="w-3 h-3" /> Verificando…
-              </Badge>
-            )}
+            <BridgeStatusBadge status={status} isConfigured={isExternalConfigured} />
             {checkedAt && (
               <span className="text-xs text-muted-foreground">
                 Última verificação: {checkedAt.toLocaleTimeString()}
@@ -116,18 +54,14 @@ export function BridgeSupabaseView() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <InfoRow label="Endpoint" value={externalUrl ?? '—'} mono />
-            <InfoRow
+            <BridgeInfoRow label="Endpoint" value={externalUrl ?? '—'} mono />
+            <BridgeInfoRow
               label="Webhook Evolution"
-              value={
-                externalUrl
-                  ? `${externalUrl}/functions/v1/evolution-webhook`
-                  : '—'
-              }
+              value={externalUrl ? `${externalUrl}/functions/v1/evolution-webhook` : '—'}
               mono
             />
-            <InfoRow label="Instância" value="wpp2" />
-            <InfoRow
+            <BridgeInfoRow label="Instância" value="wpp2" />
+            <BridgeInfoRow
               label="Auth"
               value={isExternalConfigured ? 'Anon key configurada' : 'Faltando'}
             />
@@ -154,25 +88,17 @@ export function BridgeSupabaseView() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Stat label="Janela" value={health.window_label ?? '—'} />
-              <Stat label="Total" value={fmt(health.events_total)} />
-              <Stat label="OK" value={fmt(health.events_ok)} tone="success" />
-              <Stat label="Falhas" value={fmt(health.events_failed)} tone="error" />
-              <Stat
+              <BridgeStatCard label="Janela" value={health.window_label ?? '—'} />
+              <BridgeStatCard label="Total" value={fmt(health.events_total)} />
+              <BridgeStatCard label="OK" value={fmt(health.events_ok)} tone="success" />
+              <BridgeStatCard label="Falhas" value={fmt(health.events_failed)} tone="error" />
+              <BridgeStatCard
                 label="Latência média"
-                value={
-                  health.avg_latency_ms != null
-                    ? `${Math.round(health.avg_latency_ms)} ms`
-                    : '—'
-                }
+                value={health.avg_latency_ms != null ? `${Math.round(health.avg_latency_ms)} ms` : '—'}
               />
-              <Stat
+              <BridgeStatCard
                 label="Último evento"
-                value={
-                  health.last_event_at
-                    ? new Date(health.last_event_at).toLocaleString()
-                    : '—'
-                }
+                value={health.last_event_at ? new Date(health.last_event_at).toLocaleString() : '—'}
               />
             </div>
           </CardContent>
@@ -185,36 +111,4 @@ export function BridgeSupabaseView() {
 function fmt(n: number | null | undefined) {
   if (n == null) return '—';
   return new Intl.NumberFormat('pt-BR').format(n);
-}
-
-function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`text-sm text-foreground break-all ${mono ? 'font-mono' : ''}`}>{value}</div>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: 'success' | 'error';
-}) {
-  const toneClass =
-    tone === 'success'
-      ? 'text-emerald-500'
-      : tone === 'error'
-        ? 'text-destructive'
-        : 'text-foreground';
-  return (
-    <div className="rounded-md border border-border/40 bg-muted/30 px-3 py-2">
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`text-base font-semibold ${toneClass}`}>{value}</div>
-    </div>
-  );
 }
