@@ -15,8 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DEFAULT_EXTERNAL_URL = (import.meta.env.VITE_EXTERNAL_SUPABASE_URL as string | undefined) ?? 'https://tdprnylgyrogbbhgdoik.supabase.co';
-const DEFAULT_EXTERNAL_KEY = (import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY as string | undefined) ?? '';
+const DEFAULT_EXTERNAL_URL = (import.meta.env.VITE_EXTERNAL_SUPABASE_URL as string | undefined) ?? 'https://supabase.atomicabr.com.br';
+const DEFAULT_EXTERNAL_KEY = (import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY as string | undefined) ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
 
 export default function AdminConnectionsPage() {
   const [activeTab, setActiveTab] = useState('external-db');
