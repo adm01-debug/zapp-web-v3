@@ -54,7 +54,11 @@ vi.mock('../MessageBubble', () => ({
 vi.mock('../TypingIndicator', () => ({ TypingIndicator: () => null }));
 vi.mock('./ChatWatermark', () => ({ ChatWatermark: () => null }));
 vi.mock('@/components/ui/motion', () => ({
-  motion: { div: (p: any) => <div {...p} />, span: (p: any) => <span {...p} /> },
+  motion: { 
+    div: ({ children, ...p }: any) => <div {...p}>{children}</div>, 
+    span: ({ children, ...p }: any) => <span {...p}>{children}</span> 
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
   StaggeredList: ({ children }: any) => <div>{children}</div>,
   StaggeredItem: ({ children }: any) => <div>{children}</div>,
 }));
