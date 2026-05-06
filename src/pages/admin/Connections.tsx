@@ -15,8 +15,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DEFAULT_EXTERNAL_URL = (import.meta.env.VITE_EXTERNAL_SUPABASE_URL as string | undefined) ?? 'https://supabase.atomicabr.com.br';
-const DEFAULT_EXTERNAL_KEY = (import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY as string | undefined) ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
+const APP_ENV = (import.meta.env.VITE_APP_ENV || 'production') as 'development' | 'staging' | 'production';
+
+const getInitialConfig = () => {
+  switch (APP_ENV) {
+    case 'development':
+      return {
+        url: import.meta.env.VITE_DEV_EXTERNAL_SUPABASE_URL || 'https://supabase-dev.atomicabr.com.br',
+        key: import.meta.env.VITE_DEV_EXTERNAL_SUPABASE_ANON_KEY || '',
+      };
+    case 'staging':
+      return {
+        url: import.meta.env.VITE_STAGING_EXTERNAL_SUPABASE_URL || 'https://supabase-staging.atomicabr.com.br',
+        key: import.meta.env.VITE_STAGING_EXTERNAL_SUPABASE_ANON_KEY || '',
+      };
+    default:
+      return {
+        url: import.meta.env.VITE_EXTERNAL_SUPABASE_URL || 'https://supabase.atomicabr.com.br',
+        key: import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk',
+      };
+  }
+};
+
+const initialConfig = getInitialConfig();
+const DEFAULT_EXTERNAL_URL = initialConfig.url;
+const DEFAULT_EXTERNAL_KEY = initialConfig.key;
 
 export default function AdminConnectionsPage() {
   const [activeTab, setActiveTab] = useState('external-db');
