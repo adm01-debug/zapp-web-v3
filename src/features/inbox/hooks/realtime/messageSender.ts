@@ -124,7 +124,7 @@ export async function sendMessageToContact(
   messageType = 'text',
   mediaUrl?: string,
   mediaPayload?: string,
-  opts: { optimisticId?: string } = {}
+  opts: { optimisticId?: string; conversationId?: string } = {}
 ): Promise<SendMessageResult> {
   const { data: profile } = await supabase
     .from('profiles')
@@ -160,6 +160,16 @@ export async function sendMessageToContact(
   emitSendStatus(effectiveId, { status: 'sending' }, { contactId, source: 'messageSender' });
 
   try {
+    // Audit: Início da tentativa
+    if (opts.conversationId) {
+      await supabase.from('conversation_audit_logs').insert({
+        conversation_id: opts.conversationId,
+        event_type: 'send_attempt',
+        status: 'starting',
+        metadata: { messageType, hasMedia: !!(mediaUrl || mediaPayload) }
+      });
+    }
+
     const { data: contact } = await dbFrom('contacts')
       .select('phone, whatsapp_connection_id')
       .eq('id', contactId)
@@ -170,6 +180,16 @@ export async function sendMessageToContact(
     if (!connection?.instance_id || connection.status !== 'connected') {
       log.warn('WhatsApp connection not active, message marked as failed');
       await dbFrom('messages').update({ status: 'failed' }).eq('id', data.id);
+      
+      if (opts.conversationId) {
+        await supabase.from('conversation_audit_logs').insert({
+          conversation_id: opts.conversationId,
+          event_type: 'failed',
+          status: 'error',
+          error_message: 'Nenhuma conexão WhatsApp ativa disponível'
+        });
+      }
+      
       throw new Error('Nenhuma conexão WhatsApp ativa disponível');
     }
 
@@ -214,6 +234,17 @@ export async function sendMessageToContact(
         onRetry: (attempt, total) => {
           const sid = opts.optimisticId || data.id;
           emitSendStatus(sid, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
+          
+          if (opts.conversationId) {
+            supabase.from('conversation_audit_logs').insert({
+              conversation_id: opts.conversationId,
+              event_type: 'send_attempt',
+              status: 'retrying',
+              attempt_number: attempt,
+              metadata: { totalRetries: total }
+            }).then(() => null);
+          }
+
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
           dbFrom('messages').update({
@@ -272,6 +303,15 @@ export async function sendMessageToContact(
     }).eq('id', data.id);
     const finalSid = opts.optimisticId || data.id;
     emitSendStatus(finalSid, { status: 'sent' }, { contactId, source: 'messageSender' });
+
+    if (opts.conversationId) {
+      await supabase.from('conversation_audit_logs').insert({
+        conversation_id: opts.conversationId,
+        event_type: 'delivered',
+        status: 'success',
+        metadata: { externalId }
+      });
+    }
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
     const auth = classifyAuthError(evolutionError);
@@ -294,6 +334,16 @@ export async function sendMessageToContact(
         retry_total: MAX_RETRIES,
       }).eq('id', data.id);
       emitSendStatus(sid, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
+    }
+
+    if (opts.conversationId) {
+      await supabase.from('conversation_audit_logs').insert({
+        conversation_id: opts.conversationId,
+        event_type: 'failed',
+        status: 'error',
+        error_message: reason,
+        metadata: { authError: auth.isAuth, errorCode: auth.code }
+      });
     }
     throw evolutionError;
   }
