@@ -217,12 +217,10 @@ if (require.main === module) {
   if (ci) {
     console.log('\n| # | Priority | File:Line | Match | Clean Match | Suggestion/Replacement |');
     console.log('|---|---|---|---|---|---|');
-    let count = 1;
-    filteredViolations.forEach(v => {
-      const displayReplacement = v.replacement !== undefined ? (v.replacement === '' ? '(remove)' : `\`${v.replacement}\``) : v.suggestion;
-      console.log(`| ${count++} | ${v.priority} | ${v.file}:${v.line} | \`${v.match}\` | \`${v.cleanMatch}\` | ${displayReplacement} |`);
+    filteredViolations.forEach((v, idx) => {
+      const displayReplacement = v.replacement !== undefined ? (v.replacement === '' ? '(remove)' : `\`${v.replacement}\``) : (v.suggestion || '-');
+      console.log(`| ${idx + 1} | ${v.priority} | ${v.file}:${v.line} | \`${v.match}\` | \`${v.cleanMatch}\` | ${displayReplacement} |`);
     });
-    console.log('\n-----------------------------------');
   } else {
     // Generate Reports (Markdown/HTML)
     // ... (Keep existing report generation logic but condensed)
