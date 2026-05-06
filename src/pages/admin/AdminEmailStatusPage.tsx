@@ -71,7 +71,7 @@ export default function AdminEmailStatusPage() {
       toast.error('O serviço de telemetria do Email está indisponível.');
       
       try {
-        const { data: summary } = await supabase
+        const { data: summary } = await (supabase as any)
           .from('email_health_summary')
           .select('*')
           .eq('id', 'current')
