@@ -103,6 +103,7 @@ const MESSAGE_TYPE_BLUEPRINT: Record<string, Omit<ExtractedMessageType, 'rawType
   extendedTextMessage:    { internalType: 'text',         category: 'text',        supported: true,  label: 'Texto formatado' },
   imageMessage:           { internalType: 'image',        category: 'media',       supported: true,  label: 'Imagem' },
   videoMessage:           { internalType: 'video',        category: 'media',       supported: true,  label: 'Vídeo' },
+  ptvMessage:             { internalType: 'video',        category: 'media',       supported: true,  label: 'Vídeo-nota' },
   audioMessage:           { internalType: 'audio',        category: 'media',       supported: true,  label: 'Áudio' },
   documentMessage:        { internalType: 'document',     category: 'media',       supported: true,  label: 'Documento' },
   stickerMessage:         { internalType: 'sticker',      category: 'media',       supported: true,  label: 'Figurinha' },
