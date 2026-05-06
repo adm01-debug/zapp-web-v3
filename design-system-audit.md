@@ -1,5 +1,5 @@
 # Design System Violations Report
-Generated on: 5/6/2026, 5:17:37 PM
+Generated on: 5/6/2026, 5:18:16 PM
 Total Violations: 1266
 
 ## src/components/AppErrorBoundary.tsx
@@ -26,8 +26,8 @@ Total Violations: 1266
 ## src/components/agents/AgentCard.tsx
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
-| Medium | 30 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 30 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 30 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 30 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 
 ## src/components/calls/CallDialog.tsx
 | Priority | Line | Type | Value | Suggestion |
@@ -112,7 +112,7 @@ Total Violations: 1266
 | Medium | 22 | Literal Color | `text-pink-800` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `text-blue-800` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 24 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 24 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 
 ## src/components/contacts/AuditLogPanel.tsx
 | Priority | Line | Type | Value | Suggestion |
@@ -149,7 +149,7 @@ Total Violations: 1266
 |----------|------|------|-------|------------|
 | Medium | 27 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 27 | Literal Color | `text-blue-600` | text-primary |
-| Medium | 27 | Literal Color | `text-gray-600` | muted-foreground or border |
+| Medium | 27 | Literal Color | `text-gray-600` | muted, muted-foreground or border |
 | Medium | 28 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 28 | Literal Color | `text-blue-600` | text-primary |
 | Medium | 29 | Literal Color | `bg-purple-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -190,8 +190,8 @@ Total Violations: 1266
 ## src/components/contacts/ContactBitrix24Panel.tsx
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
-| Medium | 84 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 84 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 84 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 84 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 | Medium | 85 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 85 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 86 | Literal Color | `bg-indigo-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -287,7 +287,7 @@ Total Violations: 1266
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
 | Medium | 123 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 124 | Literal Color | `text-gray-500` | muted-foreground or border |
+| Medium | 124 | Literal Color | `text-gray-500` | muted, muted-foreground or border |
 | Medium | 126 | Literal Color | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/contacts/ContactInlineEdit.tsx
@@ -334,8 +334,8 @@ Total Violations: 1266
 ## src/components/contacts/ContactNotesPanel.tsx
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
-| Medium | 29 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 29 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 29 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 29 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 | Medium | 30 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 30 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 31 | Literal Color | `bg-purple-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -345,7 +345,7 @@ Total Violations: 1266
 | Medium | 34 | Literal Color | `bg-red-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 34 | Literal Color | `text-red-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 148 | Literal Color | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 151 | Literal Color | `bg-gray-100` | muted-foreground or border |
+| Medium | 151 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
 | Medium | 154 | Literal Color | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 
 ## src/components/contacts/ContactPhoneManager.tsx
@@ -386,8 +386,8 @@ Total Violations: 1266
 ## src/components/contacts/ContactRow.tsx
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
-| Medium | 21 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 21 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 21 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 21 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 | Medium | 22 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 22 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 24 | Literal Color | `bg-purple-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -408,16 +408,16 @@ Total Violations: 1266
 | Medium | 23 | Literal Color | `bg-red-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `bg-red-950` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 23 | Literal Color | `text-red-400` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 24 | Literal Color | `text-slate-600` | muted-foreground or border |
-| Medium | 24 | Literal Color | `bg-slate-50` | muted-foreground or border |
-| Medium | 25 | Literal Color | `text-gray-400` | muted-foreground or border |
+| Medium | 24 | Literal Color | `text-slate-600` | muted, muted-foreground or border |
+| Medium | 24 | Literal Color | `bg-slate-50` | muted, muted-foreground or border |
+| Medium | 25 | Literal Color | `text-gray-400` | muted, muted-foreground or border |
 | Low | 51 | Literal Font | `font-mono` | Remove literal font class; use global typography |
 
 ## src/components/contacts/ContactSidebarPanel.tsx
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
-| Medium | 26 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 26 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 26 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 26 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 | Medium | 26 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 26 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 27 | Literal Color | `bg-purple-100` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -426,8 +426,8 @@ Total Violations: 1266
 | Medium | 28 | Literal Color | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 29 | Literal Color | `bg-red-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 29 | Literal Color | `text-red-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 64 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 64 | Literal Color | `text-gray-700` | muted-foreground or border |
+| Medium | 64 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 64 | Literal Color | `text-gray-700` | muted, muted-foreground or border |
 | Medium | 70 | Literal Color | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 70 | Literal Color | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 130 | Literal Color | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -466,7 +466,7 @@ Total Violations: 1266
 | Medium | 98 | Literal Color | `text-red-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 136 | Literal Color | `text-red-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 144 | Literal Color | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 159 | Literal Color | `bg-gray-100` | muted-foreground or border |
+| Medium | 159 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
 | Medium | 171 | Literal Color | `text-amber-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 171 | Literal Color | `bg-amber-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 
@@ -497,8 +497,8 @@ Total Violations: 1266
 | Medium | 88 | Literal Color | `bg-pink-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 88 | Literal Color | `text-pink-400` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 88 | Literal Color | `bg-pink-950` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 113 | Literal Color | `text-slate-600` | muted-foreground or border |
-| Medium | 113 | Literal Color | `bg-slate-50` | muted-foreground or border |
+| Medium | 113 | Literal Color | `text-slate-600` | muted, muted-foreground or border |
+| Medium | 113 | Literal Color | `bg-slate-50` | muted, muted-foreground or border |
 
 ## src/components/contacts/ContactsTable.tsx
 | Priority | Line | Type | Value | Suggestion |
@@ -618,8 +618,8 @@ Total Violations: 1266
 | Medium | 39 | Literal Color | `text-orange-700` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 40 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 40 | Literal Color | `text-blue-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 41 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 41 | Literal Color | `text-gray-600` | muted-foreground or border |
+| Medium | 41 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 41 | Literal Color | `text-gray-600` | muted, muted-foreground or border |
 | Medium | 94 | Literal Color | `text-blue-600` | text-primary |
 | Medium | 116 | Literal Color | `bg-blue-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 117 | Literal Color | `text-blue-600` | text-primary |
@@ -628,7 +628,7 @@ Total Violations: 1266
 | Medium | 161 | Literal Color | `bg-purple-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 162 | Literal Color | `text-purple-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 184 | Literal Color | `text-blue-600` | text-primary |
-| Medium | 197 | Literal Color | `bg-gray-100` | muted-foreground or border |
+| Medium | 197 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
 
 ## src/components/conversations/InboxView.tsx
 | Priority | Line | Type | Value | Suggestion |
@@ -683,8 +683,8 @@ Total Violations: 1266
 | Medium | 108 | Literal Color | `text-purple-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 111 | Literal Color | `bg-amber-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 111 | Literal Color | `text-amber-600` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 113 | Literal Color | `bg-gray-100` | muted-foreground or border |
-| Medium | 113 | Literal Color | `text-gray-600` | muted-foreground or border |
+| Medium | 113 | Literal Color | `bg-gray-100` | muted, muted-foreground or border |
+| Medium | 113 | Literal Color | `text-gray-600` | muted, muted-foreground or border |
 | Medium | 114 | Literal Color | `bg-red-100` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 114 | Literal Color | `text-red-600` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 122 | Literal Color | `bg-amber-400` | Use semantic tokens (destructive, muted, popover, etc.) |
@@ -823,7 +823,7 @@ Total Violations: 1266
 | Medium | 80 | Literal Color | `bg-emerald-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 81 | Literal Color | `bg-amber-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 82 | Literal Color | `bg-rose-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 83 | Literal Color | `bg-slate-400` | muted-foreground or border |
+| Medium | 83 | Literal Color | `bg-slate-400` | muted, muted-foreground or border |
 
 ## src/components/gmail/GmailMetricsDashboard.tsx
 | Priority | Line | Type | Value | Suggestion |
@@ -1113,8 +1113,8 @@ Total Violations: 1266
 |----------|------|------|-------|------------|
 | Medium | 86 | Literal Color | `bg-red-50` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 86 | Literal Color | `text-red-700` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 96 | Literal Color | `bg-slate-50` | muted-foreground or border |
-| Medium | 99 | Literal Color | `bg-slate-200` | muted-foreground or border |
+| Medium | 96 | Literal Color | `bg-slate-50` | muted, muted-foreground or border |
+| Medium | 99 | Literal Color | `bg-slate-200` | muted, muted-foreground or border |
 | Low | 73 | Literal Font | `font-mono` | Remove literal font class; use global typography |
 
 ## src/components/settings/ConnectionTestPanel.tsx
@@ -2315,9 +2315,9 @@ Total Violations: 1266
 | Priority | Line | Type | Value | Suggestion |
 |----------|------|------|-------|------------|
 | Medium | 47 | Literal Color | `text-green-500` | Use semantic tokens (destructive, muted, popover, etc.) |
-| Medium | 58 | Literal Color | `bg-slate-100` | muted-foreground or border |
-| Medium | 62 | Literal Color | `bg-slate-900` | muted-foreground or border |
-| Medium | 62 | Literal Color | `text-slate-100` | muted-foreground or border |
+| Medium | 58 | Literal Color | `bg-slate-100` | muted, muted-foreground or border |
+| Medium | 62 | Literal Color | `bg-slate-900` | muted, muted-foreground or border |
+| Medium | 62 | Literal Color | `text-slate-100` | muted, muted-foreground or border |
 | Low | 38 | Literal Font | `font-mono` | Remove literal font class; use global typography |
 | Low | 62 | Literal Font | `font-mono` | Remove literal font class; use global typography |
 
@@ -2350,7 +2350,7 @@ Total Violations: 1266
 | Medium | 170 | Literal Color | `text-red-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 177 | Literal Color | `text-orange-500` | Use semantic tokens (destructive, muted, popover, etc.) |
 | Medium | 184 | Literal Color | `text-blue-500` | text-primary |
-| Medium | 191 | Literal Color | `text-gray-500` | muted-foreground or border |
+| Medium | 191 | Literal Color | `text-gray-500` | muted, muted-foreground or border |
 | Low | 267 | Literal Font | `font-mono` | Remove literal font class; use global typography |
 
 ## src/pages/admin/external-db-explorer/QueryExplorerBlock.tsx
