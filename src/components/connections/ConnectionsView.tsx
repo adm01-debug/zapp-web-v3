@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { motion, AnimatePresence, StaggeredList, StaggeredItem } from '@/components/ui/motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
 import { EmptyState } from '@/components/ui/empty-state';
