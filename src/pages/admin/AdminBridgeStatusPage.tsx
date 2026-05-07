@@ -22,7 +22,8 @@ import {
   Bug,
   Search,
   ExternalLink,
-  Loader2
+  Loader2,
+  XCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsapp } from "@/lib/whatsappAdapter";
