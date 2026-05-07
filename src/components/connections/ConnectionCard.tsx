@@ -362,19 +362,37 @@ export function ConnectionCard({
             </div>
           </div>
 
-          {/* Urgent action banner */}
-          {needsAction && !isOfficial && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-3 px-3 py-2 rounded-lg bg-destructive/8 border border-destructive/15 flex items-center gap-2"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-destructive-foreground shrink-0" />
-              <span className="text-xs text-destructive-foreground">
-                {reasonInfo?.long ?? 'Esta conexão está desconectada. Escaneie o QR Code para reconectar.'}
-              </span>
-            </motion.div>
-          )}
+          {/* Status banner — destructive when severe, soft warning otherwise */}
+          {(needsAction || reasonInfo) && !isOfficial && (() => {
+            const severe = !!isPhantomLike || connection.status === 'disconnected';
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  'mt-3 px-3 py-2 rounded-lg border flex items-start gap-2',
+                  severe
+                    ? 'bg-destructive/8 border-destructive/15'
+                    : 'bg-muted/40 border-border/60',
+                )}
+              >
+                <AlertTriangle
+                  className={cn(
+                    'w-3.5 h-3.5 shrink-0 mt-0.5',
+                    severe ? 'text-destructive-foreground' : 'text-muted-foreground',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'text-xs leading-relaxed',
+                    severe ? 'text-destructive-foreground' : 'text-muted-foreground',
+                  )}
+                >
+                  {reasonInfo?.long ?? 'Esta conexão está desconectada. Escaneie o QR Code para reconectar.'}
+                </span>
+              </motion.div>
+            );
+          })()}
         </CardContent>
       </Card>
       {isOfficial && (
