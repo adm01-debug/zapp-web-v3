@@ -129,7 +129,7 @@ export default function BridgeStatusPage() {
       if (elapsed < minWait) await new Promise(r => setTimeout(r, minWait - elapsed));
       setLoading(false);
     }
-  }
+  }, [isExternalConfigured, toast]);
 
   useEffect(() => {
     checkHealth();
