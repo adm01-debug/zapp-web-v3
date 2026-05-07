@@ -133,9 +133,32 @@ export default function BridgeStatusPage() {
 
   useEffect(() => {
     checkHealth();
-    const interval = setInterval(checkHealth, 60000); // Auto-refresh every minute
-    return () => clearInterval(interval);
-  }, []);
+    fetchIncidents();
+    
+    // Configura Subscriptions Real-time
+    const trafficSub = supabase
+      .channel('public:provider_message_log')
+      .on('postgres_changes', { event: 'INSERT', table: 'provider_message_log' }, () => {
+        // Atualiza tráfego instantaneamente quando uma nova mensagem é logada
+        setRecentTraffic(prev => ({ ...prev, count: prev.count + 1, last_at: new Date().toISOString() }));
+      })
+      .subscribe();
+
+    const alertsSub = supabase
+      .channel('public:system_health_incidents')
+      .on('postgres_changes', { event: '*', table: 'system_health_incidents' }, () => {
+        fetchIncidents();
+        checkHealth(); // Re-valida saúde se um incidente mudar
+      })
+      .subscribe();
+
+    const interval = setInterval(checkHealth, 60000); // Auto-refresh a cada minuto como fallback
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(trafficSub);
+      supabase.removeChannel(alertsSub);
+    };
+  }, [fetchIncidents]);
 
   const statusColors = {
     online: "bg-success text-success-foreground border-success/20",
