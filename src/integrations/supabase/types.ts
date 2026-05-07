@@ -13820,6 +13820,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      fn_safe_audit_log: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_entity_id: string
+          p_entity_type: string
+          p_performed_by: string
+        }
+        Returns: string
+      }
       fn_sticky_upsert: {
         Args: {
           p_agent_profile_id: string
