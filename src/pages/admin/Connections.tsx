@@ -230,9 +230,13 @@ export default function AdminConnectionsPage() {
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
+      
+      // Atualiza o cliente em tempo de execução imediatamente
+      updateRuntimeExternalConfig(draftUrl, draftKey);
+
       toast({
         title: 'Credenciais salvas e validadas',
-        description: `Registro confirmado em ${new Date(verifyData.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
+        description: `O app agora está usando a nova configuração via runtime.`,
       });
       await fetchConnections();
     } catch (e: any) {
