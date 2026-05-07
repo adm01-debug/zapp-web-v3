@@ -54,7 +54,7 @@ export default function BridgeStatusPage() {
     setIncidents(data || []);
   }, []);
 
-  async function checkHealth() {
+  const checkHealth = useCallback(async () => {
     setLoading(true);
     const startTime = Date.now();
     
