@@ -279,7 +279,7 @@ export default function AdminConnectionsPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
-                        <Database className="w-5 h-5 text-primary" /> FATOR X (Supabase Externo)
+                        <Database className="w-5 h-5 text-primary" /> SUPABASE SELF HOSTED
                       </CardTitle>
                       <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Configurado</Badge>
                     </div>
