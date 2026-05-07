@@ -75,9 +75,25 @@ export function useConnectionsManager() {
       const { ttlMs, source: ttlSource } = whatsappConnectionService.detectQrTtlMs(result);
       const expiresAt = Date.now() + ttlMs;
       
+      // Evolution API pode retornar `base64` no nível raiz OU dentro de `qrcode.base64`.
+      const rawBase64: string | undefined =
+        (result as any)?.qrcode?.base64 ||
+        (result as any)?.base64 ||
+        (result as any)?.qr ||
+        (result as any)?.qrcode;
+      
+      if (!rawBase64) {
+        setQrCodeDialog((prev) => ({
+          ...prev,
+          status: 'error',
+          errorMessage: 'A API Evolution não retornou um QR Code. A instância pode já estar conectada — clique em "Atualizar" e verifique o status.',
+        }));
+        return;
+      }
+      
       setQrCodeDialog((prev) => ({
         ...prev,
-        qrCode: result?.qrcode?.base64 || prev.qrCode,
+        qrCode: rawBase64,
         status: 'pending',
         expiresAt,
         attemptId: (attemptId as any).data?.id || null,
