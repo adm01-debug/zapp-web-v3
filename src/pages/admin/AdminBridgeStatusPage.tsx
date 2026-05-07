@@ -41,8 +41,18 @@ export default function BridgeStatusPage() {
   const [externalDb, setExternalDb] = useState<boolean | null>(null);
   const [whatsappTransport, setWhatsappTransport] = useState<string>("...");
   const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
   const [instanceCount, setInstanceCount] = useState<number>(0);
   const [recentTraffic, setRecentTraffic] = useState<{count: number, last_at: string | null}>({count: 0, last_at: null});
+
+  const fetchIncidents = useCallback(async () => {
+    const { data } = await supabase
+      .from('system_health_incidents')
+      .select('*')
+      .order('started_at', { ascending: false })
+      .limit(10);
+    setIncidents(data || []);
+  }, []);
 
   async function checkHealth() {
     setLoading(true);
