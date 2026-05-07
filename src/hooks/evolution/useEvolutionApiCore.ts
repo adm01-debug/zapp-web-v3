@@ -127,12 +127,9 @@ export function useEvolutionApiCore() {
             if (userKey) {
               invokeOpts.headers = { 'Idempotency-Key': userKey };
             }
-            // Direct mode: bypass edge function if Evolution config is in localStorage
-            const directCfg = getDirectConfig();
-            if (directCfg) {
-              const directResult = await callEvolutionDirect<T>(directCfg, action, body as Record<string, unknown>);
-              return directResult;
-            }
+            
+            // Fixed: Standardizing to Edge Function (Bridge) mode for stability. 
+            // Local storage direct mode is prone to CORS and key drift.
             const { data, error } = await supabase.functions.invoke(`evolution-api/${action}`, invokeOpts);
             if (error) {
               const err = Object.assign(new Error(error.message || 'Evolution API error'), {
