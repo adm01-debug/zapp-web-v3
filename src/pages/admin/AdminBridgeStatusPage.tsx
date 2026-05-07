@@ -212,7 +212,7 @@ export default function BridgeStatusPage() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }} 
         animate={{ opacity: 1, y: 0 }}
-        className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500 ${statusColors[status]}`}
+        className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500 ${statusConfig.color}`}
       >
         <div className="relative">
           {status === 'online' && <CheckCircle2 className="w-16 h-16" />}
