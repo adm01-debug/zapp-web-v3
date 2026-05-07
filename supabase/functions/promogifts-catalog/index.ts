@@ -59,11 +59,59 @@ function checkRateLimit(userId: string): boolean {
   return entry.count <= RATE_LIMIT;
 }
 
+async function runHealthCheck(req: Request) {
+  const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
+  const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
+  const configured = Boolean(extUrl && extKey);
+
+  if (!configured) {
+    return jsonRes({
+      status: "error",
+      configured: false,
+      reachable: false,
+      error: "External DB not configured",
+      missing: [
+        !extUrl && "PROMOGIFTS_SUPABASE_URL",
+        !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+      ].filter(Boolean),
+    }, 503, req);
+  }
+
+  const startedAt = performance.now();
+  try {
+    const extClient = createClient(extUrl!, extKey!);
+    const { error } = await extClient.from("categories").select("id", { count: "exact", head: true }).limit(1);
+    const duration_ms = Math.round(performance.now() - startedAt);
+    if (error) {
+      return jsonRes({
+        status: "error", configured: true, reachable: false,
+        error: error.message, duration_ms,
+      }, 502, req);
+    }
+    return jsonRes({
+      status: "ok", configured: true, reachable: true, duration_ms,
+      checked_at: new Date().toISOString(),
+    }, 200, req);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return jsonRes({
+      status: "error", configured: true, reachable: false, error: msg,
+      duration_ms: Math.round(performance.now() - startedAt),
+    }, 502, req);
+  }
+}
+
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
 
   const log = new Logger("promogifts-catalog");
+
+  // Health check: GET /health or POST { action: "health" } — no auth required
+  const url = new URL(req.url);
+  if (req.method === "GET" && url.pathname.endsWith("/health")) {
+    return runHealthCheck(req);
+  }
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -86,10 +134,23 @@ Deno.serve(async (req) => {
       return jsonRes({ error: "Too many requests. Try again in 1 minute." }, 429, req);
     }
 
+    // Allow lightweight health probe via POST { action: "health" } (auth required)
+    const probeBody = await req.clone().json().catch(() => null);
+    if (probeBody?.action === "health") {
+      return runHealthCheck(req);
+    }
+
     const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
     const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
     if (!extUrl || !extKey) {
-      return jsonRes({ error: "External DB not configured" }, 500, req);
+      return jsonRes({
+        error: "External DB not configured",
+        hint: "GET /promogifts-catalog/health para diagnóstico",
+        missing: [
+          !extUrl && "PROMOGIFTS_SUPABASE_URL",
+          !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+        ].filter(Boolean),
+      }, 503, req);
     }
     const extClient = createClient(extUrl, extKey);
 
