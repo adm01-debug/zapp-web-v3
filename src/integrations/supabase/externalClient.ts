@@ -30,13 +30,13 @@ const getEnvConfig = () => {
 };
 
 const config = getEnvConfig();
-const EXTERNAL_URL = config.url;
-const EXTERNAL_ANON_KEY = config.key;
+let EXTERNAL_URL = config.url;
+let EXTERNAL_ANON_KEY = config.key;
 
 // No fallback to local keys to avoid accidental writes to internal during dev
-export const isExternalConfigured = Boolean(EXTERNAL_URL && EXTERNAL_ANON_KEY);
+export let isExternalConfigured = Boolean(EXTERNAL_URL && EXTERNAL_ANON_KEY);
 
-export const externalSupabase: SupabaseClient | null = isExternalConfigured
+export let externalSupabase: SupabaseClient | null = isExternalConfigured
   ? createClient(EXTERNAL_URL!, EXTERNAL_ANON_KEY!, {
       auth: {
         persistSession: false,
@@ -49,6 +49,34 @@ export const externalSupabase: SupabaseClient | null = isExternalConfigured
       },
     })
   : null;
+
+/**
+ * Updates the external client at runtime.
+ * Useful when credentials are changed in the Admin Connections UI
+ * without needing a full redeploy.
+ */
+export function updateRuntimeExternalConfig(url: string, key: string) {
+  if (!url || !key) return;
+  
+  EXTERNAL_URL = url;
+  EXTERNAL_ANON_KEY = key;
+  isExternalConfigured = true;
+  
+  // Re-create the client instance
+  (externalSupabase as any) = createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        'x-client-info': 'zapp-web-external-client-runtime',
+      },
+    },
+  });
+  
+  console.log('[externalClient] Runtime config updated successfully');
+}
 
 let warned = false;
 
