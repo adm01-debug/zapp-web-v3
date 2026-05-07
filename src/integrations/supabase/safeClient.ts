@@ -253,7 +253,9 @@ export const safeClient = {
         lowerKey.includes('password') || 
         lowerKey.includes('key') ||
         lowerKey.includes('auth') ||
-        lowerKey.includes('credential')
+        lowerKey.includes('credential') ||
+        lowerKey.includes('session') ||
+        lowerKey.includes('cookie')
       ) {
         masked[key] = '***MASKED***';
       } else if (lowerKey.includes('email') && typeof val === 'string') {
