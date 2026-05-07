@@ -28,6 +28,7 @@ export async function runEvolutionDiagnostics(): Promise<DiagnosticResult[]> {
 
   // 2. Test Global API Key / Evolution Connectivity
   try {
+    // Timeout extended for diagnostics check
     const { data, error } = await whatsappConnectionRepository.callEvolutionApi({
       action: 'list-instances'
     });
