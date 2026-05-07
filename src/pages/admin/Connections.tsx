@@ -183,14 +183,22 @@ export default function AdminConnectionsPage() {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
       const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
 
-      const { data, error, status } = existing
+      const { data, error, status, statusText } = existing
         ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id).select()
         : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        const msg = `[${payload.provider}] ${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${status ? ` | Status: ${status}` : ''}`;
+        const msg = `Falha na escrita [Provider: ${payload.provider}]: Status ${status} (${statusText || 'Erro'}). Mensagem: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}`;
         setSaveError(msg);
-        toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
+        toast({ title: 'Erro ao salvar no Supabase', description: msg, variant: 'destructive' });
+        return;
+      }
+
+      // Se status for 200/201 mas o data vier vazio (pode acontecer em RLS falha silenciosa em alguns drivers)
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        const msg = `A requisição retornou status ${status}, mas nenhum dado foi retornado. Verifique se as permissões de RLS permitem a inserção/atualização.`;
+        setSaveError(msg);
+        toast({ title: 'Escrita não confirmada', description: msg, variant: 'destructive' });
         return;
       }
 
