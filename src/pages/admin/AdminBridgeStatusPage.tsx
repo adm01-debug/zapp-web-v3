@@ -18,7 +18,11 @@ import {
   ShieldCheck,
   Smartphone,
   History,
-  Info
+  Info,
+  Bug,
+  Search,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsapp } from "@/lib/whatsappAdapter";
@@ -27,6 +31,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { runEvolutionDiagnostics, DiagnosticResult } from "@/lib/evolutionDiagnostics";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogTrigger
+} from "@/components/ui/dialog";
 
 type BridgeStatus = "online" | "degraded" | "offline" | "loading";
 
