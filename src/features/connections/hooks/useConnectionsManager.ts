@@ -47,6 +47,7 @@ export interface QrCodeDialogState {
   attemptId: string | null;
   ttlSeconds: number | null;
   ttlSource: QrTtlSource | null;
+  rawPayload?: any;
 }
 
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
