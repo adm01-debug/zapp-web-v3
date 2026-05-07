@@ -57,6 +57,28 @@ export default function BridgeStatusPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [instanceCount, setInstanceCount] = useState<number>(0);
   const [recentTraffic, setRecentTraffic] = useState<{count: number, last_at: string | null}>({count: 0, last_at: null});
+  const [diagResults, setDiagResults] = useState<DiagnosticResult[] | null>(null);
+  const [diagRunning, setDiagRunning] = useState(false);
+
+  const runDiagnostics = async () => {
+    setDiagRunning(true);
+    try {
+      const results = await runEvolutionDiagnostics();
+      setDiagResults(results);
+      toast({
+        title: "Diagnóstico Concluído",
+        description: `Finalizado com ${results.filter(r => r.status === 'fail').length} falhas.`
+      });
+    } catch (e: any) {
+      toast({
+        title: "Erro no Diagnóstico",
+        description: e.message,
+        variant: "destructive"
+      });
+    } finally {
+      setDiagRunning(false);
+    }
+  };
 
   const checkHealth = useCallback(async () => {
     setLoading(true);
