@@ -164,14 +164,12 @@ Deno.serve(async (req) => {
     const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
     const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
     if (!extUrl || !extKey) {
-      return jsonRes({
-        error: "External DB not configured",
-        hint: "GET /promogifts-catalog/health para diagnóstico",
-        missing: [
-          !extUrl && "PROMOGIFTS_SUPABASE_URL",
-          !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
-        ].filter(Boolean),
-      }, 503, req);
+      const missing = [
+        !extUrl && "PROMOGIFTS_SUPABASE_URL",
+        !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+      ].filter(Boolean) as string[];
+      log.error("Missing PromoGifts external DB secrets", { missing });
+      return jsonRes(buildMisconfigPayload(missing), 503, req);
     }
     const extClient = createClient(extUrl, extKey);
 
