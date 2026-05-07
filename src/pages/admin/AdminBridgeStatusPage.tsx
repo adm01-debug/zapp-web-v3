@@ -157,7 +157,7 @@ export default function BridgeStatusPage() {
       supabase.removeChannel(trafficSub);
       supabase.removeChannel(alertsSub);
     };
-  }, [fetchIncidents]);
+  }, [fetchIncidents, checkHealth]);
 
   const statusConfig = useMemo(() => {
     const config = {
