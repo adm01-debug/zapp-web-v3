@@ -246,8 +246,13 @@ export default function AdminConnectionsPage() {
 
       toast({
         title: 'Credenciais salvas e validadas',
-        description: `O app agora está usando a nova configuração via runtime.`,
+        description: `Configuração atualizada via runtime. Redirecionando para Status da Ponte...`,
       });
+      
+      setTimeout(() => {
+        window.location.href = '/admin/bridge-status';
+      }, 1500);
+      
       await fetchConnections();
     } catch (e: any) {
       const msg = `[Exceção] ${e?.message ?? 'Falha desconhecida ao processar a requisição.'}`;
