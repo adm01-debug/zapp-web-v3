@@ -73,7 +73,8 @@ export default function BridgeStatusPage() {
 
       // 3. Check WhatsApp Transport
       const transport = await whatsapp.resolveTransport();
-      setWhatsappTransport(`${transport.requestedMode}${transport.degraded ? " (DEGRADED)" : ""}`);
+      const currentTransportLabel = `${transport.requestedMode}${transport.degraded ? " (DEGRADED)" : ""}`;
+      setWhatsappTransport(currentTransportLabel);
 
       // 4. Check Recent Message Traffic (from internal log for proxy or external)
       const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -101,9 +102,13 @@ export default function BridgeStatusPage() {
       }
 
       // Determine Overall Status
-      if (!lovableDb) setStatus("offline");
-      else if (!externalOk || transport.degraded) setStatus("degraded");
-      else setStatus("online");
+      if (!internalError && (externalOk && !transport.degraded)) {
+        setStatus("online");
+      } else if (!internalError) {
+        setStatus("degraded");
+      } else {
+        setStatus("offline");
+      }
 
       setLastCheck(new Date());
     } catch (error: any) {
