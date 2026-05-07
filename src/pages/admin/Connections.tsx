@@ -98,6 +98,11 @@ export default function AdminConnectionsPage() {
   useEffect(() => {
     fetchConnections();
     checkAdminStatus();
+
+    // Revalida ao focar na aba do navegador para garantir que o acesso ainda é válido
+    const handleFocus = () => checkAdminStatus();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleTabChange = (value: string) => {
