@@ -228,12 +228,9 @@ export default function BridgeStatusPage() {
           )}
         </div>
         <div>
-          <h2 className="text-3xl font-black tracking-tighter">{statusLabels[status]}</h2>
+          <h2 className="text-3xl font-black tracking-tighter">{statusConfig.label}</h2>
           <p className="opacity-80 text-sm font-medium max-w-md mx-auto mt-1">
-            {status === 'online' && "Todos os componentes estão respondendo dentro dos limites de latência esperados."}
-            {status === 'degraded' && "Um ou mais serviços estão com lentidão ou conectividade parcial."}
-            {status === 'offline' && "Interrupção crítica detectada. A ponte não consegue processar mensagens."}
-            {status === 'loading' && "Validando integridade dos schemas e conectividade de rede..."}
+            {statusConfig.description}
           </p>
         </div>
       </motion.div>
