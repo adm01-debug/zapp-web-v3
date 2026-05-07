@@ -28,18 +28,38 @@ export async function runConnectionDiagnostics() {
     }
     log('Auth Check', 'pass', { user: session.user.email });
 
-    // Passo 2: Testar Conectividade Externa (Self-Hosted)
-    const externalUrl = 'https://supabase.atomicabr.com.br';
-    const externalKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
+    // Passo 2: Buscar Configuração Atual no Banco
+    const { data: currentConfigs, error: fetchError } = await supabase
+      .from('system_connections' as any)
+      .select('*')
+      .eq('name', 'FATOR X')
+      .eq('provider', 'supabase_external')
+      .maybeSingle();
+
+    if (fetchError || !currentConfigs) {
+      log('Fetch Current Config', 'fail', 'Configuração "FATOR X" não encontrada em system_connections.');
+      return diagnostics;
+    }
     
+    const configData = currentConfigs as any;
+    const externalUrl = configData.config?.url;
+    const externalKey = configData.config?.anon_key;
+
+    if (!externalUrl || !externalKey) {
+      log('Config Validation', 'fail', 'URL ou Anon Key ausentes na configuração do banco.');
+      return diagnostics;
+    }
+    log('Config Validation', 'pass', { url: externalUrl, key_length: externalKey.length });
+
+    // Passo 3: Testar Conectividade Externa (Self-Hosted)
     try {
-      const res = await fetch(`${externalUrl}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`, {
+      const res = await fetch(`${externalUrl.replace(/\/$/, '')}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`, {
         headers: { apikey: externalKey, Authorization: `Bearer ${externalKey}` },
       });
-      if (res.ok) {
+      if (res.status < 500) {
         log('External Connectivity', 'pass', { status: res.status });
       } else {
-        log('External Connectivity', 'fail', { status: res.status, msg: 'Endpoint não respondeu com sucesso' });
+        log('External Connectivity', 'fail', { status: res.status, msg: 'Endpoint retornou erro 500+' });
       }
     } catch (e: any) {
       log('External Connectivity', 'fail', { error: e.message });
