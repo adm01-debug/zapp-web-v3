@@ -134,10 +134,23 @@ Deno.serve(async (req) => {
       return jsonRes({ error: "Too many requests. Try again in 1 minute." }, 429, req);
     }
 
+    // Allow lightweight health probe via POST { action: "health" } (auth required)
+    const probeBody = await req.clone().json().catch(() => null);
+    if (probeBody?.action === "health") {
+      return runHealthCheck(req);
+    }
+
     const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
     const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
     if (!extUrl || !extKey) {
-      return jsonRes({ error: "External DB not configured" }, 500, req);
+      return jsonRes({
+        error: "External DB not configured",
+        hint: "GET /promogifts-catalog/health para diagnóstico",
+        missing: [
+          !extUrl && "PROMOGIFTS_SUPABASE_URL",
+          !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+        ].filter(Boolean),
+      }, 503, req);
     }
     const extClient = createClient(extUrl, extKey);
 
