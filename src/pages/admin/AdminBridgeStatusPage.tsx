@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   Activity, 
   RefreshCw, 
@@ -23,9 +25,12 @@ import {
   Search,
   ExternalLink,
   Loader2,
-  XCircle
+  XCircle,
+  Play,
+  Pause
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { safeClient } from "@/integrations/supabase/safeClient";
 import { whatsapp } from "@/lib/whatsappAdapter";
 import { getExternalSupabase, isExternalConfigured } from "@/integrations/supabase/externalClient";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,6 +65,12 @@ export default function BridgeStatusPage() {
   const [recentTraffic, setRecentTraffic] = useState<{count: number, last_at: string | null}>({count: 0, last_at: null});
   const [diagResults, setDiagResults] = useState<DiagnosticResult[] | null>(null);
   const [diagRunning, setDiagRunning] = useState(false);
+
+  // Auto Refresh Settings
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval] = useState(30); // 30 seconds
+  const [nextRefreshIn, setNextRefreshIn] = useState(30);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const runDiagnostics = async () => {
     setDiagRunning(true);
@@ -193,13 +204,30 @@ export default function BridgeStatusPage() {
       })
       .subscribe();
 
-    const interval = setInterval(checkHealth, 60000);
+    if (autoRefresh) {
+      timerRef.current = setInterval(() => {
+        setNextRefreshIn(prev => {
+          if (prev <= 1) {
+            checkHealth();
+            return refreshInterval;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
     return () => {
-      clearInterval(interval);
+      if (timerRef.current) clearInterval(timerRef.current);
       supabase.removeChannel(trafficSub);
       supabase.removeChannel(alertsSub);
     };
-  }, [fetchIncidents, checkHealth]);
+  }, [fetchIncidents, checkHealth, autoRefresh, refreshInterval]);
+
+  useEffect(() => {
+    if (!autoRefresh) {
+      setNextRefreshIn(refreshInterval);
+    }
+  }, [autoRefresh, refreshInterval]);
 
   const statusConfig = useMemo(() => {
     const config = {
@@ -238,12 +266,34 @@ export default function BridgeStatusPage() {
             Monitoramento em tempo real do fluxo entre Lovable Cloud e FATOR X (Self-Hosted).
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
+            <Switch 
+              id="auto-refresh" 
+              checked={autoRefresh} 
+              onCheckedChange={setAutoRefresh} 
+            />
+            <Label htmlFor="auto-refresh" className="text-[10px] font-bold uppercase cursor-pointer flex items-center gap-1.5">
+              {autoRefresh ? (
+                <>
+                  <Play className="w-2.5 h-2.5 text-success fill-success" /> 
+                  Auto: {nextRefreshIn}s
+                </>
+              ) : (
+                <>
+                  <Pause className="w-2.5 h-2.5 text-muted-foreground fill-muted-foreground" /> 
+                  Pausado
+                </>
+              )}
+            </Label>
+          </div>
+
+          <div className="text-right hidden sm:block border-l pl-3 border-border/50">
             <p className="text-[10px] uppercase font-bold text-muted-foreground">Última checagem</p>
             <p className="text-xs font-mono">{lastCheck.toLocaleTimeString()}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={checkHealth} disabled={loading} className="gap-2">
+          
+          <Button variant="outline" size="sm" onClick={() => { checkHealth(); setNextRefreshIn(refreshInterval); }} disabled={loading} className="gap-2">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Atualizar Status
           </Button>
@@ -292,7 +342,7 @@ export default function BridgeStatusPage() {
                             <details className="mt-2">
                               <summary className="text-[10px] cursor-pointer hover:underline text-primary/70">Ver detalhes técnicos</summary>
                               <pre className="mt-2 p-2 bg-black/5 rounded text-[10px] font-mono overflow-x-auto max-h-32">
-                                {JSON.stringify(res.details, null, 2)}
+                                {JSON.stringify(safeClient.maskSensitiveData(res.details), null, 2)}
                               </pre>
                             </details>
                           )}
