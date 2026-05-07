@@ -94,6 +94,7 @@ function AppContent() {
         {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
         <Toaster />
         <Sonner />
+        <ServiceWorkerUpdateBanner />
         <AppRoutes />
       </GlobalKeyboardProvider>
     </BrowserRouter>
