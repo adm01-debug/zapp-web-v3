@@ -40,6 +40,31 @@ import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
 export function ConnectionsView() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+
+  const maskSensitiveData = (obj: any) => {
+    if (!obj) return null;
+    const masked = { ...obj };
+    const sensitiveKeys = ['apikey', 'key', 'token', 'password', 'secret', 'base64', 'qr', 'qrcode'];
+    
+    const maskValue = (o: any) => {
+      if (typeof o !== 'object' || o === null) return o;
+      for (const key in o) {
+        if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk))) {
+          if (typeof o[key] === 'string') {
+            o[key] = o[key].length > 10 ? `${o[key].substring(0, 4)}...${o[key].substring(o[key].length - 4)}` : '****';
+          } else {
+            o[key] = '****';
+          }
+        } else if (typeof o[key] === 'object') {
+          maskValue(o[key]);
+        }
+      }
+      return o;
+    };
+    
+    return maskValue(JSON.parse(JSON.stringify(masked))); // Deep clone before masking
+  };
   const {
     connections, loading,
     isAddDialogOpen, setIsAddDialogOpen,
