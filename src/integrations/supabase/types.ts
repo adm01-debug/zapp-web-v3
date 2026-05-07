@@ -10667,6 +10667,45 @@ export type Database = {
           },
         ]
       }
+      system_health_incidents: {
+        Row: {
+          component: string
+          description: string | null
+          id: string
+          impact_level: string | null
+          metadata: Json | null
+          probable_cause: string | null
+          resolved_at: string | null
+          started_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          component: string
+          description?: string | null
+          id?: string
+          impact_level?: string | null
+          metadata?: Json | null
+          probable_cause?: string | null
+          resolved_at?: string | null
+          started_at?: string
+          status: string
+          title: string
+        }
+        Update: {
+          component?: string
+          description?: string | null
+          id?: string
+          impact_level?: string | null
+          metadata?: Json | null
+          probable_cause?: string | null
+          resolved_at?: string | null
+          started_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       system_webhook_deliveries: {
         Row: {
           attempt: number
