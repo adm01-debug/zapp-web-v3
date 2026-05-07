@@ -216,6 +216,11 @@ export default function AdminConnectionsPage() {
       }
 
       // Validação Pós-Save (SELECT para confirmar persistência no Self-Hosted)
+      toast({ title: 'Confirmando gravação...', description: 'Aguardando sincronização do banco.' });
+      
+      // Pequeno delay para garantir que o banco processou a transação (útil em setups com latência)
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const { data: verify, error: verifyError } = await supabase
         .from('system_connections' as any)
         .select('id, updated_at')
@@ -224,7 +229,7 @@ export default function AdminConnectionsPage() {
         .maybeSingle();
 
       if (verifyError || !verify) {
-        const msg = `A requisição retornou ${status}, mas o registro não pôde ser validado no banco após o save. Verifique as políticas de RLS ou a latência do banco. ${verifyError?.message ?? ''}`;
+        const msg = `A requisição retornou status ${status}, mas o SELECT de validação falhou: ${verifyError?.message ?? 'Registro não encontrado'}. Tente recarregar a página.`;
         setSaveError(msg);
         toast({ title: 'Confirmação falhou', description: msg, variant: 'destructive' });
         return;
