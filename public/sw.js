@@ -1,29 +1,19 @@
-// Push-only legacy service worker shim.
-// Important: this file must never cache the app shell, otherwise old UI bundles can reappear.
-const LEGACY_CACHE_PREFIX = 'whatsapp-crm-v';
-
+// Push-only service worker. NEVER caches app shell — any cache present is legacy and gets purged.
 self.addEventListener('install', () => {
   console.log('[ServiceWorker] Install');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activate');
-  event.waitUntil(
-    caches.keys().then((cacheKeys) => {
-      return Promise.all(
-        cacheKeys.map((key) => {
-          if (key.startsWith(LEGACY_CACHE_PREFIX)) {
-            console.log('[ServiceWorker] Removing old cache', key);
-            return caches.delete(key);
-          }
-
-          return Promise.resolve(false);
-        })
-      );
-    })
-  );
-  self.clients.claim();
+  console.log('[ServiceWorker] Activate — purging ALL caches to prevent stale UI bundles');
+  event.waitUntil((async () => {
+    const cacheKeys = await caches.keys();
+    await Promise.all(cacheKeys.map((key) => {
+      console.log('[ServiceWorker] Removing cache', key);
+      return caches.delete(key);
+    }));
+    await self.clients.claim();
+  })());
 });
 
 // Push event - handle incoming push notifications
