@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,17 @@ import {
   Clock,
   MessageSquare,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  History,
+  Info
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsapp } from "@/lib/whatsappAdapter";
 import { getExternalSupabase, isExternalConfigured } from "@/integrations/supabase/externalClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type BridgeStatus = "online" | "degraded" | "offline" | "loading";
 
