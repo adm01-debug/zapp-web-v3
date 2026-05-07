@@ -236,6 +236,38 @@ export function ConnectionsView() {
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
 
+            <div className="pt-4 border-t border-muted/30">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowDiagnostic(!showDiagnostic)} 
+                className="text-[10px] text-muted-foreground hover:text-primary gap-1"
+              >
+                {showDiagnostic ? 'Ocultar Diagnóstico' : 'Ver Diagnóstico Técnico'}
+              </Button>
+              
+              <AnimatePresence>
+                {showDiagnostic && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden mt-2"
+                  >
+                    <div className="bg-muted/50 rounded-lg p-3 text-left space-y-2">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground">Payload Evolution API (Mascarado)</p>
+                      <pre className="text-[9px] font-mono bg-black/5 p-2 rounded overflow-x-auto max-h-40">
+                        {JSON.stringify(maskSensitiveData(qrCodeDialog.rawPayload), null, 2)}
+                      </pre>
+                      <p className="text-[8px] text-muted-foreground italic">
+                        * Dados sensíveis como chaves de API e strings Base64 foram ocultados por segurança.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {qrCodeDialog.connectionId && (
               <QrAttemptHistory
                 connectionId={qrCodeDialog.connectionId}
