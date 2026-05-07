@@ -65,26 +65,26 @@ export async function runConnectionDiagnostics() {
       log('External Connectivity', 'fail', { error: e.message });
     }
 
-    // Passo 3: Testar Persistência no system_connections (Simulação de Save)
+    // Passo 4: Testar Escrita/Leitura no system_connections (Verificar RLS)
     const testName = `DIAG_TEST_${Math.floor(Math.random() * 1000)}`;
-    const { data: saveResult, error: saveError } = await supabase
+    const { data: saveResult, error: saveError, status: saveStatus } = await supabase
       .from('system_connections' as any)
       .upsert({
         name: testName,
-        provider: 'supabase_external',
-        config: { url: externalUrl, anon_key: 'HIDDEN_IN_LOGS' },
-        is_active: true,
+        provider: 'diagnostic_test',
+        config: { url: 'test', anon_key: 'test' },
+        is_active: false,
         created_by: session.user.id
       }, { onConflict: 'name' })
       .select();
 
     if (saveError) {
-      log('Database Persistence', 'fail', { error: saveError });
+      log('Database Write (RLS)', 'fail', { error: saveError, status: saveStatus });
     } else {
       const savedData = saveResult as any[];
-      log('Database Persistence', 'pass', { id: savedData?.[0]?.id });
+      log('Database Write (RLS)', 'pass', { id: savedData?.[0]?.id, status: saveStatus });
 
-      // Passo 4: Verificação de Visibilidade (Read-back)
+      // Passo 5: Verificação de Visibilidade (Read-back)
       const { data: verify, error: verifyError } = await supabase
         .from('system_connections' as any)
         .select('*')
@@ -94,12 +94,13 @@ export async function runConnectionDiagnostics() {
       const verifyData = verify as any;
 
       if (verifyError || !verifyData) {
-        log('Data Visibility (RLS)', 'fail', { error: verifyError?.message || 'Registro não encontrado após save' });
+        log('Data Read-back (RLS)', 'fail', { error: verifyError?.message || 'Registro inserido não foi encontrado no SELECT' });
       } else {
-        log('Data Visibility (RLS)', 'pass', { verified_id: verifyData.id });
+        log('Data Read-back (RLS)', 'pass', { verified_id: verifyData.id });
         
-        // Limpeza opcional
+        // Limpeza
         await supabase.from('system_connections' as any).delete().eq('name', testName);
+        log('Cleanup', 'pass', 'Registro de teste removido.');
       }
     }
 
