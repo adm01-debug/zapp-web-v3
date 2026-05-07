@@ -366,7 +366,7 @@ export default function AdminConnectionsPage() {
                           <Button variant="ghost" size="sm" className="gap-2" onClick={() => { setEditOpen(false); setDraftUrl(externalUrl); setDraftKey(externalKey); }} disabled={saving}>
                             Cancelar
                           </Button>
-                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving}>
+                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving || isAdmin === false}>
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
                           </Button>
                         </>
