@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { FloatingParticles } from '@/components/dashboard/FloatingParticles';
 import { AuroraBorealis } from '@/components/effects/AuroraBorealis';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -40,6 +41,31 @@ import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
 export function ConnectionsView() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+
+  const maskSensitiveData = (obj: any) => {
+    if (!obj) return null;
+    const masked = { ...obj };
+    const sensitiveKeys = ['apikey', 'key', 'token', 'password', 'secret', 'base64', 'qr', 'qrcode'];
+    
+    const maskValue = (o: any) => {
+      if (typeof o !== 'object' || o === null) return o;
+      for (const key in o) {
+        if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk))) {
+          if (typeof o[key] === 'string') {
+            o[key] = o[key].length > 10 ? `${o[key].substring(0, 4)}...${o[key].substring(o[key].length - 4)}` : '****';
+          } else {
+            o[key] = '****';
+          }
+        } else if (typeof o[key] === 'object') {
+          maskValue(o[key]);
+        }
+      }
+      return o;
+    };
+    
+    return maskValue(JSON.parse(JSON.stringify(masked))); // Deep clone before masking
+  };
   const {
     connections, loading,
     isAddDialogOpen, setIsAddDialogOpen,
@@ -210,6 +236,38 @@ export function ConnectionsView() {
               />
             )}
             {qrCodeDialog.status === 'connected' && <Button onClick={closeQrDialog}>Fechar</Button>}
+
+            <div className="pt-4 border-t border-muted/30">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowDiagnostic(!showDiagnostic)} 
+                className="text-[10px] text-muted-foreground hover:text-primary gap-1"
+              >
+                {showDiagnostic ? 'Ocultar Diagnóstico' : 'Ver Diagnóstico Técnico'}
+              </Button>
+              
+              <AnimatePresence>
+                {showDiagnostic && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden mt-2"
+                  >
+                    <div className="bg-muted/50 rounded-lg p-3 text-left space-y-2">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground">Payload Evolution API (Mascarado)</p>
+                      <pre className="text-[9px] font-mono bg-black/5 p-2 rounded overflow-x-auto max-h-40">
+                        {JSON.stringify(maskSensitiveData(qrCodeDialog.rawPayload), null, 2)}
+                      </pre>
+                      <p className="text-[8px] text-muted-foreground italic">
+                        * Dados sensíveis como chaves de API e strings Base64 foram ocultados por segurança.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {qrCodeDialog.connectionId && (
               <QrAttemptHistory

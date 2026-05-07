@@ -18,7 +18,12 @@ import {
   ShieldCheck,
   Smartphone,
   History,
-  Info
+  Info,
+  Bug,
+  Search,
+  ExternalLink,
+  Loader2,
+  XCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsapp } from "@/lib/whatsappAdapter";
@@ -27,6 +32,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { runEvolutionDiagnostics, DiagnosticResult } from "@/lib/evolutionDiagnostics";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogTrigger
+} from "@/components/ui/dialog";
 
 type BridgeStatus = "online" | "degraded" | "offline" | "loading";
 
@@ -44,6 +58,28 @@ export default function BridgeStatusPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
   const [instanceCount, setInstanceCount] = useState<number>(0);
   const [recentTraffic, setRecentTraffic] = useState<{count: number, last_at: string | null}>({count: 0, last_at: null});
+  const [diagResults, setDiagResults] = useState<DiagnosticResult[] | null>(null);
+  const [diagRunning, setDiagRunning] = useState(false);
+
+  const runDiagnostics = async () => {
+    setDiagRunning(true);
+    try {
+      const results = await runEvolutionDiagnostics();
+      setDiagResults(results);
+      toast({
+        title: "Diagnóstico Concluído",
+        description: `Finalizado com ${results.filter(r => r.status === 'fail').length} falhas.`
+      });
+    } catch (e: any) {
+      toast({
+        title: "Erro no Diagnóstico",
+        description: e.message,
+        variant: "destructive"
+      });
+    } finally {
+      setDiagRunning(false);
+    }
+  };
 
   const checkHealth = useCallback(async () => {
     setLoading(true);
@@ -209,8 +245,76 @@ export default function BridgeStatusPage() {
           </div>
           <Button variant="outline" size="sm" onClick={checkHealth} disabled={loading} className="gap-2">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar Agora
+            Atualizar Status
           </Button>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="sm" onClick={runDiagnostics} disabled={diagRunning} className="gap-2">
+                {diagRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bug className="w-3.5 h-3.5" />}
+                Teste de Conexão
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" /> Diagnóstico da Ponte Evolution
+                </DialogTitle>
+                <DialogDescription>
+                  Validação técnica de credenciais, rede e permissões.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {diagRunning && !diagResults && (
+                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground animate-pulse">Varrendo serviços...</p>
+                  </div>
+                )}
+                
+                {diagResults && (
+                  <div className="space-y-3">
+                    {diagResults.map((res, i) => (
+                      <div key={i} className={`p-3 rounded-lg border flex items-start gap-3 ${
+                        res.status === 'ok' ? 'bg-success/5 border-success/20' : 
+                        res.status === 'warn' ? 'bg-warning/5 border-warning/20' : 
+                        'bg-destructive/5 border-destructive/20'
+                      }`}>
+                        <div className="mt-0.5">
+                          {res.status === 'ok' && <CheckCircle2 className="w-4 h-4 text-success" />}
+                          {res.status === 'warn' && <AlertTriangle className="w-4 h-4 text-warning" />}
+                          {res.status === 'fail' && <XCircle className="w-4 h-4 text-destructive" />}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold leading-none">{res.step}</p>
+                          <p className="text-xs text-muted-foreground">{res.message}</p>
+                          {res.details && (
+                            <details className="mt-2">
+                              <summary className="text-[10px] cursor-pointer hover:underline text-primary/70">Ver detalhes técnicos</summary>
+                              <pre className="mt-2 p-2 bg-black/5 rounded text-[10px] font-mono overflow-x-auto max-h-32">
+                                {JSON.stringify(res.details, null, 2)}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="pt-4 border-t flex justify-between gap-2">
+                   <p className="text-[10px] text-muted-foreground max-w-[200px]">
+                     Este teste não afeta o tráfego real de mensagens.
+                   </p>
+                   <div className="flex gap-2">
+                     <Button variant="outline" size="sm" onClick={runDiagnostics} disabled={diagRunning}>
+                       Refazer Teste
+                     </Button>
+                   </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

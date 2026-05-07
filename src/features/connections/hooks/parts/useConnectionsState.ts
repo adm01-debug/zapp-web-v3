@@ -14,6 +14,7 @@ const INITIAL_QR_STATE: QrCodeDialogState = {
   attemptId: null,
   ttlSeconds: null,
   ttlSource: null,
+  rawPayload: null,
 };
 
 const QR_STORAGE_KEY = 'zapp:qrDialog:v1';
