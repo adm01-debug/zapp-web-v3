@@ -116,8 +116,15 @@ export default function AdminConnectionsPage() {
     if (!error && data) {
       setConnections(data as any[]);
       const fatorX: any = (data as any[]).find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-      if (fatorX?.config?.url) { setExternalUrl(fatorX.config.url); setDraftUrl(fatorX.config.url); }
-      if (fatorX?.config?.anon_key) { setExternalKey(fatorX.config.anon_key); setDraftKey(fatorX.config.anon_key); }
+      if (fatorX?.config?.url && fatorX?.config?.anon_key) { 
+        setExternalUrl(fatorX.config.url); 
+        setDraftUrl(fatorX.config.url);
+        setExternalKey(fatorX.config.anon_key); 
+        setDraftKey(fatorX.config.anon_key);
+        
+        // Sincroniza o cliente em tempo de execução
+        updateRuntimeExternalConfig(fatorX.config.url, fatorX.config.anon_key);
+      }
     }
     setLoading(false);
   }
