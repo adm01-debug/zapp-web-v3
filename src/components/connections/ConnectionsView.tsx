@@ -46,7 +46,7 @@ export function ConnectionsView() {
   const maskSensitiveData = (obj: any) => {
     if (!obj) return null;
     const masked = { ...obj };
-    const sensitiveKeys = ['apikey', 'key', 'token', 'password', 'secret', 'base64', 'qr', 'qrcode'];
+    const sensitiveKeys = ['apikey', 'key', 'token', 'password', 'secret', 'base64', 'qr', 'qrcode', 'authorization', 'session', 'cookie'];
     
     const maskValue = (o: any) => {
       if (typeof o !== 'object' || o === null) return o;
