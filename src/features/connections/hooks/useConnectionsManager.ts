@@ -87,6 +87,7 @@ export function useConnectionsManager() {
         setQrCodeDialog((prev) => ({
           ...prev,
           status: 'error',
+          rawPayload: result,
           errorMessage: 'A API Evolution não retornou um QR Code. A instância pode já estar conectada — clique em "Atualizar" e verifique o status.',
         }));
         return;
@@ -97,12 +98,18 @@ export function useConnectionsManager() {
         qrCode: rawBase64,
         status: 'pending',
         expiresAt,
+        rawPayload: result,
         attemptId: (attemptId as any).data?.id || null,
         ttlSeconds: Math.round(ttlMs / 1000),
         ttlSource: ttlSource as QrTtlSource,
       }));
     } catch (error: any) {
-      setQrCodeDialog((prev) => ({ ...prev, status: 'error', errorMessage: error.message }));
+      setQrCodeDialog((prev) => ({ 
+        ...prev, 
+        status: 'error', 
+        errorMessage: error.message,
+        rawPayload: error.payload || error 
+      }));
     }
   }, [setQrCodeDialog]);
 
