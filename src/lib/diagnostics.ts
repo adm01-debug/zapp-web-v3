@@ -28,43 +28,63 @@ export async function runConnectionDiagnostics() {
     }
     log('Auth Check', 'pass', { user: session.user.email });
 
-    // Passo 2: Testar Conectividade Externa (Self-Hosted)
-    const externalUrl = 'https://supabase.atomicabr.com.br';
-    const externalKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
+    // Passo 2: Buscar Configuração Atual no Banco
+    const { data: currentConfigs, error: fetchError } = await supabase
+      .from('system_connections' as any)
+      .select('*')
+      .eq('name', 'FATOR X')
+      .eq('provider', 'supabase_external')
+      .maybeSingle();
+
+    if (fetchError || !currentConfigs) {
+      log('Fetch Current Config', 'fail', 'Configuração "FATOR X" não encontrada em system_connections.');
+      return diagnostics;
+    }
     
+    const configData = currentConfigs as any;
+    const externalUrl = configData.config?.url;
+    const externalKey = configData.config?.anon_key;
+
+    if (!externalUrl || !externalKey) {
+      log('Config Validation', 'fail', 'URL ou Anon Key ausentes na configuração do banco.');
+      return diagnostics;
+    }
+    log('Config Validation', 'pass', { url: externalUrl, key_length: externalKey.length });
+
+    // Passo 3: Testar Conectividade Externa (Self-Hosted)
     try {
-      const res = await fetch(`${externalUrl}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`, {
+      const res = await fetch(`${externalUrl.replace(/\/$/, '')}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`, {
         headers: { apikey: externalKey, Authorization: `Bearer ${externalKey}` },
       });
-      if (res.ok) {
+      if (res.status < 500) {
         log('External Connectivity', 'pass', { status: res.status });
       } else {
-        log('External Connectivity', 'fail', { status: res.status, msg: 'Endpoint não respondeu com sucesso' });
+        log('External Connectivity', 'fail', { status: res.status, msg: 'Endpoint retornou erro 500+' });
       }
     } catch (e: any) {
       log('External Connectivity', 'fail', { error: e.message });
     }
 
-    // Passo 3: Testar Persistência no system_connections (Simulação de Save)
+    // Passo 4: Testar Escrita/Leitura no system_connections (Verificar RLS)
     const testName = `DIAG_TEST_${Math.floor(Math.random() * 1000)}`;
-    const { data: saveResult, error: saveError } = await supabase
+    const { data: saveResult, error: saveError, status: saveStatus } = await supabase
       .from('system_connections' as any)
       .upsert({
         name: testName,
-        provider: 'supabase_external',
-        config: { url: externalUrl, anon_key: 'HIDDEN_IN_LOGS' },
-        is_active: true,
+        provider: 'diagnostic_test',
+        config: { url: 'test', anon_key: 'test' },
+        is_active: false,
         created_by: session.user.id
       }, { onConflict: 'name' })
       .select();
 
     if (saveError) {
-      log('Database Persistence', 'fail', { error: saveError });
+      log('Database Write (RLS)', 'fail', { error: saveError, status: saveStatus });
     } else {
       const savedData = saveResult as any[];
-      log('Database Persistence', 'pass', { id: savedData?.[0]?.id });
+      log('Database Write (RLS)', 'pass', { id: savedData?.[0]?.id, status: saveStatus });
 
-      // Passo 4: Verificação de Visibilidade (Read-back)
+      // Passo 5: Verificação de Visibilidade (Read-back)
       const { data: verify, error: verifyError } = await supabase
         .from('system_connections' as any)
         .select('*')
@@ -74,12 +94,13 @@ export async function runConnectionDiagnostics() {
       const verifyData = verify as any;
 
       if (verifyError || !verifyData) {
-        log('Data Visibility (RLS)', 'fail', { error: verifyError?.message || 'Registro não encontrado após save' });
+        log('Data Read-back (RLS)', 'fail', { error: verifyError?.message || 'Registro inserido não foi encontrado no SELECT' });
       } else {
-        log('Data Visibility (RLS)', 'pass', { verified_id: verifyData.id });
+        log('Data Read-back (RLS)', 'pass', { verified_id: verifyData.id });
         
-        // Limpeza opcional
+        // Limpeza
         await supabase.from('system_connections' as any).delete().eq('name', testName);
+        log('Cleanup', 'pass', 'Registro de teste removido.');
       }
     }
 

@@ -13,6 +13,7 @@ import {
   Activity
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { updateRuntimeExternalConfig } from '@/integrations/supabase/externalClient';
 import { toast } from '@/hooks/use-toast';
 import { runConnectionDiagnostics } from '@/lib/diagnostics';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,25 +62,34 @@ export default function AdminConnectionsPage() {
 
   const checkAdminStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) throw authError;
+      
       setCurrentUserId(user?.id ?? null);
       if (user?.id) {
-        const { data: roles, error } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id);
         
-        if (error) throw error;
-        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin' || r.role === 'dev'));
+        if (rolesError) throw rolesError;
+        
+        const hasAccess = !!roles?.some((r: any) => r.role === 'admin' || r.role === 'dev');
+        setIsAdmin(hasAccess);
+        
+        if (!hasAccess) {
+          console.warn("Usuário logado sem permissão de admin/dev:", user.email);
+        }
       } else {
         setIsAdmin(false);
       }
-    } catch (e) {
-      console.error("Erro ao verificar roles:", e);
+    } catch (e: any) {
+      console.error("Erro ao verificar roles ou conexão:", e);
       setIsAdmin(false);
       toast({ 
-        title: 'Erro de Autenticação', 
-        description: 'Não foi possível validar seu nível de acesso. Verifique sua conexão.', 
+        title: 'Erro de Conexão ou Acesso', 
+        description: `Não foi possível validar seu nível de acesso: ${e?.message ?? 'Banco indisponível'}.`, 
         variant: 'destructive' 
       });
     }
@@ -88,6 +98,11 @@ export default function AdminConnectionsPage() {
   useEffect(() => {
     fetchConnections();
     checkAdminStatus();
+
+    // Revalida ao focar na aba do navegador para garantir que o acesso ainda é válido
+    const handleFocus = () => checkAdminStatus();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const handleTabChange = (value: string) => {
@@ -106,8 +121,15 @@ export default function AdminConnectionsPage() {
     if (!error && data) {
       setConnections(data as any[]);
       const fatorX: any = (data as any[]).find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
-      if (fatorX?.config?.url) { setExternalUrl(fatorX.config.url); setDraftUrl(fatorX.config.url); }
-      if (fatorX?.config?.anon_key) { setExternalKey(fatorX.config.anon_key); setDraftKey(fatorX.config.anon_key); }
+      if (fatorX?.config?.url && fatorX?.config?.anon_key) { 
+        setExternalUrl(fatorX.config.url); 
+        setDraftUrl(fatorX.config.url);
+        setExternalKey(fatorX.config.anon_key); 
+        setDraftKey(fatorX.config.anon_key);
+        
+        // Sincroniza o cliente em tempo de execução
+        updateRuntimeExternalConfig(fatorX.config.url, fatorX.config.anon_key);
+      }
     }
     setLoading(false);
   }
@@ -174,18 +196,31 @@ export default function AdminConnectionsPage() {
       const existing: any = connections.find((c: any) => c.provider === 'supabase_external' || c.name === 'FATOR X');
       const insertPayload = currentUserId ? { ...payload, created_by: currentUserId } : payload;
 
-      const { data, error, status } = existing
+      const { data, error, status, statusText } = existing
         ? await supabase.from('system_connections' as any).update(payload).eq('id', existing.id).select()
         : await supabase.from('system_connections' as any).insert(insertPayload).select();
 
       if (error) {
-        const msg = `[${payload.provider}] ${error.message}${error.code ? ` (código: ${error.code})` : ''}${error.details ? ` — ${error.details}` : ''}${status ? ` | Status: ${status}` : ''}`;
+        const msg = `Falha na escrita [Provider: ${payload.provider}]: Status ${status} (${statusText || 'Erro'}). Mensagem: ${error.message}${error.code ? ` (Code: ${error.code})` : ''}`;
         setSaveError(msg);
-        toast({ title: 'Erro ao salvar', description: msg, variant: 'destructive' });
+        toast({ title: 'Erro ao salvar no Supabase', description: msg, variant: 'destructive' });
+        return;
+      }
+
+      // Se status for 200/201 mas o data vier vazio (pode acontecer em RLS falha silenciosa em alguns drivers)
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        const msg = `A requisição retornou status ${status}, mas nenhum dado foi retornado. Verifique se as permissões de RLS permitem a inserção/atualização.`;
+        setSaveError(msg);
+        toast({ title: 'Escrita não confirmada', description: msg, variant: 'destructive' });
         return;
       }
 
       // Validação Pós-Save (SELECT para confirmar persistência no Self-Hosted)
+      toast({ title: 'Confirmando gravação...', description: 'Aguardando sincronização do banco.' });
+      
+      // Pequeno delay para garantir que o banco processou a transação (útil em setups com latência)
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const { data: verify, error: verifyError } = await supabase
         .from('system_connections' as any)
         .select('id, updated_at')
@@ -194,7 +229,7 @@ export default function AdminConnectionsPage() {
         .maybeSingle();
 
       if (verifyError || !verify) {
-        const msg = `A requisição retornou ${status}, mas o registro não pôde ser validado no banco após o save. Verifique as políticas de RLS ou a latência do banco. ${verifyError?.message ?? ''}`;
+        const msg = `A requisição retornou status ${status}, mas o SELECT de validação falhou: ${verifyError?.message ?? 'Registro não encontrado'}. Tente recarregar a página.`;
         setSaveError(msg);
         toast({ title: 'Confirmação falhou', description: msg, variant: 'destructive' });
         return;
@@ -205,9 +240,13 @@ export default function AdminConnectionsPage() {
       setExternalUrl(draftUrl);
       setExternalKey(draftKey);
       setEditOpen(false);
+      
+      // Atualiza o cliente em tempo de execução imediatamente
+      updateRuntimeExternalConfig(draftUrl, draftKey);
+
       toast({
         title: 'Credenciais salvas e validadas',
-        description: `Registro confirmado em ${new Date(verifyData.updated_at).toLocaleTimeString()}. Atualize os secrets VITE_EXTERNAL_SUPABASE_URL/KEY.`,
+        description: `O app agora está usando a nova configuração via runtime.`,
       });
       await fetchConnections();
     } catch (e: any) {
@@ -341,7 +380,7 @@ export default function AdminConnectionsPage() {
                           <Button variant="ghost" size="sm" className="gap-2" onClick={() => { setEditOpen(false); setDraftUrl(externalUrl); setDraftKey(externalKey); }} disabled={saving}>
                             Cancelar
                           </Button>
-                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving}>
+                          <Button size="sm" className="flex-1 gap-2" onClick={saveCredentials} disabled={saving || isAdmin === false}>
                             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
                           </Button>
                         </>
