@@ -59,33 +59,53 @@ function checkRateLimit(userId: string): boolean {
   return entry.count <= RATE_LIMIT;
 }
 
+const REQUIRED_SECRETS = ["PROMOGIFTS_SUPABASE_URL", "PROMOGIFTS_SUPABASE_ANON_KEY"] as const;
+
+function buildMisconfigPayload(missing: string[]) {
+  return {
+    status: "error",
+    code: "EXTERNAL_DB_NOT_CONFIGURED",
+    error: "Catálogo PromoGifts indisponível: o banco externo não está configurado.",
+    configured: false,
+    reachable: false,
+    missing,
+    required_secrets: REQUIRED_SECRETS,
+    setup_instructions: {
+      step_1: "Abra Lovable Cloud → Connectors → Secrets (ou use o painel de Backend).",
+      step_2: `Crie/atualize os secrets ausentes: ${missing.join(", ")}.`,
+      step_3:
+        "Use a URL do projeto Supabase do PromoGifts (https://<ref>.supabase.co) e a anon key do mesmo projeto.",
+      step_4: "Aguarde alguns segundos para o redeploy automático da edge function.",
+      step_5: "Valide com GET /functions/v1/promogifts-catalog/health (espera-se status: ok).",
+    },
+    docs: "Os secrets ficam disponíveis automaticamente em todas as edge functions via Deno.env.get().",
+    timestamp: new Date().toISOString(),
+  };
+}
+
 async function runHealthCheck(req: Request) {
   const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
   const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
-  const configured = Boolean(extUrl && extKey);
 
-  if (!configured) {
-    return jsonRes({
-      status: "error",
-      configured: false,
-      reachable: false,
-      error: "External DB not configured",
-      missing: [
-        !extUrl && "PROMOGIFTS_SUPABASE_URL",
-        !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
-      ].filter(Boolean),
-    }, 503, req);
+  if (!extUrl || !extKey) {
+    const missing = [
+      !extUrl && "PROMOGIFTS_SUPABASE_URL",
+      !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+    ].filter(Boolean) as string[];
+    return jsonRes(buildMisconfigPayload(missing), 503, req);
   }
 
   const startedAt = performance.now();
   try {
-    const extClient = createClient(extUrl!, extKey!);
+    const extClient = createClient(extUrl, extKey);
     const { error } = await extClient.from("categories").select("id", { count: "exact", head: true }).limit(1);
     const duration_ms = Math.round(performance.now() - startedAt);
     if (error) {
       return jsonRes({
-        status: "error", configured: true, reachable: false,
+        status: "error", code: "EXTERNAL_DB_UNREACHABLE",
+        configured: true, reachable: false,
         error: error.message, duration_ms,
+        hint: "Secrets presentes, mas o banco externo rejeitou a query. Verifique URL/anon key e RLS.",
       }, 502, req);
     }
     return jsonRes({
@@ -95,7 +115,8 @@ async function runHealthCheck(req: Request) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return jsonRes({
-      status: "error", configured: true, reachable: false, error: msg,
+      status: "error", code: "EXTERNAL_DB_UNREACHABLE",
+      configured: true, reachable: false, error: msg,
       duration_ms: Math.round(performance.now() - startedAt),
     }, 502, req);
   }
