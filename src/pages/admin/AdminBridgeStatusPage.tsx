@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,17 @@ import {
   Clock,
   MessageSquare,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  History,
+  Info
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { whatsapp } from "@/lib/whatsappAdapter";
 import { getExternalSupabase, isExternalConfigured } from "@/integrations/supabase/externalClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type BridgeStatus = "online" | "degraded" | "offline" | "loading";
 
@@ -37,10 +41,11 @@ export default function BridgeStatusPage() {
   const [externalDb, setExternalDb] = useState<boolean | null>(null);
   const [whatsappTransport, setWhatsappTransport] = useState<string>("...");
   const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
   const [instanceCount, setInstanceCount] = useState<number>(0);
   const [recentTraffic, setRecentTraffic] = useState<{count: number, last_at: string | null}>({count: 0, last_at: null});
 
-  async function checkHealth() {
+  const checkHealth = useCallback(async () => {
     setLoading(true);
     const startTime = Date.now();
     
@@ -68,7 +73,8 @@ export default function BridgeStatusPage() {
 
       // 3. Check WhatsApp Transport
       const transport = await whatsapp.resolveTransport();
-      setWhatsappTransport(`${transport.requestedMode}${transport.degraded ? " (DEGRADED)" : ""}`);
+      const currentTransportLabel = `${transport.requestedMode}${transport.degraded ? " (DEGRADED)" : ""}`;
+      setWhatsappTransport(currentTransportLabel);
 
       // 4. Check Recent Message Traffic (from internal log for proxy or external)
       const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -96,9 +102,13 @@ export default function BridgeStatusPage() {
       }
 
       // Determine Overall Status
-      if (!lovableDb) setStatus("offline");
-      else if (!externalOk || transport.degraded) setStatus("degraded");
-      else setStatus("online");
+      if (!internalError && (externalOk && !transport.degraded)) {
+        setStatus("online");
+      } else if (!internalError) {
+        setStatus("degraded");
+      } else {
+        setStatus("offline");
+      }
 
       setLastCheck(new Date());
     } catch (error: any) {
@@ -112,30 +122,74 @@ export default function BridgeStatusPage() {
     } finally {
       const elapsed = Date.now() - startTime;
       const minWait = 600;
-      if (elapsed < minWait) await new Promise(r => setTimeout(r, minWait - elapsed));
+      if (elapsed < minWait) await new Promise(resolve => setTimeout(resolve, minWait - elapsed));
       setLoading(false);
     }
-  }
+  }, [toast]);
+
+  const fetchIncidents = useCallback(async () => {
+    const { data } = await supabase
+      .from('system_health_incidents')
+      .select('*')
+      .order('started_at', { ascending: false })
+      .limit(10);
+    setIncidents(data || []);
+  }, []);
+
 
   useEffect(() => {
     checkHealth();
-    const interval = setInterval(checkHealth, 60000); // Auto-refresh every minute
-    return () => clearInterval(interval);
-  }, []);
+    fetchIncidents();
+    
+    // Configura Subscriptions Real-time
+    const trafficSub = supabase
+      .channel('traffic-changes')
+      .on('postgres_changes' as any, { event: 'INSERT', schema: 'public', table: 'provider_message_log' }, () => {
+        setRecentTraffic(prev => ({ ...prev, count: prev.count + 1, last_at: new Date().toISOString() }));
+      })
+      .subscribe();
 
-  const statusColors = {
-    online: "bg-success text-success-foreground border-success/20",
-    degraded: "bg-warning text-warning-foreground border-warning/20",
-    offline: "bg-destructive text-destructive-foreground border-destructive/20",
-    loading: "bg-muted text-muted-foreground border-muted/20"
-  };
+    const alertsSub = supabase
+      .channel('health-incidents')
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'system_health_incidents' }, () => {
+        fetchIncidents();
+        checkHealth();
+      })
+      .subscribe();
 
-  const statusLabels = {
-    online: "SISTEMA OPERACIONAL",
-    degraded: "DESEMPENHO REDUZIDO",
-    offline: "SISTEMA INDISPONÍVEL",
-    loading: "VERIFICANDO..."
-  };
+    const interval = setInterval(checkHealth, 60000);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(trafficSub);
+      supabase.removeChannel(alertsSub);
+    };
+  }, [fetchIncidents, checkHealth]);
+
+  const statusConfig = useMemo(() => {
+    const config = {
+      online: {
+        color: "bg-success text-success-foreground border-success/20",
+        label: "SISTEMA OPERACIONAL",
+        description: "Todos os componentes estão respondendo dentro dos limites de latência esperados."
+      },
+      degraded: {
+        color: "bg-warning text-warning-foreground border-warning/20",
+        label: "DESEMPENHO REDUZIDO",
+        description: "Um ou mais serviços estão com lentidão ou conectividade parcial."
+      },
+      offline: {
+        color: "bg-destructive text-destructive-foreground border-destructive/20",
+        label: "SISTEMA INDISPONÍVEL",
+        description: "Interrupção crítica detectada. A ponte não consegue processar mensagens."
+      },
+      loading: {
+        color: "bg-muted text-muted-foreground border-muted/20",
+        label: "VERIFICANDO...",
+        description: "Validando integridade dos schemas e conectividade de rede..."
+      }
+    };
+    return config[status];
+  }, [status]);
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
@@ -164,7 +218,7 @@ export default function BridgeStatusPage() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }} 
         animate={{ opacity: 1, y: 0 }}
-        className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500 ${statusColors[status]}`}
+        className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500 ${statusConfig.color}`}
       >
         <div className="relative">
           {status === 'online' && <CheckCircle2 className="w-16 h-16" />}
@@ -180,12 +234,9 @@ export default function BridgeStatusPage() {
           )}
         </div>
         <div>
-          <h2 className="text-3xl font-black tracking-tighter">{statusLabels[status]}</h2>
+          <h2 className="text-3xl font-black tracking-tighter">{statusConfig.label}</h2>
           <p className="opacity-80 text-sm font-medium max-w-md mx-auto mt-1">
-            {status === 'online' && "Todos os componentes estão respondendo dentro dos limites de latência esperados."}
-            {status === 'degraded' && "Um ou mais serviços estão com lentidão ou conectividade parcial."}
-            {status === 'offline' && "Interrupção crítica detectada. A ponte não consegue processar mensagens."}
-            {status === 'loading' && "Validando integridade dos schemas e conectividade de rede..."}
+            {statusConfig.description}
           </p>
         </div>
       </motion.div>
@@ -259,6 +310,52 @@ export default function BridgeStatusPage() {
 
         {/* Stats & Quick Links */}
         <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" /> Histórico de Incidentes
+              </CardTitle>
+              <CardDescription className="text-[10px]">Últimos eventos de estabilidade detectados</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+              {incidents.length > 0 ? (
+                incidents.map(inc => (
+                  <div key={inc.id} className="relative pl-6 pb-4 border-l border-muted last:pb-0">
+                    <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full ${inc.resolved_at ? 'bg-success' : 'bg-destructive'}`} />
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold uppercase">{inc.title}</span>
+                        <Badge variant={inc.status === 'offline' ? 'destructive' : 'warning'} className="text-[8px] h-4 px-1">
+                          {inc.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2">{inc.description}</p>
+                      {inc.probable_cause && (
+                        <div className="flex items-start gap-1 p-1.5 rounded bg-muted/30 text-[9px]">
+                          <Info className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
+                          <span><strong>Causa:</strong> {inc.probable_cause}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-[9px] text-muted-foreground pt-1">
+                        <span>{formatDistanceToNow(new Date(inc.started_at), { addSuffix: true, locale: ptBR })}</span>
+                        {inc.resolved_at ? (
+                          <span className="text-success font-medium">Resolvido</span>
+                        ) : (
+                          <span className="text-destructive font-medium animate-pulse">Ativo</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center opacity-40">
+                  <CheckCircle2 className="w-10 h-10 mb-2" />
+                  <p className="text-xs">Nenhum incidente registrado no histórico</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Instâncias Ativas</CardTitle>
