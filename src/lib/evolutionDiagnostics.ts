@@ -29,7 +29,7 @@ export async function runEvolutionDiagnostics(): Promise<DiagnosticResult[]> {
   // 2. Test Global API Key / Evolution Connectivity
   try {
     const { data, error } = await whatsappConnectionRepository.callEvolutionApi({
-      action: 'fetch-instances'
+      action: 'list-instances'
     });
 
     if (error) {
