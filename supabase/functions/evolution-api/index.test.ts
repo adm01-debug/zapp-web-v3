@@ -57,7 +57,7 @@ Deno.test("evolution-api: disconnect resilience check", async () => {
       assertEquals(isExpected, true, `Unexpected status code: ${response.status}`);
     }
   } catch (e) {
-    console.log("Fetch failed in disconnect check", e.message);
+    console.log("Fetch failed in disconnect check", e instanceof Error ? e.message : String(e));
   }
 });
 
