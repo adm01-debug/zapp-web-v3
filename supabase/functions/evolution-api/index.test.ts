@@ -35,7 +35,7 @@ Deno.test("evolution-api: status endpoint response envelope check", async () => 
       assertEquals(isExpected, true, `Unexpected status code: ${response.status}`);
     }
   } catch (e) {
-    console.log("Fetch failed, likely network issue or invalid URL in CI", e.message);
+    console.log("Fetch failed, likely network issue or invalid URL in CI", e instanceof Error ? e.message : String(e));
   }
 });
 
