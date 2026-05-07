@@ -70,7 +70,7 @@ export default function AdminConnectionsPage() {
           .eq('user_id', user.id);
         
         if (error) throw error;
-        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin' || r.role === 'dev'));
       } else {
         setIsAdmin(false);
       }
