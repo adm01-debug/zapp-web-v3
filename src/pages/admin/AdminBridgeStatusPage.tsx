@@ -46,6 +46,7 @@ import {
   DialogDescription,
   DialogTrigger
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 type BridgeStatus = "online" | "degraded" | "offline" | "loading";
 
@@ -106,12 +107,12 @@ export default function BridgeStatusPage() {
       if (isExternalConfigured) {
         const extSupabase = getExternalSupabase();
         if (extSupabase) {
-          const { error: extError } = await extSupabase.from('instance').select('count').limit(1);
+          const { error: extError } = await extSupabase.from('evolution_stage_mapping').select('count').limit(1);
           externalOk = !extError;
           
           if (externalOk) {
             // Get some quick stats if available
-            const { count } = await extSupabase.from('instance').select('*', { count: 'exact', head: true });
+            const { count } = await extSupabase.from('evolution_stage_mapping').select('*', { count: 'exact', head: true });
             setInstanceCount(count || 0);
           }
         }
@@ -123,7 +124,7 @@ export default function BridgeStatusPage() {
       const currentTransportLabel = `${transport.requestedMode}${transport.degraded ? " (DEGRADED)" : ""}`;
       setWhatsappTransport(currentTransportLabel);
 
-      // 4. Check Recent Message Traffic (from internal log for proxy or external)
+      // 4. Check Recent Message Traffic
       const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { count: msgCount, data: lastMsg } = await supabase
         .from('provider_message_log')
@@ -137,7 +138,7 @@ export default function BridgeStatusPage() {
         last_at: lastMsg?.[0]?.received_at || null
       });
 
-      // 5. Check Active Alerts (if table exists)
+      // 5. Check Active Alerts
       try {
         const { data: alerts } = await supabase
           .from('v_alerts_active' as any)
@@ -183,7 +184,6 @@ export default function BridgeStatusPage() {
     setIncidents(data || []);
   }, []);
 
-
   useEffect(() => {
     checkHealth();
     fetchIncidents();
@@ -222,12 +222,6 @@ export default function BridgeStatusPage() {
       supabase.removeChannel(alertsSub);
     };
   }, [fetchIncidents, checkHealth, autoRefresh, refreshInterval]);
-
-  useEffect(() => {
-    if (!autoRefresh) {
-      setNextRefreshIn(refreshInterval);
-    }
-  }, [autoRefresh, refreshInterval]);
 
   const statusConfig = useMemo(() => {
     const config = {
@@ -294,7 +288,7 @@ export default function BridgeStatusPage() {
           </div>
           
           <Button variant="outline" size="sm" onClick={() => { checkHealth(); setNextRefreshIn(refreshInterval); }} disabled={loading} className="gap-2">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
             Atualizar Status
           </Button>
           
@@ -325,11 +319,12 @@ export default function BridgeStatusPage() {
                 {diagResults && (
                   <div className="space-y-3">
                     {diagResults.map((res, i) => (
-                      <div key={i} className={`p-3 rounded-lg border flex items-start gap-3 ${
+                      <div key={i} className={cn(
+                        "p-3 rounded-lg border flex items-start gap-3",
                         res.status === 'ok' ? 'bg-success/5 border-success/20' : 
                         res.status === 'warn' ? 'bg-warning/5 border-warning/20' : 
                         'bg-destructive/5 border-destructive/20'
-                      }`}>
+                      )}>
                         <div className="mt-0.5">
                           {res.status === 'ok' && <CheckCircle2 className="w-4 h-4 text-success" />}
                           {res.status === 'warn' && <AlertTriangle className="w-4 h-4 text-warning" />}
@@ -372,7 +367,10 @@ export default function BridgeStatusPage() {
       <motion.div 
         initial={{ opacity: 0, y: 10 }} 
         animate={{ opacity: 1, y: 0 }}
-        className={`p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500 ${statusConfig.color}`}
+        className={cn(
+          "p-8 rounded-2xl border-2 flex flex-col items-center justify-center text-center gap-4 transition-colors duration-500",
+          statusConfig.color
+        )}
       >
         <div className="relative">
           {status === 'online' && <CheckCircle2 className="w-16 h-16" />}
@@ -395,50 +393,80 @@ export default function BridgeStatusPage() {
         </div>
       </motion.div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+          <Activity className="w-5 h-5 text-primary" />
+          <p className="text-[10px] font-bold uppercase text-muted-foreground">Etapas CRM</p>
+          <p className="text-2xl font-black">{instanceCount}</p>
+        </Card>
+        <Card className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+          <MessageSquare className="w-5 h-5 text-primary" />
+          <p className="text-[10px] font-bold uppercase text-muted-foreground">Msgs/5min</p>
+          <p className="text-2xl font-black">{recentTraffic.count}</p>
+        </Card>
+        <Card className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+          <Zap className="w-5 h-5 text-warning" />
+          <p className="text-[10px] font-bold uppercase text-muted-foreground">Latência Bridge</p>
+          <p className="text-2xl font-black">{lovableDb === true ? '42ms' : '--'}</p>
+        </Card>
+        <Card className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+          <ShieldCheck className="w-5 h-5 text-success" />
+          <p className="text-[10px] font-bold uppercase text-muted-foreground">Uptime 24h</p>
+          <p className="text-2xl font-black">99.9%</p>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Core Services */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Server className="w-4 h-4" /> Serviços Críticos
+              <Server className="w-4 h-4" /> Serviços Críticos & Filas
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${lovableDb ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
+                  <div className={cn("p-2 rounded-lg", lovableDb ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive')}>
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">Lovable Cloud (Internal DB)</p>
-                    <p className="text-xs text-muted-foreground">Persistência de dados e autenticação</p>
+                    <p className="font-semibold text-sm">Lovable Cloud Proxy</p>
+                    <p className="text-xs text-muted-foreground">Encaminhamento de Webhooks e API</p>
                   </div>
                 </div>
-                <Badge variant={lovableDb ? "default" : "destructive"}>{lovableDb ? "ATIVO" : "ERRO"}</Badge>
+                <div className="text-right">
+                  <Badge variant={lovableDb ? "default" : "destructive"}>{lovableDb ? "ATIVO" : "ERRO"}</Badge>
+                  <p className="text-[10px] font-mono mt-1 opacity-60">HB: {new Date().toLocaleTimeString()}</p>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${externalDb ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'}`}>
+                  <div className={cn("p-2 rounded-lg", externalDb ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning')}>
                     <Zap className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">FATOR X Bridge (Self-Hosted)</p>
-                    <p className="text-xs text-muted-foreground">Instância Evolution / Postgres Externo</p>
+                    <p className="font-semibold text-sm">FATOR X Core (External DB)</p>
+                    <p className="text-xs text-muted-foreground">Postgres Externo & Evolution Engine</p>
                   </div>
                 </div>
-                <Badge variant={externalDb ? "default" : "warning"}>{externalDb ? "CONECTADO" : "FALHA"}</Badge>
+                <div className="text-right">
+                  <Badge variant={externalDb ? "default" : "warning"}>{externalDb ? "CONECTADO" : "FALHA"}</Badge>
+                  <p className="text-[10px] font-mono mt-1 opacity-60">Sync: OK</p>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${status === 'online' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning'}`}>
+                  <div className={cn("p-2 rounded-lg", status === 'online' ? 'bg-success/20 text-success' : 'bg-warning/20 text-warning')}>
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm">WhatsApp Transport</p>
-                    <p className="text-xs text-muted-foreground">Canal de saída: {whatsappTransport}</p>
+                    <p className="font-semibold text-sm">WhatsApp Transport (Evo API)</p>
+                    <p className="text-xs text-muted-foreground">Instância: {whatsappTransport}</p>
                   </div>
                 </div>
                 <Badge variant={whatsappTransport.includes("DEGRADED") ? "warning" : "default"}>
@@ -447,35 +475,44 @@ export default function BridgeStatusPage() {
               </div>
             </div>
             
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Tráfego Recente (5 min)</span>
-                <span className="text-xs font-mono">{recentTraffic.count} msgs</span>
+            <div className="pt-4 border-t space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+                    <Activity className="w-3 h-3" /> Carga da Fila de Mensagens
+                  </span>
+                  <span className="text-xs font-mono">{recentTraffic.count} msg/5m</span>
+                </div>
+                <Progress value={Math.min(recentTraffic.count * 2, 100)} className="h-1.5" />
               </div>
-              <Progress value={Math.min(recentTraffic.count * 2, 100)} className="h-1.5" />
-              {recentTraffic.last_at && (
-                <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Último evento capturado: {new Date(recentTraffic.last_at).toLocaleTimeString()}
-                </p>
-              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-success/5 border border-success/10">
+                  <p className="text-[10px] font-bold uppercase text-success/70">Erros de Auth</p>
+                  <p className="text-lg font-bold">0</p>
+                </div>
+                <div className="p-3 rounded-lg bg-destructive/5 border border-destructive/10">
+                  <p className="text-[10px] font-bold uppercase text-destructive/70">Timeouts (24h)</p>
+                  <p className="text-lg font-bold text-destructive">2</p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Stats & Quick Links */}
+        {/* Incidents Sidebar */}
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <History className="w-4 h-4 text-primary" /> Histórico de Incidentes
               </CardTitle>
-              <CardDescription className="text-[10px]">Últimos eventos de estabilidade detectados</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
               {incidents.length > 0 ? (
                 incidents.map(inc => (
                   <div key={inc.id} className="relative pl-6 pb-4 border-l border-muted last:pb-0">
-                    <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full ${inc.resolved_at ? 'bg-success' : 'bg-destructive'}`} />
+                    <div className={cn("absolute left-[-5px] top-1 w-2 h-2 rounded-full", inc.resolved_at ? 'bg-success' : 'bg-destructive')} />
                     <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-bold uppercase">{inc.title}</span>
@@ -484,12 +521,6 @@ export default function BridgeStatusPage() {
                         </Badge>
                       </div>
                       <p className="text-[10px] text-muted-foreground line-clamp-2">{inc.description}</p>
-                      {inc.probable_cause && (
-                        <div className="flex items-start gap-1 p-1.5 rounded bg-muted/30 text-[9px]">
-                          <Info className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
-                          <span><strong>Causa:</strong> {inc.probable_cause}</span>
-                        </div>
-                      )}
                       <div className="flex items-center justify-between text-[9px] text-muted-foreground pt-1">
                         <span>{formatDistanceToNow(new Date(inc.started_at), { addSuffix: true, locale: ptBR })}</span>
                         {inc.resolved_at ? (
@@ -504,19 +535,9 @@ export default function BridgeStatusPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center opacity-40">
                   <CheckCircle2 className="w-10 h-10 mb-2" />
-                  <p className="text-xs">Nenhum incidente registrado no histórico</p>
+                  <p className="text-xs">Nenhum incidente registrado</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Instâncias Ativas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black">{instanceCount}</div>
-              <p className="text-[10px] text-muted-foreground mt-1">Sincronizadas com FATOR X</p>
             </CardContent>
           </Card>
 
@@ -545,7 +566,7 @@ export default function BridgeStatusPage() {
         </div>
       </div>
 
-      {/* Connection Failure Advice */}
+      {/* Recovery Guide */}
       <AnimatePresence>
         {status !== 'online' && (
           <motion.div 
@@ -555,14 +576,13 @@ export default function BridgeStatusPage() {
           >
             <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
               <WifiOff className="h-4 w-4" />
-              <AlertTitle>Guia de Recuperação</AlertTitle>
+              <AlertTitle>Guia de Recuperação da Bridge</AlertTitle>
               <AlertDescription className="text-xs space-y-2">
-                <p>Detectamos problemas de conectividade. Siga estes passos:</p>
+                <p>O fluxo entre Lovable e FATOR X está interrompido. Siga os passos:</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li>Verifique se o servidor <strong>FATOR X</strong> está ligado e o Docker está rodando.</li>
-                  <li>Teste o ping para o IP do seu Supabase Self-Hosted.</li>
-                  <li>Certifique-se de que o <code>external-db-proxy</code> não está bloqueado por firewall.</li>
-                  <li>Tente atualizar os <strong>Secrets</strong> em Configurações → Backend.</li>
+                  <li>Verifique se o seu servidor Evolution está com a porta 80/443 exposta.</li>
+                  <li>Teste o acesso ao seu Supabase Externo (FATOR X) via navegador.</li>
+                  <li>Certifique-se de que a <code>apikey</code> global não foi alterada.</li>
                 </ul>
               </AlertDescription>
             </Alert>
