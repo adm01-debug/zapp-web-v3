@@ -159,19 +159,31 @@ export default function BridgeStatusPage() {
     };
   }, [fetchIncidents]);
 
-  const statusColors = {
-    online: "bg-success text-success-foreground border-success/20",
-    degraded: "bg-warning text-warning-foreground border-warning/20",
-    offline: "bg-destructive text-destructive-foreground border-destructive/20",
-    loading: "bg-muted text-muted-foreground border-muted/20"
-  };
-
-  const statusLabels = {
-    online: "SISTEMA OPERACIONAL",
-    degraded: "DESEMPENHO REDUZIDO",
-    offline: "SISTEMA INDISPONÍVEL",
-    loading: "VERIFICANDO..."
-  };
+  const statusConfig = useMemo(() => {
+    const config = {
+      online: {
+        color: "bg-success text-success-foreground border-success/20",
+        label: "SISTEMA OPERACIONAL",
+        description: "Todos os componentes estão respondendo dentro dos limites de latência esperados."
+      },
+      degraded: {
+        color: "bg-warning text-warning-foreground border-warning/20",
+        label: "DESEMPENHO REDUZIDO",
+        description: "Um ou mais serviços estão com lentidão ou conectividade parcial."
+      },
+      offline: {
+        color: "bg-destructive text-destructive-foreground border-destructive/20",
+        label: "SISTEMA INDISPONÍVEL",
+        description: "Interrupção crítica detectada. A ponte não consegue processar mensagens."
+      },
+      loading: {
+        color: "bg-muted text-muted-foreground border-muted/20",
+        label: "VERIFICANDO...",
+        description: "Validando integridade dos schemas e conectividade de rede..."
+      }
+    };
+    return config[status];
+  }, [status]);
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
