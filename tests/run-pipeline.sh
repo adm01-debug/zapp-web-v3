@@ -1,37 +1,30 @@
 #!/bin/bash
-# run-pipeline.sh - CI/CD Pipeline Simulator with Coverage Gates
+set -e
 
-echo "🚀 Starting CI Pipeline with Gates..."
+echo "🚀 Starting ZAPP Web QA Pipeline..."
 
-# 0. Setup Environment
-chmod +x tests/setup-test-env.sh
-./tests/setup-test-env.sh
+# 1. Lint
+echo "🔍 Running Linter..."
+bun run lint || echo "⚠️ Lint warnings found"
 
-echo "📦 1. Linting..."
-bun run lint || { echo "⚠️ Lint warnings found (non-blocking for simulation)"; }
+# 2. Type Check
+echo "📦 Running Type Checks..."
+bunx tsc --noEmit || echo "⚠️ Type errors found"
 
-echo "🔨 2. Type Checking..."
-echo "✅ Type check passed"
+# 3. Unit & Fuzz Tests (Vitest)
+echo "🧪 Running Unit & UI Fuzz Tests..."
+bunx vitest run --coverage
 
-echo "🧪 3. Edge Function Tests..."
-deno test --allow-net --allow-env --allow-read supabase/functions/evolution-api/index.test.ts || { echo "❌ Edge tests failed"; }
-
-echo "🌐 4. E2E Tests (Playwright)..."
-npx playwright test tests/e2e/webhooks.spec.ts tests/e2e/reliability.spec.ts tests/e2e/resilience.spec.ts --project=chromium || { echo "⚠️ Playwright resilience tests failed (expected in limited simulation)"; }
-
-echo "📊 5. Coverage Gates & Artifacts..."
-MIN_COVERAGE=80
-CURRENT_COVERAGE=85 # Simulated: in production, parse from coverage/index.html
-
-if [ "$CURRENT_COVERAGE" -lt "$MIN_COVERAGE" ]; then
-  echo "❌ Error: Coverage ($CURRENT_COVERAGE%) is below target ($MIN_COVERAGE%)"
-  exit 1
+# 4. Edge Function Integration Tests (Deno)
+echo "🌐 Running Edge Function Integration Tests..."
+if command -v deno &> /dev/null; then
+  deno test --allow-net --allow-env supabase/functions/
+else
+  echo "⚠️ Deno not found, skipping Edge Function tests."
 fi
 
-echo "📦 Archiving artifacts to /mnt/documents/ci-reports/..."
-mkdir -p /mnt/documents/ci-reports/
-cp -r playwright-report /mnt/documents/ci-reports/ 2>/dev/null || true
-cp -r test-results /mnt/documents/ci-reports/ 2>/dev/null || true
-echo "✅ Artifacts (HTML report, screenshots, videos) published to /mnt/documents/ci-reports/"
+# 5. E2E & Visual Regression (Playwright)
+echo "🎭 Running Playwright E2E Suite..."
+bunx playwright test tests/e2e/critical-flows.spec.ts
 
-echo "✅ Pipeline finished successfully."
+echo "✅ QA Pipeline finished successfully!"
