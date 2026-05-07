@@ -156,6 +156,7 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'dispatch-errors-history', icon: ScrollText, label: 'Histórico Erros Dispatch', requiredRoles: ['supervisor'] },
   { id: 'inbox-sync-status', icon: Activity, label: 'Status do Inbox', requiredRoles: ['supervisor'] },
   { id: 'evo-api-health', icon: HeartPulse, label: 'Evo API Health', requiredRoles: ['admin'] },
+  { id: 'bridge-status', icon: Activity, label: 'Bridge Status', requiredRoles: ['admin', 'supervisor'] },
   { id: 'email-status', icon: Mail, label: 'Status Email', requiredRoles: ['admin'] },
   { id: 'email-audit', icon: ScrollText, label: 'Auditoria Email', requiredRoles: ['admin'] },
 ] as const;
