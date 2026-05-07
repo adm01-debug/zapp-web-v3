@@ -297,6 +297,52 @@ export default function BridgeStatusPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" /> Histórico de Incidentes
+              </CardTitle>
+              <CardDescription className="text-[10px]">Últimos eventos de estabilidade detectados</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+              {incidents.length > 0 ? (
+                incidents.map(inc => (
+                  <div key={inc.id} className="relative pl-6 pb-4 border-l border-muted last:pb-0">
+                    <div className={`absolute left-[-5px] top-1 w-2 h-2 rounded-full ${inc.resolved_at ? 'bg-success' : 'bg-destructive'}`} />
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold uppercase">{inc.title}</span>
+                        <Badge variant={inc.status === 'offline' ? 'destructive' : 'warning'} className="text-[8px] h-4 px-1">
+                          {inc.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2">{inc.description}</p>
+                      {inc.probable_cause && (
+                        <div className="flex items-start gap-1 p-1.5 rounded bg-muted/30 text-[9px]">
+                          <Info className="w-3 h-3 mt-0.5 shrink-0 text-primary" />
+                          <span><strong>Causa:</strong> {inc.probable_cause}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between text-[9px] text-muted-foreground pt-1">
+                        <span>{formatDistanceToNow(new Date(inc.started_at), { addSuffix: true, locale: ptBR })}</span>
+                        {inc.resolved_at ? (
+                          <span className="text-success font-medium">Resolvido</span>
+                        ) : (
+                          <span className="text-destructive font-medium animate-pulse">Ativo</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center opacity-40">
+                  <CheckCircle2 className="w-10 h-10 mb-2" />
+                  <p className="text-xs">Nenhum incidente registrado no histórico</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
               <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Instâncias Ativas</CardTitle>
             </CardHeader>
             <CardContent>
