@@ -61,25 +61,34 @@ export default function AdminConnectionsPage() {
 
   const checkAdminStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) throw authError;
+      
       setCurrentUserId(user?.id ?? null);
       if (user?.id) {
-        const { data: roles, error } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id);
         
-        if (error) throw error;
-        setIsAdmin(!!roles?.some((r: any) => r.role === 'admin' || r.role === 'dev'));
+        if (rolesError) throw rolesError;
+        
+        const hasAccess = !!roles?.some((r: any) => r.role === 'admin' || r.role === 'dev');
+        setIsAdmin(hasAccess);
+        
+        if (!hasAccess) {
+          console.warn("Usuário logado sem permissão de admin/dev:", user.email);
+        }
       } else {
         setIsAdmin(false);
       }
-    } catch (e) {
-      console.error("Erro ao verificar roles:", e);
+    } catch (e: any) {
+      console.error("Erro ao verificar roles ou conexão:", e);
       setIsAdmin(false);
       toast({ 
-        title: 'Erro de Autenticação', 
-        description: 'Não foi possível validar seu nível de acesso. Verifique sua conexão.', 
+        title: 'Erro de Conexão ou Acesso', 
+        description: `Não foi possível validar seu nível de acesso: ${e?.message ?? 'Banco indisponível'}.`, 
         variant: 'destructive' 
       });
     }
