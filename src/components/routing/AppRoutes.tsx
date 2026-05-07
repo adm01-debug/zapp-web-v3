@@ -61,6 +61,7 @@ const AdminEmailStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminEmai
 const AdminEmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminEmailAuditPage"));
 const AuditEvidenceDashboard = lazyWithRetry(() => import("@/pages/admin/AuditEvidenceDashboard"));
 const AdminDevDiagnosticsPage = lazyWithRetry(() => import("@/pages/admin/AdminDevDiagnosticsPage"));
+const AdminBridgeStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminBridgeStatusPage"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
