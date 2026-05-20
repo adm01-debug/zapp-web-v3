@@ -117,7 +117,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^14.0.0",
-    "vaul": "^0.9.9",
+    "vaul": "^1.1.2",
     "vite-plugin-compression2": "1.4.0",
     "vite-plugin-pwa": "0.19.8",
     "wait-on": "^9.0.5",
