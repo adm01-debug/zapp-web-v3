@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getCorsHeaders, handleCors } from "../_shared/validation.ts";
+import { getCorsHeaders, handleCors, errorResponse } from "../_shared/validation.ts";
+import { parseBody, WebhookPayloadSchema } from "../_shared/schemas.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
   handleReactionEvent,
-  type WebhookPayload,
 } from "../_shared/evolution-helpers.ts";
 import { parseMessageContent } from "../_shared/evolution-media.ts";
 import {
@@ -32,10 +32,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const payload: WebhookPayload = await req.json();
+    const parsed = parseBody(WebhookPayloadSchema, await req.json());
+    if (!parsed.success) return errorResponse(parsed.error, 422, req, parsed.fieldErrors);
+
+    const payload = parsed.data;
     const event = normalizeEventName(payload.event);
     const instance = payload.instance;
-    const data = payload.data ?? {};
+    const data = payload.data;
     const baseData = isRecord(data) ? data : {};
 
     console.log('Evolution webhook received:', payload.event, '->', event, instance);

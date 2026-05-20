@@ -263,16 +263,37 @@ export const ExternalDbBridgeSchema = z.object({
   countMode: z.string().max(20).optional(),
 });
 
+// ─── Webhook generic schema ──────────────────────────────────
+export const WebhookPayloadSchema = z.object({
+  event: z.string().min(1, "Event name is required"),
+  instance: z.string().min(1, "Instance name is required"),
+  data: z.union([z.record(z.unknown()), z.array(z.record(z.unknown()))]).optional().default({}),
+  destination: z.string().optional(),
+  date_time: z.string().optional(),
+  sender: z.string().optional(),
+  server_url: z.string().optional(),
+  apikey: z.string().optional(),
+});
+
 // ─── Helper: parse body with schema ──────────────────────────
-export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
+export type ParseResult<T> = 
+  | { success: true; data: T } 
+  | { success: false; error: string; fieldErrors: Record<string, string[]> };
+
+export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): ParseResult<T> {
   const result = schema.safeParse(data);
   if (!result.success) {
     const errors = result.error.flatten();
-    const fieldErrors = Object.entries(errors.fieldErrors)
-      .map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-      .join('; ');
-    const formErrors = errors.formErrors.join('; ');
-    return { success: false, error: [formErrors, fieldErrors].filter(Boolean).join('; ') };
+    const fieldErrors = errors.fieldErrors as Record<string, string[]>;
+    const errorMsg = Object.entries(fieldErrors)
+      .map(([k, v]) => `${k}: ${v.join(', ')}`)
+      .join('; ') || errors.formErrors.join('; ') || "Validation failed";
+      
+    return { 
+      success: false, 
+      error: errorMsg,
+      fieldErrors
+    };
   }
   return { success: true, data: result.data };
 }
