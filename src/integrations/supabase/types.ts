@@ -2368,18 +2368,34 @@ export type Database = {
       conversation_transfers: {
         Row: {
           accepted_at: string | null
+          category: string | null
           completed_at: string | null
+          contact_id: string | null
+          contact_name: string | null
+          context_messages: Json | null
           context_summary: string | null
-          conversation_id: string
           created_at: string | null
+          expires_at: string | null
           from_agent_id: string | null
           from_queue_id: string | null
           id: string
           metadata: Json | null
-          priority: string | null
+          priority: number | null
+          reason: string | null
+          remote_jid: string | null
+          resolution_notes: string | null
+          resolution_type: string | null
           return_reason: string | null
           sla_deadline: string | null
+          source_conversation_id: string
+          source_instance: string | null
+          source_message_id: string | null
+          source_operator: string | null
           status: string
+          tags: string[] | null
+          target_conversation_id: string | null
+          target_instance: string | null
+          target_operator: string | null
           ticket_number: string
           to_agent_id: string | null
           to_queue_id: string | null
@@ -2388,18 +2404,34 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          category?: string | null
           completed_at?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          context_messages?: Json | null
           context_summary?: string | null
-          conversation_id: string
           created_at?: string | null
+          expires_at?: string | null
           from_agent_id?: string | null
           from_queue_id?: string | null
           id?: string
           metadata?: Json | null
-          priority?: string | null
+          priority?: number | null
+          reason?: string | null
+          remote_jid?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
           return_reason?: string | null
           sla_deadline?: string | null
+          source_conversation_id: string
+          source_instance?: string | null
+          source_message_id?: string | null
+          source_operator?: string | null
           status?: string
+          tags?: string[] | null
+          target_conversation_id?: string | null
+          target_instance?: string | null
+          target_operator?: string | null
           ticket_number: string
           to_agent_id?: string | null
           to_queue_id?: string | null
@@ -2408,18 +2440,34 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          category?: string | null
           completed_at?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          context_messages?: Json | null
           context_summary?: string | null
-          conversation_id?: string
           created_at?: string | null
+          expires_at?: string | null
           from_agent_id?: string | null
           from_queue_id?: string | null
           id?: string
           metadata?: Json | null
-          priority?: string | null
+          priority?: number | null
+          reason?: string | null
+          remote_jid?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
           return_reason?: string | null
           sla_deadline?: string | null
+          source_conversation_id?: string
+          source_instance?: string | null
+          source_message_id?: string | null
+          source_operator?: string | null
           status?: string
+          tags?: string[] | null
+          target_conversation_id?: string | null
+          target_instance?: string | null
+          target_operator?: string | null
           ticket_number?: string
           to_agent_id?: string | null
           to_queue_id?: string | null
@@ -2427,6 +2475,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversation_transfers_from_agent_id_fkey"
             columns: ["from_agent_id"]
@@ -6157,6 +6212,8 @@ export type Database = {
       transfer_comments: {
         Row: {
           agent_id: string
+          author_instance: string | null
+          author_name: string | null
           content: string
           created_at: string | null
           id: string
@@ -6165,6 +6222,8 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          author_instance?: string | null
+          author_name?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -6173,6 +6232,8 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          author_instance?: string | null
+          author_name?: string | null
           content?: string
           created_at?: string | null
           id?: string
@@ -6199,13 +6260,6 @@ export type Database = {
             columns: ["transfer_id"]
             isOneToOne: false
             referencedRelation: "conversation_transfers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transfer_comments_transfer_id_fkey"
-            columns: ["transfer_id"]
-            isOneToOne: false
-            referencedRelation: "v_pending_transfers"
             referencedColumns: ["id"]
           },
         ]
@@ -7257,58 +7311,14 @@ export type Database = {
       }
       v_pending_transfers: {
         Row: {
-          accepted_at: string | null
-          completed_at: string | null
-          contact_name: string | null
-          context_summary: string | null
-          conversation_id: string | null
-          created_at: string | null
-          from_agent_id: string | null
-          from_agent_name: string | null
-          from_queue_id: string | null
-          id: string | null
-          metadata: Json | null
-          priority: string | null
-          return_reason: string | null
-          sla_deadline: string | null
-          status: string | null
-          ticket_number: string | null
-          to_agent_id: string | null
-          to_agent_name: string | null
-          to_queue_id: string | null
-          transfer_type: string | null
-          updated_at: string | null
+          alta: number | null
+          mais_antiga: string | null
+          pending: number | null
+          sla_estourado: number | null
+          target_instance: string | null
+          urgente: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
-            columns: ["from_agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
-            columns: ["from_agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
-            columns: ["to_agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
-            columns: ["to_agent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       whatsapp_connections_agent: {
         Row: {
@@ -7450,34 +7460,71 @@ export type Database = {
       }
       decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
       encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
-      fn_accept_transfer: {
-        Args: { p_agent_id: string; p_transfer_id: string }
-        Returns: boolean
-      }
-      fn_complete_transfer: {
-        Args: { p_transfer_id: string }
-        Returns: boolean
-      }
-      fn_create_transfer: {
-        Args: {
-          p_context_summary?: string
-          p_conversation_id: string
-          p_from_agent_id: string
-          p_priority?: string
-          p_to_agent_id?: string
-          p_to_queue_id?: string
-          p_transfer_type?: string
-        }
-        Returns: string
-      }
+      fn_accept_transfer:
+        | {
+            Args: { p_agent_id: string; p_transfer_id: string }
+            Returns: boolean
+          }
+        | {
+            Args: { p_operator: string; p_transfer_id: string }
+            Returns: boolean
+          }
+      fn_complete_transfer:
+        | { Args: { p_transfer_id: string }; Returns: boolean }
+        | {
+            Args: { p_notes: string; p_transfer_id: string; p_type?: string }
+            Returns: boolean
+          }
+      fn_create_transfer:
+        | {
+            Args: {
+              p_context_summary?: string
+              p_conversation_id: string
+              p_from_agent_id: string
+              p_priority?: string
+              p_to_agent_id?: string
+              p_to_queue_id?: string
+              p_transfer_type?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_category: string
+              p_context_summary?: string
+              p_priority?: number
+              p_reason: string
+              p_remote_jid: string
+              p_source_instance: string
+              p_source_operator?: string
+              p_tags?: string[]
+              p_target_instance: string
+              p_transfer_type?: string
+            }
+            Returns: string
+          }
       fn_return_transfer: {
         Args: { p_reason: string; p_transfer_id: string }
         Returns: boolean
       }
-      fn_transfer_comment: {
-        Args: { p_agent_id: string; p_content: string; p_transfer_id: string }
-        Returns: string
-      }
+      fn_transfer_comment:
+        | {
+            Args: {
+              p_agent_id: string
+              p_content: string
+              p_transfer_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_author: string
+              p_content: string
+              p_instance: string
+              p_transfer_id: string
+            }
+            Returns: string
+          }
       generate_transfer_ticket: { Args: never; Returns: string }
       get_channel_credentials: {
         Args: { _connection_id: string }
