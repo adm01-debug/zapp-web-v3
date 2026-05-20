@@ -1,134 +1,59 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { log } from '@/lib/logger';
-import { Clock, Sun, Moon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { supabase } from '@/integrations/supabase/client';
+import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useBusinessHours, BusinessHour } from '@/hooks/useBusinessHours';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BusinessHoursIndicatorProps {
   connectionId: string;
   className?: string;
-  showLabel?: boolean;
 }
 
-export function BusinessHoursIndicator({
-  connectionId,
-  className,
-  showLabel = true,
-}: BusinessHoursIndicatorProps) {
-  const [isOpen, setIsOpen] = useState<boolean | null>(null);
-  const [todayHours, setTodayHours] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+export function BusinessHoursIndicator({ connectionId, className }: BusinessHoursIndicatorProps) {
+  const { businessHours, isLoading } = useBusinessHours(connectionId);
 
-  useEffect(() => {
-    checkBusinessHours();
+  if (isLoading || !businessHours.length) return null;
+
+  const getDayStatus = (day: number) => {
+    const dayConfig = businessHours.find((h: BusinessHour) => h.day_of_week === day);
+    if (!dayConfig) return { status: 'disabled', label: 'Fechado' };
     
-    // Check every minute
-    const interval = setInterval(checkBusinessHours, 60000);
-    return () => clearInterval(interval);
-  }, [connectionId]);
+    const isEnabled = dayConfig.is_enabled;
+    if (!isEnabled) return { status: 'closed', label: 'Fechado' };
 
-  const checkBusinessHours = async () => {
-    try {
-      // Get current time in Brazil timezone
-      const now = new Date();
-      const brazilTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-      const currentDay = brazilTime.getDay();
-      const currentTimeStr = brazilTime.toTimeString().slice(0, 5); // HH:MM
-
-      // Fetch business hours for today - using any to bypass type issues
-      const { data, error } = await supabase
-        .from('business_hours')
-        .select('*')
-        .eq('whatsapp_connection_id', connectionId)
-        .eq('day_of_week', currentDay)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        log.error('Error fetching business hours:', error);
-        setIsOpen(null);
-        setLoading(false);
-        return;
-      }
-
-      if (!data) {
-        // No configuration = assume open
-        setIsOpen(true);
-        setTodayHours(null);
-        setLoading(false);
-        return;
-      }
-
-      if (!data.is_enabled) {
-        setIsOpen(false);
-        setTodayHours('Fechado hoje');
-        setLoading(false);
-        return;
-      }
-
-      // Check if current time is within business hours
-      const openTime = data.start_time.slice(0, 5);
-      const closeTime = data.end_time.slice(0, 5);
-      const isWithinHours = currentTimeStr >= openTime && currentTimeStr <= closeTime;
-
-      setIsOpen(isWithinHours);
-      setTodayHours(`${openTime} - ${closeTime}`);
-      setLoading(false);
-    } catch (error) {
-      log.error('Error checking business hours:', error);
-      setIsOpen(null);
-      setLoading(false);
-    }
+    return { 
+      status: 'open', 
+      label: `${dayConfig.start_time} - ${dayConfig.end_time}` 
+    };
   };
 
-  if (loading) {
-    return null;
-  }
-
-  if (isOpen === null) {
-    return null; // No business hours configured
-  }
+  const days = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
   return (
     <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={className}
-          >
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-xs gap-1 cursor-default',
-                isOpen
-                  ? 'border-status-online/50 text-status-online bg-status-online/10'
-                  : 'border-status-offline/50 text-status-offline bg-status-offline/10'
-              )}
-            >
-              {isOpen ? (
-                <Sun className="w-3 h-3" />
-              ) : (
-                <Moon className="w-3 h-3" />
-              )}
-              {showLabel && (isOpen ? 'Aberto' : 'Fechado')}
-            </Badge>
-          </motion.div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">
-          <div className="flex items-center gap-2">
-            <Clock className="w-3 h-3" />
-            {todayHours ? (
-              <span>Horário hoje: {todayHours}</span>
-            ) : (
-              <span>Sem horário configurado</span>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
+      <div className={cn("flex items-center gap-1", className)}>
+        {days.map((day, i) => {
+          const { status, label } = getDayStatus(i);
+          return (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    "w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-bold border",
+                    status === 'open' ? "bg-whatsapp/10 border-whatsapp text-whatsapp" :
+                    status === 'closed' ? "bg-muted border-border text-muted-foreground" :
+                    "bg-muted/50 border-dashed border-border text-muted-foreground/50"
+                  )}
+                >
+                  {day}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">{label}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
     </TooltipProvider>
   );
 }
