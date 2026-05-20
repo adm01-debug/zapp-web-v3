@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
-import { newRequestId } from '@/lib/withRequestId';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { dbFrom } from '@/integrations/datasource/db';
 
@@ -21,7 +20,6 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
   const [searchingContacts, setSearchingContacts] = useState(false);
   const [selectedContact, setSelectedContact] = useState<ContactResult | null>(null);
 
-  // Search contacts with debounce
   useEffect(() => {
     if (step !== 'selectContact' || !contactSearch.trim()) {
       setContactResults([]);
@@ -40,7 +38,6 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
     return () => clearTimeout(timeout);
   }, [contactSearch, step]);
 
-  // Load recent contacts when entering step 2
   useEffect(() => {
     if (step !== 'selectContact') return;
     setSearchingContacts(true);
@@ -85,20 +82,17 @@ export function useSendToContact(onSuccess: () => void) {
 
       const connection = connections?.[0];
 
-      // Send images
       for (const imgUrl of imageUrls) {
-        const trace = newRequestId('catalog-img');
-        const { data: dbResult , error: dbResultErr } = await supabase.from('messages').insert({
+        const { data: dbResult } = await supabase.from('messages').insert({
           contact_id: contact.id,
           content: imgUrl,
           sender: 'agent',
           message_type: 'image',
           status: 'sending',
           whatsapp_connection_id: connection?.id || null,
-          request_id: trace.requestId,
         }).select('id').single();
 
-        const { data: apiResult , error: apiResultErr } = await supabase.functions.invoke('evolution-api', {
+        const { data: apiResult } = await supabase.functions.invoke('evolution-api', {
           body: {
             action: 'send-media',
             instanceName: connection?.name || 'wpp2',
@@ -106,8 +100,7 @@ export function useSendToContact(onSuccess: () => void) {
             mediatype: 'image',
             media: imgUrl,
             caption: '',
-          },
-          headers: trace.headers,
+          }
         });
 
         const externalId = extractEvolutionMessageId(apiResult);
@@ -118,26 +111,22 @@ export function useSendToContact(onSuccess: () => void) {
         }
       }
 
-      // Send text
-      const textTrace = newRequestId('catalog-text');
-      const { data: textDbResult , error: textDbResultErr } = await supabase.from('messages').insert({
+      const { data: textDbResult } = await supabase.from('messages').insert({
         contact_id: contact.id,
         content: message,
         sender: 'agent',
         message_type: 'text',
         status: 'sending',
         whatsapp_connection_id: connection?.id || null,
-        request_id: textTrace.requestId,
       }).select('id').single();
 
-      const { data: textApiResult , error: textApiResultErr } = await supabase.functions.invoke('evolution-api', {
+      const { data: textApiResult } = await supabase.functions.invoke('evolution-api', {
         body: {
           action: 'send-text',
           instanceName: connection?.name || 'wpp2',
           number: contact.phone,
           text: message,
-        },
-        headers: textTrace.headers,
+        }
       });
 
       const textExternalId = extractEvolutionMessageId(textApiResult);

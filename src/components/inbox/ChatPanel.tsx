@@ -138,7 +138,6 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
 
   const canGenerateSummary = messages.length >= 10;
 
-  // Memoize expensive derived arrays to avoid re-creation on every keystroke
   const lastContactMessages = useMemo(
     () => messages.filter(m => m.sender === 'contact').slice(-5).map(m => m.content),
     [messages]
@@ -158,54 +157,12 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  // Stable refs for ChatMessagesArea to prevent re-renders on input change
   const contactJid = useMemo(() => conversation.contact.phone ? `${conversation.contact.phone}@s.whatsapp.net` : '', [conversation.contact.phone]);
   const contactAvatar = conversation.contact.avatar || undefined;
   const handleScrollToMessage = useCallback((id: string) => messagesAreaRef.current?.scrollToMessage(id), []);
 
   const handleQuickReply = (reply: { id: string; title: string; shortcut: string; content: string; category: string }) => {
     handlers.setInputValue(reply.content); closeDialog('quickReplies'); incrementUseCount(reply.id);
-  };
-
-  const handleTransfer = async (data: {
-    type: 'agent' | 'queue' | 'connection';
-    targetId: string;
-    priority: 'P1' | 'P2' | 'P3' | 'P4';
-    message?: string;
-  }) => {
-    try {
-      const { data: transferId, error } = await supabase.rpc('fn_create_transfer', {
-        p_conversation_id: conversation.id,
-        p_from_agent_id: (await supabase.auth.getUser()).data.user?.id,
-        p_to_agent_id: data.type === 'agent' ? data.targetId : null,
-        p_to_queue_id: data.type === 'queue' ? data.targetId : null,
-        p_transfer_type: data.type === 'agent' ? 'direct' : data.type === 'queue' ? 'queue' : 'internal',
-        p_priority: data.priority,
-        p_context_summary: data.message
-      });
-
-      if (error) throw error;
-
-      toast({ 
-        title: 'Transferência Iniciada!', 
-        description: `O ticket ${transferId} foi criado com sucesso.` 
-      });
-
-      // Se for para um agente específico, podemos opcionalmente mudar o assigned_to da conversa
-      if (data.type === 'agent') {
-        await supabase
-          .from('contacts')
-          .update({ assigned_to: data.targetId })
-          .eq('id', conversation.contact.id);
-      }
-    } catch (error: any) {
-      log.error('Transfer error:', error);
-      toast({ 
-        title: 'Erro na transferência', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
-    }
   };
 
   const handleScheduleMessage = async (message: string, scheduledAt: Date, attachment?: File) => {
@@ -303,18 +260,19 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
         <ChatDialogs
           dialogs={dialogs} openDialog={openDialog} closeDialog={closeDialog}
           conversation={conversation} forwardMessage={handlers.forwardMessage} callDirection={callDirection}
-          contactId={conversation.contact.id} onTransfer={handleTransfer}
-          onScheduleMessage={handleScheduleMessage} onSendInteractiveMessage={handlers.handleSendInteractiveMessage}
-          onForwardToTargets={handlers.handleForwardToTargets} onSendLocation={handlers.handleSendLocation}
-          onSendProduct={handlers.handleSendProduct} onSetInputValue={handlers.setInputValue}
+          contactId={conversation.contact.id}
+          onTransfer={() => openDialog('transferDialog')}
+          onScheduleMessage={handleScheduleMessage}
+          onSendInteractiveMessage={handlers.handleSendInteractiveMessage}
+          onForwardToTargets={handlers.handleForwardToTargets}
+          onSendLocation={handlers.handleSendLocation}
+          onSendProduct={handlers.handleSendProduct}
+          onSetInputValue={handlers.setInputValue}
+          remoteJid={contactJid}
+          sourceInstance={instanceName}
+          operatorName={agentName}
         />
       </div>
-
-      <ChatToolPanels
-        activeTool={activeTool} onSetActiveTool={handleSetActiveTool}
-        messages={messages} contactId={conversation.contact.id}
-        contactName={conversation.contact.name} onSelectSuggestion={(text) => handlers.setInputValue(text)}
-      />
     </div>
   );
 }
