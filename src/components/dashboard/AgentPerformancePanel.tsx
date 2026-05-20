@@ -27,7 +27,7 @@ export function AgentPerformancePanel() {
   const { data: agents = [], isLoading } = useQuery({
     queryKey: ['agent-performance-ranking'],
     queryFn: async () => {
-      const { data: stats } = await supabase
+      const { data: stats , error } = await supabase
         .from('agent_stats')
         .select('profile_id, xp, level, current_streak, best_streak, messages_sent, conversations_resolved, avg_response_time_seconds, customer_satisfaction_score')
         .order('xp', { ascending: false });
@@ -35,7 +35,7 @@ export function AgentPerformancePanel() {
       if (!stats) return [];
 
       const profileIds = stats.map(s => s.profile_id);
-      const { data: profiles } = await supabase
+      const { data: profiles , error: profilesErr } = await supabase
         .from('profiles')
         .select('id, name, avatar_url')
         .in('id', profileIds);
@@ -107,7 +107,7 @@ export function AgentPerformancePanel() {
                 transition={{ delay: i * 0.05 }}
                 className={cn(
                   "p-3 rounded-lg border hover:shadow-md transition-all",
-                  i === 0 && "bg-gradient-to-r from-warning/5 to-transparent border-yellow-500/30",
+                  i === 0 && "bg-gradient-to-r from-warning/5 to-transparent border-warning/30",
                   i === 1 && "bg-gradient-to-r from-gray-400/5 to-transparent border-border/20",
                   i === 2 && "bg-gradient-to-r from-warning/5 to-transparent border-warning/20"
                 )}

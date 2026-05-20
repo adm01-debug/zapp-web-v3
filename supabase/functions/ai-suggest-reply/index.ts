@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     if (!allowed) return errorResponse("Rate limit exceeded. Please try again later.", 429, req);
 
     const parsed = parseBody(AiSuggestReplySchema, await req.json());
-    if (!parsed.success) return errorResponse(parsed.error, 422, req, parsed.fieldErrors);
+    if (!parsed.success) return errorResponse(parsed.error, 400, req);
 
     const { messages, contactName, contactId, context } = parsed.data;
     const LOVABLE_API_KEY = requireEnv("LOVABLE_API_KEY");

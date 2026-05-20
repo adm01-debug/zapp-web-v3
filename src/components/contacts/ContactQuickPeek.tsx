@@ -85,7 +85,7 @@ export function ContactQuickPeek({ contact, companyLogo, companyName, children }
             )}
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="w-3.5 h-3.5 shrink-0" />
-              <span className="font-mono text-[11px]">{contact.phone}</span>
+              <span className=" text-[11px]">{contact.phone}</span>
             </div>
             {contact.email && (
               <div className="flex items-center gap-2 text-muted-foreground">

@@ -1,0 +1,1 @@
+import{gV as t}from"./index-DpOz8rHm.js";function r(o,s){return t(o,-s)}export{r as s};

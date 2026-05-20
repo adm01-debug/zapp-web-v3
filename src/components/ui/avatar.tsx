@@ -53,7 +53,7 @@ const AvatarFallback = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}
-    className={cn("flex h-full w-full items-center justify-center rounded-full bg-muted font-medium", className)}
+    className={cn("flex h-full w-full items-center justify-center rounded-full bg-accent font-medium text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -87,7 +87,7 @@ function StatusIndicator({ status, size = 'default', pulse = true, className }: 
   return (
     <span className={cn("relative flex", className)}>
       <span className={cn(
-        "rounded-full ring-2 ring-background",
+        "rounded-full ring-2 ring-black",
         statusStyles[status],
         statusSizes[size],
       )} />
@@ -172,15 +172,15 @@ function AvatarGroup({ avatars, max = 4, size = 'default', className }: AvatarGr
         <Avatar 
           key={index} 
           size={size}
-          className="ring-2 ring-background"
+          className="ring-2 ring-black border border-border"
         >
           <AvatarImage src={avatar.src} alt={avatar.alt} />
           <AvatarFallback>{avatar.fallback}</AvatarFallback>
         </Avatar>
       ))}
       {remainingCount > 0 && (
-        <Avatar size={size} className="ring-2 ring-background">
-          <AvatarFallback className="bg-muted text-muted-foreground">
+        <Avatar size={size} className="ring-2 ring-black border border-border">
+          <AvatarFallback className="bg-accent text-muted-foreground">
             +{remainingCount}
           </AvatarFallback>
         </Avatar>

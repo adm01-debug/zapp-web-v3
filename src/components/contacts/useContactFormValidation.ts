@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export const validateEmail = (email: string): boolean => {
   if (!email) return true;
@@ -49,7 +50,7 @@ export function useContactFormValidation(
   const checkDuplicate = useCallback(async (phone: string) => {
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length < 10) { setDuplicateWarning(null); return; }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('contacts')
       .select('name, phone')
       .or(`phone.ilike.%${cleaned.slice(-8)}%`)

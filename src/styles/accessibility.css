@@ -142,14 +142,25 @@
 :root, [data-density="comfortable"] {
   --density-padding-y: 0.5rem; --density-padding-x: 1rem; --density-gap: 0.75rem;
   --density-row-height: 2.5rem; --density-text-size: var(--text-sm);
+  --chat-bubble-padding: 0.625rem 1rem;
 }
 [data-density="compact"] {
   --density-padding-y: 0.25rem; --density-padding-x: 0.5rem; --density-gap: 0.375rem;
   --density-row-height: 2rem; --density-text-size: var(--text-xs);
+  --chat-bubble-padding: 0.375rem 0.75rem;
 }
 [data-density="dense"] {
   --density-padding-y: 0.125rem; --density-padding-x: 0.375rem; --density-gap: 0.25rem;
   --density-row-height: 1.75rem; --density-text-size: var(--text-xs);
+  --chat-bubble-padding: 0.25rem 0.5rem;
+}
+
+/* Mobile viewport adjustments */
+@media (max-width: 640px) {
+  :root {
+    --chat-bubble-padding: 0.5rem 0.875rem;
+    --chat-font-size: 14px;
+  }
 }
 
 /* ===== AMBIENT SENTIMENT COLORS ===== */

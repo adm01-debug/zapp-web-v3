@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { AchievementToast, AchievementType } from './AchievementToast';
-import { useAgentGamification, ACHIEVEMENT_TYPES, calculateLevel } from '@/hooks/useAgentGamification';
+import { useAgentGamification, ACHIEVEMENT_TYPES, calculateLevel } from '@/features/admin';
 import { log } from '@/lib/logger';
 
 interface Achievement {

@@ -8,11 +8,6 @@ import { cn } from '@/lib/utils';
 import { TRIGGER_TYPES, ACTION_TYPES } from './automationConstants';
 import type { AutomationRow } from './useAutomations';
 
-interface AutomationAction {
-  type: string;
-  [key: string]: unknown;
-}
-
 interface AutomationCardProps {
   automation: AutomationRow;
   onToggle: () => void;
@@ -24,7 +19,7 @@ interface AutomationCardProps {
 export function AutomationCard({ automation, onToggle, onEdit, onDelete, onDuplicate }: AutomationCardProps) {
   const triggerInfo = TRIGGER_TYPES.find(t => t.type === automation.trigger_type);
   const TriggerIcon = triggerInfo?.icon || Zap;
-  const actions = (Array.isArray(automation.actions) ? automation.actions : []) as unknown as AutomationAction[];
+  const actions = Array.isArray(automation.actions) ? automation.actions : [];
 
   return (
     <motion.div
@@ -50,7 +45,7 @@ export function AutomationCard({ automation, onToggle, onEdit, onDelete, onDupli
           <div className="flex items-center gap-1 mt-2 flex-wrap">
             <Badge variant="outline" className="text-xs">{triggerInfo?.label}</Badge>
             <ArrowRight className="w-3 h-3 text-muted-foreground" />
-            {actions.map((action: AutomationAction, i: number) => {
+            {actions.map((action: Record<string, unknown>, i: number) => {
               const actionInfo = ACTION_TYPES.find(a => a.type === action.type);
               return <Badge key={i} variant="secondary" className="text-xs">{actionInfo?.label}</Badge>;
             })}

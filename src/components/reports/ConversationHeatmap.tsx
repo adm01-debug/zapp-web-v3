@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Flame } from 'lucide-react';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface HeatmapCell {
   day: number;
@@ -28,7 +29,7 @@ export function ConversationHeatmap() {
     const since = new Date();
     since.setDate(since.getDate() - parseInt(period));
 
-    const { data: messages } = await supabase
+    const { data: messages , error } = await supabase
       .from('messages')
       .select('created_at')
       .gte('created_at', since.toISOString())

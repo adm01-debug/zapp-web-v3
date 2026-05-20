@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -43,16 +44,35 @@ function parseSortOption(sortBy: string): { field: string; direction: string } {
 }
 
 export function useContactsSearch() {
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [filterCompany, setFilterCompany] = useState('');
-  const [filterJobTitle, setFilterJobTitle] = useState('');
-  const [filterTag, setFilterTag] = useState('');
-  const [filterDateRange, setFilterDateRange] = useState('all');
-  const [sortBy, setSortBy] = useState('name_asc');
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('q') || '');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
+  const [filterCompany, setFilterCompany] = useState(searchParams.get('company') || '');
+  const [filterJobTitle, setFilterJobTitle] = useState(searchParams.get('job') || '');
+  const [filterTag, setFilterTag] = useState(searchParams.get('tag') || '');
+  const [filterDateRange, setFilterDateRange] = useState(searchParams.get('date') || 'all');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'name_asc');
+  const [page, setPage] = useState(Number(searchParams.get('p')) || 0);
+  
   const debounceRef = useRef<NodeJS.Timeout>();
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set('q', debouncedSearch);
+    if (activeTab !== 'all') params.set('tab', activeTab);
+    if (filterCompany) params.set('company', filterCompany);
+    if (filterJobTitle) params.set('job', filterJobTitle);
+    if (filterTag) params.set('tag', filterTag);
+    if (filterDateRange !== 'all') params.set('date', filterDateRange);
+    if (sortBy !== 'name_asc') params.set('sort', sortBy);
+    if (page > 0) params.set('p', page.toString());
+    
+    setSearchParams(params, { replace: true });
+  }, [debouncedSearch, activeTab, filterCompany, filterJobTitle, filterTag, filterDateRange, sortBy, page, setSearchParams]);
 
   // Debounce search input
   const handleSearchChange = useCallback((value: string) => {
@@ -60,7 +80,7 @@ export function useContactsSearch() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setDebouncedSearch(value);
-      setPage(0); // Reset page on new search
+      setPage(0);
     }, 400);
   }, []);
 
@@ -68,7 +88,6 @@ export function useContactsSearch() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, []);
 
-  // Reset page when filters change
   const handleTabChange = useCallback((v: string) => { setActiveTab(v); setPage(0); }, []);
   const handleCompanyChange = useCallback((v: string) => { setFilterCompany(v); setPage(0); }, []);
   const handleJobTitleChange = useCallback((v: string) => { setFilterJobTitle(v); setPage(0); }, []);
@@ -76,7 +95,6 @@ export function useContactsSearch() {
   const handleDateRangeChange = useCallback((v: string) => { setFilterDateRange(v); setPage(0); }, []);
   const handleSortChange = useCallback((v: string) => { setSortBy(v); setPage(0); }, []);
 
-  // Compute date_from from filterDateRange
   const dateFrom = useMemo(() => {
     const now = new Date();
     switch (filterDateRange) {

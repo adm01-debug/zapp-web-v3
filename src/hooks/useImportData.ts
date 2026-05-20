@@ -139,7 +139,7 @@ export function useImportData<T>(options: UseImportDataOptions<T>) {
         success.push(validated);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          error.errors.forEach((err) => {
+          error.issues.forEach((err) => {
             errors.push({
               row: index + 2, // +2 porque linha 1 é header
               field: err.path.join('.'),

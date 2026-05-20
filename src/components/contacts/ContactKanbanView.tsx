@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface KanbanContact {
   id: string;
@@ -75,8 +76,7 @@ export function ContactKanbanView({ contacts, onContactClick }: ContactKanbanVie
       prev.map(c => c.id === draggableId ? { ...c, contact_type: newType } : c)
     );
 
-    const { error } = await supabase
-      .from('contacts')
+    const { error } = await dbFrom('contacts')
       .update({ contact_type: newType })
       .eq('id', draggableId);
 

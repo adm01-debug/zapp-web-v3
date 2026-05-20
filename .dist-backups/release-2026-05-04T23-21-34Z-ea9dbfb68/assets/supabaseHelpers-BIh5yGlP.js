@@ -1,0 +1,1 @@
+import{c as o}from"./index-C7dyICpy.js";function f(r){return o.from(r)}export{f};

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export interface PredictionPoint {
   time: string;
@@ -53,8 +54,7 @@ export function useDemandPrediction(externalData?: PredictionPoint[], currentCap
   const { data: messageHistory = [] } = useQuery({
     queryKey: ['demand-prediction-history'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select('created_at')
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
       if (error) throw error;

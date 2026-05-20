@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { toast } from '@/hooks/use-toast';
 
 export interface ScheduledMessage {
@@ -56,7 +56,7 @@ export function useScheduledMessages(contactId?: string) {
         .eq('user_id', user?.id)
         .maybeSingle();
 
-      const { data: msg, error } = await supabase
+      const { data: msg, error: msgErr } = await supabase
         .from('scheduled_messages')
         .insert({
           contact_id: data.contactId,
@@ -70,7 +70,7 @@ export function useScheduledMessages(contactId?: string) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (msgErr) throw msgErr;
       return msg;
     },
     onSuccess: () => {

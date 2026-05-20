@@ -120,7 +120,7 @@ export function CommandPalette({ onNavigate }: CommandPaletteProps) {
                   <CommandItem key={item.id} onSelect={() => select(item.id)} className="gap-2 cursor-pointer">
                     <Icon className="w-4 h-4 text-muted-foreground" />
                     <span>{item.label}</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground/60 font-mono">#{item.id}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground/60 ">#{item.id}</span>
                   </CommandItem>
                 );
               })}

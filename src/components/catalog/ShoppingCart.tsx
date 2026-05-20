@@ -163,6 +163,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
                             size="icon"
                             variant="outline"
                             className="h-7 w-7"
+                            aria-label="Diminuir quantidade"
                             onClick={() =>
                               onUpdateQuantity(
                                 item.product.id,
@@ -180,6 +181,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
                             size="icon"
                             variant="outline"
                             className="h-7 w-7"
+                            aria-label="Aumentar quantidade"
                             onClick={() =>
                               onUpdateQuantity(
                                 item.product.id,
@@ -194,6 +196,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 ml-auto text-destructive hover:text-destructive"
+                            aria-label="Remover item"
                             onClick={() => onRemoveItem(item.product.id)}
                           >
                             <Trash2 className="w-3 h-3" />

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Trash2, Clock, ArrowRight, Zap, MessageSquare } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { FollowUpExecutionsHistory } from './FollowUpExecutionsHistory';
 
 interface Step {
@@ -34,7 +34,7 @@ export function FollowUpSequences() {
   const { data: sequences = [], isLoading } = useQuery({
     queryKey: ['followup-sequences'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('followup_sequences')
         .select('*, followup_steps(*)') 
         .order('created_at', { ascending: false });

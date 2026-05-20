@@ -1,187 +1,24 @@
-import { useState, useEffect, useCallback, useRef, forwardRef, memo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useNavigationHistory } from '@/hooks/useNavigationHistory';
+import { forwardRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { CommandPalette } from '@/components/CommandPalette';
-import { SLANotificationProvider } from '@/components/notifications/SLANotificationProvider';
-import { GoalNotificationProvider } from '@/components/notifications/GoalNotificationProvider';
-import { TourProvider, DEFAULT_ONBOARDING_STEPS, useTour } from '@/components/onboarding/OnboardingTour';
-import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
-import { useGlobalKeyboard } from '@/components/keyboard/GlobalKeyboardProvider';
-import { useAuth } from '@/hooks/useAuth';
-import { useOnboarding } from '@/hooks/useOnboarding';
-import { useOnboardingChecklist } from '@/hooks/useOnboardingChecklist';
-import { useTranscriptionNotifications } from '@/hooks/useTranscriptionNotifications';
-import { logAudit } from '@/lib/audit';
-import { consumeGmailOAuthReturnContext, parseGmailOAuthState, setPendingIntegrationView } from '@/lib/gmailOAuth';
 import { Sparkles } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
-import { OfflineIndicator, ConnectionToast } from '@/components/ui/offline-indicator';
-import { EvolutionDisconnectBanner } from '@/components/alerts/EvolutionDisconnectBanner';
-import { toast } from 'sonner';
+import { useAuth } from '@/features/auth';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import { TourProvider } from '@/components/onboarding/OnboardingTour';
+import { IndexContentConnected } from '@/components/layout/IndexContentConnected';
+import { useLoginAudit } from '@/features/auth';
 
-const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _ref) {
+const Index = forwardRef<HTMLDivElement>(function Index(_props, _ref) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { user, profile, loading, signOut } = useAuth();
-  const { hasCompletedOnboarding, loading: loadingOnboarding, completeOnboarding } = useOnboarding();
-  const { startTour } = useTour();
-  const { currentView, navigateTo: rawNavigateTo, goBack: rawGoBack, goForward: rawGoForward, canGoBack, canGoForward, breadcrumbTrail } = useNavigationHistory('inbox');
-  const navDirectionRef = useRef<'forward' | 'back'>('forward');
+  const { user, loading } = useAuth();
+  const { completeOnboarding } = useOnboarding();
 
-  // Only run checklist queries when on dashboard view
-  const { isComplete: checklistComplete, isDismissed: checklistDismissed } = useOnboardingChecklist({
-    enabled: currentView === 'dashboard',
-  });
-
-  const setCurrentView = useCallback((viewId: string) => {
-    navDirectionRef.current = 'forward';
-    rawNavigateTo(viewId);
-  }, [rawNavigateTo]);
-
-  const goBack = useCallback(() => {
-    navDirectionRef.current = 'back';
-    rawGoBack();
-  }, [rawGoBack]);
-
-  const goForward = useCallback(() => {
-    navDirectionRef.current = 'forward';
-    rawGoForward();
-  }, [rawGoForward]);
-
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  const { registerNavigationHandler, unregisterNavigationHandler } = useGlobalKeyboard();
-
-  useEffect(() => {
-    registerNavigationHandler(setCurrentView);
-    return () => unregisterNavigationHandler();
-  }, [registerNavigationHandler, unregisterNavigationHandler, setCurrentView]);
-
-  // Keyboard navigation: Alt+←/→, Escape, Alt+Home
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
-
-      if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        goBack();
-      } else if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        goForward();
-      } else if (e.key === 'Escape' && !isInput) {
-        const hasOpenDialog = document.querySelector('[data-state="open"][role="dialog"]');
-        if (!hasOpenDialog && canGoBack) {
-          goBack();
-        }
-      } else if (e.altKey && e.key === 'Home') {
-        e.preventDefault();
-        setCurrentView('inbox');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goBack, goForward, canGoBack, setCurrentView]);
-
-  // Defer transcription notifications by 2s after mount to not block first paint
-  const [notifReady, setNotifReady] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setNotifReady(true), 2000);
-    return () => clearTimeout(t);
-  }, []);
-  useTranscriptionNotifications({ enabled: !!user && notifReady });
-
-  const showChecklist = !checklistComplete && !checklistDismissed && currentView === 'dashboard';
-
-  const hasLoggedAudit = useRef(false);
-  const gmailOAuthHandledRef = useRef(false);
+  useLoginAudit(user, loading);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user && !loading && !hasLoggedAudit.current) {
-      hasLoggedAudit.current = true;
-      logAudit({ action: 'login', details: { email: user.email } });
     }
   }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (loading || !user || gmailOAuthHandledRef.current) return;
-
-    const searchParams = new URLSearchParams(window.location.search);
-    const code = searchParams.get('code');
-    const oauthError = searchParams.get('error');
-    const issuer = searchParams.get('iss');
-    const oauthState = parseGmailOAuthState(searchParams.get('state'));
-    const hasGmailOAuthParams = Boolean(code || oauthError || issuer === 'https://accounts.google.com');
-
-    if (!hasGmailOAuthParams) return;
-
-    gmailOAuthHandledRef.current = true;
-
-    const fallbackContext = consumeGmailOAuthReturnContext();
-    const returnView = oauthState?.view || fallbackContext.view;
-    const integrationView = oauthState?.integrationView || fallbackContext.integrationView;
-
-    if (integrationView) {
-      setPendingIntegrationView(integrationView);
-    }
-
-    const returnToSavedView = () => {
-      window.history.replaceState(null, '', window.location.pathname);
-      setCurrentView(returnView);
-    };
-
-    if (oauthError) {
-      toast.error('Conexão com Gmail cancelada.');
-      returnToSavedView();
-      return;
-    }
-
-    if (!code) {
-      returnToSavedView();
-      return;
-    }
-
-    void (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          throw new Error('Sua sessão expirou. Faça login novamente para concluir a conexão.');
-        }
-
-        const response = await supabase.functions.invoke('gmail-oauth', {
-          body: { action: 'exchange-code', code },
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-
-        if (response.error) {
-          throw new Error(response.error.message);
-        }
-
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['gmail-accounts'] }),
-          queryClient.invalidateQueries({ queryKey: ['gmail-threads'] }),
-        ]);
-
-        toast.success('Gmail conectado com sucesso!');
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Falha ao concluir a autenticação do Gmail.';
-        toast.error(`Erro na autenticação: ${message}`);
-      } finally {
-        returnToSavedView();
-      }
-    })();
-  }, [loading, queryClient, setCurrentView, user]);
-
-  useEffect(() => {
-    if (!loadingOnboarding && hasCompletedOnboarding === false && user) {
-      setShowWelcome(true);
-    }
-  }, [loadingOnboarding, hasCompletedOnboarding, user]);
 
   if (loading) {
     return <LoadingSplash />;
@@ -190,43 +27,9 @@ const IndexContent = forwardRef<HTMLDivElement>(function IndexContent(_props, _r
   if (!user) return null;
 
   return (
-    <SLANotificationProvider>
-      <GoalNotificationProvider>
-        <AppShell
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          userId={user.id}
-          canGoBack={canGoBack}
-          canGoForward={canGoForward}
-          goBack={goBack}
-          goForward={goForward}
-          breadcrumbTrail={breadcrumbTrail}
-          navDirectionRef={navDirectionRef}
-          profile={profile}
-          userEmail={user.email || ''}
-          signOut={signOut}
-          unreadNotifications={0}
-          showChecklist={showChecklist}
-          loading={loading}
-        />
-
-        <CommandPalette onNavigate={setCurrentView} />
-
-        <OfflineIndicator />
-        <ConnectionToast />
-        <EvolutionDisconnectBanner />
-
-        <WelcomeModal
-          isOpen={showWelcome}
-          onClose={() => { setShowWelcome(false); completeOnboarding(); }}
-          onStartTour={() => {
-            setShowWelcome(false);
-            setTimeout(() => startTour(DEFAULT_ONBOARDING_STEPS), 400);
-          }}
-          userName={profile?.name}
-        />
-      </GoalNotificationProvider>
-    </SLANotificationProvider>
+    <TourProvider onComplete={completeOnboarding}>
+      <IndexContentConnected />
+    </TourProvider>
   );
 });
 
@@ -261,28 +64,5 @@ function LoadingSplash() {
   );
 }
 
-const Index = memo(forwardRef<HTMLDivElement>(function Index(_props, _ref) {
-  const { user, loading } = useAuth();
-  const { completeOnboarding } = useOnboarding();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
-  if (loading) {
-    return <LoadingSplash />;
-  }
-
-  if (!user) return null;
-
-  return (
-    <TourProvider onComplete={completeOnboarding}>
-      <IndexContent />
-    </TourProvider>
-  );
-}));
-
 export default Index;
+

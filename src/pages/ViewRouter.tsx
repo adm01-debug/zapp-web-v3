@@ -4,9 +4,24 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCurrentModule } from '@/hooks/useCurrentModule';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAriaAnnouncer } from '@/hooks/useAriaAnnouncer';
+import { useUserRole, type AppRole } from '@/features/auth';
 import { ErrorBoundaryWithRetry } from '@/components/ui/error-boundary-retry';
+import { NotAuthorizedView } from '@/features/auth';
 
 import * as Views from './lazyViews';
+
+// Route-level role gates. Backend RPC/RLS remain the source of truth — this is a UX layer.
+// `hasRole` é hierárquico: requerer 'admin' já libera para dev; requerer 'supervisor' libera para admin/dev.
+const VIEW_REQUIRED_ROLES: Record<string, AppRole[]> = {
+  // Áreas técnicas — visualização: admin+ (admin já inclui dev).
+  'failed-messages': ['admin'],
+  'failed-auth-messages': ['admin'],
+  'search-insights': ['admin'],
+  // Operação — supervisor+
+  'agents-ops': ['supervisor'],
+  'realtime-monitor': ['supervisor'],
+  'dispatch-errors-history': ['supervisor'],
+};
 
 interface ViewRouterProps {
   currentView: string;
@@ -37,14 +52,15 @@ function WithHeader({ viewId, children }: WithHeaderProps) {
 }
 
 // Declarative route map — easier to maintain than switch/case
-const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Record<string, never>>>> = {
+const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
   'inbox': Views.RealtimeInboxView,
   'dashboard': Views.DashboardView,
   'agents': Views.AgentsView,
+  'agents-system': Views.AgentsView,
   'queues': Views.QueuesView,
   'contacts': Views.ContactsView,
   'groups': Views.GroupsView,
-  'connections': Views.ConnectionsView,
+  'connections': Views.ConnectionsIntegrationsHub,
   'wallet': Views.ClientWalletView,
   'catalog': Views.ProductManagement,
   'transcriptions': Views.TranscriptionsHistoryView,
@@ -58,7 +74,7 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'campaigns': Views.CampaignsView,
   'chatbot': Views.ChatbotFlowsView,
   'automations': Views.AutomationsManager,
-  'integrations': Views.IntegrationsHub,
+  'integrations': Views.ConnectionsIntegrationsHub,
   'privacy': Views.LGPDComplianceView,
   'pipeline': Views.SalesPipelineView,
   'knowledge': Views.KnowledgeBaseView,
@@ -80,12 +96,18 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'omni-inbox': Views.OmnichannelInbox,
   'audit-logs': Views.AuditLogDashboard,
   'telemetry': Views.AdminTelemetriaPage,
+  'failed-messages': Views.AdminFailedMessagesPage,
+  'failed-auth-messages': Views.AdminFailedAuthMessagesPage,
+  'webhook-events': Views.AdminWebhookEventsPage,
+  'evolution-api-logs': Views.AdminEvolutionApiLogsPage,
+  'alert-history': Views.AdminAlertHistoryPage,
+  'webhook-overview': Views.AdminWebhookOverviewPage,
   'nps': Views.NPSDashboard,
   'team-chat': Views.TeamChatView,
   'email-chat': Views.EmailChatView,
-  'gmail': Views.GmailInboxView,
+  'email': Views.EmailInboxView,
   'public-api': Views.PublicApiDashboard,
-  'gmail-webhook': Views.GmailWebhookMonitor,
+  'email-webhook': Views.EmailWebhookMonitor,
   'media-migration': Views.MediaMigrationTool,
   'sicoob-bridge': Views.SicoobBridgeDashboard,
   'crm360': Views.CRM360ExplorerView,
@@ -93,7 +115,18 @@ const VIEW_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<Rec
   'sla': Views.SLADashboardView,
   'talkx': Views.TalkXView,
   'evolution-monitor': Views.EvolutionMonitoringDashboard,
-  'transfers': Views.TransferView,
+  'webhook-secret': Views.AdminWebhookSecretStatusPage,
+  'search-insights': Views.AdminSearchInsightsPage,
+  'agents-ops': Views.AgentsOperationsPage,
+  'realtime-monitor': Views.AdminRealtimeMonitorPage,
+  'dispatch-errors-history': Views.AdminDispatchErrorsHistoryPage,
+  'inbox-sync-status': Views.AdminInboxSyncStatusPage,
+  'evo-api-health': Views.AdminEvoApiHealthPage,
+  'email-status': Views.AdminEmailStatusPage,
+  'email-audit': Views.AdminEmailAuditPage,
+  'sla-history': Views.SLAHistory,
+  'admin-connections': Views.AdminConnectionsPage,
+  'bridge': Views.ConnectionsIntegrationsHub,
 };
 
 // Views that need custom props
@@ -155,9 +188,24 @@ export function ViewRouter({ currentView, userId, canGoBack, canGoForward, onGoB
   );
 }
 
-/** Per-view error boundary with automatic retry */
+/** Per-view error boundary with automatic retry + role gating. */
 function ErrorBoundaryView({ viewId, children }: { viewId: string; children: React.ReactNode }) {
   const mod = useCurrentModule(viewId);
+  const requiredRoles = VIEW_REQUIRED_ROLES[viewId];
+  const { hasRole, loading: rolesLoading } = useUserRole();
+
+  if (requiredRoles) {
+    if (rolesLoading) {
+      return (
+        <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground" role="status" aria-busy="true">
+          Verificando permissões…
+        </div>
+      );
+    }
+    const allowed = requiredRoles.some((r) => hasRole(r));
+    if (!allowed) return <NotAuthorizedView viewLabel={mod.label} />;
+  }
+
   return (
     <ErrorBoundaryWithRetry
       key={viewId}

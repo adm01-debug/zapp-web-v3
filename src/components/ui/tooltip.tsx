@@ -10,11 +10,11 @@ const Tooltip = TooltipPrimitive.Root;
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
 const tooltipVariants = cva(
-  "z-50 overflow-hidden rounded-xl text-sm shadow-lg shadow-background/20 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+  "z-50 overflow-hidden rounded-lg text-sm shadow-none animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
   {
     variants: {
       variant: {
-        default: "border bg-popover px-3 py-1.5 text-popover-foreground",
+        default: "border border-border bg-background px-3 py-1.5 text-foreground",
         dark: "bg-foreground px-3 py-1.5 text-background border-0",
         info: "bg-info px-3 py-2 text-info-foreground border-0",
         success: "bg-success px-3 py-2 text-success-foreground border-0",
@@ -75,7 +75,7 @@ const TooltipContentEnhanced = React.forwardRef<
           <div className="flex items-center justify-between gap-4">
             <span className="font-medium">{title}</span>
             {shortcut && (
-              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+              <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5  text-[10px] font-medium text-muted-foreground">
                 {shortcut}
               </kbd>
             )}

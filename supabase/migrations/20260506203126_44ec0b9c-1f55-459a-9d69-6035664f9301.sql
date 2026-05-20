@@ -1,0 +1,20 @@
+-- Batch 2
+ALTER FUNCTION public.rpc_update_gmail_health_state(text, integer, jsonb) SET search_path = public;
+ALTER FUNCTION public.rpc_email_mark_thread_read(text, boolean) SET search_path = public;
+ALTER FUNCTION public.rpc_email_token_status() SET search_path = public;
+ALTER FUNCTION public.fn_mark_conversation_as_read(uuid, text) SET search_path = public;
+ALTER FUNCTION public.fn_reopen_transfer(uuid, text, text) SET search_path = public;
+ALTER FUNCTION public.fn_process_escalations() SET search_path = public;
+ALTER FUNCTION public.process_settings_audit() SET search_path = public;
+ALTER FUNCTION public.fn_on_transfer_created() SET search_path = public;
+ALTER FUNCTION public.fn_is_instance_member(text) SET search_path = public;
+ALTER FUNCTION public.claim_next_voice_task(uuid) SET search_path = public;
+ALTER FUNCTION public.fn_log_reconnection_attempt(uuid, integer, text, text, text, text) SET search_path = public;
+ALTER FUNCTION public.increment_voice_task_attempt(uuid) SET search_path = public;
+ALTER FUNCTION public.cleanup_old_stress_metrics(integer) SET search_path = public;
+ALTER FUNCTION public.rpc_check_and_trigger_gmail_revalidation() SET search_path = public;
+ALTER FUNCTION public.match_kb_chunks(extensions.vector, double precision, integer, text) SET search_path = public;
+ALTER FUNCTION public.rpc_log_service_event(text, text, text, text, text, jsonb, jsonb, text) SET search_path = public;
+ALTER FUNCTION public.audit_settings_changes() SET search_path = public;
+ALTER FUNCTION public.is_admin_or_supervisor(uuid) SET search_path = public;
+ALTER FUNCTION public.send_message_v2(text, text, text, text, text) SET search_path = public;

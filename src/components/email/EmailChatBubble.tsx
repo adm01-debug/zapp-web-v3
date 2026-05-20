@@ -1,203 +1,276 @@
-import { useState, memo } from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
+import { ChevronDown, ChevronUp, MoreHorizontal, Reply, Forward, Trash2, Star, StarOff, Mail, MailOpen } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Paperclip, ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Star, Check, CheckCheck } from 'lucide-react';
-import type { EmailMessage } from '@/hooks/useGmail';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { motion } from '@/components/ui/motion';
+import { type EmailMessage } from '@/hooks/gmail/gmailTypes';
+import { EmailAttachmentPreview } from './EmailAttachmentPreview';
+import { EmailSLABadge } from './EmailSLABadge';
+import { type SLAStatus } from '@/hooks/useEmailSLA';
+import { emailMarkRead, emailTrashMessage, emailModifyLabels } from '@/hooks/gmail/gmailApi';
+import { toast } from 'sonner';
+import { formatDistanceToNow, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface EmailChatBubbleProps {
   message: EmailMessage;
-  isLast: boolean;
-  onReply?: (message: EmailMessage) => void;
-  onReplyAll?: (message: EmailMessage) => void;
-  onForward?: (message: EmailMessage) => void;
+  accountId: string;
+  slaStatus?: SLAStatus | null;
+  onReply?: () => void;
+  onForward?: () => void;
+  isFirst?: boolean;
+  className?: string;
 }
 
-function getInitials(name: string | null, email: string): string {
-  if (name) return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  return email[0]?.toUpperCase() || '?';
-}
-
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatFullDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('pt-BR', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+function sanitizeHtml(html: string): string {
+  // Força target="_blank" + rel="noopener noreferrer nofollow" em todos os <a>
+  // (clientes de email enviam links sem esses attrs; sem isso o link navega in-tab e
+  // pode permitir window.opener leak via tabnabbing).
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+      node.setAttribute('target', '_blank');
+      node.setAttribute('rel', 'noopener noreferrer nofollow');
+    }
   });
+  try {
+    return DOMPurify.sanitize(html, {
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form'],
+      ADD_ATTR: ['target', 'rel'],
+      FORCE_BODY: true,
+    });
+  } finally {
+    DOMPurify.removeHook('afterSanitizeAttributes');
+  }
 }
 
-export const EmailChatBubble = memo(function EmailChatBubble({ message, isLast, onReply, onReplyAll, onForward }: EmailChatBubbleProps) {
-  const [expanded, setExpanded] = useState(isLast);
-  const isSent = message.direction === 'outbound';
-  const hasMultipleRecipients = (message.to_addresses?.length || 0) + (message.cc_addresses?.length || 0) > 1;
+function getInitials(name: string | null, email: string | null): string {
+  if (name) return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  if (email) return email[0]?.toUpperCase() ?? '?';
+  return '?';
+}
 
-  const bodyPreview = message.body_text?.slice(0, 300) || message.snippet || '';
-  const hasMore = (message.body_text?.length || 0) > 300;
+function getAvatarColor(email: string | null): string {
+  const colors = [
+    'bg-primary shadow-[0_0_10px_-2px_rgba(var(--primary),0.4)]',
+    'bg-primary/90 shadow-[0_0_10px_-2px_rgba(var(--primary),0.3)]',
+    'bg-secondary shadow-[0_0_10px_-2px_rgba(var(--secondary),0.4)]',
+    'bg-accent shadow-[0_0_10px_-2px_rgba(var(--accent),0.4)]',
+    'bg-destructive shadow-[0_0_10px_-2px_rgba(var(--destructive),0.4)]',
+    'bg-muted shadow-[0_0_10px_-2px_rgba(var(--muted),0.4)]'
+  ];
+  const code = (email ?? '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  return colors[code % colors.length];
+}
+
+export function EmailChatBubble({
+  message,
+  accountId,
+  slaStatus,
+  onReply,
+  onForward,
+  isFirst = false,
+  className,
+}: EmailChatBubbleProps) {
+  const [expanded, setExpanded] = useState(isFirst);
+  const [showFullHtml, setShowFullHtml] = useState(false);
+  const [isStarred, setIsStarred] = useState(message.label_ids.includes('STARRED'));
+  const [isRead, setIsRead] = useState(message.is_read);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const sentAt = message.internal_date
+    ? new Date(message.internal_date)
+    : null;
+
+  const hasHtml = !!message.body_html;
+  const hasQuote = message.body_html?.includes('email_quote') || message.body_html?.includes('blockquote');
+
+  const displayHtml = hasHtml
+    ? sanitizeHtml(
+        showFullHtml
+          ? message.body_html ?? ''
+          : (message.body_html ?? '').replace(/<div class="email_quote"[\s\S]*/i, '').replace(/<blockquote[\s\S]*<\/blockquote>/i, '')
+      )
+    : message.body_plain ?? message.snippet ?? '';
+
+  const handleToggleStar = async () => {
+    const wasStarred = isStarred;
+    setIsStarred(!wasStarred);
+    try {
+      await emailModifyLabels({
+        accountId,
+        messageId: message.message_id,
+        addLabels: wasStarred ? [] : ['STARRED'],
+        removeLabels: wasStarred ? ['STARRED'] : [],
+      } as any);
+    } catch (err) {
+      setIsStarred(wasStarred);
+    }
+  };
+
+  const handleToggleRead = async () => {
+    const wasRead = isRead;
+    setIsRead(!wasRead);
+    try {
+      await emailMarkRead({ accountId, messageIds: [message.message_id], read: !wasRead } as any);
+    } catch (err) {
+      setIsRead(wasRead);
+    }
+  };
+
+  const handleTrash = async () => {
+    try {
+      await emailTrashMessage({ accountId, messageId: message.message_id } as any);
+      toast.success('Mensagem movida para lixeira');
+    } catch (err) {
+      toast.error('Erro ao mover para lixeira');
+    }
+  };
 
   return (
-    <TooltipProvider>
+    <div className={cn('group relative animate-in fade-in slide-in-from-bottom-2 duration-700 ease-out', className)}>
+      {/* Header */}
       <div
-        className={cn('flex group gap-2 mb-3', isSent ? 'justify-end' : 'justify-start')}
-        role="article"
-        aria-label={`Mensagem de ${message.from_name || message.from_address}`}
+        className={cn(
+          'flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/30 transition-all duration-300 rounded-xl group/header mx-2 my-1',
+          expanded && 'bg-muted/15 shadow-sm border border-border/5'
+        )}
+        onClick={() => setExpanded(v => !v)}
       >
-        {/* Avatar for inbound */}
-        {!isSent && (
-          <Avatar className="h-8 w-8 shrink-0 mt-1">
-            <AvatarFallback className="text-[10px] bg-accent text-accent-foreground">
-              {getInitials(message.from_name, message.from_address)}
+        {/* Avatar com Animação */}
+        <motion.div whileHover={{ scale: 1.1 }} className="relative shrink-0">
+          <Avatar className="h-[38px] w-[44px] ring-2 ring-background shadow-lg border border-border">
+            <AvatarFallback className={cn('text-primary-foreground text-[11px] font-bold uppercase tracking-wider', getAvatarColor(message.from_email))}>
+              {getInitials(message.from_name, message.from_email)}
             </AvatarFallback>
           </Avatar>
-        )}
+        </motion.div>
 
-        <div className="max-w-[75%] space-y-0.5 relative">
-          {/* Hover actions */}
-          <div className={cn(
-            'absolute top-0 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10',
-            isSent ? 'right-full mr-1' : 'left-full ml-1'
-          )}>
-            {onReply && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onReply(message)}
-                    className="p-1 rounded-full bg-card border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm transition-colors"
-                    aria-label="Responder"
-                  >
-                    <Reply className="w-3 h-3" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Responder</TooltipContent>
-              </Tooltip>
-            )}
-            {onReplyAll && hasMultipleRecipients && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onReplyAll(message)}
-                    className="p-1 rounded-full bg-card border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm transition-colors"
-                    aria-label="Responder a todos"
-                  >
-                    <ReplyAll className="w-3 h-3" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Responder a todos</TooltipContent>
-              </Tooltip>
-            )}
-            {onForward && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onForward(message)}
-                    className="p-1 rounded-full bg-card border border-border/50 text-muted-foreground hover:text-primary hover:bg-primary/10 shadow-sm transition-colors"
-                    aria-label="Encaminhar"
-                  >
-                    <Forward className="w-3 h-3" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Encaminhar</TooltipContent>
-              </Tooltip>
-            )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={cn(' text-[16px] truncate tracking-tight transition-colors', !isRead ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground group-hover/header:text-foreground/80')}>
+                {message.from_name || message.from_email || '?'}
+              </span>
+              {!isRead && <Badge className="text-[9px] h-4.5 px-2 font-bold uppercase tracking-widest border-0 bg-primary text-primary-foreground shadow-sm">Novo</Badge>}
+              {isStarred && <Star className="h-3.5 w-3.5 text-warning-foreground fill-amber-400" />}
+              {slaStatus && <EmailSLABadge status={slaStatus} compact />}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {sentAt && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className=" text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-tighter">
+                      {formatDistanceToNow(sentAt, { locale: ptBR, addSuffix: true })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>{format(sentAt, "dd/MM/yyyy HH:mm", { locale: ptBR })}</TooltipContent>
+                </Tooltip>
+              )}
+              <div className="w-6 h-6 rounded-full flex items-center justify-center bg-muted/20 text-muted-foreground/40 transition-transform duration-300" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </div>
+            </div>
           </div>
 
-          {/* Sender name for inbound */}
-          {!isSent && (
-            <p className="text-[10px] text-muted-foreground ml-1 truncate">
-              {message.from_name || message.from_address}
-              {hasMultipleRecipients && (
-                <span className="opacity-60"> → {message.to_addresses?.length || 0} destinatários</span>
-              )}
-            </p>
+          {!expanded && (
+            <p className=" text-[12px] text-muted-foreground/70 truncate mt-0.5 font-medium">{message.snippet}</p>
           )}
 
-          {/* Bubble */}
-          <motion.div
-            initial={{ opacity: 0, x: isSent ? 10 : -10, scale: 0.97 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className={cn(
-              'rounded-2xl px-3.5 py-2.5 shadow-sm relative overflow-hidden',
-              isSent
-                ? 'rounded-br-md bg-primary text-primary-foreground'
-                : 'rounded-bl-md bg-card border border-border/30 text-foreground'
-            )}
-          >
-            {/* Subject line if present */}
-            {message.subject && (
-              <p className={cn(
-                'text-[11px] font-semibold mb-1.5 pb-1.5 border-b',
-                isSent ? 'border-primary-foreground/20' : 'border-border/30'
-              )}>
-                {message.subject}
-              </p>
-            )}
-
-            {/* Body */}
-            <div className="text-sm whitespace-pre-wrap leading-relaxed break-words">
-              {expanded ? (message.body_text || message.snippet) : bodyPreview}
-              {hasMore && !expanded && '…'}
+          {expanded && (
+            <div className="flex items-center gap-1.5  text-[10px] font-bold text-muted-foreground/50 mt-1 uppercase tracking-wider">
+              <span className="text-primary/60">Para:</span>
+              <span className="truncate max-w-[300px]">{message.to_emails.join(', ')}</span>
+              {message.cc_emails.length > 0 && (
+                <>
+                  <span className="mx-1 opacity-30">|</span>
+                  <span className="text-primary/60">Cc:</span>
+                  <span className="truncate max-w-[200px]">{message.cc_emails.join(', ')}</span>
+                </>
+              )}
             </div>
+          )}
+        </div>
 
-            {hasMore && (
-              <button
-                onClick={() => setExpanded(!expanded)}
-                className={cn(
-                  'text-[10px] mt-1 flex items-center gap-0.5 transition-colors',
-                  isSent ? 'text-primary-foreground/70 hover:text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                )}
-                aria-label={expanded ? 'Ver menos' : 'Ver mais'}
-              >
-                {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                {expanded ? 'Menos' : 'Mais'}
-              </button>
-            )}
+        <div className="opacity-0 group-hover/header:opacity-100 transition-opacity flex items-center gap-0.5 ml-auto" onClick={e => e.stopPropagation()}>
+          {onReply && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onReply}>
+                  <Reply className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Responder</TooltipContent>
+            </Tooltip>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {onForward && (
+                <DropdownMenuItem onClick={onForward}>
+                  <Forward className="h-4 w-4 mr-2" />Encaminhar
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleToggleStar}>
+                {isStarred ? <StarOff className="h-4 w-4 mr-2" /> : <Star className="h-4 w-4 mr-2" />}
+                {isStarred ? 'Remover estrela' : 'Adicionar estrela'}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleToggleRead}>
+                {isRead ? <Mail className="h-4 w-4 mr-2" /> : <MailOpen className="h-4 w-4 mr-2" />}
+                Marcar como {isRead ? 'não lido' : 'lido'}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleTrash}>
+                <Trash2 className="h-4 w-4 mr-2" />Mover para lixeira
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Body */}
+      {expanded && (
+        <div className="px-4 pb-4 pl-15 animate-in slide-in-from-top-2 duration-300">
+          <div className="pl-11">
+            <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-5 border border-border/50 shadow-xl relative">
+              {hasHtml ? (
+                <div
+                  ref={contentRef}
+                  className="prose prose-sm dark:prose-invert max-w-none text-[14px] leading-relaxed overflow-hidden  text-foreground/90 selection:bg-primary/20"
+                  style={{ maxHeight: showFullHtml ? 'none' : '500px' }}
+                  dangerouslySetInnerHTML={{ __html: displayHtml }}
+                />
+              ) : (
+                <p className="text-[14px] whitespace-pre-wrap leading-relaxed  text-foreground/90 selection:bg-primary/20">{displayHtml}</p>
+              )}
+
+              {/* Mostrar citação */}
+              {hasQuote && !showFullHtml && (
+                <button
+                  className="mt-3 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors bg-primary/5 px-2.5 py-1 rounded-full"
+                  onClick={e => { e.stopPropagation(); setShowFullHtml(true); }}
+                >
+                  <span className="text-sm leading-none">···</span>
+                  <span>Conteúdo citado</span>
+                </button>
+              )}
+            </div>
 
             {/* Attachments */}
             {message.has_attachments && (
-              <div className={cn(
-                'flex items-center gap-1 mt-1.5 pt-1.5 border-t text-[10px]',
-                isSent ? 'border-primary-foreground/20 text-primary-foreground/70' : 'border-border/30 text-muted-foreground'
-              )}>
-                <Paperclip className="w-3 h-3" />
-                <span>Anexo(s)</span>
-              </div>
+              <EmailAttachmentPreview attachments={[]} className="mt-3" />
             )}
-
-            {/* Time + status */}
-            <div className={cn(
-              'flex items-center justify-end gap-1.5 mt-1',
-              isSent ? 'text-primary-foreground/60' : 'text-muted-foreground'
-            )}>
-              {message.is_starred && <Star className="w-2.5 h-2.5 fill-current text-accent-foreground" />}
-              <Tooltip>
-                <TooltipTrigger>
-                  <span className="text-[10px]">{formatTime(message.internal_date)}</span>
-                </TooltipTrigger>
-                <TooltipContent>{formatFullDate(message.internal_date)}</TooltipContent>
-              </Tooltip>
-              {isSent && (
-                message.is_read
-                  ? <CheckCheck className="w-3 h-3" />
-                  : <Check className="w-3 h-3" />
-              )}
-            </div>
-          </motion.div>
+          </div>
         </div>
-
-        {/* Avatar for outbound */}
-        {isSent && (
-          <Avatar className="h-8 w-8 shrink-0 mt-1">
-            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-              Eu
-            </AvatarFallback>
-          </Avatar>
-        )}
-      </div>
-    </TooltipProvider>
+      )}
+    </div>
   );
-});
+}

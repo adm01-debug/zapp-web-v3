@@ -1,0 +1,30 @@
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { FailedMessageStatus } from '@/features/admin';
+
+const STATUS_LABEL: Record<FailedMessageStatus, string> = {
+  pending: 'Pendente',
+  retrying: 'Reprocessando',
+  succeeded: 'Sucesso',
+  abandoned: 'Abandonado',
+};
+
+const STATUS_VARIANT: Record<FailedMessageStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  pending: 'secondary',
+  retrying: 'default',
+  succeeded: 'outline',
+  abandoned: 'destructive',
+};
+
+interface Props {
+  status: FailedMessageStatus;
+  className?: string;
+}
+
+export function FailedMessageStatusBadge({ status, className }: Props) {
+  return (
+    <Badge variant={STATUS_VARIANT[status]} className={className}>
+      {STATUS_LABEL[status]}
+    </Badge>
+  );
+}

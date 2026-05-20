@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { toast } from '@/hooks/use-toast';
 import { log } from '@/lib/logger';
 
@@ -44,6 +44,14 @@ export interface UserSettings {
   // TTS
   tts_voice_id: string;
   tts_speed: number;
+
+  // Simulation
+  simulation_mode_enabled: boolean;
+
+  // SLA
+  global_sla_warning_minutes: number;
+  global_sla_critical_minutes: number;
+  global_sla_notification_message: string;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -73,6 +81,12 @@ const DEFAULT_SETTINGS: UserSettings = {
   
   tts_voice_id: DEFAULT_TTS_VOICE_ID,
   tts_speed: DEFAULT_TTS_SPEED,
+
+  simulation_mode_enabled: false,
+
+  global_sla_warning_minutes: 30,
+  global_sla_critical_minutes: 60,
+  global_sla_notification_message: 'Alerta SLA: Tempo limite excedido para resposta.',
 };
 
 export function useUserSettings() {
@@ -128,6 +142,10 @@ export function useUserSettings() {
             compact_mode: data.compact_mode ?? DEFAULT_SETTINGS.compact_mode,
             tts_voice_id: data.tts_voice_id ?? DEFAULT_SETTINGS.tts_voice_id,
             tts_speed: data.tts_speed ?? DEFAULT_SETTINGS.tts_speed,
+            simulation_mode_enabled: data.simulation_mode_enabled ?? DEFAULT_SETTINGS.simulation_mode_enabled,
+            global_sla_warning_minutes: data.global_sla_warning_minutes ?? DEFAULT_SETTINGS.global_sla_warning_minutes,
+            global_sla_critical_minutes: data.global_sla_critical_minutes ?? DEFAULT_SETTINGS.global_sla_critical_minutes,
+            global_sla_notification_message: data.global_sla_notification_message ?? DEFAULT_SETTINGS.global_sla_notification_message,
           });
         }
       } catch (err) {
@@ -181,6 +199,10 @@ export function useUserSettings() {
         compact_mode: settings.compact_mode,
         tts_voice_id: settings.tts_voice_id,
         tts_speed: settings.tts_speed,
+        simulation_mode_enabled: settings.simulation_mode_enabled,
+        global_sla_warning_minutes: settings.global_sla_warning_minutes,
+        global_sla_critical_minutes: settings.global_sla_critical_minutes,
+        global_sla_notification_message: settings.global_sla_notification_message,
       };
 
       const { error } = await supabase

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardFilters } from './useDashboardData';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export const useAgentsQuery = (agentId?: string | null) =>
   useQuery({
@@ -26,9 +27,8 @@ export const useContactsQuery = (filters: DashboardFilters) =>
   useQuery({
     queryKey: ['dashboard-contacts', filters.queueId, filters.agentId, filters.dateRange?.from?.toISOString(), filters.dateRange?.to?.toISOString()],
     queryFn: async () => {
-      let query = supabase
-        .from('contacts')
-        .select('id, name, phone, avatar_url, queue_id, assigned_to, created_at, updated_at')
+      let query = dbFrom('contacts')
+        .select('id, name, phone, avatar_url, queue_id, assigned_to, created_at, updated_at', { count: 'exact' })
         .order('updated_at', { ascending: false });
       if (filters.queueId) query = query.eq('queue_id', filters.queueId);
       if (filters.agentId) query = query.eq('assigned_to', filters.agentId);
@@ -45,9 +45,8 @@ export const useMessagesQuery = (filters: DashboardFilters) =>
   useQuery({
     queryKey: ['dashboard-messages', filters.dateRange?.from?.toISOString(), filters.dateRange?.to?.toISOString(), filters.agentId],
     queryFn: async () => {
-      let query = supabase
-        .from('messages')
-        .select(`id, contact_id, content, sender, created_at, is_read, agent_id, contacts (id, name, phone, avatar_url, queue_id)`)
+      let query = dbFrom('messages')
+        .select(`id, contact_id, content, sender, created_at, is_read, agent_id, contacts (id, name, phone, avatar_url, queue_id)`, { count: 'exact' })
         .order('created_at', { ascending: false })
         .limit(100);
       if (filters.dateRange?.from) query = query.gte('created_at', filters.dateRange.from.toISOString());
@@ -84,9 +83,8 @@ export const useContactsPerQueueQuery = () =>
   useQuery({
     queryKey: ['dashboard-contacts-per-queue'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('id, queue_id, assigned_to');
+      const { data, error } = await dbFrom('contacts')
+        .select('id, queue_id, assigned_to', { count: 'exact' });
       if (error) throw error;
       const queueCounts: Record<string, number> = {};
       data?.forEach(contact => {

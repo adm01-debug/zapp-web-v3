@@ -172,7 +172,7 @@ export function useMediaLibrary(type: MediaType) {
     for (const item of toReclassify) {
       try {
         const body = type === 'audio_memes' ? { audio_url: item.audio_url || '', file_name: item.name || '' } : { image_url: item.image_url || '' };
-        const { data } = await supabase.functions.invoke(fnName, { body });
+        const { data, error } = await supabase.functions.invoke(fnName, { body });
         if (data?.category && data.category !== item.category) {
           const { error } = await supabase.from(type).update({ category: data.category }).eq('id', item.id);
           if (!error) { setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: data.category } : i)); updated++; }

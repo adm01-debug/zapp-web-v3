@@ -15,11 +15,11 @@ function PulseDot({ active }: { active: boolean }) {
   return (
     <span className="relative flex h-2.5 w-2.5">
       {active && (
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
       )}
       <span className={cn(
         'relative inline-flex rounded-full h-2.5 w-2.5',
-        active ? 'bg-emerald-500' : 'bg-destructive'
+        active ? 'bg-primary' : 'bg-destructive'
       )} />
     </span>
   );
@@ -45,7 +45,7 @@ function MiniSparkline({ data, color = 'text-primary' }: { data: number[]; color
 
   return (
     <svg width={w} height={h} className="shrink-0" viewBox={`0 0 ${w} ${h}`}>
-      <polygon points={fillPoints} className={cn('opacity-10', color === 'text-emerald-500' ? 'fill-emerald-500' : color === 'text-destructive' ? 'fill-destructive' : 'fill-primary')} />
+      <polygon points={fillPoints} className={cn('opacity-10', color === 'text-primary' ? 'fill-emerald-500' : color === 'text-destructive' ? 'fill-destructive' : 'fill-primary')} />
       <polyline
         points={points}
         fill="none"
@@ -71,25 +71,25 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
   const stats = [
     {
       icon: Wifi,
-      iconColor: 'text-emerald-500',
-      bgColor: 'bg-emerald-500/10',
+      iconColor: 'text-primary',
+      bgColor: 'bg-primary/10',
       label: 'Conexões Ativas',
       value: `${activeCount}/${connections.length}`,
       subtitle: allOnline ? 'Todas online' : `${connections.length - activeCount} offline`,
       pulse: allOnline,
       sparkline: null as number[] | null,
-      sparkColor: 'text-emerald-500',
+      sparkColor: 'text-primary',
     },
     {
       icon: Shield,
-      iconColor: uptime.percentage >= 99 ? 'text-emerald-500' : uptime.percentage >= 95 ? 'text-amber-500' : 'text-destructive',
-      bgColor: uptime.percentage >= 99 ? 'bg-emerald-500/10' : uptime.percentage >= 95 ? 'bg-amber-500/10' : 'bg-destructive/10',
+      iconColor: uptime.percentage >= 99 ? 'text-primary' : uptime.percentage >= 95 ? 'text-warning-foreground' : 'text-destructive',
+      bgColor: uptime.percentage >= 99 ? 'bg-primary/10' : uptime.percentage >= 95 ? 'bg-warning/10' : 'bg-destructive/10',
       label: 'Uptime 24h',
       value: `${uptime.percentage}%`,
       subtitle: uptime.totalChecks > 0 ? `${uptime.healthyChecks}/${uptime.totalChecks} checks OK` : 'Sem dados',
       pulse: uptime.percentage >= 99,
       sparkline: sparklines.uptime,
-      sparkColor: uptime.percentage >= 95 ? 'text-emerald-500' : 'text-destructive',
+      sparkColor: uptime.percentage >= 95 ? 'text-primary' : 'text-destructive',
     },
     {
       icon: MessageSquare,
@@ -104,25 +104,25 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
     },
     {
       icon: Zap,
-      iconColor: avgLatency && avgLatency < 500 ? 'text-emerald-500' : 'text-amber-500',
-      bgColor: avgLatency && avgLatency < 500 ? 'bg-emerald-500/10' : 'bg-amber-500/10',
+      iconColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-warning-foreground',
+      bgColor: avgLatency && avgLatency < 500 ? 'bg-primary/10' : 'bg-warning/10',
       label: 'Latência Média',
       value: avgLatency ? `${avgLatency}ms` : '--',
       subtitle: avgLatency && avgLatency < 300 ? 'Excelente' : avgLatency && avgLatency < 800 ? 'Boa' : avgLatency ? 'Lenta' : 'Sem dados',
       pulse: false,
       sparkline: sparklines.latency,
-      sparkColor: avgLatency && avgLatency < 500 ? 'text-emerald-500' : 'text-amber-500',
+      sparkColor: avgLatency && avgLatency < 500 ? 'text-primary' : 'text-warning-foreground',
     },
     {
       icon: ArrowUpDown,
-      iconColor: hasIncoming ? 'text-emerald-500' : 'text-destructive',
-      bgColor: hasIncoming ? 'bg-emerald-500/10' : 'bg-destructive/10',
+      iconColor: hasIncoming ? 'text-primary' : 'text-destructive',
+      bgColor: hasIncoming ? 'bg-primary/10' : 'bg-destructive/10',
       label: 'Webhook',
       value: hasIncoming ? 'Operacional' : 'Sem Incoming',
       subtitle: hasIncoming ? `${messageStats.incoming} recebidas` : 'Verificar config',
       pulse: hasIncoming,
       sparkline: null,
-      sparkColor: 'text-emerald-500',
+      sparkColor: 'text-primary',
     },
   ];
 
@@ -136,25 +136,21 @@ export function MonitoringStatsCards({ connections, messageStats, uptime, sparkl
           transition={{ delay: i * 0.05, duration: 0.25 }}
         >
           <Card className="hover:shadow-md transition-shadow border-border/60 h-full">
-            <CardContent className="pt-4 pb-3 px-4 flex flex-col h-full">
+            <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-start justify-between mb-2">
-                <div className={cn('p-2 rounded-lg shrink-0', bgColor)}>
+                <div className={cn('p-2 rounded-lg', bgColor)}>
                   <Icon className={cn('w-4 h-4', iconColor)} />
                 </div>
-                <div className="flex items-center gap-1.5 overflow-hidden">
+                <div className="flex items-center gap-1.5">
                   {sparkline && sparkline.length > 1 && (
-                    <div className="hidden xs:block opacity-60 hover:opacity-100 transition-opacity">
-                      <MiniSparkline data={sparkline} color={sparkColor} />
-                    </div>
+                    <MiniSparkline data={sparkline} color={sparkColor} />
                   )}
                   {pulse && <PulseDot active />}
                 </div>
               </div>
-              <div className="mt-auto">
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
-                <p className="text-lg font-bold truncate mt-0.5 tabular-nums">{value}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
-              </div>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
+              <p className="text-lg font-bold truncate mt-0.5">{value}</p>
+              <p className="text-[11px] text-muted-foreground">{subtitle}</p>
             </CardContent>
           </Card>
         </motion.div>

@@ -1,22 +1,19 @@
-import { lazy, Suspense, useEffect, useState, useRef, forwardRef } from "react";
+import { lazy, Suspense, useEffect, useState, forwardRef } from "react";
+import { BrowserRouter } from "react-router-dom";
 import { getLogger } from "@/lib/logger";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
 import { GlobalKeyboardProvider } from "@/components/keyboard/GlobalKeyboardProvider";
-import { AccessibleToastProvider } from "@/components/ui/accessible-toast";
-import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { SkipLinks } from "@/components/ui/skip-link";
 import { LiveRegion } from "@/components/ui/visually-hidden";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Sparkles } from "lucide-react";
-import { HighContrastProvider } from "@/components/theme/HighContrastToggle";
-import { ThemeSync } from "@/hooks/useTheme";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
+import { ThemeDebugger } from "@/components/debug/ThemeDebugger";
+import { AppProviders } from "@/components/providers/AppProviders";
+import { AppRoutes } from "@/components/routing/AppRoutes";
+import { ServiceWorkerUpdateBanner } from "@/components/system/ServiceWorkerUpdateBanner";
+import { useThemeAudit } from "@/hooks/useThemeAudit";
+
+const log = getLogger('App');
 
 // Deferred non-critical providers loaded after first paint
 const RealtimeSentimentAlertProvider = lazy(() => import("@/components/notifications/RealtimeSentimentAlertProvider").then(m => ({ default: m.RealtimeSentimentAlertProvider })));
@@ -36,97 +33,34 @@ function DeferredProviders({ children }: { children?: React.ReactNode }) {
   );
 }
 
-// Retry wrapper for lazy imports to handle transient network failures
-function lazyWithRetry<T extends React.ComponentType<any>>(
-  factory: () => Promise<{ default: T }>,
-  retries = 3
-): React.LazyExoticComponent<T> {
-  return lazy(() => {
-    let attempt = 0;
-    const load = (): Promise<{ default: T }> =>
-      factory().catch((err: unknown) => {
-        attempt++;
-        if (attempt < retries) {
-          return new Promise(r => setTimeout(r, 1000 * attempt)).then(load);
-        }
-        throw err;
-      });
-    return load();
-  });
-}
-
-// Lazy-load ALL page routes for optimal initial bundle
-const Index = lazyWithRetry(() => import("./pages/Index"));
-const Auth = lazyWithRetry(() => import("./pages/Auth"));
-import NotFound from "./pages/NotFound";
-
-const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
-const VerifyEmail = lazyWithRetry(() => import("./pages/VerifyEmail"));
-const SSOCallback = lazyWithRetry(() => import("./pages/SSOCallback"));
-const TwoFactorAuth = lazyWithRetry(() => import("./pages/TwoFactorAuth"));
-const QueueDetails = lazyWithRetry(() => import("./pages/QueueDetails"));
-const QueuesComparison = lazyWithRetry(() => import("./pages/QueuesComparison"));
-const SLADashboard = lazyWithRetry(() => import("./pages/SLADashboard"));
-const SLAHistory = lazyWithRetry(() => import("./pages/SLAHistory"));
-const RolesPage = lazyWithRetry(() => import("./pages/admin/RolesPage"));
-const RateLimitDashboard = lazyWithRetry(() => import("./pages/admin/RateLimitDashboard"));
-const Install = lazyWithRetry(() => import("./pages/Install"));
-const ChatPopup = lazyWithRetry(() => import("./pages/ChatPopup"));
-
-// Route loading fallback component
-function RouteLoadingFallback() {
-  return (
-    <div className="flex items-center justify-center h-screen bg-background" role="status" aria-busy="true" aria-label="Carregando página">
-      <div className="text-center space-y-6 max-w-xs w-full px-4">
-        <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto animate-pulse-soft border border-primary/20 shadow-glow-primary/20">
-          <Sparkles className="w-10 h-10 text-primary" aria-hidden="true" />
-        </div>
-        <div className="space-y-3">
-          <div className="h-5 w-40 bg-muted rounded-full mx-auto animate-pulse-soft" />
-          <div className="h-3 w-28 bg-muted/60 rounded-full mx-auto animate-pulse-soft" />
-        </div>
-        <span className="sr-only">Carregando página...</span>
-      </div>
-    </div>
-  );
-}
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 30,
-      retry: 2,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: 'always',
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
-
-const log = getLogger('App');
+/** Deferred hooks component — lazy-loaded so hooks don't run until after first paint */
+const DeferredHooks = lazy(() =>
+  import('@/hooks/useServiceWorker').then(swMod =>
+    import('@/features/auth').then(spMod => ({
+      default: forwardRef(function DeferredHooksInner(_props: Record<string, never>, _ref: React.ForwardedRef<unknown>) {
+        swMod.useServiceWorker();
+        spMod.useScreenProtection();
+        return null;
+      })
+    }))
+  )
+);
 
 function AppContent() {
+  useThemeAudit();
   const [deferredReady, setDeferredReady] = useState(false);
 
+  // Defer non-critical features to after first paint
   useEffect(() => {
-    console.log('[BOOT] AppContent mounted');
-    if (window.performance && window.performance.mark) {
-      performance.mark('app-content-mounted');
-      const measure = performance.measure('total-load', undefined, 'app-content-mounted');
-      console.log(`[METRIC] Total Load Time: ${measure.duration.toFixed(2)}ms`);
-    }
-    setDeferredReady(true);
+    const id = requestAnimationFrame(() => {
+      setTimeout(() => setDeferredReady(true), 800);
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
-  // Global unhandled rejection handler
+  // Global error handlers
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
-      // Silence harmless View Transition API aborts (rapid navigation)
       const reason = event.reason;
       if (reason && typeof reason === 'object' && 'name' in reason) {
         const name = (reason as { name: string }).name;
@@ -152,157 +86,25 @@ function AppContent() {
   return (
     <BrowserRouter>
       <ThemeInitializer />
+      <ThemeDebugger />
       <SkipLinks />
       <LiveRegion />
       <GlobalKeyboardProvider>
         {deferredReady && <DeferredProviders />}
-        {deferredReady && (
-          <Suspense fallback={null}>
-            <DeferredHooks />
-          </Suspense>
-        )}
+        {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
         <Toaster />
         <Sonner />
-        <ErrorBoundary
-          fallback={<div className="p-4 text-center">Erro ao carregar roteamento</div>}
-        >
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/auth/callback" element={<SSOCallback />} />
-              <Route path="/2fa" element={<TwoFactorAuth />} />
-              <Route path="/install" element={<Install />} />
-              <Route
-                path="/chat-popup/:contactId"
-                element={
-                  <ProtectedRoute>
-                    <ChatPopup />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/queue/:id"
-                element={
-                  <ProtectedRoute>
-                    <QueueDetails />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/queues/comparison"
-                element={
-                  <ProtectedRoute>
-                    <QueuesComparison />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/sla"
-                element={
-                  <ProtectedRoute>
-                    <SLADashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/sla/history"
-                element={
-                  <ProtectedRoute>
-                    <SLAHistory />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/roles"
-                element={
-                  <ProtectedRoute requiredRoles={["admin"]}>
-                    <RolesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/rate-limit"
-                element={
-                  <ProtectedRoute requiredRoles={["admin"]}>
-                    <RateLimitDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
+        <ServiceWorkerUpdateBanner />
+        <AppRoutes />
       </GlobalKeyboardProvider>
     </BrowserRouter>
   );
 }
 
-/** Deferred hooks component — lazy-loaded so hooks don't run until after first paint */
-const DeferredHooks = lazy(() =>
-  import('@/hooks/useServiceWorker').then(swMod =>
-    import('@/hooks/useScreenProtection').then(spMod => ({
-      default: forwardRef(function DeferredHooksInner(_props: Record<string, never>, _ref: React.ForwardedRef<unknown>) {
-        swMod.useServiceWorker();
-        spMod.useScreenProtection();
-        return null;
-      })
-    }))
-  )
+const App = () => (
+  <AppProviders>
+    <AppContent />
+  </AppProviders>
 );
 
-function AppWithErrorRecovery() {
-  const [errorKey, setErrorKey] = useState(0);
-  const retryCountRef = useRef(0);
-  const MAX_RETRIES = 3;
-
-  useEffect(() => {
-    setErrorKey(prev => prev + 1);
-    retryCountRef.current = 0;
-  }, []);
-
-  return (
-    <ErrorBoundary
-      resetKey={errorKey}
-      onError={(error) => {
-        log.error('ErrorBoundary caught:', error.message, error.stack);
-        if (retryCountRef.current < MAX_RETRIES) {
-          retryCountRef.current += 1;
-          log.warn(`Auto-retry ${retryCountRef.current}/${MAX_RETRIES}`);
-          setTimeout(() => setErrorKey(prev => prev + 1), 2000 * retryCountRef.current);
-        } else {
-          log.error('Max retries reached. Manual intervention required.');
-        }
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeSync />
-          <HighContrastProvider>
-            <AccessibleToastProvider>
-              <TooltipProvider delayDuration={300}>
-                <AppContent />
-              </TooltipProvider>
-            </AccessibleToastProvider>
-          </HighContrastProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  );
-}
-
-const App = () => <AppWithErrorRecovery />;
-
 export default App;
-
-

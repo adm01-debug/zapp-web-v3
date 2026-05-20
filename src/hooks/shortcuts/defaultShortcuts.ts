@@ -8,6 +8,7 @@ export const DEFAULT_SHORTCUTS: ShortcutBinding[] = [
   { id: 'focus-input', name: 'Focar no campo', description: 'Move o foco para o campo de mensagem', defaultKey: '/', defaultModifiers: {}, category: 'chat' },
   { id: 'emoji-picker', name: 'Seletor de Emoji', description: 'Abre o seletor de emojis', defaultKey: 'e', defaultModifiers: { ctrlKey: true }, category: 'chat' },
   { id: 'attach-file', name: 'Anexar arquivo', description: 'Abre o seletor de arquivos', defaultKey: 'u', defaultModifiers: { ctrlKey: true }, category: 'chat' },
+  { id: 'audio-toggle-mute', name: 'Silenciar áudio em reprodução', description: 'Silencia ou retoma o áudio que está tocando no chat', defaultKey: 'm', defaultModifiers: {}, category: 'chat' },
   // Navigation shortcuts
   { id: 'global-search', name: 'Busca global', description: 'Abre a busca global', defaultKey: 'k', defaultModifiers: { ctrlKey: true }, category: 'navigation' },
   { id: 'next-conversation', name: 'Próxima conversa', description: 'Navega para a próxima conversa', defaultKey: 'ArrowDown', defaultModifiers: { altKey: true }, category: 'navigation' },

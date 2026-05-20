@@ -15,7 +15,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCalls } from '@/hooks/useCalls';
+import { useCalls } from '@/features/inbox';
 import { logAudit } from '@/lib/audit';
 
 interface CallDialogProps {
@@ -195,7 +195,7 @@ export function CallDialog({
               </p>
             )}
             {status === 'answered' && (
-              <p className="text-whatsapp font-mono text-lg">{formatDuration(duration)}</p>
+              <p className="text-whatsapp  text-lg">{formatDuration(duration)}</p>
             )}
           </motion.div>
 

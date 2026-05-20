@@ -11,7 +11,7 @@ export interface ReportData {
   subtitle?: string;
   generatedAt: Date;
   columns: { header: string; key: string; width?: number }[];
-  rows: Record<string, string | number | boolean | null | undefined>[];
+  rows: Record<string, any>[];
   summary?: { label: string; value: string | number }[];
 }
 

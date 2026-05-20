@@ -22,7 +22,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('name, avatar_url')
         .eq('user_id', user.id)
@@ -38,7 +38,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     action: 'Conectar WhatsApp',
     actionRoute: 'connections',
     checkCondition: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('whatsapp_connections')
         .select('id')
         .eq('status', 'connected')
@@ -56,7 +56,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('business_hours_enabled')
         .eq('user_id', user.id)
@@ -74,7 +74,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('message_templates')
         .select('id')
         .eq('user_id', user.id)
@@ -92,7 +92,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('browser_notifications_enabled, sound_enabled')
         .eq('user_id', user.id)
@@ -110,7 +110,7 @@ export const CHECKLIST_STEPS: ChecklistStep[] = [
     checkCondition: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .select('theme')
         .eq('user_id', user.id)

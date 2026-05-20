@@ -1,5 +1,4 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -11,17 +10,6 @@ Object.defineProperty(window, "matchMedia", {
     removeListener: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},
-    dispatchEvent: () => false,
+    dispatchEvent: () => {},
   }),
-});
-
-// Mock IntersectionObserver
-class MockIntersectionObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-Object.defineProperty(window, 'IntersectionObserver', {
-  writable: true,
-  value: MockIntersectionObserver,
 });

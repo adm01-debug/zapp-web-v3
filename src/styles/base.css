@@ -1,7 +1,8 @@
 /* ===== BASE STYLES — Resets, typography, body ===== */
 
-* {
-    @apply border-border;
+
+  * {
+    @apply border-border/40;
   }
 
   html {
@@ -33,13 +34,15 @@
 
   /* ===== TEXT SELECTION — branded ===== */
   ::selection {
-    background: hsl(var(--primary) / 0.2);
+    background: hsl(var(--primary) / 0.35); /* Mais contraste */
     color: hsl(var(--foreground));
+    text-shadow: none;
   }
 
   ::-moz-selection {
-    background: hsl(var(--primary) / 0.2);
+    background: hsl(var(--primary) / 0.35);
     color: hsl(var(--foreground));
+    text-shadow: none;
   }
 
   /* ===== INPUT REFINEMENTS ===== */
@@ -99,7 +102,7 @@
 
   p {
     @apply text-base leading-relaxed;
-    font-size: clamp(0.875rem, 0.825rem + 0.2vw, 1rem);
+    font-size: var(--text-base);
   }
 
   small {
@@ -110,32 +113,45 @@
     @apply text-sm font-medium leading-none;
   }
 
-  code, pre {
-    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
-    @apply text-sm;
-}
+  a {
+    @apply text-primary transition-colors hover:text-primary/80;
+  }
 
-/* ===== SCROLLBAR ===== */
+  code, pre {
+    font-family: var(--font-mono);
+    @apply text-sm;
+  }
+
+
+
+/* ===== SCROLLBAR — OLED Optimized ===== */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 5px; /* Mais fino */
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted) / 0.3);
-  border-radius: 4px;
+  background: hsl(var(--background));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.25);
-  border-radius: 4px;
+  background: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 10px;
   border: 1px solid transparent;
   background-clip: padding-box;
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.45);
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.4);
 }
 
 ::-webkit-scrollbar-corner {
@@ -147,12 +163,12 @@
   scrollbar-color: hsl(var(--muted-foreground) / 0.25) hsl(var(--muted) / 0.3);
 }
 
-/* ===== FOCUS STATES ===== */
+/* ===== FOCUS STATES — OLED High Contrast ===== */
 :focus-visible {
   @apply outline-none;
   box-shadow: 
     0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
+    0 0 0 4px hsl(var(--primary)); /* Ring mais forte */
 }
 
 button:focus-visible,
@@ -167,5 +183,7 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   @apply outline-none border-primary;
-  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary)),
+    0 0 0 3px hsl(var(--primary) / 0.1);
 }

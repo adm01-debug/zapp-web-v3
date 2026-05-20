@@ -11,7 +11,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Bot, Brain, Shield, Zap, BookOpen, ArrowRightLeft } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 
 export function ChatbotL1Config() {
   const { profile } = useAuth();
@@ -20,7 +20,7 @@ export function ChatbotL1Config() {
   const { data: flow, isLoading } = useQuery({
     queryKey: ['chatbot-l1-flow'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('chatbot_flows')
         .select('*')
         .eq('trigger_type', 'ai_l1')

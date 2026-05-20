@@ -3,112 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
-
-    <!-- Security Headers (Simplified for Preview) -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    
-    <!-- Primary Meta Tags -->
     <title>ZAPP Web - Plataforma de Multiatendimento</title>
-    <meta name="description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais. Inbox unificada, gestão de filas, dashboard com métricas e muito mais.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://pronto-talk-suite.lovable.app/" />
-    
-    <!-- Favicon -->
+    <meta name="description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    
-    <!-- PWA -->
     <meta name="theme-color" content="#25d366" />
-
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="ZAPP Web" />
-    
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://pronto-talk-suite.lovable.app/" />
-    
-    
-    <meta property="og:image" content="https://f65cb7da-e8aa-46a9-ad0d-8a6e1fc36710.lovableproject.com/og-image.png">
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    
-    
-    <meta name="twitter:image" content="https://f65cb7da-e8aa-46a9-ad0d-8a6e1fc36710.lovableproject.com/og-image.png">
-    
-    <!-- Resource Hints -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://rqmbchomazwsaupnuduf.supabase.co" />
-    <link rel="dns-prefetch" href="https://api.elevenlabs.io" />
-    <link rel="dns-prefetch" href="https://ai.gateway.lovable.dev" />
-    
-    <!-- Preload critical fonts for faster LCP -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" as="style" />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/src/index.css" as="style" />
-    
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "ZAPP Web",
-      "description": "Plataforma completa de multiatendimento WhatsApp para equipes comerciais.",
-      "url": "https://pronto-talk-suite.lovable.app",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "BRL"
-      }
-    }
-    </script>
-
-    <script>
-      (function(){
-        window.__APP_START_TIME__ = performance.now();
-        console.log('[BOOT] HTML scripts execution started');
-        
-        function logMetric(name, value) {
-          console.log('[METRIC] ' + name + ': ' + (value || performance.now() - window.__APP_START_TIME__).toFixed(2) + 'ms');
-        }
-
-        try {
-          logMetric('Theme Init Start');
-          var t = localStorage.getItem('theme');
-          var isDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.classList.toggle('dark', isDark);
-          
-          var skin = localStorage.getItem('theme-custom-colors');
-          if (skin) {
-            var c = JSON.parse(skin);
-            var root = document.documentElement;
-            if (c.cssVarsCache) {
-              for (var k in c.cssVarsCache) root.style.setProperty('--' + k, c.cssVarsCache[k]);
-            }
-            if (c.borderRadius != null) {
-              root.style.setProperty('--radius', (c.borderRadius / 16) + 'rem');
-            }
-          }
-          logMetric('Theme Init End');
-        } catch(e) {
-          console.error('[BOOT] Theme init failed:', e);
-        }
-      })();
-    </script>
-    <meta property="og:title" content="ZAPP Web - Plataforma de Multiatendimento">
-  <meta name="twitter:title" content="ZAPP Web - Plataforma de Multiatendimento">
-  <meta property="og:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais. Inbox unificada, gestão de filas, dashboard com métricas e muito mais.">
-  <meta name="twitter:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais. Inbox unificada, gestão de filas, dashboard com métricas e muito mais.">
-</head>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

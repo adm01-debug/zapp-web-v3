@@ -1,6 +1,6 @@
 /**
  * Web Vitals monitoring utility
- * Tracks Core Web Vitals (LCP, FID, CLS, INP, TTFB) and reports to console/analytics
+ * Tracks Core Web Vitals (LCP, FID, CLS, INP, TTFB), reports to console and backend observability.
  */
 
 import { getLogger } from '@/lib/logger';
@@ -14,8 +14,6 @@ interface WebVitalMetric {
   delta: number;
   id: string;
 }
-
-type MetricCallback = (metric: WebVitalMetric) => void;
 
 const thresholds = {
   LCP: { good: 2500, poor: 4000 },
@@ -34,96 +32,137 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
 }
 
 const metricsBuffer: WebVitalMetric[] = [];
+const uploadQueue: WebVitalMetric[] = [];
+let uploadTimer: number | null = null;
+const OBS_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/client-observability`;
+const OBS_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+async function flushMetrics() {
+  if (!uploadQueue.length || !OBS_KEY || !import.meta.env.VITE_SUPABASE_URL) return;
+
+  const batch = uploadQueue.splice(0, uploadQueue.length).map((metric) => ({
+    ...metric,
+    path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+    timestamp: new Date().toISOString(),
+  }));
+
+  try {
+    await fetch(OBS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: OBS_KEY,
+        Authorization: `Bearer ${OBS_KEY}`,
+      },
+      body: JSON.stringify({ metrics: batch }),
+      keepalive: true,
+    });
+  } catch (err) {
+    log.warn('Failed sending web-vitals to backend observability', err);
+  }
+}
+
+function scheduleFlush() {
+  if (uploadTimer !== null) return;
+  uploadTimer = window.setTimeout(() => {
+    uploadTimer = null;
+    void flushMetrics();
+  }, 3000);
+}
 
 function onMetric(metric: WebVitalMetric) {
   metricsBuffer.push(metric);
-  
+  uploadQueue.push(metric);
+
   const emoji = metric.rating === 'good' ? '🟢' : metric.rating === 'needs-improvement' ? '🟡' : '🔴';
-  log.info(`${emoji} ${metric.name}: ${metric.value.toFixed(metric.name === 'CLS' ? 3 : 0)}ms (${metric.rating})`);
+  const unit = metric.name === 'CLS' ? '' : 'ms';
+  log.info(`${emoji} ${metric.name}: ${metric.value.toFixed(metric.name === 'CLS' ? 3 : 0)}${unit} (${metric.rating})`);
+
+  if (typeof window !== 'undefined') scheduleFlush();
 }
 
 export function initWebVitals() {
   if (typeof window === 'undefined') return;
 
+  window.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      void flushMetrics();
+    }
+  });
+
   // LCP - Largest Contentful Paint
   try {
-    if (PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint')) {
-      const lcpObserver = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
-        if (lastEntry) {
-          onMetric({
-            name: 'LCP',
-            value: lastEntry.startTime,
-            rating: getRating('LCP', lastEntry.startTime),
-            delta: lastEntry.startTime,
-            id: `lcp-${Date.now()}`,
-          });
-        }
-      });
-      lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
-    }
-  } catch (e) { /* not supported */ }
+    const lcpObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const lastEntry = entries[entries.length - 1] as PerformanceEntry;
+      if (lastEntry) {
+        onMetric({
+          name: 'LCP',
+          value: lastEntry.startTime,
+          rating: getRating('LCP', lastEntry.startTime),
+          delta: lastEntry.startTime,
+          id: `lcp-${Date.now()}`,
+        });
+      }
+    });
+    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+  } catch (_e) { /* not supported */ }
 
   // FID - First Input Delay
   try {
-    if (PerformanceObserver.supportedEntryTypes.includes('first-input')) {
-      const fidObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
-          onMetric({
-            name: 'FID',
-            value: fid,
-            rating: getRating('FID', fid),
-            delta: fid,
-            id: `fid-${Date.now()}`,
-          });
-        }
-      });
-      fidObserver.observe({ type: 'first-input', buffered: true });
-    }
-  } catch (e) { /* not supported */ }
+    const fidObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const fid = (entry as PerformanceEventTiming).processingStart - entry.startTime;
+        onMetric({
+          name: 'FID',
+          value: fid,
+          rating: getRating('FID', fid),
+          delta: fid,
+          id: `fid-${Date.now()}`,
+        });
+      }
+    });
+    fidObserver.observe({ type: 'first-input', buffered: true });
+  } catch (_e) { /* not supported */ }
 
   // CLS - Cumulative Layout Shift
   try {
-    if (PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
-      let clsValue = 0;
-      const clsObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
-            clsValue += (entry as PerformanceEntry & { value: number }).value;
-          }
+    let clsValue = 0;
+    const clsObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
+          clsValue += (entry as PerformanceEntry & { value: number }).value;
         }
-        onMetric({
-          name: 'CLS',
-          value: clsValue,
-          rating: getRating('CLS', clsValue),
-          delta: clsValue,
-          id: `cls-${Date.now()}`,
-        });
+      }
+      onMetric({
+        name: 'CLS',
+        value: clsValue,
+        rating: getRating('CLS', clsValue),
+        delta: clsValue,
+        id: `cls-${Date.now()}`,
       });
-      clsObserver.observe({ type: 'layout-shift', buffered: true });
-    }
-  } catch (e) { /* not supported */ }
+    });
+    clsObserver.observe({ type: 'layout-shift', buffered: true });
+  } catch (_e) { /* not supported */ }
 
   // INP - Interaction to Next Paint
   try {
-    if (PerformanceObserver.supportedEntryTypes.includes('event')) {
-      const inpObserver = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          const duration = entry.duration;
-          onMetric({
-            name: 'INP',
-            value: duration,
-            rating: getRating('INP', duration),
-            delta: duration,
-            id: `inp-${Date.now()}`,
-          });
-        }
-      });
-      inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
-    }
-  } catch (e) { /* not supported */ }
+    const inpObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const duration = entry.duration;
+        onMetric({
+          name: 'INP',
+          value: duration,
+          rating: getRating('INP', duration),
+          delta: duration,
+          id: `inp-${Date.now()}`,
+        });
+      }
+    });
+    inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
+  } catch (_e) { /* not supported */ }
 
   // TTFB - Time to First Byte
   try {
@@ -138,7 +177,9 @@ export function initWebVitals() {
         id: `ttfb-${Date.now()}`,
       });
     }
-  } catch (e) { log.debug('[web-vitals] Navigation Timing API not supported'); }
+  } catch (e) {
+    log.debug('Navigation Timing API not supported', e);
+  }
 }
 
 export function getWebVitalsReport(): WebVitalMetric[] {

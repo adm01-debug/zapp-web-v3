@@ -2,12 +2,12 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
+import { dbFrom } from '@/integrations/datasource/db';
 
 export function useContactAssignment(contactId: string) {
   const assignAgent = useCallback(async (agentId: string | null) => {
     try {
-      const { error } = await supabase
-        .from('contacts')
+      const { error } = await dbFrom('contacts')
         .update({ assigned_to: agentId })
         .eq('id', contactId);
 
@@ -21,8 +21,7 @@ export function useContactAssignment(contactId: string) {
 
   const assignQueue = useCallback(async (queueId: string | null) => {
     try {
-      const { error } = await supabase
-        .from('contacts')
+      const { error } = await dbFrom('contacts')
         .update({ queue_id: queueId })
         .eq('id', contactId);
 

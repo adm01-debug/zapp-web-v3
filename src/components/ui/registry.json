@@ -1,0 +1,279 @@
+{
+  "alert": {
+    "name": "alert",
+    "variants": {
+      "variant": [
+        "default",
+        "destructive"
+      ]
+    }
+  },
+  "avatar": {
+    "name": "avatar",
+    "variants": {
+      "size": [
+        "xs",
+        "sm",
+        "default",
+        "lg",
+        "xl"
+      ]
+    }
+  },
+  "badge": {
+    "name": "badge",
+    "variants": {
+      "variant": [
+        "default",
+        "hover",
+        "secondary",
+        "hover",
+        "destructive",
+        "hover",
+        "outline",
+        "hover",
+        "subtle",
+        "success",
+        "warning",
+        "info",
+        "whatsapp",
+        "hover",
+        "glowPurple",
+        "hover"
+      ]
+    }
+  },
+  "button": {
+    "name": "button",
+    "variants": {
+      "variant": [
+        "default",
+        "hover",
+        "hover",
+        "destructive",
+        "hover",
+        "hover",
+        "outline",
+        "hover",
+        "hover",
+        "hover",
+        "secondary",
+        "hover",
+        "hover",
+        "ghost",
+        "hover",
+        "hover",
+        "link",
+        "hover",
+        "whatsapp",
+        "hover",
+        "hover",
+        "glowPurple",
+        "hover",
+        "hover",
+        "glowGradient",
+        "hover",
+        "neon",
+        "hover",
+        "hover",
+        "neonOutline",
+        "hover",
+        "hover",
+        "hover",
+        "success",
+        "hover",
+        "hover"
+      ],
+      "size": [
+        "default",
+        "sm",
+        "lg",
+        "xl",
+        "icon"
+      ]
+    }
+  },
+  "card": {
+    "name": "card",
+    "variants": {
+      "variant": [
+        "default",
+        "elevated",
+        "hover",
+        "hover",
+        "interactive",
+        "hover",
+        "hover",
+        "selected",
+        "ghost",
+        "glass",
+        "neon",
+        "gradient"
+      ],
+      "padding": [
+        "none",
+        "sm",
+        "default",
+        "lg"
+      ]
+    }
+  },
+  "dialog": {
+    "name": "dialog",
+    "variants": {
+      "size": [
+        "sm",
+        "default",
+        "lg",
+        "xl",
+        "full"
+      ]
+    }
+  },
+  "icon-button": {
+    "name": "icon-button",
+    "variants": {
+      "variant": [
+        "default",
+        "hover",
+        "hover",
+        "secondary",
+        "hover",
+        "ghost",
+        "hover",
+        "hover",
+        "outline",
+        "hover",
+        "hover",
+        "destructive",
+        "hover",
+        "muted",
+        "hover"
+      ],
+      "size": [
+        "sm",
+        "default",
+        "lg",
+        "xl"
+      ]
+    }
+  },
+  "input": {
+    "name": "input",
+    "variants": {
+      "variant": [
+        "default",
+        "visible",
+        "glow",
+        "visible",
+        "visible",
+        "neon",
+        "visible",
+        "visible",
+        "ghost",
+        "visible",
+        "visible",
+        "underline",
+        "visible",
+        "visible"
+      ],
+      "inputSize": [
+        "sm",
+        "default",
+        "lg"
+      ]
+    }
+  },
+  "sheet": {
+    "name": "sheet",
+    "variants": {
+      "side": [
+        "top",
+        "bottom",
+        "left",
+        "sm",
+        "right",
+        "sm"
+      ]
+    }
+  },
+  "skeleton": {
+    "name": "skeleton",
+    "variants": {
+      "variant": [
+        "pulse",
+        "shimmer",
+        "before",
+        "before",
+        "before",
+        "before",
+        "before",
+        "before",
+        "before",
+        "before",
+        "wave",
+        "after",
+        "after",
+        "after",
+        "after",
+        "after",
+        "after",
+        "after",
+        "after",
+        "subtle"
+      ],
+      "speed": [
+        "slow",
+        "duration",
+        "default",
+        "duration",
+        "fast",
+        "duration"
+      ]
+    }
+  },
+  "toast": {
+    "name": "toast",
+    "variants": {
+      "variant": [
+        "default",
+        "destructive"
+      ]
+    }
+  },
+  "toggle": {
+    "name": "toggle",
+    "variants": {
+      "variant": [
+        "default",
+        "outline",
+        "hover",
+        "hover"
+      ],
+      "size": [
+        "default",
+        "sm",
+        "lg"
+      ]
+    }
+  },
+  "tooltip": {
+    "name": "tooltip",
+    "variants": {
+      "variant": [
+        "default",
+        "dark",
+        "info",
+        "success",
+        "warning",
+        "error",
+        "neon"
+      ],
+      "size": [
+        "sm",
+        "default",
+        "lg"
+      ]
+    }
+  }
+}

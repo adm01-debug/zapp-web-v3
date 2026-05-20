@@ -14,7 +14,7 @@ import { Phone, PhoneCall, PhoneIncoming, PhoneOutgoing, PhoneMissed, Settings, 
 import { format, formatDuration, intervalToDuration } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DialPad } from './DialPad';
-import { useSipClient } from '@/hooks/useSipClient';
+import { useSipClient } from '@/features/inbox';
 
 interface Call {
   id: string;
@@ -72,7 +72,7 @@ export function VoIPPanel() {
   };
 
   const handleSipConnect = async () => {
-    const { data } = await supabase.functions.invoke('get-sip-password');
+    const { data, error } = await supabase.functions.invoke('get-sip-password');
     const password = data?.password;
     if (!password) {
       toast.error('Senha SIP não configurada. Adicione o segredo SIP_PASSWORD.');

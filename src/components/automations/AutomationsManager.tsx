@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Zap, Plus } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useAutomations, type AutomationRow } from './useAutomations';
 import { AutomationCard } from './AutomationCard';
 import { AutomationEditorDialog } from './AutomationEditorDialog';

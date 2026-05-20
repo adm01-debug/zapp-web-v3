@@ -39,7 +39,7 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
 
   useEffect(() => {
     async function fetch() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('contact_purchases')
         .select('id, title, amount, currency, status, purchased_at, purchase_type, created_at')
         .eq('contact_id', contactId)

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Mic, Search, Calendar, X, RefreshCw } from 'lucide-react';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { TranscriptionContactGroup } from './TranscriptionContactGroup';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface TranscriptionRecord {
   id: string; content: string; transcription: string; media_url: string | null;
@@ -31,8 +32,7 @@ export function TranscriptionsHistoryView() {
   const fetchTranscriptions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
+      const { data, error } = await dbFrom('messages')
         .select(`id, content, transcription, media_url, created_at, contact_id, contacts!inner (id, name, phone, avatar_url)`)
         .eq('message_type', 'audio')
         .not('transcription', 'is', null)

@@ -2,17 +2,21 @@ import { lazyWithRetry } from '@/lib/lazyWithRetry';
 import React from 'react';
 
 // Lazy-loaded views with automatic retry (3 attempts with backoff)
-export const RealtimeInboxView = lazyWithRetry(() => import('@/components/inbox/RealtimeInboxView').then(m => ({ default: m.RealtimeInboxView })));
+export const RealtimeInboxView = lazyWithRetry(() => import('@/features/inbox').then(m => ({ default: m.RealtimeInboxView })));
 export const DashboardView = lazyWithRetry(() => import('@/components/dashboard/DashboardView').then(m => ({ default: m.DashboardView })));
 export const SentimentAlertsDashboard = lazyWithRetry(() => import('@/components/dashboard/SentimentAlertsDashboard').then(m => ({ default: m.SentimentAlertsDashboard })));
 export const AgentsView = lazyWithRetry(() => import('@/components/agents/AgentsView').then(m => ({ default: m.AgentsView })));
 export const QueuesView = lazyWithRetry(() => import('@/components/queues/QueuesView').then(m => ({ default: m.QueuesView })));
-export const ContactsView = lazyWithRetry(() => import('@/components/contacts/ContactsView').then(m => ({ default: m.ContactsView })));
+// ContactsView agora aponta para o layout rico (KPIs + Aniversários + Abas por tipo
+// + Grid/Lista/Tabela/Pipeline/Mapa/Analytics). O ContactsView legacy
+// (Todos/Duplicados/Lixeira) foi mantido no repositório como fallback.
+export const ContactsView = lazyWithRetry(() => import('@/components/contacts/ContactsRichView').then(m => ({ default: m.ContactsRichView })));
 export const ConnectionsView = lazyWithRetry(() => import('@/components/connections/ConnectionsView').then(m => ({ default: m.ConnectionsView })));
+export const ConnectionsIntegrationsHub = lazyWithRetry(() => import('@/components/connections/ConnectionsIntegrationsHub').then(m => ({ default: m.ConnectionsIntegrationsHub })));
 export const TagsView = lazyWithRetry(() => import('@/components/tags/TagsView').then(m => ({ default: m.TagsView })));
 export const SettingsView = lazyWithRetry(() => import('@/components/settings/SettingsView').then(m => ({ default: m.SettingsView })));
 export const ClientWalletView = lazyWithRetry(() => import('@/components/wallet/ClientWalletView').then(m => ({ default: m.ClientWalletView })));
-export const AdminView = lazyWithRetry(() => import('@/components/admin/AdminView').then(m => ({ default: m.AdminView })));
+export const AdminView = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.AdminView })));
 export const ProductManagement = lazyWithRetry(() => import('@/components/catalog/ExternalProductManagement').then(m => ({ default: m.ExternalProductManagement })));
 export const GroupsView = lazyWithRetry(() => import('@/components/groups/GroupsView').then(m => ({ default: m.GroupsView })));
 export const TranscriptionsHistoryView = lazyWithRetry(() => import('@/components/transcriptions/TranscriptionsHistoryView').then(m => ({ default: m.TranscriptionsHistoryView })));
@@ -44,20 +48,39 @@ export const PerformanceMonitor = lazyWithRetry(() => import('@/components/perfo
 export const OmnichannelInbox = lazyWithRetry(() => import('@/components/omnichannel/OmnichannelInbox').then(m => ({ default: m.OmnichannelInbox })));
 export const AuditLogDashboard = lazyWithRetry(() => import('@/components/security/AuditLogDashboard').then(m => ({ default: m.AuditLogDashboard })));
 export const AdminTelemetriaPage = lazyWithRetry(() => import('@/pages/AdminTelemetriaPage'));
+export const AdminFailedMessagesPage = lazyWithRetry(() => import('@/pages/AdminFailedMessagesPage'));
+export const AdminFailedAuthMessagesPage = lazyWithRetry(() => import('@/pages/admin/AdminFailedAuthMessagesPage'));
+export const AdminSearchInsightsPage = lazyWithRetry(() => import('@/pages/AdminSearchInsightsPage'));
+export const AdminWebhookEventsPage = lazyWithRetry(() => import('@/pages/AdminWebhookEventsPage'));
+export const AdminEvolutionApiLogsPage = lazyWithRetry(() => import('@/pages/AdminEvolutionApiLogsPage'));
+export const AdminAlertHistoryPage = lazyWithRetry(() => import('@/pages/AdminAlertHistoryPage'));
+export const AdminWebhookOverviewPage = lazyWithRetry(() => import('@/pages/AdminWebhookOverviewPage'));
 export const NPSDashboard = lazyWithRetry(() => import('@/components/nps/NPSDashboard').then(m => ({ default: m.NPSDashboard })));
 export const SLADashboardView = lazyWithRetry(() => import('@/components/queues/SLADashboard').then(m => ({ default: m.SLADashboard })));
 export const TeamChatView = lazyWithRetry(() => import('@/components/team-chat/TeamChatView').then(m => ({ default: m.TeamChatView })));
-export const GmailInboxView = lazyWithRetry(() => import('@/components/gmail/GmailInboxView'));
+export const EmailInboxView = lazyWithRetry(() => import('@/components/gmail/GmailInboxView'));
 export const EmailChatView = lazyWithRetry(() => import('@/components/email/EmailChatInbox').then(m => ({ default: m.EmailChatInbox })));
-export const PublicApiDashboard = lazyWithRetry(() => import('@/components/admin/PublicApiDashboard').then(m => ({ default: m.PublicApiDashboard })));
-export const GmailWebhookMonitor = lazyWithRetry(() => import('@/components/admin/GmailWebhookMonitor').then(m => ({ default: m.GmailWebhookMonitor })));
-export const MediaMigrationTool = lazyWithRetry(() => import('@/components/admin/MediaMigrationTool').then(m => ({ default: m.MediaMigrationTool })));
-export const SicoobBridgeDashboard = lazyWithRetry(() => import('@/components/admin/SicoobBridgeDashboard').then(m => ({ default: m.SicoobBridgeDashboard })));
+export const PublicApiDashboard = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.PublicApiDashboard })));
+export const EmailWebhookMonitor = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.EmailWebhookMonitor })));
+export const MediaMigrationTool = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.MediaMigrationTool })));
+export const SicoobBridgeDashboard = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.SicoobBridgeDashboard })));
 export const CRM360ExplorerView = lazyWithRetry(() => import('@/components/crm360/CRM360ExplorerView').then(m => ({ default: m.CRM360ExplorerView })));
-export const AIUsageDashboard = lazyWithRetry(() => import('@/components/admin/AIUsageDashboard').then(m => ({ default: m.AIUsageDashboard })));
+export const AIUsageDashboard = lazyWithRetry(() => import('@/features/admin').then(m => ({ default: m.AIUsageDashboard })));
 export const TalkXView = lazyWithRetry(() => import('@/components/talkx/TalkXView'));
 export const EvolutionMonitoringDashboard = lazyWithRetry(() => import('@/components/monitoring/EvolutionMonitoringDashboard').then(m => ({ default: m.EvolutionMonitoringDashboard })));
-export const TransferView = lazyWithRetry(() => import('@/components/transfers/TransferView').then(m => ({ default: m.TransferView })));
+export const AdminWebhookSecretStatusPage = lazyWithRetry(() => import('@/pages/AdminWebhookSecretStatusPage'));
+export const AdminInstancePausesPage = lazyWithRetry(() => import('@/pages/AdminInstancePausesPage'));
+export const AgentsOperationsPage = lazyWithRetry(() => import('@/pages/inbox/AgentsOperationsPage'));
+export const AdminRealtimeMonitorPage = lazyWithRetry(() => import('@/pages/AdminRealtimeMonitorPage'));
+export const AdminDispatchErrorsHistoryPage = lazyWithRetry(() => import('@/pages/AdminDispatchErrorsHistoryPage'));
+export const AdminInboxSyncStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminInboxSyncStatusPage'));
+export const AdminEvoApiHealthPage = lazyWithRetry(() => import('@/pages/admin/AdminEvoApiHealthPage'));
+export const AdminEmailStatusPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailStatusPage'));
+export const AdminEmailAuditPage = lazyWithRetry(() => import('@/pages/admin/AdminEmailAuditPage'));
+export const AdminConnectionsPage = lazyWithRetry(() => import('@/pages/admin/Connections'));
+
+export const InboxPage = lazyWithRetry(() => import('@/pages/inbox/InboxPage'));
+export const SLAHistory = lazyWithRetry(() => import('@/pages/SLAHistory'));
 export const AchievementsSystemLazy = lazyWithRetry(async () => {
   const m = await import('@/components/gamification/AchievementsSystem');
   return { default: m.AchievementsSystem };

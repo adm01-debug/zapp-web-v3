@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   MessageSquare, Edit, Trash2, MoreVertical, Phone, Mail,
-  Briefcase,
+  Briefcase, Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -19,6 +19,7 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import { CompanyLogo } from './CompanyLogo';
 import { HighlightText } from './HighlightText';
+import { calculateContactHealth, getHealthColor } from '@/lib/contact-health';
 import type { ContactItemProps } from './types';
 
 export function ContactListItem({
@@ -29,6 +30,7 @@ export function ContactListItem({
 
   return (
     <motion.div
+      layoutId={`contact-${contact.id}`}
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02, duration: 0.25 }}
@@ -49,12 +51,14 @@ export function ContactListItem({
 
       {/* Avatar with company logo overlay */}
       <div className="relative shrink-0">
-        <Avatar className="w-11 h-11">
-          <AvatarImage src={contact.avatar_url || undefined} />
-          <AvatarFallback className={cn('font-semibold text-sm', avatarColors.bg, avatarColors.text)}>
-            {getInitials(contact.name)}
-          </AvatarFallback>
-        </Avatar>
+        <motion.div layoutId={`avatar-${contact.id}`}>
+          <Avatar className="w-[53px] h-[53px]">
+            <AvatarImage src={contact.avatar_url || undefined} />
+            <AvatarFallback className={cn('font-semibold text-sm', avatarColors.bg, avatarColors.text)}>
+              {getInitials(contact.name)}
+            </AvatarFallback>
+          </Avatar>
+        </motion.div>
         <div className={cn(
           "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background",
           typeConfig.dotBg
@@ -80,6 +84,13 @@ export function ContactListItem({
             highlight={searchQuery}
             className="font-semibold text-sm text-foreground truncate block"
           />
+          <div className={cn(
+            "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-tight shrink-0",
+            getHealthColor(calculateContactHealth(contact))
+          )}>
+            <Activity className="w-2.5 h-2.5" />
+            {calculateContactHealth(contact)}%
+          </div>
           <Badge
             variant="outline"
             className={cn("text-[10px] h-5 px-1.5 font-medium gap-1 shrink-0", typeConfig.badgeClass)}
@@ -97,13 +108,13 @@ export function ContactListItem({
                 fallbackCompanyName={contact.company}
                 size="xs"
               />
-              <span className="truncate max-w-[120px]">{companyName || contact.company}</span>
+              <HighlightText text={companyName || contact.company || ""} highlight={searchQuery} className="truncate max-w-[120px]" />
             </span>
           )}
           {contact.job_title && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <Briefcase className="w-3 h-3" />
-              {contact.job_title}
+              <HighlightText text={contact.job_title} highlight={searchQuery} />
             </span>
           )}
         </div>
@@ -116,10 +127,10 @@ export function ContactListItem({
           href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-mono text-[11px] hover:text-primary hover:underline transition-colors"
+          className=" text-[11px] hover:text-primary hover:underline transition-colors"
           title="Abrir no WhatsApp"
         >
-          {contact.phone}
+          <HighlightText text={contact.phone} highlight={searchQuery} />
         </a>
       </div>
 
@@ -133,7 +144,7 @@ export function ContactListItem({
               className="truncate text-[11px] hover:text-primary hover:underline transition-colors"
               title="Enviar email"
             >
-              {contact.email}
+              <HighlightText text={contact.email} highlight={searchQuery} />
             </a>
           </>
         ) : (

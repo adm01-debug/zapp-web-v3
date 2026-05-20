@@ -10,7 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Clock, CheckCircle2, AlertTriangle, XCircle, Users, TrendingUp, Target, RefreshCw, Calendar } from 'lucide-react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { cn } from '@/lib/utils';
-import { useSLAMetrics, type PeriodFilter } from '@/hooks/useSLAMetrics';
+import { useSLAMetrics, type PeriodFilter } from '@/features/sla';
 
 function getRateColor(rate: number): string {
   if (rate >= 90) return 'text-success';

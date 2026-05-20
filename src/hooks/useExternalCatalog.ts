@@ -80,13 +80,26 @@ export interface CatalogFilters {
 }
 
 // ─── API invoke ───────────────────────────────────────────────
+import { hasField, readArray, readVariants } from '@/lib/runtimeGuards';
+
 async function invokeAction<T = unknown>(action: string, params: Record<string, unknown> = {}): Promise<T> {
   const { data, error } = await supabase.functions.invoke('promogifts-catalog', {
     body: { action, params },
   });
   if (error) throw new Error(error.message);
-  if (data?.error) throw new Error(data.error);
+  if (hasField(data, 'error') && typeof data.error === 'string') {
+    throw new Error(data.error);
+  }
   return data as T;
+}
+
+/** Ensures a product object always exposes a typed `variants` array. */
+export function withSafeVariants(product: ExternalProduct | null | undefined): ExternalProduct | null {
+  if (!product) return null;
+  return {
+    ...product,
+    variants: readVariants<ExternalProductVariant>(product),
+  };
 }
 
 // ─── Hook ─────────────────────────────────────────────────────
@@ -100,12 +113,16 @@ export function useExternalCatalog() {
     queryKey: ['external-catalog', 'products', filters],
     queryFn: async () => {
       log.debug('Fetching products with filters:', JSON.stringify(filters));
-      const result = await invokeAction<{ data: ExternalProduct[]; meta: { total: number; duration_ms: number } }>(
-        'list_products',
-        filters as Record<string, unknown>
-      );
-      log.debug('Got', result.data?.length, 'products, total:', result.meta?.total);
-      return result;
+      const result = await invokeAction<unknown>('list_products', filters as Record<string, unknown>);
+      const products = readArray<ExternalProduct>(result, 'data').map((p) => ({
+        ...p,
+        variants: readVariants<ExternalProductVariant>(p),
+      }));
+      const meta = (result && typeof result === 'object' && 'meta' in result
+        ? (result as { meta?: { total?: number; duration_ms?: number } }).meta
+        : undefined) ?? { total: 0, duration_ms: 0 };
+      log.debug('Got', products.length, 'products, total:', meta.total);
+      return { data: products, meta: { total: meta.total ?? 0, duration_ms: meta.duration_ms ?? 0 } };
     },
     enabled: ready,
     staleTime: 5 * 60 * 1000,
@@ -117,8 +134,8 @@ export function useExternalCatalog() {
   const categoriesQuery = useQuery({
     queryKey: ['external-catalog', 'categories'],
     queryFn: async () => {
-      const result = await invokeAction<{ data: ExternalCategory[] }>('list_categories');
-      return result.data || [];
+      const result = await invokeAction<unknown>('list_categories');
+      return readArray<ExternalCategory>(result, 'data');
     },
     enabled: ready,
     staleTime: 30 * 60 * 1000,
@@ -129,8 +146,8 @@ export function useExternalCatalog() {
   const suppliersQuery = useQuery({
     queryKey: ['external-catalog', 'suppliers'],
     queryFn: async () => {
-      const result = await invokeAction<{ data: ExternalSupplier[] }>('list_suppliers');
-      return result.data || [];
+      const result = await invokeAction<unknown>('list_suppliers');
+      return readArray<ExternalSupplier>(result, 'data');
     },
     enabled: ready,
     staleTime: 30 * 60 * 1000,
@@ -148,8 +165,11 @@ export function useExternalCatalog() {
       const result = await queryClient.fetchQuery({
         queryKey: ['external-catalog', 'product', productId],
         queryFn: async () => {
-          const res = await invokeAction<{ data: ExternalProduct }>('get_product', { product_id: productId });
-          return res.data || null;
+          const res = await invokeAction<unknown>('get_product', { product_id: productId });
+          const product = (res && typeof res === 'object' && 'data' in res
+            ? (res as { data?: ExternalProduct }).data
+            : null) ?? null;
+          return withSafeVariants(product);
         },
         staleTime: 5 * 60 * 1000,
       });

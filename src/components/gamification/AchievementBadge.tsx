@@ -5,7 +5,7 @@ import {
   TrendingUp, CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ACHIEVEMENT_TYPES } from '@/hooks/useAgentGamification';
+import { ACHIEVEMENT_TYPES } from '@/features/admin';
 
 export interface AchievementBadgeProps {
   type: string;

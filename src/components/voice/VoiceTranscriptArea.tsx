@@ -1,6 +1,8 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
-import type { VoiceAgentPhase } from '@/hooks/voice/types';
+import type { VoiceAgentPhase } from '@/features/inbox';
+import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface VoiceTranscriptAreaProps {
   phase: VoiceAgentPhase;
@@ -35,7 +37,7 @@ export function VoiceTranscriptArea({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-center text-sm text-white/50 italic"
+            className="text-center text-sm text-muted-foreground/50 italic"
           >
             "{partialTranscript}"
           </motion.div>
@@ -46,7 +48,7 @@ export function VoiceTranscriptArea({
             key="final"
             initial={{ opacity: 0, y: prefersReduced ? 0 : 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center text-sm text-white/80 font-medium"
+            className="text-center text-sm text-foreground/80 font-medium"
           >
             🎤 "{finalTranscript}"
           </motion.div>
@@ -57,55 +59,41 @@ export function VoiceTranscriptArea({
             key="response"
             initial={{ opacity: 0, y: prefersReduced ? 0 : 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center text-sm font-medium px-3 py-2 rounded-xl"
-            style={{
-              background: `linear-gradient(135deg, ${colors.primary.replace('hsl(', 'hsla(').replace(')', ', 0.08)')}, ${colors.secondary.replace('hsl(', 'hsla(').replace(')', ', 0.08)')})`,
-              border: `1px solid ${colors.primary.replace('hsl(', 'hsla(').replace(')', ', 0.15)')}`,
-              color: 'rgba(255,255,255,0.85)',
-            }}
+            className="text-center text-sm font-medium px-4 py-3 rounded-2xl border border-primary/20 bg-primary/5 text-foreground shadow-glow-primary/5"
           >
-            <MessageCircle className="w-3 h-3 inline-block mr-1.5 opacity-60" />
+            <MessageCircle className="w-4 h-4 inline-block mr-2 opacity-70 text-primary" />
             {agentResponse}
           </motion.div>
         )}
 
-        {phase === 'processing' && !agentResponse && (
+        {(phase === 'processing' || phase === 'booting') && !agentResponse && (
           <motion.div
-            key="processing"
+            key={phase}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 text-white/40 text-xs"
+            className="flex items-center justify-center gap-2 text-muted-foreground/50 text-xs font-medium"
           >
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Processando com IA...
-          </motion.div>
-        )}
-
-        {phase === 'booting' && (
-          <motion.div
-            key="booting"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-2 text-white/40 text-xs"
-          >
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Conectando microfone...
+            <Loader2 className="w-4 h-4 animate-spin text-primary/60" />
+            {phase === 'processing' ? 'Processando com IA...' : 'Conectando microfone...'}
           </motion.div>
         )}
 
         {error && (
           <motion.div
             key="error"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col gap-1.5 items-center text-center px-3 py-2.5 rounded-xl bg-destructive/10 border border-destructive/20"
-            role="alert"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="flex items-center gap-2 text-destructive text-xs font-medium">
-              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-              {error}
-            </div>
-            <span className="text-[10px] text-white/30">Toque no orbe para tentar novamente</span>
+            <Alert variant="destructive" className="bg-destructive/5 border-destructive/20 py-3">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle className="text-xs font-bold uppercase tracking-wider mb-1">Erro de Voz</AlertTitle>
+              <AlertDescription className="text-xs opacity-90">
+                {error}
+                <div className="mt-2 text-[10px] text-muted-foreground font-normal">
+                  Toque no orbe para tentar novamente
+                </div>
+              </AlertDescription>
+            </Alert>
           </motion.div>
         )}
       </AnimatePresence>

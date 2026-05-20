@@ -59,11 +59,80 @@ function checkRateLimit(userId: string): boolean {
   return entry.count <= RATE_LIMIT;
 }
 
+const REQUIRED_SECRETS = ["PROMOGIFTS_SUPABASE_URL", "PROMOGIFTS_SUPABASE_ANON_KEY"] as const;
+
+function buildMisconfigPayload(missing: string[]) {
+  return {
+    status: "error",
+    code: "EXTERNAL_DB_NOT_CONFIGURED",
+    error: "Catálogo PromoGifts indisponível: o banco externo não está configurado.",
+    configured: false,
+    reachable: false,
+    missing,
+    required_secrets: REQUIRED_SECRETS,
+    setup_instructions: {
+      step_1: "Abra Lovable Cloud → Connectors → Secrets (ou use o painel de Backend).",
+      step_2: `Crie/atualize os secrets ausentes: ${missing.join(", ")}.`,
+      step_3:
+        "Use a URL do projeto Supabase do PromoGifts (https://<ref>.supabase.co) e a anon key do mesmo projeto.",
+      step_4: "Aguarde alguns segundos para o redeploy automático da edge function.",
+      step_5: "Valide com GET /functions/v1/promogifts-catalog/health (espera-se status: ok).",
+    },
+    docs: "Os secrets ficam disponíveis automaticamente em todas as edge functions via Deno.env.get().",
+    timestamp: new Date().toISOString(),
+  };
+}
+
+async function runHealthCheck(req: Request) {
+  const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
+  const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
+
+  if (!extUrl || !extKey) {
+    const missing = [
+      !extUrl && "PROMOGIFTS_SUPABASE_URL",
+      !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+    ].filter(Boolean) as string[];
+    return jsonRes(buildMisconfigPayload(missing), 503, req);
+  }
+
+  const startedAt = performance.now();
+  try {
+    const extClient = createClient(extUrl, extKey);
+    const { error } = await extClient.from("categories").select("id", { count: "exact", head: true }).limit(1);
+    const duration_ms = Math.round(performance.now() - startedAt);
+    if (error) {
+      return jsonRes({
+        status: "error", code: "EXTERNAL_DB_UNREACHABLE",
+        configured: true, reachable: false,
+        error: error.message, duration_ms,
+        hint: "Secrets presentes, mas o banco externo rejeitou a query. Verifique URL/anon key e RLS.",
+      }, 502, req);
+    }
+    return jsonRes({
+      status: "ok", configured: true, reachable: true, duration_ms,
+      checked_at: new Date().toISOString(),
+    }, 200, req);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return jsonRes({
+      status: "error", code: "EXTERNAL_DB_UNREACHABLE",
+      configured: true, reachable: false, error: msg,
+      duration_ms: Math.round(performance.now() - startedAt),
+    }, 502, req);
+  }
+}
+
 Deno.serve(async (req) => {
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
 
   const log = new Logger("promogifts-catalog");
+
+  // Health check: GET /health or POST { action: "health" } — no auth required
+  const url = new URL(req.url);
+  if (req.method === "GET" && url.pathname.endsWith("/health")) {
+    return runHealthCheck(req);
+  }
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -86,10 +155,21 @@ Deno.serve(async (req) => {
       return jsonRes({ error: "Too many requests. Try again in 1 minute." }, 429, req);
     }
 
+    // Allow lightweight health probe via POST { action: "health" } (auth required)
+    const probeBody = await req.clone().json().catch(() => null);
+    if (probeBody?.action === "health") {
+      return runHealthCheck(req);
+    }
+
     const extUrl = Deno.env.get("PROMOGIFTS_SUPABASE_URL");
     const extKey = Deno.env.get("PROMOGIFTS_SUPABASE_ANON_KEY");
     if (!extUrl || !extKey) {
-      return jsonRes({ error: "External DB not configured" }, 500, req);
+      const missing = [
+        !extUrl && "PROMOGIFTS_SUPABASE_URL",
+        !extKey && "PROMOGIFTS_SUPABASE_ANON_KEY",
+      ].filter(Boolean) as string[];
+      log.error("Missing PromoGifts external DB secrets", { missing });
+      return jsonRes(buildMisconfigPayload(missing), 503, req);
     }
     const extClient = createClient(extUrl, extKey);
 

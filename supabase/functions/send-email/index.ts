@@ -1,59 +1,75 @@
-import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
-import { SendEmailSchema, parseBody } from "../_shared/schemas.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-Deno.serve(async (req) => {
-  const cors = handleCors(req);
-  if (cors) return cors;
+/**
+ * send-email — Endpoint unificado legado (mantido para compatibilidade)
+ *
+ * DEPRECADO: Redireciona para gmail-send com action=send.
+ * Use gmail-send diretamente em novos desenvolvimentos.
+ */
 
-  const log = new Logger("send-email");
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
-  const ip = getClientIP(req);
-  const rl = checkRateLimit(`send-email:${ip}`, 30, 60_000);
-  if (!rl.allowed) return errorResponse('Rate limit exceeded', 429, req);
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
-    const RESEND_API_KEY = requireEnv("RESEND_API_KEY");
+    const body = await req.json().catch(() => ({}));
 
-    const parsed = parseBody(SendEmailSchema, await req.json());
-    if (!parsed.success) return errorResponse(parsed.error, 400, req);
+    // Verifica se há accountId para usar gmail-send
+    if (body.accountId) {
+      // Delega para gmail-send
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const serviceKey  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const body = parsed.data;
+      const res = await fetch(`${supabaseUrl}/functions/v1/gmail-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({ ...body, action: body.action ?? 'send' }),
+      });
 
-    const payload: Record<string, unknown> = {
-      from: body.from || "ZAPP System <noreply@zapp.com>",
-      to: Array.isArray(body.to) ? body.to : [body.to],
-      subject: body.subject,
-    };
-
-    if (body.html) payload.html = body.html;
-    if (body.text) payload.text = body.text;
-    if (body.reply_to) payload.reply_to = body.reply_to;
-    if (body.cc) payload.cc = body.cc;
-    if (body.bcc) payload.bcc = body.bcc;
-    if (body.attachments) payload.attachments = body.attachments;
-
-    log.info("Sending email", { to: payload.to, subject: body.subject });
-
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      log.error("Resend API error", { status: response.status, detail: JSON.stringify(data).substring(0, 300) });
-      return errorResponse("Failed to send email", response.status, req);
+      const data = await res.json();
+      return json(data, res.status);
     }
 
-    log.done(200, { emailId: data.id });
-    return jsonResponse({ success: true, id: data.id }, 200, req);
-  } catch (error: unknown) {
-    log.error("Unhandled error", { error: error instanceof Error ? error.message : String(error) });
-    return errorResponse(error instanceof Error ? error.message : "Internal error", 500, req);
+    // Fallback: Resend / SMTP genérico (para emails transacionais sem conta Gmail)
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendKey) {
+      return json({ error: 'Nenhum provedor de email configurado. Forneça accountId para usar Gmail ou configure RESEND_API_KEY.' }, 503);
+    }
+
+    const { to, subject, html, from = 'noreply@zappweb.app' } = body;
+    if (!to || !subject || !html) {
+      return json({ error: 'to, subject e html são obrigatórios' }, 400);
+    }
+
+    const resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, html }),
+    });
+
+    const resendData = await resendRes.json();
+    if (!resendRes.ok) {
+      return json({ error: resendData.message ?? 'Erro no Resend' }, resendRes.status);
+    }
+
+    return json({ messageId: resendData.id, provider: 'resend' });
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return json({ error: msg }, 500);
   }
 });

@@ -1,10 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2, Radio, Copy } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Send, Shield, PlayCircle, Loader2, Radio, Copy, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { RetryMetricsPanel } from './RetryMetricsPanel';
+import { CrossTabDedupePanel } from './CrossTabDedupePanel';
+import { DLQPanel } from './DLQPanel';
+import { DLQAuditHistory } from './DLQAuditHistory';
 import type { ConnectionInfo, WebhookTestResult, WebhookConfig } from './hooks/useEvolutionMonitoring';
+
+interface SecretStatus {
+  configured: boolean;
+  length: number;
+  hashPrefix: string | null;
+  strictMode: boolean;
+  checkedAt: string;
+}
 
 interface Props {
   connections: ConnectionInfo[];
@@ -35,6 +49,25 @@ const EVENT_CATEGORIES: Record<string, string[]> = {
 
 export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig, reconfiguring, onTest, onReconfigure, onCheckConfig }: Props) {
   const configuredEvents = webhookConfig?.events || [];
+  const [secretStatus, setSecretStatus] = useState<SecretStatus | null>(null);
+  const [loadingSecret, setLoadingSecret] = useState(false);
+
+  const loadSecretStatus = async () => {
+    setLoadingSecret(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('webhook-secret-status');
+      if (error) throw error;
+      setSecretStatus(data as SecretStatus);
+    } catch (e) {
+      toast.error(`Falha ao verificar segredo do webhook: ${e instanceof Error ? e.message : 'erro'}`);
+    } finally {
+      setLoadingSecret(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSecretStatus();
+  }, []);
 
   const copyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
@@ -43,6 +76,66 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
 
   return (
     <div className="space-y-4">
+      {/* Webhook Secret Status Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <KeyRound className="w-4 h-4" />Segredo HMAC do Webhook
+          </CardTitle>
+          <CardDescription>
+            Status do <code className="text-[10px]">WEBHOOK_SECRET</code> — apenas hash parcial é exibido (nunca o valor).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 flex-wrap">
+            {secretStatus ? (
+              <>
+                {secretStatus.configured ? (
+                  <Badge className="bg-primary/80 hover:bg-primary/70">
+                    <CheckCircle2 className="w-3 h-3 mr-1" />Strict mode ativo
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <AlertTriangle className="w-3 h-3 mr-1" />Sem segredo — webhook aceito sem assinatura
+                  </Badge>
+                )}
+                {secretStatus.configured && (
+                  <>
+                    <span className="text-xs text-muted-foreground">
+                      Comprimento: <span className="">{secretStatus.length}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Hash SHA-256: <span className="">{secretStatus.hashPrefix}…</span>
+                    </span>
+                  </>
+                )}
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  Verificado: {new Date(secretStatus.checkedAt).toLocaleTimeString()}
+                </span>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">Carregando…</span>
+            )}
+            <Button variant="outline" size="sm" onClick={loadSecretStatus} disabled={loadingSecret}>
+              {loadingSecret ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Shield className="w-3 h-3 mr-1" />}
+              Re-verificar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Retry Metrics Panel */}
+      <RetryMetricsPanel />
+
+      {/* Cross-tab dedupe activity (collapsed duplicate sends across tabs) */}
+      <CrossTabDedupePanel />
+
+      {/* Dead-Letter Queue Panel */}
+      <DLQPanel />
+
+      {/* DLQ audit trail — who reprocessed, when, which IDs, outcome */}
+      <DLQAuditHistory />
+
       {/* Auto-load config for first connection if not loaded */}
       {!webhookConfig && connections.length > 0 && (
         <div className="flex gap-2">
@@ -81,10 +174,10 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
             {webhookTest.status !== 'idle' && webhookTest.status !== 'testing' && (
               <div className={cn(
                 'p-4 rounded-lg border',
-                webhookTest.status === 'success' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-destructive/5 border-destructive/20'
+                webhookTest.status === 'success' ? 'bg-primary/5 border-primary/20' : 'bg-destructive/5 border-destructive/20'
               )}>
                 <div className="flex items-center gap-2">
-                  {webhookTest.status === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                  {webhookTest.status === 'success' ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <XCircle className="w-4 h-4 text-destructive" />}
                   <span className="font-medium text-sm">{webhookTest.status === 'success' ? 'Sucesso' : 'Falha'}</span>
                   {webhookTest.latencyMs && <Badge variant="outline" className="text-xs">{webhookTest.latencyMs}ms</Badge>}
                 </div>
@@ -106,7 +199,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
             {webhookConfig ? (
               <>
                 <div className="flex items-center gap-2">
-                  {webhookConfig.configured ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-destructive" />}
+                  {webhookConfig.configured ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <XCircle className="w-4 h-4 text-destructive" />}
                   <span className="font-medium text-sm">{webhookConfig.configured ? 'Configurado' : 'NÃO Configurado'}</span>
                   <Badge variant="outline" className="text-[10px] ml-auto">{configuredEvents.length}/{ALL_EXPECTED_EVENTS.length} eventos</Badge>
                 </div>
@@ -119,7 +212,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
-                    <p className="text-xs font-mono break-all">{webhookConfig.url}</p>
+                    <p className="text-xs  break-all">{webhookConfig.url}</p>
                   </div>
                 )}
 
@@ -133,7 +226,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                     return (
                       <div key={category} className="p-2.5 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-2 mb-1.5">
-                          {allOk ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                          {allOk ? <CheckCircle2 className="w-3 h-3 text-primary" /> : <AlertTriangle className="w-3 h-3 text-warning-foreground" />}
                           <span className="text-[11px] font-medium">{category}</span>
                           <span className="text-[10px] text-muted-foreground ml-auto">{configured.length}/{events.length}</span>
                         </div>
@@ -144,7 +237,7 @@ export function MonitoringWebhookPanel({ connections, webhookTest, webhookConfig
                               <Badge
                                 key={e}
                                 variant={isConfigured ? 'default' : 'destructive'}
-                                className={cn('text-[9px]', isConfigured && 'bg-emerald-500/80 hover:bg-emerald-500/70')}
+                                className={cn('text-[9px]', isConfigured && 'bg-primary/80 hover:bg-primary/70')}
                               >
                                 {isConfigured ? '✓' : '✗'} {e}
                               </Badge>

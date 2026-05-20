@@ -1,224 +1,212 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+/**
+ * useMessages.ts
+ * Messages hook using evolution_messages table (real schema).
+ * Loads conversation messages, supports follow-up, star, important.
+ */
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { log } from '@/lib/logger';
+import { sanitizeText } from '@/lib/sanitize';
+import { useToast } from '@/hooks/use-toast';
+import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
+import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { eventBus } from '@/lib/eventBus';
+import { deduplicateMessages, setLastReceived } from '@/lib/inbox/chatOptimizations';
+
+// ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Message {
-  id: string;
-  contact_id: string | null;
-  agent_id: string | null;
-  content: string;
-  sender: string;
-  message_type: string;
-  media_url: string | null;
-  is_read: boolean | null;
-  status: 'sent' | 'delivered' | 'read' | 'failed' | null;
-  status_updated_at: string | null;
-  created_at: string;
-  updated_at: string;
-  external_id: string | null;
-  whatsapp_connection_id: string | null;
-  transcription: string | null;
-  transcription_status: string | null;
-  is_deleted: boolean | null;
+  id:               string;
+  message_id:       string;
+  remote_jid:       string;
+  from_me:          boolean;
+  message_type:     string;
+  content:          string | null;
+  media_url:        string | null;
+  media_mimetype:   string | null;
+  quoted_message_id:string | null;
+  is_starred:       boolean;
+  is_important:     boolean;
+  category:         string | null;
+  sentiment:        string | null;
+  tags:             string[];
+  notes:            string | null;
+  follow_up_at:     string | null;
+  follow_up_done:   boolean;
+  status:           number;
+  contact_id:       string | null;
+  created_at:       string;
 }
 
-interface UseMessagesOptions {
-  contactId: string | null;
-  enabled?: boolean;
-}
+// ── Hook ───────────────────────────────────────────────────────────────────
 
-export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const previousContactIdRef = useRef<string | null>(null);
-  const mountedRef = useRef(true);
+export function useMessages(remoteJid: string | null) {
+  const { toast } = useToast();
+  const [messages,    setMessages]    = useState<Message[]>([]);
+  const [loading,     setLoading]     = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore,     setHasMore]     = useState(false);
+  const PAGE_SIZE = 50;
+  const offsetRef = useRef(0);
 
-  // Track mount state to prevent setState after unmount
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+  const mapRow = (row: Record<string, unknown>): Message => ({
+    id:                String(row.id ?? ''),
+    message_id:        String(row.message_id ?? ''),
+    remote_jid:        String(row.remote_jid ?? ''),
+    from_me:           Boolean(row.from_me ?? false),
+    message_type:      String(row.message_type ?? 'text'),
+    content:           row.content ? sanitizeText(row.content as string) : null,
+    media_url:         row.media_url as string | null,
+    media_mimetype:    row.media_mimetype as string | null,
+    quoted_message_id: row.quoted_message_id as string | null,
+    is_starred:        Boolean(row.is_starred ?? false),
+    is_important:      Boolean(row.is_important ?? false),
+    category:          row.category as string | null,
+    sentiment:         row.sentiment as string | null,
+    tags:              Array.isArray(row.tags) ? row.tags as string[] : [],
+    notes:             row.notes ? sanitizeText(row.notes as string) : null,
+    follow_up_at:      row.follow_up_at as string | null,
+    follow_up_done:    Boolean(row.follow_up_done ?? false),
+    status:            Number(row.status ?? 1), // Default to sent
+    contact_id:        row.contact_id as string | null,
+    created_at:        String(row.created_at ?? ''),
+  });
+
+  // ── Load ──────────────────────────────────────────────────────────────
+
+  const loadMessages = useCallback(async (jid: string) => {
+    setLoading(true);
+    setMessages([]);
+    offsetRef.current = 0;
+    try {
+      const { data, error } = await dbList(RPC.listMessagesLite, {
+        p_remote_jid: jid,
+        p_limit:      PAGE_SIZE,
+        p_offset:     0,
+      });
+      if (error) throw error;
+      const items = ((data ?? []) as any[]).map(mapRow);
+      // FATOR X RPCs return oldest first? Usually messages are ordered DESC in lists, 
+      // but inbox needs oldest at top for scroll-to-bottom. 
+      // rpc_list_messages_lite uses ORDER BY created_at DESC for pagination consistency.
+      // We reverse them to show in chat.
+      const reversed = [...items].reverse();
+      setMessages(reversed);
+      setHasMore(items.length === PAGE_SIZE);
+      offsetRef.current = items.length;
+    } catch (err) {
+      console.error('[useMessages]', err);
+    } finally { setLoading(false); }
   }, []);
 
-  // Fetch messages for contact
-  const fetchMessages = useCallback(async () => {
-    if (!contactId || !mountedRef.current) {
-      if (mountedRef.current) { setMessages([]); setLoading(false); }
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    if (remoteJid) loadMessages(remoteJid);
+  }, [remoteJid, loadMessages]);
 
+  // ── Load more (older messages) ────────────────────────────────────────
+
+  const loadMore = useCallback(async () => {
+    if (!remoteJid || loadingMore || !hasMore) return;
+    setLoadingMore(true);
     try {
-      setLoading(true);
-      setError(null);
+      const { data, error } = await dbList(RPC.listMessagesLite, {
+        p_remote_jid: remoteJid,
+        p_limit:      PAGE_SIZE,
+        p_offset:     offsetRef.current,
+      });
+      if (error) throw error;
+      const newItems = ((data ?? []) as any[]).map(mapRow);
+      // Prepended because they are older (reversed for UI)
+      const reversed = [...newItems].reverse();
+      setMessages((prev) => {
+        const uniqueNew = deduplicateMessages(prev, reversed);
+        return [...uniqueNew, ...prev];
+      });
+      setHasMore(newItems.length === PAGE_SIZE);
+      offsetRef.current += newItems.length;
+    } finally { setLoadingMore(false); }
+  }, [remoteJid, loadingMore, hasMore]);
 
-      // Fetch all messages using pagination to bypass the 1000 row default limit
-      type MessageRow = Omit<Message, 'isEdited'>;
-      let allData: MessageRow[] = [];
-      let from = 0;
-      const PAGE_SIZE = 1000;
-      let hasMore = true;
+  // ── Realtime new messages ─────────────────────────────────────────────
 
-      while (hasMore) {
-        const { data: page, error: fetchError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('contact_id', contactId)
-          .order('created_at', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
-
-        if (fetchError) throw fetchError;
-
-        if (page && page.length > 0) {
-          allData = allData.concat(page as MessageRow[]);
-          from += PAGE_SIZE;
-          hasMore = page.length === PAGE_SIZE;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      const mappedMessages: Message[] = allData.map((m) => ({
-        ...m,
-        isEdited: !!(m as any).is_edited,
-      }));
-      if (mountedRef.current) setMessages(mappedMessages);
-    } catch (err) {
-      log.error('Error fetching messages:', err);
-      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch messages');
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [contactId]);
-
-  // Handle new message from realtime
-  const handleNewMessage = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const newMessage = payload.new as Message;
-      
-      // Only add if it's for the current contact
-      if (newMessage.contact_id === contactId) {
+  useEffect(() => {
+    if (!remoteJid) return;
+    const channel = supabase
+      .channel(`messages:${remoteJid}`)
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table: dbTable('messages'),
+        filter: `remote_jid=eq.${remoteJid}`,
+      }, (payload) => {
+        const newMsg = mapRow(payload.new as Record<string, unknown>);
         setMessages((prev) => {
-          // Check if message already exists
-          if (prev.some((m) => m.id === newMessage.id)) {
+          if (prev.some(m => m.id === newMsg.id || (newMsg.message_id && m.message_id === newMsg.message_id))) {
             return prev;
           }
-          return [...prev, newMessage];
+          
+          // Track last received message if from contact
+          if (!newMsg.from_me) {
+            setLastReceived(newMsg.remote_jid, {
+              message_id: newMsg.message_id,
+              timestamp: newMsg.created_at,
+              content: newMsg.content || ''
+            });
+          }
+          
+          return [...prev, newMsg];
         });
-      }
-    },
-    [contactId]
-  );
+      })
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table: dbTable('messages'),
+        filter: `remote_jid=eq.${remoteJid}`,
+      }, (payload) => {
+        setMessages((prev) => prev.map((m) =>
+          m.id === payload.new.id ? mapRow(payload.new as Record<string, unknown>) : m
+        ));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [remoteJid]);
 
-  // Handle message update from realtime
-  const handleMessageUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const updatedMessage = payload.new as Message;
-
-      if (updatedMessage.contact_id === contactId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
-        );
-      }
-    },
-    [contactId]
-  );
-
-  // Handle message delete from realtime
-  const handleMessageDelete = useCallback(
-    (payload: RealtimePostgresChangesPayload<Message>) => {
-      const deletedMessage = payload.old as Message;
-
-      if (deletedMessage.contact_id === contactId) {
-        setMessages((prev) => prev.filter((m) => m.id !== deletedMessage.id));
-      }
-    },
-    [contactId]
-  );
-
-  // Fetch on contact change
+  // Listen for reconnection to refresh
   useEffect(() => {
-    if (enabled && contactId !== previousContactIdRef.current) {
-      previousContactIdRef.current = contactId;
-      fetchMessages();
-    }
-  }, [contactId, enabled, fetchMessages]);
-
-  // Subscribe to realtime updates
-  useEffect(() => {
-    if (!enabled || !contactId) return;
-
-    const channel = supabase
-      .channel(`messages:${contactId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        handleNewMessage
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        handleMessageUpdate
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'messages',
-          filter: `contact_id=eq.${contactId}`,
-        },
-        handleMessageDelete
-      )
-      .subscribe((status) => {
-        log.debug(`Messages realtime subscription (${contactId}):`, status);
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [contactId, enabled, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
-
-  // Add a message optimistically
-  const addMessage = useCallback((message: Message) => {
-    setMessages((prev) => {
-      if (prev.some((m) => m.id === message.id)) {
-        return prev;
-      }
-      return [...prev, message];
+    const unsub = eventBus.on('connection:recovered', () => {
+      if (remoteJid) loadMessages(remoteJid);
     });
+    return unsub;
+  }, [remoteJid, loadMessages]);
+
+  // ── Actions ───────────────────────────────────────────────────────────
+
+  const toggleStar = useCallback(async (id: string, current: boolean) => {
+    await dbFrom('messages').update({ is_starred: !current }).eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_starred: !current } : m));
   }, []);
 
-  // Update a message optimistically
-  const updateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, ...updates } : m))
-    );
+  const toggleImportant = useCallback(async (id: string, current: boolean) => {
+    await dbFrom('messages').update({ is_important: !current }).eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_important: !current } : m));
   }, []);
 
-  // Remove a message optimistically
-  const removeMessage = useCallback((messageId: string) => {
-    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  const scheduleFollowUp = useCallback(async (id: string, followUpAt: string) => {
+    await dbFrom('messages')
+      .update({ follow_up_at: followUpAt, follow_up_done: false })
+      .eq('id', id);
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_at: followUpAt } : m));
+    toast({ title: '⏰ Follow-up agendado!', duration: 2_500 });
+  }, [toast]);
+
+  const markFollowUpDone = useCallback(async (id: string) => {
+    const { error } = await (supabase as any).rpc('mark_follow_up_done', { p_message_id: id });
+    if (error) throw error;
+    setMessages((prev) => prev.map((m) => m.id === id ? { ...m, follow_up_done: true } : m));
   }, []);
 
   return {
-    messages,
-    loading,
-    error,
-    refetch: fetchMessages,
-    addMessage,
-    updateMessage,
-    removeMessage,
+    messages, loading, loadingMore, hasMore,
+    loadMessages, loadMore,
+    toggleStar, toggleImportant, scheduleFollowUp, markFollowUpDone,
   };
 }

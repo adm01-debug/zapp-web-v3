@@ -21,6 +21,7 @@ import { format, subDays, startOfWeek, eachDayOfInterval, isSameDay, getDay } fr
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface ActivityData {
   date: Date;
@@ -59,8 +60,7 @@ export const ActivityHeatmap = ({
       const days = selectedPeriod === '3m' ? 90 : selectedPeriod === '6m' ? 180 : 365;
       const startDate = subDays(new Date(), days);
       
-      const { data: messages, error } = await supabase
-        .from('messages')
+      const { data: messages, error } = await dbFrom('messages')
         .select('created_at')
         .gte('created_at', startDate.toISOString());
       

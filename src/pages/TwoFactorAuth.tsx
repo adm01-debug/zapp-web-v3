@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useMFA } from '@/hooks/useMFA';
-import { MFAVerify } from '@/components/mfa/MFAVerify';
+import { useAuth } from '@/features/auth';
+import { useMFA } from '@/features/auth';
+import { MFAVerify } from '@/features/auth';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 

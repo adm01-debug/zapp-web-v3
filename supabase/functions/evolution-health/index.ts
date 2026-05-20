@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
   const log = new Logger('evolution-health');
 
   try {
-    const EVOLUTION_API_URL = Deno.env.get('EVOLUTION_API_URL')!
+    const EVOLUTION_API_URL = (Deno.env.get('EVOLUTION_API_URL') || '').replace(/\/+$/, '')
     const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY')!
     const INSTANCE_NAME = Deno.env.get('EVOLUTION_INSTANCE_NAME') || 'wpp2'
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!

@@ -30,13 +30,13 @@ export function useGeoBlocking() {
 
   const fetchData = async () => {
     try {
-      const { data: settingsData } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
+      const { data: settingsData , error } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
       if (settingsData) setSettings(settingsData as GeoSettings);
 
-      const { data: allowedData } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
+      const { data: allowedData , error: allowedDataErr } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });
       setAllowedCountries(allowedData || []);
 
-      const { data: blockedData } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
+      const { data: blockedData , error: blockedDataErr } = await supabase.from('blocked_countries').select('*').order('created_at', { ascending: false });
       setBlockedCountries(blockedData || []);
     } catch (error) {
       log.error('Error fetching geo data:', error);
@@ -66,9 +66,9 @@ export function useGeoBlocking() {
   const handleAddCountry = async (countryCode: string, countryName: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const table = activeTab === 'whitelist' ? 'allowed_countries' : 'blocked_countries';
-      const userField = activeTab === 'whitelist' ? 'added_by' : 'blocked_by';
-      const { error } = await supabase.from(table).insert({ country_code: countryCode, country_name: countryName, [userField]: user?.id });
+      const { error } = activeTab === 'whitelist'
+        ? await supabase.from('allowed_countries').insert({ country_code: countryCode, country_name: countryName, added_by: user?.id })
+        : await supabase.from('blocked_countries').insert({ country_code: countryCode, country_name: countryName, blocked_by: user?.id });
       if (error) {
         if (error.code === '23505') { toast.error('Este país já está na lista'); return; }
         throw error;

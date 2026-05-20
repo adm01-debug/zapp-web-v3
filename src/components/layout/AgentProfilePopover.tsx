@@ -27,7 +27,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'relative group flex items-center gap-2.5 rounded-lg transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none',
+            'relative group flex items-center gap-2.5 rounded-lg transition-colors hover:bg-muted/10 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none',
             collapsed ? 'justify-center p-1' : 'w-full px-3 py-1.5'
           )}
           aria-label="Status e perfil"
@@ -39,7 +39,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
             </AvatarFallback>
           </Avatar>
           <span className={cn(
-            'absolute w-2.5 h-2.5 rounded-full border-2 border-sidebar',
+            'absolute w-2.5 h-2.5 rounded-full border-2 border-border',
             collapsed ? '-bottom-0.5 -right-0.5' : 'bottom-1 left-[30px]',
             agent.status === 'online' && 'bg-[hsl(var(--online))]',
             agent.status === 'away' && 'bg-[hsl(var(--away))]',
@@ -60,7 +60,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent side="right" sideOffset={12} align="end" className="w-48 p-2">
+      <PopoverContent side="right" sideOffset={12} align="end" className="w-48 p-2 bg-foreground border-border shadow-none">
         <div className="px-2 py-1.5 mb-1">
           <p className="text-xs font-semibold text-foreground truncate">{agent.name}</p>
         </div>
@@ -71,7 +71,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
               onClick={() => { onStatusChange?.(opt.status); onStatusOpenChange(false); }}
               className={cn(
                 'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors',
-                agent.status === opt.status ? 'bg-muted font-medium text-foreground' : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                agent.status === opt.status ? 'bg-muted/20 font-medium text-foreground' : 'text-muted-foreground hover:bg-muted/10 hover:text-foreground'
               )}
             >
               <opt.icon className={cn('w-3.5 h-3.5', opt.color)} />
@@ -80,7 +80,7 @@ export function AgentProfilePopover({ agent, collapsed, statusOpen, onStatusOpen
           ))}
         </div>
         <div className="mt-1 pt-1 border-t border-border/50 space-y-0.5">
-          <button onClick={() => { onViewChange('settings'); onStatusOpenChange(false); }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+          <button onClick={() => { onViewChange('settings'); onStatusOpenChange(false); }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted/10 hover:text-foreground transition-colors">
             <Settings className="w-3.5 h-3.5" />Configurações
           </button>
           {onLogout && (

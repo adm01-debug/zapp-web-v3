@@ -151,8 +151,8 @@ const ToastItem = React.forwardRef<HTMLDivElement, ToastItemProps>(function Toas
       role="alert"
       aria-atomic="true"
       className={cn(
-        'relative overflow-hidden rounded-xl border p-4 shadow-lg pointer-events-auto',
-        'bg-card',
+        'relative overflow-hidden rounded-xl border p-4 shadow-none pointer-events-auto',
+        'bg-background',
         backgrounds[toast.type]
       )}
     >

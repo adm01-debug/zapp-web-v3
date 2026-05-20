@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface TimelineEvent {
   id: string;
@@ -18,7 +19,7 @@ interface TimelineEvent {
   title: string;
   description?: string;
   timestamp: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, any>;
 }
 
 interface ContactActivityTimelineProps {
@@ -57,7 +58,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       });
 
       // Fetch messages
-      const { data: messages } = await supabase
+      const { data: messages , error } = await supabase
         .from('messages')
         .select('id, content, sender, created_at')
         .eq('contact_id', contactId)
@@ -77,7 +78,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       }
 
       // Fetch notes
-      const { data: notes } = await supabase
+      const { data: notes , error: notesErr } = await supabase
         .from('contact_notes')
         .select('id, content, created_at')
         .eq('contact_id', contactId)
@@ -97,7 +98,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       }
 
       // Fetch assignment events
-      const { data: assignments } = await supabase
+      const { data: assignments , error: assignmentsErr } = await supabase
         .from('conversation_events')
         .select('id, event_type, created_at, metadata')
         .eq('contact_id', contactId)

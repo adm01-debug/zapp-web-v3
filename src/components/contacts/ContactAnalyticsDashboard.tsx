@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  BarChart3, Users, TrendingUp, Building, Tag,
+  BarChart3, Users, TrendingUp, Building, Tag, 
+  Lightbulb, AlertCircle, ArrowUpRight, Clock, Zap, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfDay } from 'date-fns';
@@ -74,7 +75,42 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
     const weekAgo = subDays(new Date(), 7);
     const newThisWeek = contacts.filter(c => new Date(c.created_at) >= weekAgo).length;
 
-    return { typeDistribution, topCompanies, topTags, dailyGrowth, newThisWeek };
+    // Actionable Insights Logic
+    const insights = [];
+    
+    if (newThisWeek > contacts.length * 0.05) {
+      insights.push({
+        title: 'Crescimento Acelerado',
+        description: `Aumento de ${Math.round((newThisWeek / contacts.length) * 100)}% na base esta semana.`,
+        icon: ArrowUpRight,
+        color: 'text-primary',
+        bg: 'bg-primary/10'
+      });
+    }
+
+    const leadsCount = contacts.filter(c => c.contact_type === 'lead').length;
+    if (leadsCount > contacts.length * 0.3) {
+      insights.push({
+        title: 'Foco em Conversão',
+        description: 'Leads representam mais de 30% da base. Priorize ações de vendas.',
+        icon: Zap,
+        color: 'text-warning-foreground',
+        bg: 'bg-warning/10'
+      });
+    }
+
+    const missingCompany = contacts.filter(c => !c.company).length;
+    if (missingCompany > contacts.length * 0.2) {
+      insights.push({
+        title: 'Dados Incompletos',
+        description: `${missingCompany} contatos sem empresa. Enriqueça para melhor segmentação.`,
+        icon: AlertCircle,
+        color: 'text-warning-foreground',
+        bg: 'bg-warning/10'
+      });
+    }
+
+    return { typeDistribution, topCompanies, topTags, dailyGrowth, newThisWeek, insights };
   }, [contacts]);
 
   const maxDaily = Math.max(...analytics.dailyGrowth.map(d => d.count), 1);
@@ -144,7 +180,7 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
                   className="flex-1 rounded-t bg-primary/50 hover:bg-primary/70 transition-colors relative group cursor-default"
                   title={`${day.date}: ${day.count} contatos`}
                 >
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-mono text-foreground bg-popover border border-border rounded px-1 py-0.5 whitespace-nowrap z-10 pointer-events-none">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px]  text-foreground bg-popover border border-border rounded px-1 py-0.5 whitespace-nowrap z-10 pointer-events-none">
                     {day.count}
                   </div>
                 </motion.div>
@@ -203,6 +239,40 @@ export function ContactAnalyticsDashboard({ contacts, className }: ContactAnalyt
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Actionable Insights Section */}
+      <div className="pt-4 border-t border-border/50">
+        <div className="flex items-center gap-2 mb-4">
+          <Lightbulb className="w-4 h-4 text-warning-foreground" />
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Insights Acionáveis</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {analytics.insights.map((insight, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + (i * 0.1) }}
+              className={cn("p-4 rounded-xl border border-border/40 flex items-start gap-3", insight.bg)}
+            >
+              <div className={cn("p-2 rounded-lg bg-background shadow-sm", insight.color)}>
+                <insight.icon className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold leading-none">{insight.title}</p>
+                <p className="text-xs text-muted-foreground leading-tight">{insight.description}</p>
+              </div>
+            </motion.div>
+          ))}
+          {analytics.insights.length === 0 && (
+            <div className="col-span-full p-8 border border-dashed border-border/50 rounded-xl flex flex-col items-center justify-center text-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground font-medium">Sua base está saudável!</p>
+              <p className="text-xs text-muted-foreground/60">Continue mantendo os dados atualizados para gerar novos insights.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

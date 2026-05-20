@@ -4,13 +4,26 @@ import type {
   TypebotConfig, OpenAIConfig, DifyConfig, FlowiseConfig,
   EvolutionBotConfig, ChatwootConfig, PrivacySettings,
 } from '../evolutionApi.types';
+import {
+  withV237Fallback,
+  fallbackFindChats,
+  fallbackFindContacts,
+  fallbackFetchProfile,
+} from './v237Fallbacks';
 
 export function useEvolutionIntegrations(
   callApi: (action: string, body?: object, method?: HttpMethod) => Promise<any>,
   withToast: (action: string, body: object | undefined, successMsg: string, errorMsg: string, method?: HttpMethod) => Promise<any>
 ) {
   // Profile
-  const fetchProfile = useCallback((instanceName: string) => callApi('fetch-profile', { instanceName }, 'GET'), [callApi]);
+  // v2.3.7 has a regression on `fetch-profile`; if the endpoint 404s we
+  // transparently read the canonical profile from FATOR X (evolution_contacts).
+  const fetchProfile = useCallback((instanceName: string, remoteJid?: string) =>
+    withV237Fallback(
+      () => callApi('fetch-profile', { instanceName, ...(remoteJid ? { number: remoteJid } : {}) }, 'GET'),
+      () => fallbackFetchProfile(remoteJid ?? '', instanceName),
+      'fetchProfile',
+    ), [callApi]);
   const updateProfileName = useCallback((instanceName: string, name: string) => withToast('update-profile-name', { instanceName, name }, 'Nome atualizado', 'Erro ao atualizar nome'), [withToast]);
   const updateProfileStatus = useCallback((instanceName: string, status: string) => withToast('update-profile-status', { instanceName, status }, 'Status atualizado', 'Erro ao atualizar status'), [withToast]);
   const updateProfilePicture = useCallback((instanceName: string, picture: string) => withToast('update-profile-picture', { instanceName, picture }, 'Foto atualizada', 'Erro ao atualizar foto'), [withToast]);
@@ -23,11 +36,22 @@ export function useEvolutionIntegrations(
   const findLabels = useCallback((instanceName: string) => callApi('find-labels', { instanceName }, 'GET'), [callApi]);
   const handleLabel = useCallback((instanceName: string, number: string, labelId: string, action: 'add' | 'remove') => callApi('handle-label', { instanceName, number, labelId, action }), [callApi]);
 
-  // Chat management
-  const findChats = useCallback((instanceName: string, page?: number, offset?: number) => callApi('find-chats', { instanceName, page, offset }, 'GET'), [callApi]);
+  // Chat management — find-chats / find-contacts são quebrados em v2.3.7;
+  // caem para RPC FATOR X (`rpc_list_conversations` / `rpc_list_contacts`).
+  const findChats = useCallback((instanceName: string, page?: number, offset?: number) =>
+    withV237Fallback(
+      () => callApi('find-chats', { instanceName, page, offset }, 'GET'),
+      () => fallbackFindChats(instanceName, offset ?? 200),
+      'findChats',
+    ), [callApi]);
   const findMessages = useCallback((instanceName: string, remoteJid: string, page?: number, offset?: number, timestampStart?: number, timestampEnd?: number) => callApi('find-messages', { instanceName, remoteJid, page, offset, timestampStart, timestampEnd }, 'GET'), [callApi]);
   const findStatusMessages = useCallback((instanceName: string) => callApi('find-status-messages', { instanceName }, 'GET'), [callApi]);
-  const findContacts = useCallback((instanceName: string, page?: number, offset?: number) => callApi('find-contacts', { instanceName, page, offset }, 'GET'), [callApi]);
+  const findContacts = useCallback((instanceName: string, page?: number, offset?: number) =>
+    withV237Fallback(
+      () => callApi('find-contacts', { instanceName, page, offset }, 'GET'),
+      () => fallbackFindContacts(instanceName, offset ?? 500),
+      'findContacts',
+    ), [callApi]);
   const checkWhatsAppNumbers = useCallback((instanceName: string, numbers: string[]) => callApi('check-numbers', { instanceName, numbers }), [callApi]);
   const getMediaBase64 = useCallback((instanceName: string, message: object, convertToMp4?: boolean) => callApi('get-media-base64', { instanceName, message, convertToMp4 }), [callApi]);
 

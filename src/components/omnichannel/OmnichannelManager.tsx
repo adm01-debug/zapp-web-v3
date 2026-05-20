@@ -24,7 +24,7 @@ const channelConfig = {
   telegram: { label: 'Telegram', icon: Send, color: 'text-info', bg: 'bg-info/10' },
   messenger: { label: 'Messenger', icon: MessagesSquare, color: 'text-primary', bg: 'bg-primary/10' },
   webchat: { label: 'Web Chat', icon: Globe, color: 'text-warning', bg: 'bg-warning/10' },
-  email: { label: 'Gmail', icon: MessageSquare, color: 'text-destructive', bg: 'bg-destructive/10' },
+  email: { label: 'Email', icon: MessageSquare, color: 'text-destructive', bg: 'bg-destructive/10' },
 };
 
 type ChannelType = keyof typeof channelConfig;
@@ -61,19 +61,19 @@ export function OmnichannelManager() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile } = await supabase
+      const { data: profile , error } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      const { error } = await supabase.from('channel_connections').insert([{
+      const { error: insertErr } = await supabase.from('channel_connections').insert([{
         name: channel.name,
         channel_type: channel.channel_type as Database["public"]["Enums"]["channel_type"],
         created_by: profile?.id,
         status: 'pending_setup',
       }]);
-      if (error) throw error;
+      if (insertErr) throw insertErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['channel-connections'] });

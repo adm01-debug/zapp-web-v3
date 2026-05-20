@@ -103,27 +103,37 @@ export function extractSignatureFromHeaders(headers: Headers): string | null {
 
 /**
  * WebhookSecurityService - Comprehensive webhook security validation.
- * 
+ *
+ * Supports multi-secret rotation: when constructed with an array of secrets,
+ * a request is considered authentic if ANY secret in the array validates its
+ * signature. Use this to roll a webhook secret without downtime:
+ *
+ *   1. Deploy with `[newSecret, oldSecret]` — validates both.
+ *   2. Update the signing side (Evolution / external producer) to `newSecret`.
+ *   3. Once all traffic uses `newSecret`, deploy with `[newSecret]` only.
+ *
+ * Single-secret constructor is preserved for backwards compatibility.
+ *
  * Usage:
  * ```typescript
  * const security = new WebhookSecurityService('my-secret');
- * const validation = await security.validateRequest(req);
- * if (!validation.valid) {
- *   return new Response('Unauthorized', { status: 401 });
- * }
- * const payload = validation.payload;
+ * // or with rotation:
+ * const security = new WebhookSecurityService(['new', 'old'], true);
  * ```
  */
 export class WebhookSecurityService {
-  private secret: string;
+  private secrets: string[];
   private strictMode: boolean;
 
   /**
-   * @param secret - HMAC secret for signature validation
+   * @param secret - HMAC secret (string) or list of secrets (rotation). Empty
+   *                strings are filtered out so an unset env var doesn't add a
+   *                permanently-failing slot.
    * @param strictMode - If true, rejects requests without signatures. Default: false
    */
-  constructor(secret: string, strictMode = false) {
-    this.secret = secret;
+  constructor(secret: string | string[], strictMode = false) {
+    const arr = Array.isArray(secret) ? secret : [secret];
+    this.secrets = arr.filter((s): s is string => typeof s === 'string' && s.length > 0);
     this.strictMode = strictMode;
   }
 
@@ -177,8 +187,19 @@ export class WebhookSecurityService {
       };
     }
 
-    // Validate signature
-    const signatureValid = await verifyHmacSignature(payload, signature, this.secret);
+    // Validate signature against each configured secret. The first match wins.
+    // Tries them sequentially to keep timing differences below the noise of
+    // the network jitter (constant-time per-secret, but loop bails early on
+    // success — acceptable trade-off for rotation support).
+    let signatureValid = false;
+    let matchedSlot = -1;
+    for (let i = 0; i < this.secrets.length; i++) {
+      if (await verifyHmacSignature(payload, signature, this.secrets[i])) {
+        signatureValid = true;
+        matchedSlot = i;
+        break;
+      }
+    }
 
     if (!signatureValid) {
       console.warn('[HMAC] Invalid signature received');
@@ -191,7 +212,13 @@ export class WebhookSecurityService {
       };
     }
 
-    console.info('[HMAC] Signature validated successfully');
+    if (this.secrets.length > 1) {
+      // Slot 0 is the primary; >0 means a rotation-tail secret was used. Log
+      // so ops can monitor when it's safe to drop the old secret.
+      console.info(`[HMAC] Signature validated successfully (slot=${matchedSlot}${matchedSlot === 0 ? ' primary' : ' rotation-tail'})`);
+    } else {
+      console.info('[HMAC] Signature validated successfully');
+    }
     return {
       valid: true,
       payload,
@@ -201,12 +228,16 @@ export class WebhookSecurityService {
   }
 
   /**
-   * Creates a signature for a payload (useful for testing or outgoing webhooks).
+   * Creates a signature for a payload using the primary (first) secret. Useful
+   * for outgoing webhooks and tests. When rotating, signing always uses slot 0.
    */
   async signPayload(payload: string): Promise<string> {
+    if (this.secrets.length === 0) {
+      throw new Error('No secret configured — cannot sign payload');
+    }
     const encoder = new TextEncoder();
-    const keyData = encoder.encode(this.secret);
-    
+    const keyData = encoder.encode(this.secrets[0]);
+
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
       keyData,
@@ -217,7 +248,7 @@ export class WebhookSecurityService {
 
     const payloadBytes = encoder.encode(payload);
     const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, payloadBytes);
-    
+
     const signature = Array.from(new Uint8Array(signatureBuffer))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
@@ -243,7 +274,30 @@ export class WebhookSecurityService {
  * });
  * ```
  */
-export function createWebhookValidator(secret: string, strictMode = false) {
+export function createWebhookValidator(secret: string | string[], strictMode = false) {
   const service = new WebhookSecurityService(secret, strictMode);
   return (req: Request) => service.validateRequest(req);
+}
+
+/**
+ * Reads webhook secrets from environment, supporting rotation via a
+ * comma-separated list. The first non-empty entry is the primary secret;
+ * subsequent ones are accepted but logged as `rotation-tail` matches.
+ *
+ * Variables tried (first non-empty wins):
+ *   - <BASE>_SECRETS  — comma-separated list (e.g. "newSecret,oldSecret")
+ *   - <BASE>_SECRET   — single secret (legacy)
+ *
+ * @param base env-var prefix, e.g. "EVOLUTION_WEBHOOK"
+ */
+export function readWebhookSecretsFromEnv(base: string): string[] {
+  const env = (typeof Deno !== 'undefined' && Deno.env)
+    ? (k: string) => Deno.env.get(k) ?? ''
+    : () => '';
+  const list = env(`${base}_SECRETS`);
+  if (list) {
+    return list.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+  const single = env(`${base}_SECRET`);
+  return single ? [single] : [];
 }

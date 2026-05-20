@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SidebarNavItem, type NavItemConfig } from './SidebarNavItem';
 
+interface BadgeInfo {
+  count: number;
+  variant?: 'destructive' | 'warning' | 'info';
+  title?: string;
+}
+
 interface SidebarNavGroupProps {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -15,9 +21,10 @@ interface SidebarNavGroupProps {
   collapsed?: boolean;
   onToggleFavorite?: (id: string) => void;
   isFavorite?: (id: string) => boolean;
+  badgeMap?: Record<string, BadgeInfo | undefined>;
 }
 
-export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, onViewChange, defaultOpen = false, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavGroupProps) {
+export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, onViewChange, defaultOpen = false, collapsed = true, onToggleFavorite, isFavorite, badgeMap }: SidebarNavGroupProps) {
   const hasActiveItem = items.some(item => item.id === currentView);
   const [isOpen, setIsOpen] = useState(defaultOpen || hasActiveItem);
 
@@ -30,10 +37,10 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, on
       onClick={() => setIsOpen(!isOpen)}
       className={cn(
         'rounded-lg flex items-center transition-all duration-200 group/trigger',
-        collapsed ? 'w-full h-[30px] justify-center gap-0.5' : 'w-full h-[30px] px-2.5 gap-2',
+        collapsed ? 'w-full h-[30px] justify-center gap-0.5' : 'w-full h-[30px] px-2.5 gap-2 hover:bg-muted/10',
         hasActiveItem
           ? 'text-primary'
-          : 'text-muted-foreground hover:text-foreground'
+          : 'text-muted-foreground/80 hover:text-foreground'
       )}
       aria-expanded={isOpen}
       aria-label={`${label} — ${isOpen ? 'recolher' : 'expandir'}`}
@@ -80,21 +87,27 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, on
           >
             <ul role="list" className={cn(
               'flex flex-col gap-0.5 w-full list-none p-0 m-0 pt-0.5',
-              collapsed && 'items-center',
-              !collapsed && 'pl-1'
+                collapsed && 'items-center px-[11px]',
+                !collapsed && 'px-2'
             )}>
-              {items.map((item) => (
-                <li key={item.id}>
-                  <SidebarNavItem
-                    item={item}
-                    currentView={currentView}
-                    onViewChange={onViewChange}
-                    collapsed={collapsed}
-                    onToggleFavorite={onToggleFavorite}
-                    isFavorite={isFavorite?.(item.id)}
-                  />
-                </li>
-              ))}
+              {items.map((item) => {
+                const b = badgeMap?.[item.id];
+                return (
+                  <li key={item.id}>
+                    <SidebarNavItem
+                      item={item}
+                      currentView={currentView}
+                      onViewChange={onViewChange}
+                      collapsed={collapsed}
+                      onToggleFavorite={onToggleFavorite}
+                      isFavorite={isFavorite?.(item.id)}
+                      badge={b?.count}
+                      badgeVariant={b?.variant}
+                      badgeTitle={b?.title}
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </motion.nav>
         )}

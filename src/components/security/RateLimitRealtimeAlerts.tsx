@@ -38,7 +38,7 @@ export function RateLimitRealtimeAlerts() {
   useEffect(() => {
     // Fetch recent unresolved alerts
     const fetchAlerts = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('security_alerts')
         .select('*')
         .eq('is_resolved', false)
@@ -135,7 +135,7 @@ export function RateLimitRealtimeAlerts() {
                   )}
                   <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                     {alert.ip_address && (
-                      <code className="font-mono">{alert.ip_address}</code>
+                      <code className="">{alert.ip_address}</code>
                     )}
                     <span>•</span>
                     <span>

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 import { startOfDay, subDays, format, startOfHour, eachDayOfInterval, eachHourOfInterval, startOfToday, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dbFrom } from '@/integrations/datasource/db';
 
 interface DailyData {
   day: string;
@@ -60,8 +61,7 @@ export function useQueueAnalytics(queueId: string, dateRange: DateRange): QueueA
       setLoading(true);
 
       // Get contacts in this queue
-      const { data: contacts, error: contactsError } = await supabase
-        .from('contacts')
+      const { data: contacts, error: contactsError } = await dbFrom('contacts')
         .select('id, assigned_to, created_at')
         .eq('queue_id', queueId);
 
@@ -83,8 +83,7 @@ export function useQueueAnalytics(queueId: string, dateRange: DateRange): QueueA
       }
 
       // Fetch messages for these contacts in the date range
-      const { data: messages, error: messagesError } = await supabase
-        .from('messages')
+      const { data: messages, error: messagesError } = await dbFrom('messages')
         .select('id, contact_id, created_at, sender, agent_id')
         .in('contact_id', contactIds)
         .gte('created_at', dateRange.from.toISOString())

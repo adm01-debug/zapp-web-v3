@@ -1,5 +1,5 @@
 export type SoundType = 'beep' | 'chime' | 'bell' | 'alert' | 'soft';
-export type NotificationType = 'message' | 'mention' | 'sla_breach' | 'sla_warning' | 'achievement' | 'goal_achieved';
+export type NotificationType = 'message' | 'mention' | 'sla_breach' | 'sla_warning' | 'achievement' | 'goal_achieved' | 'record_start' | 'record_stop';
 
 export interface SoundConfig {
   frequencies: number[];
@@ -21,6 +21,8 @@ export const SOUND_CONFIGS: Record<SoundType, Record<NotificationType, SoundConf
     sla_warning: base([660, 880], [0.15, 0.2], 'triangle', [0.3, 0.35], [0, 0.18]),
     achievement: base([523, 659, 784, 1047], [0.12, 0.12, 0.12, 0.3], 'sine', [0.25, 0.3, 0.35, 0.4], [0, 0.15, 0.3, 0.45]),
     goal_achieved: base([659, 784, 988, 1319], [0.15, 0.12, 0.12, 0.35], 'sine', [0.3, 0.35, 0.4, 0.45], [0, 0.18, 0.36, 0.55]),
+    record_start: base([660, 880], [0.1, 0.1], 'sine', [0.3, 0.4], [0, 0.05]),
+    record_stop: base([880, 660], [0.1, 0.1], 'sine', [0.4, 0.3], [0, 0.05]),
   },
   chime: {
     message: base([1047, 1319], [0.2, 0.25], 'sine', [0.25, 0.2], [0, 0.15]),
@@ -29,6 +31,8 @@ export const SOUND_CONFIGS: Record<SoundType, Record<NotificationType, SoundConf
     sla_warning: base([659, 523], [0.2, 0.3], 'sine', [0.3, 0.25], [0, 0.22]),
     achievement: base([523, 659, 784, 1047, 1319], [0.1, 0.1, 0.1, 0.15, 0.35], 'sine', [0.2, 0.25, 0.3, 0.35, 0.4], [0, 0.1, 0.2, 0.3, 0.45]),
     goal_achieved: base([659, 784, 988, 1319], [0.15, 0.12, 0.12, 0.35], 'sine', [0.3, 0.35, 0.4, 0.45], [0, 0.18, 0.36, 0.55]),
+    record_start: base([523, 659], [0.15, 0.15], 'sine', [0.25, 0.3], [0, 0.08]),
+    record_stop: base([659, 523], [0.15, 0.15], 'sine', [0.3, 0.25], [0, 0.08]),
   },
   bell: {
     message: base([1175, 880], [0.3, 0.2], 'sine', [0.35, 0.2], [0, 0.05]),
@@ -37,6 +41,8 @@ export const SOUND_CONFIGS: Record<SoundType, Record<NotificationType, SoundConf
     sla_warning: base([784, 587], [0.25, 0.35], 'sine', [0.35, 0.3], [0, 0.28]),
     achievement: base([587, 784, 988, 1175, 1480], [0.12, 0.12, 0.12, 0.15, 0.4], 'sine', [0.25, 0.3, 0.35, 0.4, 0.45], [0, 0.12, 0.24, 0.36, 0.5]),
     goal_achieved: base([587, 784, 988, 1175, 1480], [0.12, 0.12, 0.12, 0.15, 0.4], 'sine', [0.25, 0.3, 0.35, 0.4, 0.45], [0, 0.12, 0.24, 0.36, 0.5]),
+    record_start: base([880, 1175], [0.2, 0.2], 'sine', [0.3, 0.4], [0, 0.1]),
+    record_stop: base([1175, 880], [0.2, 0.2], 'sine', [0.4, 0.3], [0, 0.1]),
   },
   alert: {
     message: base([800, 1000], [0.08, 0.08], 'square', [0.2, 0.15], [0, 0.1]),
@@ -45,6 +51,8 @@ export const SOUND_CONFIGS: Record<SoundType, Record<NotificationType, SoundConf
     sla_warning: base([600, 500], [0.12, 0.15], 'square', [0.3, 0.25], [0, 0.15]),
     achievement: base([600, 800, 1000, 1200], [0.08, 0.08, 0.08, 0.2], 'square', [0.2, 0.25, 0.3, 0.35], [0, 0.1, 0.2, 0.3]),
     goal_achieved: base([600, 800, 1000, 1200], [0.08, 0.08, 0.08, 0.2], 'square', [0.2, 0.25, 0.3, 0.35], [0, 0.1, 0.2, 0.3]),
+    record_start: base([800, 1200], [0.05, 0.08], 'square', [0.2, 0.3], [0, 0.05]),
+    record_stop: base([1200, 800], [0.05, 0.08], 'square', [0.3, 0.2], [0, 0.05]),
   },
   soft: {
     message: base([440, 550], [0.25, 0.3], 'sine', [0.15, 0.12], [0, 0.2]),
@@ -53,5 +61,7 @@ export const SOUND_CONFIGS: Record<SoundType, Record<NotificationType, SoundConf
     sla_warning: base([440, 392], [0.25, 0.3], 'sine', [0.2, 0.18], [0, 0.28]),
     achievement: base([392, 440, 523, 659], [0.15, 0.15, 0.18, 0.4], 'sine', [0.15, 0.18, 0.22, 0.28], [0, 0.18, 0.36, 0.55]),
     goal_achieved: base([392, 440, 523, 659], [0.15, 0.15, 0.18, 0.4], 'sine', [0.15, 0.18, 0.22, 0.28], [0, 0.18, 0.36, 0.55]),
+    record_start: base([440, 550], [0.2, 0.2], 'sine', [0.15, 0.2], [0, 0.15]),
+    record_stop: base([550, 440], [0.2, 0.2], 'sine', [0.2, 0.15], [0, 0.15]),
   },
 };

@@ -104,27 +104,32 @@ export function ContactEmptyState({
 
       {type === 'no-results' && (
         <>
-          <h3 className="text-lg font-bold text-foreground mb-2">
-            Nenhum resultado encontrado
+          <h3 className="text-xl font-bold text-foreground mb-2">
+            Nenhum resultado para "{searchQuery}"
           </h3>
-          <p className="text-sm text-muted-foreground text-center max-w-sm mb-5 leading-relaxed">
-            Não encontramos contatos com{' '}
-            <span className="font-medium text-foreground">"{searchQuery}"</span>.
-            Tente outro termo ou limpe a busca.
+          <p className="text-sm text-muted-foreground text-center max-w-sm mb-6 leading-relaxed">
+            Verifique a ortografia ou tente termos mais genéricos. Você também pode buscar por partes do telefone ou empresa.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
             {onClearSearch && (
-              <Button variant="outline" onClick={onClearSearch} className="gap-2">
+              <Button onClick={onClearSearch} className="gap-2 px-6">
                 <Search className="w-4 h-4" />
                 Limpar Busca
               </Button>
             )}
             {onAddContact && (
-              <Button variant="ghost" onClick={onAddContact} className="gap-2 text-muted-foreground">
+              <Button variant="outline" onClick={onAddContact} className="gap-2 px-6">
                 <UserPlus className="w-4 h-4" />
-                Criar Contato
+                Criar "{searchQuery}"
               </Button>
             )}
+          </div>
+          <div className="mt-8 pt-6 border-t border-border/20 w-full max-w-xs text-center">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mb-3">Sugestões Rápidas</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button variant="ghost" size="sm" className="h-7 text-[10px] bg-muted/50 rounded-full" onClick={onClearSearch}>Remover filtros</Button>
+              <Button variant="ghost" size="sm" className="h-7 text-[10px] bg-muted/50 rounded-full" onClick={onAddContact}>Novo registro</Button>
+            </div>
           </div>
         </>
       )}

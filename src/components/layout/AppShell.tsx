@@ -1,5 +1,5 @@
-import { Suspense, useCallback, forwardRef, lazy, useState } from 'react';
-import { Target, Mic } from 'lucide-react';
+import { Suspense, useCallback, forwardRef, lazy, useState, useMemo } from 'react';
+import { Target, Mic, Maximize2, Minimize2, Info } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';
 import { cn } from '@/lib/utils';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -7,14 +7,16 @@ import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist
 import { ViewRouter } from '@/pages/ViewRouter';
 import { ViewLoadingFallback } from '@/components/layout/ViewLoadingFallback';
 import { RouteLoadingBar } from '@/components/ui/route-loading-bar';
+import { FailedMessageAlertsMount } from '@/components/system/FailedMessageAlertsMount';
+import { AutomationFailureAlertsMount } from '@/components/system/AutomationFailureAlertsMount';
+import { IntegrationMigrationMount } from '@/components/system/IntegrationMigrationMount';
 import { MobileShell } from '@/components/mobile/MobileShell';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useZenMode } from '@/hooks/useZenMode';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import type { VoiceAgentAction } from '@/hooks/voice/types';
+import { useVoiceActionHandler } from '@/hooks/useVoiceActionHandler';
 
 const LazyVoiceOverlay = lazy(() => import('@/components/voice/VoiceSearchOverlayConnected'));
 
@@ -63,39 +65,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     startTransition(() => setCurrentView(viewId));
   }, [startTransition, setCurrentView]);
 
-  const handleVoiceAction = useCallback((action: VoiceAgentAction) => {
-    switch (action.action) {
-      case 'navigate':
-        if (action.data?.route) {
-          handleViewChange(action.data.route);
-          toast.success(`Navegando para ${action.data.route}`);
-        }
-        break;
-      case 'search':
-        if (action.data?.query) {
-          handleViewChange('contacts');
-          toast.info(`Buscando: "${action.data.query}"`);
-        }
-        break;
-      case 'filter':
-        if (action.data?.filters) {
-          handleViewChange('inbox');
-          toast.info('Filtros aplicados por comando de voz');
-        }
-        break;
-      case 'sort':
-        if (action.data?.sortBy) {
-          toast.info(`Ordenação alterada: ${action.data.sortBy}`);
-        }
-        break;
-      case 'clear':
-        toast.info('Filtros limpos');
-        break;
-      case 'answer':
-        // Verbal response already given via TTS
-        break;
-    }
-  }, [handleViewChange]);
+  const handleVoiceAction = useVoiceActionHandler(handleViewChange);
 
   // Mobile edge-swipe navigation
   useSwipeNavigation({
@@ -108,9 +78,17 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
     threshold: 60,
   });
 
+  const appVersion = useMemo(() => {
+    // build time versioning based on today's date + minor increment
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+    return `v2.0.${today}.10-10`;
+  }, []);
   return (
     <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
       <RouteLoadingBar isLoading={loading} />
+      <FailedMessageAlertsMount />
+      <AutomationFailureAlertsMount />
+      <IntegrationMigrationMount />
 
       {/* Skip to content — a11y */}
       <a
@@ -147,6 +125,15 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         />
       )}
 
+      {!isMobile && (
+        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px]  text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
+          <Info className="w-2.5 h-2.5 opacity-40" />
+          <span>{appVersion}</span>
+          <span className="w-1 h-1 rounded-full bg-success/40" />
+          <span className="uppercase tracking-tighter opacity-40">Build 10/10</span>
+        </div>
+      )}
+
       <main
         id="main-content"
         role="main"
@@ -165,10 +152,10 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
                 onClick={toggleZen}
                 className={cn(
                   'absolute top-3 right-3 z-30 h-8 rounded-full flex items-center gap-1.5 transition-all duration-200',
-                  'border backdrop-blur-sm shadow-sm',
+                  'border border-border/40 shadow-none',
                   isZen
                     ? 'px-3 bg-primary/15 border-primary/30 text-primary hover:bg-primary/25 hover:border-primary/50 shadow-primary/10'
-                    : 'px-2.5 bg-card/80 border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 hover:border-border/70'
+                    : 'px-2.5 bg-foreground border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/10 hover:border-border/70'
                 )}
                 aria-label={isZen ? 'Sair do modo zen' : 'Modo zen'}
               >
@@ -209,7 +196,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           <TooltipTrigger asChild>
             <button
               onClick={() => setVoiceOpen(true)}
-              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-none hover:scale-105 transition-all flex items-center justify-center border border-primary/20"
               aria-label="Assistente de voz"
             >
               <Mic className="w-6 h-6" />

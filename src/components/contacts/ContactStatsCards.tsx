@@ -165,8 +165,9 @@ export function ContactStatsCards({
         <motion.div
           key={stat.label}
           variants={item}
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
           className={cn(
-            "relative rounded-xl border bg-card p-4 overflow-hidden group hover:shadow-md transition-shadow duration-200",
+            "relative rounded-xl border bg-card p-4 overflow-hidden group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300",
             stat.border
           )}
         >

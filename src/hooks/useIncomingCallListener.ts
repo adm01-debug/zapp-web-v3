@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/features/auth';
 import { log } from '@/lib/logger';
+import type { IncomingCall } from '@/types/incomingCall';
+import { dbFrom } from '@/integrations/datasource/db';
 
-export interface IncomingCall {
-  id: string;
-  contact_id: string | null;
-  contact_name: string;
-  contact_phone: string;
-  is_video: boolean;
-  whatsapp_connection_id: string | null;
-  started_at: string;
-}
+export type { IncomingCall } from '@/types/incomingCall';
 
 export function useIncomingCallListener() {
   const { user, profile } = useAuth();
@@ -44,7 +38,7 @@ export function useIncomingCallListener() {
           let contactPhone = '';
 
           if (call.contact_id) {
-            const { data: contact } = await supabase
+            const { data: contact , error } = await supabase
               .from('contacts')
               .select('name, phone')
               .eq('id', call.contact_id as string)

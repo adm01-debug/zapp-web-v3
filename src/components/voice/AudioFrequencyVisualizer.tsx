@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import type { VoiceAgentPhase } from '@/hooks/voice/types';
+import type { VoiceAgentPhase } from '@/features/inbox';
 import { usePhaseColors } from './usePhaseColors';
 
 interface AudioFrequencyVisualizerProps {

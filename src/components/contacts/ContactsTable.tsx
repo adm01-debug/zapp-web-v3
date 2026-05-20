@@ -12,7 +12,7 @@ import {
   MessageSquare, Edit, Trash2, MoreVertical, Phone, Mail,
   Briefcase, Calendar, Tag, Users, Truck, UserCheck,
   Wrench, Star, Handshake, MoreHorizontal,
-  ArrowUp, ArrowDown, ArrowUpDown,
+  ArrowUp, ArrowDown, ArrowUpDown, Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -21,6 +21,7 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 import { CompanyLogo } from './CompanyLogo';
 import { HighlightText } from './HighlightText';
+import { calculateContactHealth, getHealthColor } from '@/lib/contact-health';
 import type { Contact } from './types';
 import type { CRMBatchResult } from '@/hooks/useExternalContact360Batch';
 
@@ -124,6 +125,7 @@ export function ContactsTable({
             <SortableHeader label="Empresa" field="company" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
             <SortableHeader label="Cargo" field="job_title" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
             <th className="text-left p-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Etiquetas</th>
+            <th className="text-center p-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saúde</th>
             <th className="text-right p-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ações</th>
           </tr>
         </thead>
@@ -184,14 +186,14 @@ export function ContactsTable({
                 <td className="p-3">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Phone className="w-3.5 h-3.5 shrink-0" />
-                    <span className="font-mono text-[11px]">{contact.phone}</span>
+                    <HighlightText text={contact.phone} highlight={searchQuery} className=" text-[11px]" />
                   </div>
                 </td>
                 <td className="p-3">
                   {contact.email ? (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Mail className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate max-w-[160px] text-[11px]">{contact.email}</span>
+                      <HighlightText text={contact.email} highlight={searchQuery} className="truncate max-w-[160px] text-[11px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>
@@ -204,7 +206,7 @@ export function ContactsTable({
                         fallbackCompanyName={contact.company}
                         size="xs"
                       />
-                      <span className="truncate max-w-[140px]">{crmData?.company_name || contact.company}</span>
+                      <HighlightText text={crmData?.company_name || contact.company} highlight={searchQuery} className="truncate max-w-[140px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>
@@ -212,7 +214,7 @@ export function ContactsTable({
                   {contact.job_title ? (
                     <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                       <Briefcase className="w-3 h-3 shrink-0" />
-                      <span className="truncate max-w-[140px]">{contact.job_title}</span>
+                      <HighlightText text={contact.job_title} highlight={searchQuery} className="truncate max-w-[140px]" />
                     </div>
                   ) : <span className="text-muted-foreground/30">—</span>}
                 </td>
@@ -224,6 +226,17 @@ export function ContactsTable({
                     {(contact.tags?.length || 0) > 2 && (
                       <Badge variant="secondary" className="text-[10px] h-5 px-1.5">+{(contact.tags?.length || 0) - 2}</Badge>
                     )}
+                  </div>
+                </td>
+                <td className="p-3">
+                  <div className="flex justify-center">
+                    <div className={cn(
+                      "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold",
+                      getHealthColor(calculateContactHealth(contact))
+                    )}>
+                      <Activity className="w-2.5 h-2.5" />
+                      {calculateContactHealth(contact)}%
+                    </div>
                   </div>
                 </td>
                 <td className="p-3 text-right">

@@ -48,7 +48,7 @@ export function MetaCAPIView() {
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('meta_capi_events')
       .select('*')
       .order('event_time', { ascending: false })
@@ -62,7 +62,7 @@ export function MetaCAPIView() {
   // Load config from global_settings
   useEffect(() => {
     const loadConfig = async () => {
-      const { data } = await supabase
+      const { data, error: configErr } = await supabase
         .from('global_settings')
         .select('key, value')
         .in('key', ['meta_pixel_id', 'meta_capi_auto_track']);
@@ -78,7 +78,7 @@ export function MetaCAPIView() {
 
   const saveConfig = async () => {
     const upsert = async (key: string, value: string) => {
-      const { data: existing } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
+      const { data: existing , error: existingErr } = await supabase.from('global_settings').select('id').eq('key', key).maybeSingle();
       if (existing) {
         await supabase.from('global_settings').update({ value }).eq('key', key);
       } else {
@@ -92,13 +92,13 @@ export function MetaCAPIView() {
   };
 
   const sendTestEvent = async (eventName: string) => {
-    const { error } = await supabase.from('meta_capi_events').insert({
+    const { error: insertErr } = await supabase.from('meta_capi_events').insert({
       event_name: eventName,
       pixel_id: pixelId || null,
       action_source: 'chat',
       custom_data: { test: true, value: 0 },
     });
-    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
+    if (insertErr) { toast({ title: 'Erro', description: insertErr.message, variant: 'destructive' }); return; }
     toast({ title: `Evento "${eventName}" registrado!` });
     fetchEvents();
   };
@@ -147,7 +147,7 @@ export function MetaCAPIView() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <Zap className="w-3.5 h-3.5" /> Pixel ID
             </div>
-            <p className="text-sm font-mono truncate">{pixelId || 'Não configurado'}</p>
+            <p className="text-sm  truncate">{pixelId || 'Não configurado'}</p>
           </CardContent>
         </Card>
         <Card className="bg-card/50 border-border/30">
