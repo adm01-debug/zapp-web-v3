@@ -30,7 +30,12 @@ interface ChatDialogsProps {
   forwardMessage: Message | null;
   callDirection: 'inbound' | 'outbound';
   contactId: string;
-  onTransfer: (type: 'agent' | 'queue', targetId: string, message?: string) => void;
+  onTransfer: (data: {
+    type: 'agent' | 'queue' | 'connection';
+    targetId: string;
+    priority: 'P1' | 'P2' | 'P3' | 'P4';
+    message?: string;
+  }) => void;
   onScheduleMessage: (message: string, scheduledAt: Date, attachment?: File) => Promise<void>;
   onSendInteractiveMessage: (interactive: InteractiveMessage) => void;
   onForwardToTargets: (targetIds: string[], targetType: 'contact' | 'group') => void;
@@ -47,7 +52,7 @@ export function ChatDialogs({
   return (
     <>
       <Suspense fallback={null}>
-        {dialogs.transferDialog && <TransferDialog open={dialogs.transferDialog} onOpenChange={(v) => v ? openDialog('transferDialog') : closeDialog('transferDialog')} onTransfer={onTransfer as (type: "agent" | "connection" | "queue", targetId: string, message?: string) => void} />}
+        {dialogs.transferDialog && <TransferDialog open={dialogs.transferDialog} onOpenChange={(v) => v ? openDialog('transferDialog') : closeDialog('transferDialog')} onTransfer={onTransfer} />}
         {dialogs.scheduleDialog && <ScheduleMessageDialog open={dialogs.scheduleDialog} onOpenChange={(v) => v ? openDialog('scheduleDialog') : closeDialog('scheduleDialog')} onSchedule={onScheduleMessage} />}
         {dialogs.callDialog && <CallDialog open={dialogs.callDialog} onOpenChange={(v) => v ? openDialog('callDialog') : closeDialog('callDialog')} contact={{ name: conversation.contact.name, phone: conversation.contact.phone, avatar: conversation.contact.avatar }} direction={callDirection} onEnd={() => closeDialog('callDialog')} />}
         {dialogs.globalSearch && <GlobalSearch open={dialogs.globalSearch} onOpenChange={(v) => v ? openDialog('globalSearch') : closeDialog('globalSearch')} onSelectResult={(result) => { log.debug('Selected:', result); toast({ title: 'Resultado selecionado', description: result.title }); }} />}

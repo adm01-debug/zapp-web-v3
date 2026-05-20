@@ -167,8 +167,45 @@ export function ChatPanel({ conversation, messages, onSendMessage, onSendAudio, 
     handlers.setInputValue(reply.content); closeDialog('quickReplies'); incrementUseCount(reply.id);
   };
 
-  const handleTransfer = (type: 'agent' | 'queue', targetId: string, message?: string) => {
-    toast({ title: 'Chat transferido!', description: type === 'agent' ? 'O chat foi transferido para outro atendente.' : 'O chat foi transferido para outra fila.' });
+  const handleTransfer = async (data: {
+    type: 'agent' | 'queue' | 'connection';
+    targetId: string;
+    priority: 'P1' | 'P2' | 'P3' | 'P4';
+    message?: string;
+  }) => {
+    try {
+      const { data: transferId, error } = await supabase.rpc('fn_create_transfer', {
+        p_conversation_id: conversation.id,
+        p_from_agent_id: (await supabase.auth.getUser()).data.user?.id,
+        p_to_agent_id: data.type === 'agent' ? data.targetId : null,
+        p_to_queue_id: data.type === 'queue' ? data.targetId : null,
+        p_transfer_type: data.type === 'agent' ? 'direct' : data.type === 'queue' ? 'queue' : 'internal',
+        p_priority: data.priority,
+        p_context_summary: data.message
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Transferência Iniciada!', 
+        description: `O ticket ${transferId} foi criado com sucesso.` 
+      });
+
+      // Se for para um agente específico, podemos opcionalmente mudar o assigned_to da conversa
+      if (data.type === 'agent') {
+        await supabase
+          .from('contacts')
+          .update({ assigned_to: data.targetId })
+          .eq('id', conversation.contact.id);
+      }
+    } catch (error: any) {
+      log.error('Transfer error:', error);
+      toast({ 
+        title: 'Erro na transferência', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    }
   };
 
   const handleScheduleMessage = async (message: string, scheduledAt: Date, attachment?: File) => {

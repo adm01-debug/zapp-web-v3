@@ -27,12 +27,18 @@ import { supabase } from '@/integrations/supabase/client';
 interface TransferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTransfer: (type: 'agent' | 'queue' | 'connection', targetId: string, message?: string) => void;
+  onTransfer: (data: {
+    type: 'agent' | 'queue' | 'connection';
+    targetId: string;
+    priority: 'P1' | 'P2' | 'P3' | 'P4';
+    message?: string;
+  }) => void;
 }
 
 export function TransferDialog({ open, onOpenChange, onTransfer }: TransferDialogProps) {
   const [transferType, setTransferType] = useState<'agent' | 'queue' | 'connection'>('agent');
   const [selectedTarget, setSelectedTarget] = useState<string>('');
+  const [priority, setPriority] = useState<'P1' | 'P2' | 'P3' | 'P4'>('P3');
   const [message, setMessage] = useState('');
   const [connections, setConnections] = useState<{ id: string; name: string; phone_number: string; status: string }[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
@@ -60,9 +66,15 @@ export function TransferDialog({ open, onOpenChange, onTransfer }: TransferDialo
     if (!selectedTarget || isTransferring) return;
     setIsTransferring(true);
     try {
-      onTransfer(transferType, selectedTarget, message || undefined);
+      onTransfer({
+        type: transferType,
+        targetId: selectedTarget,
+        priority,
+        message: message || undefined
+      });
       onOpenChange(false);
       setSelectedTarget('');
+      setPriority('P3');
       setMessage('');
     } finally {
       setIsTransferring(false);
@@ -283,11 +295,38 @@ export function TransferDialog({ open, onOpenChange, onTransfer }: TransferDialo
             </div>
           )}
 
+          {/* Priority Selection */}
+          <div className="space-y-2">
+            <Label>Prioridade do Atendimento</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: 'P1', label: 'Urgente (15m)', color: 'bg-red-500' },
+                { id: 'P2', label: 'Alta (1h)', color: 'bg-orange-500' },
+                { id: 'P3', label: 'Média (4h)', color: 'bg-blue-500' },
+                { id: 'P4', label: 'Baixa (24h)', color: 'bg-gray-500' },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPriority(p.id as any)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 p-2 rounded-lg border text-[10px] font-bold transition-all",
+                    priority === p.id 
+                      ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                      : "border-border hover:bg-muted"
+                  )}
+                >
+                  <div className={cn("w-2 h-2 rounded-full", p.color)} />
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Optional Message */}
           <div className="space-y-2">
-            <Label>Mensagem (opcional)</Label>
+            <Label>Contexto / Mensagem Interna</Label>
             <Textarea
-              placeholder="Deixe uma mensagem para o próximo atendente..."
+              placeholder="Explique o motivo da transferência para o próximo atendente..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={3}
