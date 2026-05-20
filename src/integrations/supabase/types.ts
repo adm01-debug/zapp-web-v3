@@ -7400,6 +7400,10 @@ export type Database = {
         Args: { p_agent_id: string; p_transfer_id: string }
         Returns: boolean
       }
+      fn_complete_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: boolean
+      }
       fn_create_transfer: {
         Args: {
           p_context_summary?: string
@@ -7410,6 +7414,14 @@ export type Database = {
           p_to_queue_id?: string
           p_transfer_type?: string
         }
+        Returns: string
+      }
+      fn_return_transfer: {
+        Args: { p_reason: string; p_transfer_id: string }
+        Returns: boolean
+      }
+      fn_transfer_comment: {
+        Args: { p_agent_id: string; p_content: string; p_transfer_id: string }
         Returns: string
       }
       generate_transfer_ticket: { Args: never; Returns: string }
