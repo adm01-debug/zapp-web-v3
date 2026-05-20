@@ -171,7 +171,6 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon"
                 className="rounded-r-none"
-                aria-label="Modo grade"
                 onClick={() => setViewMode('grid')}
               >
                 <Grid3X3 className="w-4 h-4" />
@@ -180,7 +179,6 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
                 variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 size="icon"
                 className="rounded-l-none"
-                aria-label="Modo lista"
                 onClick={() => setViewMode('list')}
               >
                 <List className="w-4 h-4" />

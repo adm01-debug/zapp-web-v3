@@ -15,8 +15,7 @@ export type AuditAction =
   | 'call_started'
   | 'call_ended'
   | 'transfer'
-  | 'settings_changed'
-  | 'scope_change';
+  | 'settings_changed';
 
 interface AuditLogParams {
   action: AuditAction;

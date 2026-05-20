@@ -17,7 +17,6 @@ import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Contact } from './types';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactMergePanelProps {
   open: boolean;
@@ -76,14 +75,16 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
       mergedData.tags = allTags;
 
       // Update primary with merged data
-      const { error: updateError } = await dbFrom('contacts')
-        .update(mergedData as never)
+      const { error: updateError } = await supabase
+        .from('contacts')
+        .update(mergedData)
         .eq('id', primary.id);
 
       if (updateError) throw updateError;
 
       // Move messages from secondary to primary
-      await dbFrom('messages')
+      await supabase
+        .from('messages')
         .update({ contact_id: primary.id })
         .eq('contact_id', secondary.id);
 
@@ -94,7 +95,7 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
         .eq('contact_id', secondary.id);
 
       // Delete secondary
-      await dbFrom('contacts').delete().eq('id', secondary.id);
+      await supabase.from('contacts').delete().eq('id', secondary.id);
 
       toast.success('Contatos mesclados com sucesso!');
       onMergeComplete();
@@ -136,7 +137,7 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
                       </Avatar>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate">{contact.name}</p>
-                        <p className="text-xs text-muted-foreground ">{contact.phone}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{contact.phone}</p>
                       </div>
                       {idx === 0 && <Badge variant="default" className="ml-auto text-[10px]">Principal</Badge>}
                     </CardContent>
@@ -186,11 +187,11 @@ export function ContactMergePanel({ open, onOpenChange, contacts, onMergeComplet
             })}
 
             {/* Warning */}
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-3">
-              <AlertTriangle className="w-4 h-4 text-warning-foreground mt-0.5 shrink-0" />
-              <div className="text-xs text-warning-foreground dark:text-warning-foreground">
+            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+              <div className="text-xs text-amber-800 dark:text-amber-300">
                 <p className="font-semibold">Atenção: esta ação é irreversível</p>
-                <p className="mt-0.5 text-warning-foreground dark:text-warning-foreground">
+                <p className="mt-0.5 text-amber-700 dark:text-amber-400">
                   O contato secundário será excluído e seu histórico será migrado para o contato principal.
                 </p>
               </div>

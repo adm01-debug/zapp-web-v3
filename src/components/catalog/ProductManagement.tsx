@@ -119,7 +119,7 @@ export const ProductManagement: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>{product.category && <Badge variant="outline">{product.category}</Badge>}</TableCell>
-                      <TableCell className=" text-sm">{product.sku || '-'}</TableCell>
+                      <TableCell className="font-mono text-sm">{product.sku || '-'}</TableCell>
                       <TableCell className="text-right font-semibold">{formatPrice(product.price, product.currency)}</TableCell>
                       <TableCell className="text-center">
                         <Badge variant={product.stock_quantity <= 0 ? 'destructive' : product.stock_quantity <= 5 ? 'secondary' : 'outline'}>

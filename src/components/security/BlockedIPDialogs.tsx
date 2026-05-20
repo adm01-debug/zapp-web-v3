@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface BlockIPDialogProps {
   open: boolean;
@@ -84,7 +84,7 @@ export function UnblockIPDialog({ ip, onClose, onSuccess }: UnblockIPDialogProps
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Desbloquear IP?</AlertDialogTitle>
-          <AlertDialogDescription>O IP <code className="">{ip?.ip_address}</code> poderá acessar o sistema novamente.</AlertDialogDescription>
+          <AlertDialogDescription>O IP <code className="font-mono">{ip?.ip_address}</code> poderá acessar o sistema novamente.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={updating}>Cancelar</AlertDialogCancel>

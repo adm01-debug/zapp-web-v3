@@ -7,7 +7,6 @@ import { PRESETS } from './theme/presets';
 import { useThemePreset } from './theme/useThemePreset';
 import { PresetCard } from './theme/PresetCard';
 import { BorderRadiusControl } from './theme/BorderRadiusControl';
-import { ThemeDebugTooltip } from './theme/ThemeDebugTooltip';
 import { toast } from 'sonner';
 
 export function ThemeCustomizer() {
@@ -43,19 +42,16 @@ export function ThemeCustomizer() {
           <p className="text-sm text-muted-foreground">Escolha sua skin favorita</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <ThemeDebugTooltip />
-          <div className="flex gap-2">
-            <Button variant="default" size="sm" onClick={() => {
-              const preset = PRESETS.find(p => p.id === activePreset);
-              toast.success(`Tema "${preset?.name || 'Padrão'}" salvo com sucesso!`);
-            }}>
-              <Save className="w-4 h-4 mr-1" /> Salvar
-            </Button>
-            <Button variant="outline" size="sm" onClick={resetTheme}>
-              <RotateCcw className="w-4 h-4 mr-1" /> Resetar tema
-            </Button>
-          </div>
+        <div className="flex gap-2">
+          <Button variant="default" size="sm" onClick={() => {
+            const preset = PRESETS.find(p => p.id === activePreset);
+            toast.success(`Tema "${preset?.name || 'Padrão'}" salvo com sucesso!`);
+          }}>
+            <Save className="w-4 h-4 mr-1" /> Salvar
+          </Button>
+          <Button variant="outline" size="sm" onClick={resetTheme}>
+            <RotateCcw className="w-4 h-4 mr-1" /> Original
+          </Button>
         </div>
       </div>
 

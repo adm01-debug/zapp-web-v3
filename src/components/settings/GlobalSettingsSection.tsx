@@ -7,8 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Globe, Users, MessageCircle, RotateCcw, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { LanguageSelector } from '@/components/settings/LanguageSelector';
-import { WhatsAppModeSetting } from '@/components/settings/WhatsAppModeSetting';
-import { ConnectionTestPanel } from '@/components/settings/ConnectionTestPanel';
 
 export function GlobalSettingsSection() {
   const { settings, isLoading, getSetting, updateSetting } = useGlobalSettings();
@@ -85,8 +83,6 @@ export function GlobalSettingsSection() {
           </div>
         ))}
 
-        <WhatsAppModeSetting />
-
         <div className="p-3 rounded-lg border border-border/20 space-y-2">
           <div className="flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-muted-foreground" />
@@ -121,9 +117,6 @@ export function GlobalSettingsSection() {
             className="h-8 text-sm"
           />
         </div>
-      </CardContent>
-      <CardContent className="pt-0">
-        <ConnectionTestPanel />
       </CardContent>
     </Card>
   );

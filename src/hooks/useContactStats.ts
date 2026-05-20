@@ -1,85 +1,89 @@
-/**
- * useContactStats.ts — Estatísticas de contatos para dashboard CRM
- *
- * Usa rpc_contact_stats para dados consolidados:
- * - Total de contatos
- * - Por status, instância, lead_status
- * - Candidatos a duplicata
- * - Pendências LGPD
- * - Crescimento nos últimos 30 dias
- */
-
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { log } from '@/lib/logger';
 
-export interface ContactStatsData {
-  total: number;
-  with_email: number;
-  with_company: number;
-  by_lead_status: Record<string, number>;
-  by_instance: Record<string, number>;
-  pending_lgpd_deletion: number;
-  recent_30d: number;
-  duplicate_candidates: number;
+export interface ContactStats {
+  totalMessages: number;
+  avgResponseTimeMinutes: number;
+  totalConversations: number;
+  csatAverage: number | null;
+  csatCount: number;
 }
 
-interface UseContactStatsReturn {
-  stats: ContactStatsData | null;
-  isLoading: boolean;
-  error: Error | null;
-  hasDuplicates: boolean;
-  hasLgpdPending: boolean;
-  growthPct30d: number | null;
-  refresh: () => Promise<void>;
-}
+export function useContactStats(contactId: string) {
+  return useQuery({
+    queryKey: ['contact-stats', contactId],
+    queryFn: async (): Promise<ContactStats> => {
+      try {
+        // Fetch message count
+        const { count: messageCount } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('contact_id', contactId);
 
-export function useContactStats(): UseContactStatsReturn {
-  const [stats, setStats] = useState<ContactStatsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+        // Fetch conversation days count (unique days as proxy for conversations)
+        const { data: messages } = await supabase
+          .from('messages')
+          .select('created_at')
+          .eq('contact_id', contactId)
+          .order('created_at', { ascending: false })
+          .limit(500);
 
-  const fetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+        // Count unique conversation days
+        const uniqueDays = new Set(
+          messages?.map(m => new Date(m.created_at).toDateString()) || []
+        );
 
-    try {
-      const { data, error: rpcErr } = await (supabase as any).rpc('rpc_contact_stats');
+        // Fetch CSAT surveys
+        const { data: csatData } = await supabase
+          .from('csat_surveys')
+          .select('rating')
+          .eq('contact_id', contactId);
 
-      if (rpcErr) throw new Error(rpcErr.message);
+        const csatAvg = csatData && csatData.length > 0
+          ? csatData.reduce((sum, s) => sum + s.rating, 0) / csatData.length
+          : null;
 
-      // Supabase retorna o JSONB como objeto direto
-      const statsData = data as unknown as ContactStatsData;
-      setStats(statsData);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        // Calculate avg response time from agent messages
+        const { data: agentMessages } = await supabase
+          .from('messages')
+          .select('created_at, sender')
+          .eq('contact_id', contactId)
+          .order('created_at', { ascending: true })
+          .limit(200);
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+        let totalResponseTime = 0;
+        let responseCount = 0;
+        if (agentMessages) {
+          for (let i = 1; i < agentMessages.length; i++) {
+            if (agentMessages[i].sender === 'agent' && agentMessages[i - 1].sender === 'contact') {
+              const diff = new Date(agentMessages[i].created_at).getTime() - new Date(agentMessages[i - 1].created_at).getTime();
+              totalResponseTime += diff;
+              responseCount++;
+            }
+          }
+        }
 
-  // Métricas derivadas
-  const hasDuplicates = (stats?.duplicate_candidates ?? 0) > 0;
-  const hasLgpdPending = (stats?.pending_lgpd_deletion ?? 0) > 0;
+        const avgResponseMs = responseCount > 0 ? totalResponseTime / responseCount : 0;
 
-  // Crescimento percentual: recent_30d / (total - recent_30d) * 100
-  const growthPct30d: number | null = (() => {
-    if (!stats) return null;
-    const base = stats.total - stats.recent_30d;
-    if (base <= 0) return null;
-    return Math.round((stats.recent_30d / base) * 100);
-  })();
-
-  return {
-    stats,
-    isLoading,
-    error,
-    hasDuplicates,
-    hasLgpdPending,
-    growthPct30d,
-    refresh: fetch,
-  };
+        return {
+          totalMessages: messageCount || 0,
+          avgResponseTimeMinutes: Math.round(avgResponseMs / 60000),
+          totalConversations: uniqueDays.size,
+          csatAverage: csatAvg,
+          csatCount: csatData?.length || 0,
+        };
+      } catch (err) {
+        log.error('Error fetching contact stats:', err);
+        return {
+          totalMessages: 0,
+          avgResponseTimeMinutes: 0,
+          totalConversations: 0,
+          csatAverage: null,
+          csatCount: 0,
+        };
+      }
+    },
+    enabled: !!contactId,
+  });
 }

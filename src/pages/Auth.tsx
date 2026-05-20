@@ -7,11 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Smartphone, Mail, User, ArrowRight, Sparkles, Fingerprint, Loader2, Lock, AlertTriangle } from 'lucide-react';
 import { RippleButton } from '@/components/ui/micro-interactions';
-import { PasswordInput } from '@/features/auth';
-import { PasswordStrengthMeter } from '@/features/auth';
-import { SocialProof } from '@/features/auth';
-import { HeroBenefits } from '@/features/auth';
-import { useAuthForm } from '@/features/auth';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
+import { SocialProof } from '@/components/auth/SocialProof';
+import { HeroBenefits } from '@/components/auth/HeroBenefits';
+import { useAuthForm } from '@/hooks/useAuthForm';
 import { Link } from 'react-router-dom';
 
 export default function Auth() {
@@ -65,7 +65,7 @@ export default function Auth() {
 
           {/* Card */}
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
-            <Card className="border-border/50 shadow-none">
+            <Card className="glass-strong border-border/50 shadow-2xl shadow-primary/10">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <CardHeader className="pb-0">
                   <TabsList className="grid w-full grid-cols-2 glass border border-border/30">
@@ -89,7 +89,7 @@ export default function Auth() {
                                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                                   <motion.div initial={{ width: '100%' }} animate={{ width: '0%' }} transition={{ duration: lockStatus.remainingTime, ease: 'linear' }} className="h-full bg-destructive rounded-full" />
                                 </div>
-                                <span className="text-sm  text-destructive min-w-[60px] text-right">
+                                <span className="text-sm font-mono text-destructive min-w-[60px] text-right">
                                   {Math.floor(lockStatus.remainingTime / 60)}:{(lockStatus.remainingTime % 60).toString().padStart(2, '0')}
                                 </span>
                               </div>
@@ -130,7 +130,7 @@ export default function Auth() {
                       </motion.div>
                       
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-                        <RippleButton type="submit" variant="primary" className="w-full text-primary-foreground transition-all group bg-primary rounded-md px-4 py-2 font-medium" disabled={loading}>
+                        <RippleButton type="submit" variant="primary" className="w-full text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all group bg-primary rounded-md px-4 py-2 font-medium" disabled={loading}>
                           {loading ? <motion.span animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>Entrando...</motion.span> : <>Entrar<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" /></>}
                         </RippleButton>
                       </motion.div>

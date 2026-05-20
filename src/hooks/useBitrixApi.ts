@@ -2,22 +2,8 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
-import { isSuccessful, readNumber, hasField } from '@/lib/runtimeGuards';
 
 type EntityType = 'lead' | 'contact' | 'deal' | 'activity' | 'call';
-
-/**
- * Shape returned by the `bitrix-api` edge function. Fields are optional
- * because the runtime payload can vary per action; callers MUST narrow
- * via runtime guards (e.g. `isSuccessful`) before accessing them.
- */
-export interface BitrixApiResponse {
-  success?: boolean;
-  error?: string;
-  synced?: number;
-  data?: unknown;
-  [key: string]: unknown;
-}
 
 interface BitrixEntity {
   ID?: string;
@@ -39,7 +25,7 @@ export const useBitrixApi = () => {
     entityId?: string,
     data?: Record<string, unknown>,
     filters?: Record<string, unknown>
-  ): Promise<BitrixApiResponse | null> => {
+  ) => {
     setLoading(true);
     setError(null);
 
@@ -52,11 +38,11 @@ export const useBitrixApi = () => {
         throw new Error(invokeError.message);
       }
 
-      if (hasField(response, 'error') && typeof response.error === 'string') {
+      if (response?.error) {
         throw new Error(response.error);
       }
 
-      return (response ?? null) as BitrixApiResponse | null;
+      return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao comunicar com Bitrix';
       setError(errorMessage);
@@ -78,7 +64,7 @@ export const useBitrixApi = () => {
 
   const createLead = async (data: Record<string, unknown>) => {
     const result = await callBitrixApi('create', 'lead', undefined, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Lead criado no Bitrix');
     }
     return result;
@@ -86,7 +72,7 @@ export const useBitrixApi = () => {
 
   const updateLead = async (id: string, data: Record<string, unknown>) => {
     const result = await callBitrixApi('update', 'lead', id, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Lead atualizado no Bitrix');
     }
     return result;
@@ -94,7 +80,7 @@ export const useBitrixApi = () => {
 
   const deleteLead = async (id: string) => {
     const result = await callBitrixApi('delete', 'lead', id);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Lead removido do Bitrix');
     }
     return result;
@@ -111,7 +97,7 @@ export const useBitrixApi = () => {
 
   const createContact = async (data: Record<string, unknown>) => {
     const result = await callBitrixApi('create', 'contact', undefined, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Contato criado no Bitrix');
     }
     return result;
@@ -119,7 +105,7 @@ export const useBitrixApi = () => {
 
   const updateContact = async (id: string, data: Record<string, unknown>) => {
     const result = await callBitrixApi('update', 'contact', id, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Contato atualizado no Bitrix');
     }
     return result;
@@ -136,7 +122,7 @@ export const useBitrixApi = () => {
 
   const createDeal = async (data: Record<string, unknown>) => {
     const result = await callBitrixApi('create', 'deal', undefined, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Negócio criado no Bitrix');
     }
     return result;
@@ -144,7 +130,7 @@ export const useBitrixApi = () => {
 
   const updateDeal = async (id: string, data: Record<string, unknown>) => {
     const result = await callBitrixApi('update', 'deal', id, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Negócio atualizado no Bitrix');
     }
     return result;
@@ -157,7 +143,7 @@ export const useBitrixApi = () => {
 
   const createActivity = async (data: Record<string, unknown>) => {
     const result = await callBitrixApi('create', 'activity', undefined, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Atividade criada no Bitrix');
     }
     return result;
@@ -196,8 +182,8 @@ export const useBitrixApi = () => {
   // === SYNC ===
   const syncContactsFromBitrix = async (filters?: Record<string, unknown>) => {
     const result = await callBitrixApi('sync_contacts', undefined, undefined, undefined, filters);
-    if (isSuccessful(result)) {
-      toast.success(`${readNumber(result, 'synced')} contatos sincronizados do Bitrix`);
+    if (result?.success) {
+      toast.success(`${result.synced} contatos sincronizados do Bitrix`);
     }
     return result;
   };
@@ -210,7 +196,7 @@ export const useBitrixApi = () => {
     jobTitle?: string;
   }) => {
     const result = await callBitrixApi('push_contact', undefined, undefined, contact);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Contato enviado para o Bitrix');
     }
     return result;
@@ -224,7 +210,7 @@ export const useBitrixApi = () => {
     title?: string;
   }) => {
     const result = await callBitrixApi('create_lead_from_conversation', undefined, undefined, data);
-    if (isSuccessful(result)) {
+    if (result?.success) {
       toast.success('Lead criado a partir da conversa');
     }
     return result;

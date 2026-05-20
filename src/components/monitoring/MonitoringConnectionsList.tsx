@@ -14,17 +14,15 @@ import type { ConnectionInfo, WebhookTestResult } from './hooks/useEvolutionMoni
 interface Props {
   connections: ConnectionInfo[];
   webhookTest: WebhookTestResult;
-  onCheckWebhook: (instanceId: string) => void;
-  onTestWebhook: (instanceId: string) => void;
+  onCheckWebhook: (id: string) => void;
+  onTestWebhook: (id: string) => void;
 }
 
-const statusIcon = (status: string | null) => {
-  switch (status) {
-    case 'connected': case 'healthy': return <CheckCircle2 className="w-3.5 h-3.5 text-primary" />;
-    case 'disconnected': case 'error': return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-    case 'degraded': return <AlertTriangle className="w-3.5 h-3.5 text-warning-foreground" />;
-    default: return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
-  }
+const statusIcon = (s: string | null) => {
+  if (s === 'connected' || s === 'healthy') return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
+  if (s === 'disconnected' || s === 'error') return <XCircle className="w-3.5 h-3.5 text-destructive" />;
+  if (s === 'degraded') return <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />;
+  return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
 };
 
 export function MonitoringConnectionsList({ connections, webhookTest, onCheckWebhook, onTestWebhook }: Props) {
@@ -32,115 +30,73 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
   const [loadingQr, setLoadingQr] = useState<Record<string, boolean>>({});
   const [reconnecting, setReconnecting] = useState<Record<string, boolean>>({});
 
-  const fetchQrCode = useCallback(async (instanceId: string) => {
-    setLoadingQr(prev => ({ ...prev, [instanceId]: true }));
+  const fetchQr = useCallback(async (id: string) => {
+    setLoadingQr(p => ({ ...p, [id]: true }));
     try {
-      const { data, error } = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'get-qrcode', instanceName: instanceId },
-      });
+      const { data, error } = await supabase.functions.invoke('evolution-api', { body: { action: 'get-qrcode', instanceName: id } });
       if (error) throw error;
-      const base64 = data?.qrcode?.base64 || data?.base64;
-      if (base64) {
-        setQrCodes(prev => ({ ...prev, [instanceId]: base64 }));
-      } else {
-        toast.info('QR Code não disponível. A instância pode já estar conectada.');
-      }
-    } catch {
-      toast.error('Erro ao buscar QR Code');
-    } finally {
-      setLoadingQr(prev => ({ ...prev, [instanceId]: false }));
-    }
+      const b64 = data?.qrcode?.base64 || data?.base64;
+      if (b64) setQrCodes(p => ({ ...p, [id]: b64 }));
+      else toast.info('QR Code indisponível — instância pode já estar conectada.');
+    } catch { toast.error('Erro ao buscar QR Code'); }
+    finally { setLoadingQr(p => ({ ...p, [id]: false })); }
   }, []);
 
-  const reconnectInstance = useCallback(async (instanceId: string) => {
-    setReconnecting(prev => ({ ...prev, [instanceId]: true }));
+  const reconnect = useCallback(async (id: string) => {
+    setReconnecting(p => ({ ...p, [id]: true }));
     try {
-      const { error: restartErr } = await supabase.functions.invoke('evolution-api', {
-        body: { action: 'restart-instance', instanceName: instanceId },
-      });
-      if (restartErr) throw restartErr;
-      toast.success(`Instância ${instanceId} reiniciada!`);
-    } catch {
-      toast.error('Erro ao reconectar instância');
-    } finally {
-      setReconnecting(prev => ({ ...prev, [instanceId]: false }));
-    }
+      const { error } = await supabase.functions.invoke('evolution-api', { body: { action: 'restart-instance', instanceName: id } });
+      if (error) throw error;
+      toast.success(`Instância ${id} reiniciada!`);
+    } catch { toast.error('Erro ao reconectar'); }
+    finally { setReconnecting(p => ({ ...p, [id]: false })); }
   }, []);
 
-  if (connections.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <WifiOff className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Nenhuma conexão cadastrada.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (!connections.length) return (
+    <Card><CardContent className="py-12 text-center">
+      <WifiOff className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+      <p className="text-sm text-muted-foreground">Nenhuma conexão cadastrada.</p>
+    </CardContent></Card>
+  );
 
   return (
     <div className="space-y-3">
       {connections.map((conn, i) => {
-        const isOffline = conn.status !== 'connected';
+        const offline = conn.status !== 'connected';
         return (
-          <motion.div
-            key={conn.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-          >
+          <motion.div key={conn.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <Card className="hover:shadow-md transition-all border-border/60">
               <CardContent className="py-4 px-5">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className={cn(
-                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors',
-                      conn.status === 'connected' ? 'bg-primary/10' : 'bg-destructive/10'
-                    )}>
-                      {conn.status === 'connected'
-                        ? <Wifi className="w-5 h-5 text-primary" />
-                        : <WifiOff className="w-5 h-5 text-destructive" />
-                      }
+                    <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', conn.status === 'connected' ? 'bg-emerald-500/10' : 'bg-destructive/10')}>
+                      {conn.status === 'connected' ? <Wifi className="w-5 h-5 text-emerald-500" /> : <WifiOff className="w-5 h-5 text-destructive" />}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm">{conn.instance_id}</span>
-                        <Badge variant={conn.status === 'connected' ? 'default' : 'destructive'} className="text-[10px]">
-                          {conn.status}
-                        </Badge>
-                        {conn.health_status && (
-                          <Badge variant="outline" className="text-[10px] gap-1">
-                            {statusIcon(conn.health_status)}
-                            {conn.health_status}
-                          </Badge>
-                        )}
+                        <Badge variant={conn.status === 'connected' ? 'default' : 'destructive'} className="text-[10px]">{conn.status}</Badge>
+                        {conn.health_status && <Badge variant="outline" className="text-[10px] gap-1">{statusIcon(conn.health_status)}{conn.health_status}</Badge>}
                       </div>
-                      <div className="flex gap-3 mt-1 text-[11px] text-muted-foreground">
+                      <div className="flex gap-3 mt-1 text-[11px] text-muted-foreground flex-wrap">
                         {conn.phone_number && <span>📱 {conn.phone_number}</span>}
                         {conn.health_response_ms != null && (
-                          <span className={cn('font-medium',
-                            conn.health_response_ms < 300 ? 'text-primary' :
-                            conn.health_response_ms < 800 ? 'text-warning-foreground' : 'text-destructive'
-                          )}>
+                          <span className={cn('font-medium', conn.health_response_ms < 300 ? 'text-emerald-500' : conn.health_response_ms < 800 ? 'text-amber-500' : 'text-destructive')}>
                             ⚡ {conn.health_response_ms}ms
                           </span>
                         )}
-                        {conn.last_health_check && (
-                          <span>🕐 {formatDistanceToNow(new Date(conn.last_health_check), { addSuffix: true, locale: ptBR })}</span>
-                        )}
+                        {conn.last_health_check && <span>🕐 {formatDistanceToNow(new Date(conn.last_health_check), { addSuffix: true, locale: ptBR })}</span>}
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0 flex-wrap">
-                    {isOffline && (
+                    {offline && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => fetchQrCode(conn.instance_id)} disabled={loadingQr[conn.instance_id]} className="text-xs h-8">
-                          {loadingQr[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <QrCode className="w-3.5 h-3.5 mr-1" />}
-                          QR Code
+                        <Button size="sm" variant="outline" onClick={() => fetchQr(conn.instance_id)} disabled={loadingQr[conn.instance_id]} className="text-xs h-8">
+                          {loadingQr[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <QrCode className="w-3.5 h-3.5 mr-1" />}QR
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => reconnectInstance(conn.instance_id)} disabled={reconnecting[conn.instance_id]} className="text-xs h-8 text-warning-foreground">
-                          {reconnecting[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
-                          Reconectar
+                        <Button size="sm" variant="outline" onClick={() => reconnect(conn.instance_id)} disabled={reconnecting[conn.instance_id]} className="text-xs h-8 text-amber-600">
+                          {reconnecting[conn.instance_id] ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}Reconectar
                         </Button>
                       </>
                     )}
@@ -148,30 +104,15 @@ export function MonitoringConnectionsList({ connections, webhookTest, onCheckWeb
                       <Settings2 className="w-3.5 h-3.5 mr-1" />Webhook
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => onTestWebhook(conn.instance_id)} disabled={webhookTest.status === 'testing'} className="text-xs h-8">
-                      {webhookTest.status === 'testing'
-                        ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />Testando</>
-                        : <><PlayCircle className="w-3.5 h-3.5 mr-1" />Testar</>
-                      }
+                      {webhookTest.status === 'testing' ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />Testando</> : <><PlayCircle className="w-3.5 h-3.5 mr-1" />Testar</>}
                     </Button>
                   </div>
                 </div>
-
-                {/* QR Code inline */}
                 {qrCodes[conn.instance_id] && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="mt-4 flex justify-center"
-                  >
-                    <div className="p-4 bg-background rounded-xl border shadow-sm">
-                      <img
-                        src={qrCodes[conn.instance_id]}
-                        alt={`QR Code ${conn.instance_id}`}
-                        className="w-48 h-48 object-contain"
-                      />
-                      <p className="text-[10px] text-center text-muted-foreground mt-2">
-                        Escaneie com WhatsApp
-                      </p>
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mt-4 flex justify-center">
+                    <div className="p-4 bg-white rounded-xl border shadow-sm">
+                      <img src={qrCodes[conn.instance_id]} alt={`QR ${conn.instance_id}`} className="w-48 h-48 object-contain" />
+                      <p className="text-[10px] text-center text-muted-foreground mt-2">Escaneie com WhatsApp</p>
                     </div>
                   </motion.div>
                 )}

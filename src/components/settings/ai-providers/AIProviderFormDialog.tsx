@@ -131,7 +131,7 @@ export function AIProviderFormDialog({
                   value={form.api_key_secret_name || ''}
                   onChange={e => setForm(p => ({ ...p, api_key_secret_name: e.target.value }))}
                   placeholder="OPENAI_API_KEY"
-                  className="rounded-xl  text-sm"
+                  className="rounded-xl font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
                   Nome do secret configurado no backend. A chave será lida automaticamente.
@@ -146,7 +146,7 @@ export function AIProviderFormDialog({
               value={form.model || ''}
               onChange={e => setForm(p => ({ ...p, model: e.target.value }))}
               placeholder={form.provider_type === 'lovable_ai' ? 'google/gemini-3-flash-preview' : 'gpt-4o'}
-              className="rounded-xl  text-sm"
+              className="rounded-xl font-mono text-sm"
             />
           </div>
 

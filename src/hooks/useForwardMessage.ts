@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 import { toast } from '@/hooks/use-toast';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface Contact {
   id: string;
@@ -42,7 +41,8 @@ export function useForwardMessage(
   const fetchContacts = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await dbFrom('contacts')
+      const { data, error } = await supabase
+        .from('contacts')
         .select('id, name, phone, avatar_url')
         .order('name');
       if (error) throw error;

@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, differenceInDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface ChurnRisk {
   contactId: string;
@@ -38,7 +37,8 @@ export function ChurnPredictionDashboard() {
     setLoading(true);
     try {
       // Fetch contacts with their latest messages
-      const { data: contacts, error } = await dbFrom('contacts')
+      const { data: contacts, error } = await supabase
+        .from('contacts')
         .select('id, name, phone, ai_sentiment, updated_at, created_at')
         .order('updated_at', { ascending: true })
         .limit(500);

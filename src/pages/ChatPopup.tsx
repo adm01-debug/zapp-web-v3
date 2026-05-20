@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useMessages } from '@/features/inbox';
+import { useMessages } from '@/hooks/useMessages';
 import type { Database } from '@/integrations/supabase/types';
 import { Conversation, Message } from '@/types/chat';
 import { log } from '@/lib/logger';
@@ -9,7 +9,6 @@ import { log } from '@/lib/logger';
 type ContactRow = Database['public']['Tables']['contacts']['Row'];
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { dbFrom } from '@/integrations/datasource/db';
 import {
   Minus,
   Maximize2,
@@ -25,7 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 
 const ChatPanel = lazy(() =>
-  import('@/features/inbox').then((m) => ({ default: m.ChatPanel }))
+  import('@/components/inbox/ChatPanel').then((m) => ({ default: m.ChatPanel }))
 );
 
 interface RawMessage {
@@ -42,9 +41,23 @@ interface RawMessage {
   transcription_status?: string;
 }
 
-// This mapper is now mostly redundant as useMessages already maps to UI Message type.
-function mapToLegacyMessages(msgs: Message[]): Message[] {
-  return msgs;
+function mapToLegacyMessages(msgs: RawMessage[], contactId: string): Message[] {
+  return msgs.map((m) => ({
+    id: m.id,
+    conversationId: contactId,
+    content: m.content,
+    type: (m.message_type || 'text') as Message['type'],
+    sender: m.sender as Message['sender'],
+    agentId: m.agent_id || undefined,
+    timestamp: new Date(m.created_at),
+    status:
+      (m.status as Message['status'] | null) ||
+      (m.is_read ? 'read' : 'delivered'),
+    mediaUrl: m.media_url || undefined,
+    transcription: m.transcription || null,
+    transcriptionStatus:
+      (m.transcription_status as Message['transcriptionStatus']) || null,
+  }));
 }
 
 export default function ChatPopup() {
@@ -60,7 +73,7 @@ export default function ChatPopup() {
   useEffect(() => {
     if (!contactId) return;
     (async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('*')
         .eq('id', contactId)
@@ -96,12 +109,14 @@ export default function ChatPopup() {
       }
     : null;
 
-  const legacyMessages = messages;
+  const legacyMessages = contactId
+    ? mapToLegacyMessages(messages, contactId)
+    : [];
 
   const handleSendMessage = useCallback(
     async (content: string) => {
       if (!contactId) return;
-      await dbFrom('messages').insert({
+      await supabase.from('messages').insert({
         contact_id: contactId,
         content,
         sender: 'agent',
@@ -122,11 +137,11 @@ export default function ChatPopup() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
+        const { data: urlData } = await supabase.storage
           .from('whatsapp-media')
           .getPublicUrl(fileName);
 
-        await dbFrom('messages').insert({
+        await supabase.from('messages').insert({
           contact_id: contactId,
           content: '🎵 Mensagem de áudio',
           sender: 'agent',

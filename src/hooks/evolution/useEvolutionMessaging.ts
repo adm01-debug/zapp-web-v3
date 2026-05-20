@@ -1,35 +1,29 @@
 import { useCallback } from 'react';
-import type { HttpMethod, CallApiOptions } from './useEvolutionApiCore';
-import type { SendMessageParams, SendTextOptions, ContactCard, PollParams, ListSection, ButtonItem } from '../evolutionApi.types';
+import type { HttpMethod } from './useEvolutionApiCore';
+import type { SendMessageParams, ContactCard, PollParams, ListSection, ButtonItem } from '../evolutionApi.types';
 
 export function useEvolutionMessaging(
-  callApi: (action: string, body?: object, methodOrOptions?: HttpMethod | CallApiOptions) => Promise<any>,
-  withToast: (action: string, body: object | undefined, successMsg: string, errorMsg: string, methodOrOptions?: HttpMethod | CallApiOptions) => Promise<any>
+  callApi: (action: string, body?: object, method?: HttpMethod) => Promise<any>,
+  withToast: (action: string, body: object | undefined, successMsg: string, errorMsg: string, method?: HttpMethod) => Promise<any>
 ) {
   // ============================================================
   // SEND MESSAGES
   // ============================================================
-
-  const sendTextMessage = useCallback((
-    instanceName: string,
-    number: string,
-    text: string,
-    options?: SendTextOptions,
-  ) => callApi('send-text', { instanceName, number, text, ...options }, { 
-    idempotencyKey: options?.idempotencyKey 
-  }), [callApi]);
+  
+  const sendTextMessage = useCallback((instanceName: string, number: string, text: string, options?: { delay?: number; quoted?: SendMessageParams['quoted']; mentioned?: string[] }) =>
+    callApi('send-text', { instanceName, number, text, ...options }), [callApi]);
 
   const sendMediaMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-media', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
+    callApi('send-media', params), [callApi]);
 
-  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number; idempotencyKey?: string }) =>
-    callApi('send-audio', { instanceName, number, mediaUrl, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
+  const sendAudioMessage = useCallback((instanceName: string, number: string, mediaUrl: string, options?: { encoding?: boolean; delay?: number }) =>
+    callApi('send-audio', { instanceName, number, mediaUrl, ...options }), [callApi]);
 
-  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string, options?: { idempotencyKey?: string }) =>
-    callApi('send-sticker', { instanceName, number, sticker, ...options }, { idempotencyKey: options?.idempotencyKey }), [callApi]);
+  const sendStickerMessage = useCallback((instanceName: string, number: string, sticker: string) =>
+    callApi('send-sticker', { instanceName, number, sticker }), [callApi]);
 
   const sendLocationMessage = useCallback((params: SendMessageParams) =>
-    callApi('send-location', params, { idempotencyKey: params.idempotencyKey }), [callApi]);
+    callApi('send-location', params), [callApi]);
 
   const sendContactMessage = useCallback((instanceName: string, number: string, contact: ContactCard[]) =>
     callApi('send-contact', { instanceName, number, contact }), [callApi]);
@@ -57,36 +51,6 @@ export function useEvolutionMessaging(
 
   const sendChatPresence = useCallback((instanceName: string, number: string, presence: 'composing' | 'recording' | 'paused', delay?: number) =>
     callApi('send-chat-presence', { instanceName, number, presence, delay }), [callApi]);
-
-  /**
-   * Humanized text sending — emits a `composing` presence signal for `pauseMs`
-   * (default 1200ms) before delivering the actual text. Used for long
-   * messages so the recipient sees the "typing…" indicator like a real user.
-   * Falls back to a normal send if the presence call fails (best-effort).
-   */
-  const sendTextHumanized = useCallback(async (
-    instanceName: string,
-    number: string,
-    text: string,
-    options?: SendTextOptions & {
-      pauseMs?: number;
-      minLengthForPause?: number;
-    },
-  ) => {
-    const pauseMs = options?.pauseMs ?? 1200;
-    const minLength = options?.minLengthForPause ?? 40;
-    const shouldSimulate = text.length >= minLength && pauseMs > 0;
-    if (shouldSimulate) {
-      try {
-        await callApi('send-chat-presence', { instanceName, number, presence: 'composing', delay: pauseMs });
-      } catch {
-        // Presence is best-effort — never block the actual send.
-      }
-      await new Promise((r) => setTimeout(r, pauseMs));
-    }
-    const { pauseMs: _pm, minLengthForPause: _ml, ...rest } = options ?? {};
-    return callApi('send-text', { instanceName, number, text, ...rest });
-  }, [callApi]);
 
   // ============================================================
   // MESSAGE MANAGEMENT (existing)
@@ -185,7 +149,7 @@ export function useEvolutionMessaging(
     sendTextMessage, sendMediaMessage, sendAudioMessage, sendStickerMessage,
     sendLocationMessage, sendContactMessage, sendReaction, sendPollMessage,
     sendListMessage, sendButtonsMessage, sendStatusMessage, sendTemplateMessage,
-    sendPtvMessage, sendChatPresence, sendTextHumanized,
+    sendPtvMessage, sendChatPresence,
     // Message management (existing)
     markMessageAsRead, markMessageAsUnread, archiveChat, deleteMessage,
     updateMessage, deleteMessageForEveryone, editMessage,

@@ -38,21 +38,12 @@ export function CampaignABTesting({ campaignId }: CampaignABTestingProps) {
 
   const loadVariants = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('campaign_ab_variants')
       .select('*')
       .eq('campaign_id', campaignId)
       .order('created_at');
-    if (data) {
-      const typedVariants: ABVariant[] = (data as any[]).map(v => ({
-        ...v,
-        send_count: v.send_count || 0,
-        delivered_count: v.delivered_count || 0,
-        read_count: v.read_count || 0,
-        response_count: v.response_count || 0
-      }));
-      setVariants(typedVariants);
-    }
+    if (data) setVariants(data);
     setLoading(false);
   };
 

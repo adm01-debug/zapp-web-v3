@@ -7,11 +7,10 @@ import { log } from '@/lib/logger';
 export interface BusinessHour {
   id?: string;
   whatsapp_connection_id: string;
-  instance_name?: string;
   day_of_week: number;
-  is_enabled: boolean;
-  start_time: string;
-  end_time: string;
+  is_open: boolean;
+  open_time: string;
+  close_time: string;
 }
 
 export interface AwayMessage {
@@ -22,13 +21,13 @@ export interface AwayMessage {
 }
 
 const DEFAULT_HOURS: Omit<BusinessHour, 'whatsapp_connection_id'>[] = [
-  { day_of_week: 0, is_enabled: false, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 1, is_enabled: true, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 2, is_enabled: true, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 3, is_enabled: true, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 4, is_enabled: true, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 5, is_enabled: true, start_time: '09:00', end_time: '18:00' },
-  { day_of_week: 6, is_enabled: false, start_time: '09:00', end_time: '18:00' },
+  { day_of_week: 0, is_open: false, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 1, is_open: true, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 2, is_open: true, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 3, is_open: true, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 4, is_open: true, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 5, is_open: true, open_time: '09:00', close_time: '18:00' },
+  { day_of_week: 6, is_open: false, open_time: '09:00', close_time: '18:00' },
 ];
 
 const DEFAULT_AWAY_MESSAGE: Omit<AwayMessage, 'whatsapp_connection_id'> = {
@@ -92,9 +91,9 @@ export function useBusinessHours(connectionId: string) {
           .upsert({
             whatsapp_connection_id: connectionId,
             day_of_week: hour.day_of_week,
-            is_enabled: hour.is_enabled,
-            start_time: hour.start_time,
-            end_time: hour.end_time,
+            is_open: hour.is_open,
+            open_time: hour.open_time,
+            close_time: hour.close_time,
           }, { onConflict: 'whatsapp_connection_id,day_of_week' });
 
         if (error) throw error;

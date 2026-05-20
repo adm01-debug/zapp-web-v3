@@ -25,7 +25,7 @@ import {
   Save,
   RotateCcw,
 } from 'lucide-react';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface GoalsConfigDialogProps {
   open: boolean;

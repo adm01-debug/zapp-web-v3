@@ -7,7 +7,7 @@ import { LayoutGrid } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SCOPE_TABS } from './sla/sla-utils';
 import { ScopeRulesList } from './sla/ScopeRulesList';
-import { SLARuleScope } from '@/features/sla';
+import { SLARuleScope } from '@/hooks/useSLARules';
 
 export function SLARulesManager() {
   // Fetch rule counts per scope in a single query

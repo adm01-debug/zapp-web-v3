@@ -4,7 +4,6 @@ import { log } from '@/lib/logger';
 import { toast } from 'sonner';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import type { WhatsAppGroup, WhatsAppConnection } from './types';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface UseGroupActionsParams {
   connections: WhatsAppConnection[];
@@ -113,7 +112,7 @@ export function useGroupActions({ connections, groups, selectedGroups, setGroups
     toast.success('Categoria atualizada');
     const group = groups.find(g => g.id === groupId);
     if (group) {
-      await dbFrom('contacts').update({ group_category: category }).like('phone', `%${group.group_id.replace('@g.us', '')}%`);
+      await supabase.from('contacts').update({ group_category: category }).like('phone', `%${group.group_id.replace('@g.us', '')}%`);
     }
     setGroups(prev => prev.map(g => g.id === groupId ? { ...g, category } : g));
   }, [groups, setGroups]);

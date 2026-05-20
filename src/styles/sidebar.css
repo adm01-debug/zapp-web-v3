@@ -5,13 +5,12 @@
 }
 
 .nav-item-active {
-  background: hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.12);
   color: hsl(var(--primary));
-  border-right: 2px solid hsl(var(--primary));
 }
 
 .nav-item-hover:hover {
-  background: hsl(var(--muted));
+  background: hsl(var(--muted) / 0.6);
 }
 
 .badge-primary {
@@ -35,13 +34,13 @@
 
 /* Legacy neon compat classes — mapped to clean styles */
 .sidebar-neon { /* no-op */ }
-.nav-item-neon-active { background: hsl(var(--primary) / 0.25); }
-.nav-item-neon-hover:hover { background: hsl(var(--muted)); }
+.nav-item-neon-active { background: hsl(var(--primary) / 0.12); }
+.nav-item-neon-hover:hover { background: hsl(var(--muted) / 0.6); }
 .badge-neon { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
 .logo-neon { background: var(--gradient-primary); }
-.avatar-neon-online { border: 2px solid hsl(var(--success)); }
+.avatar-neon-online { box-shadow: 0 0 0 2px hsl(var(--success)); }
 .profile-card-neon { border: 1px solid hsl(var(--border)); transition: border-color 0.2s ease; }
-.profile-card-neon:hover { border-color: hsl(var(--primary)); }
+.profile-card-neon:hover { border-color: hsl(var(--primary) / 0.3); }
 .nav-indicator-neon { background: hsl(var(--primary)); }
 
 /* Reveal animations */

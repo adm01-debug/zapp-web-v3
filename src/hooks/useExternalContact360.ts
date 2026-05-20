@@ -6,9 +6,7 @@
  * RFM, interactions history, social media, stakeholder map, etc.
  */
 import { useQuery } from '@tanstack/react-query';
-import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { dbGet } from '@/integrations/datasource/db';
-import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { Contact360Data } from '@/types/contact360';
 import { log } from '@/lib/logger';
 
@@ -24,7 +22,7 @@ export function useExternalContact360(phone: string | undefined) {
     queryFn: async () => {
       if (!cleanedPhone || cleanedPhone.length < 8) return null;
 
-      const { data, error } = await dbGet(RPC.getContact360ByPhone, {
+      const { data, error } = await getExternalSupabase().rpc('get_contact_360_by_phone', {
         p_phone: cleanedPhone,
       });
 

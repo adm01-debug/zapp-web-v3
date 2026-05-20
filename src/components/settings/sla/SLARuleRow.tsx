@@ -1,4 +1,4 @@
-import { SLARule, SLARuleScope, SLARuleMetadata } from '@/features/sla';
+import { SLARule, SLARuleScope, SLARuleMetadata } from '@/hooks/useSLARules';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -53,7 +53,7 @@ export function SLARuleRow({ rule, scope, scopeLabel, index, onEdit, onDelete, o
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm truncate text-foreground">{rule.name}</span>
-          <Badge variant="outline" className="text-[10px] ">P{rule.priority}</Badge>
+          <Badge variant="outline" className="text-[10px] font-mono">P{rule.priority}</Badge>
           {displayLabel && (
             <Badge variant="secondary" className="text-[10px] truncate max-w-[150px]">{displayLabel}</Badge>
           )}

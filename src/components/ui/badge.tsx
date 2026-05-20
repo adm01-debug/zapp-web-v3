@@ -8,16 +8,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/90 shadow-none",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-none",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-none",
-        outline: "text-foreground border-border bg-background hover:border-primary/40 transition-colors",
-        subtle: "border-transparent bg-muted/30 text-muted-foreground",
-        success: "border-transparent bg-success/15 text-success font-bold border border-success/30",
-        warning: "border-transparent bg-warning/15 text-warning font-bold border border-warning/30",
-        info: "border-transparent bg-info/15 text-info font-bold border border-info/30",
-        whatsapp: "border-transparent bg-whatsapp text-foreground hover:bg-whatsapp/90 shadow-sm shadow-whatsapp/20",
-        glowPurple: "border-transparent bg-accent text-foreground hover:bg-accent shadow-[0_0_12px_rgba(139,92,246,0.3)]",
+        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground border-border/60",
+        subtle: "border-transparent bg-muted text-muted-foreground",
+        success: "border-transparent bg-success/15 text-success font-semibold",
+        warning: "border-transparent bg-warning/15 text-warning font-semibold",
+        info: "border-transparent bg-info/15 text-info font-semibold",
       },
     },
     defaultVariants: {

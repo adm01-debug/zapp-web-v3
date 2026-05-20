@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Json } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -9,8 +10,8 @@ export interface AutomationRow {
   description: string | null;
   is_active: boolean;
   trigger_type: string;
-  trigger_config: Record<string, any>;
-  actions: Record<string, any>[];
+  trigger_config: Json;
+  actions: Json[];
   created_by: string | null;
   last_triggered_at: string | null;
   trigger_count: number;

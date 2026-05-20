@@ -46,7 +46,7 @@ export function SecurityNotificationsPanel() {
 
   if (!isSupported) {
     return (
-      <Card className="border-warning/20 bg-warning/5">
+      <Card className="border-yellow-500/20 bg-warning/5">
         <CardContent className="flex items-start gap-4 p-4">
           <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
           <div>
@@ -92,7 +92,7 @@ export function SecurityNotificationsPanel() {
                       ? 'bg-success/10 text-success border-success/20'
                       : permission === 'denied'
                         ? 'bg-destructive/10 text-destructive border-destructive/20'
-                        : 'bg-warning/10 text-warning border-warning/20'
+                        : 'bg-warning/10 text-warning border-yellow-500/20'
                   }
                 >
                   {permission === 'granted' ? 'Permitido' : permission === 'denied' ? 'Bloqueado' : 'Não solicitado'}

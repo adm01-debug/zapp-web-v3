@@ -4,14 +4,13 @@ import App from "./App.tsx";
 import "./index.css";
 import "./i18n"; // Initialize i18n 
 import { getLogger } from "./lib/logger";
-import { initSentry, SentryErrorBoundary } from "./lib/sentry";
 import { initWebVitals } from "./lib/web-vitals";
 
-// Init Sentry first (no-op se VITE_SENTRY_DSN não estiver configurada)
-const sentryEnabled = initSentry();
-
 const log = getLogger('App');
-if (sentryEnabled) log.info('Sentry SDK ativo');
+if (window.performance && window.performance.mark) {
+  performance.mark('main-init');
+}
+console.log('[BOOT] src/main.tsx loaded');
 log.info('Initialized at', new Date().toISOString());
 
 // Global unhandled error handlers for resilience
@@ -42,26 +41,4 @@ if (import.meta.env.DEV) {
   });
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <SentryErrorBoundary
-    fallback={({ error, resetError }) => (
-      <div role="alert" className="p-6  max-w-2xl mx-auto my-10 bg-card rounded-2xl border border-border shadow-xl">
-        <h1 className="text-2xl font-bold mb-3 text-foreground">Algo deu errado</h1>
-        <p className="text-muted-foreground mb-4">
-          O erro foi registrado e nossa equipe foi notificada. Você pode tentar de novo:
-        </p>
-        <button onClick={resetError} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
-          Tentar novamente
-        </button>
-        {import.meta.env.DEV && (
-          <pre className="mt-4 p-3 bg-muted text-destructive rounded-lg overflow-auto text-xs ">
-            {String(error?.toString?.() ?? error)}
-          </pre>
-        )}
-      </div>
-    )}
-    showDialog={false}
-  >
-    <App />
-  </SentryErrorBoundary>
-);
+ReactDOM.createRoot(document.getElementById("root")!).render(<App />);

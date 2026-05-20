@@ -63,9 +63,9 @@ export function RouteLoadingBar({ isLoading, className }: RouteLoadingBarProps) 
           />
           {/* Glow effect */}
           <motion.div
-            className="absolute right-0 top-0 h-full w-12 bg-primary/20 rounded-r-full"
-            animate={{ opacity: progress < 100 ? [0.4, 0.7, 0.4] : 0 }}
-            transition={{ duration: 1, repeat: Infinity }}
+            className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/40 to-transparent rounded-r-full"
+            animate={{ opacity: progress < 100 ? [0.4, 0.8, 0.4] : 0 }}
+            transition={{ duration: 1.2, repeat: Infinity }}
           />
         </motion.div>
       )}

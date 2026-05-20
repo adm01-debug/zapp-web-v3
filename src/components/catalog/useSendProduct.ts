@@ -2,9 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
-import { newRequestId } from '@/lib/withRequestId';
-import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
-import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('useSendProduct');
 
@@ -29,7 +26,7 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
     }
     const timeout = setTimeout(async () => {
       setSearchingContacts(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('id, name, phone, avatar_url')
         .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
@@ -44,7 +41,8 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
   useEffect(() => {
     if (step !== 'selectContact') return;
     setSearchingContacts(true);
-    dbFrom('contacts')
+    supabase
+      .from('contacts')
       .select('id, name, phone, avatar_url')
       .order('updated_at', { ascending: false })
       .limit(15)
@@ -77,7 +75,7 @@ export function useSendToContact(onSuccess: () => void) {
   ) => {
     setIsSending(true);
     try {
-      const { data: connections , error: connectionsErr } = await supabase
+      const { data: connections } = await supabase
         .from('whatsapp_connections')
         .select('id, name')
         .eq('status', 'connected')
@@ -87,18 +85,16 @@ export function useSendToContact(onSuccess: () => void) {
 
       // Send images
       for (const imgUrl of imageUrls) {
-        const trace = newRequestId('catalog-img');
-        const { data: dbResult , error: dbResultErr } = await supabase.from('messages').insert({
+        const { data: dbResult } = await supabase.from('messages').insert({
           contact_id: contact.id,
           content: imgUrl,
           sender: 'agent',
           message_type: 'image',
           status: 'sending',
           whatsapp_connection_id: connection?.id || null,
-          request_id: trace.requestId,
         }).select('id').single();
 
-        const { data: apiResult , error: apiResultErr } = await supabase.functions.invoke('evolution-api', {
+        const { data: apiResult } = await supabase.functions.invoke('evolution-api', {
           body: {
             action: 'send-media',
             instanceName: connection?.name || 'wpp2',
@@ -107,42 +103,38 @@ export function useSendToContact(onSuccess: () => void) {
             media: imgUrl,
             caption: '',
           },
-          headers: trace.headers,
         });
 
-        const externalId = extractEvolutionMessageId(apiResult);
+        const externalId = apiResult?.key?.id || null;
         if (dbResult?.id && externalId) {
-          await dbFrom('messages')
+          await supabase.from('messages')
             .update({ external_id: externalId, status: 'sent' })
             .eq('id', dbResult.id);
         }
       }
 
       // Send text
-      const textTrace = newRequestId('catalog-text');
-      const { data: textDbResult , error: textDbResultErr } = await supabase.from('messages').insert({
+      const { data: textDbResult } = await supabase.from('messages').insert({
         contact_id: contact.id,
         content: message,
         sender: 'agent',
         message_type: 'text',
         status: 'sending',
         whatsapp_connection_id: connection?.id || null,
-        request_id: textTrace.requestId,
       }).select('id').single();
 
-      const { data: textApiResult , error: textApiResultErr } = await supabase.functions.invoke('evolution-api', {
+      const { data: textApiResult } = await supabase.functions.invoke('evolution-api', {
         body: {
           action: 'send-text',
           instanceName: connection?.name || 'wpp2',
           number: contact.phone,
           text: message,
         },
-        headers: textTrace.headers,
       });
 
-      const textExternalId = extractEvolutionMessageId(textApiResult);
+      const textExternalId = textApiResult?.key?.id || null;
       if (textDbResult?.id && textExternalId) {
-        await dbFrom('messages')
+        await supabase.from('messages')
           .update({ external_id: textExternalId, status: 'sent' })
           .eq('id', textDbResult.id);
       }

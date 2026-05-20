@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mic, Volume2, Loader2, Zap } from 'lucide-react';
-import type { VoiceAgentPhase } from '@/features/inbox';
+import type { VoiceAgentPhase } from '@/hooks/voice/types';
 import { usePhaseColors } from './usePhaseColors';
 
 interface VoiceOrbProps {
@@ -141,17 +141,17 @@ export function VoiceOrb({ phase, size = 200 }: VoiceOrbProps) {
         }}
       >
         {phase === 'idle' && (
-          <Mic className="w-6 h-6 text-primary-foreground drop-shadow-lg" />
+          <Mic className="w-6 h-6 text-white/60 drop-shadow-lg" />
         )}
         {phase === 'booting' && (
-          <Loader2 className="w-6 h-6 text-primary-foreground animate-spin drop-shadow-lg" />
+          <Loader2 className="w-6 h-6 text-white animate-spin drop-shadow-lg" />
         )}
         {phase === 'listening' && (
           <motion.div
             animate={prefersReduced ? {} : { scale: [1, 1.2, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            <Mic className="w-6 h-6 text-primary-foreground drop-shadow-lg" />
+            <Mic className="w-6 h-6 text-white drop-shadow-lg" />
           </motion.div>
         )}
         {phase === 'processing' && (
@@ -159,7 +159,7 @@ export function VoiceOrb({ phase, size = 200 }: VoiceOrbProps) {
             animate={prefersReduced ? {} : { rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
           >
-            <Zap className="w-6 h-6 text-primary-foreground drop-shadow-lg" />
+            <Zap className="w-6 h-6 text-white drop-shadow-lg" />
           </motion.div>
         )}
         {phase === 'speaking' && (
@@ -167,7 +167,7 @@ export function VoiceOrb({ phase, size = 200 }: VoiceOrbProps) {
             animate={prefersReduced ? {} : { scale: [1, 1.15, 1] }}
             transition={{ duration: 0.8, repeat: Infinity }}
           >
-            <Volume2 className="w-6 h-6 text-primary-foreground drop-shadow-lg" />
+            <Volume2 className="w-6 h-6 text-white drop-shadow-lg" />
           </motion.div>
         )}
         {phase === 'error' && (
@@ -175,7 +175,7 @@ export function VoiceOrb({ phase, size = 200 }: VoiceOrbProps) {
             animate={prefersReduced ? {} : { rotate: [0, 10, -10, 0] }}
             transition={{ duration: 0.5, repeat: Infinity }}
           >
-            <Mic className="w-6 h-6 text-destructive-foreground drop-shadow-lg" />
+            <Mic className="w-6 h-6 text-destructive drop-shadow-lg" />
           </motion.div>
         )}
       </div>

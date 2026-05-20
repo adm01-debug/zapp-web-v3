@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { useMonitoringData } from './useMonitoringData';
 import { useMonitoringActions } from './useMonitoringActions';
 import { useMonitoringNotifications } from './useMonitoringNotifications';
 import type { TimePeriod } from './types';
 
-// Re-export all types for consumers
 export type { TimePeriod, DiagnosticResult, ConnectionInfo, HealthLog, MessageStats, WebhookTestResult, WebhookConfig, UptimeInfo, SparklineData, InstanceUptime } from './types';
 
 export function useEvolutionMonitoring() {
@@ -17,8 +15,7 @@ export function useEvolutionMonitoring() {
   const periodRef = useRef(period);
   periodRef.current = period;
 
-  const { notificationsEnabled, requestNotifications, checkDisconnections } = useMonitoringNotifications();
-
+  const { notificationsEnabled, soundEnabled, setSoundEnabled, requestNotifications, checkDisconnections } = useMonitoringNotifications();
   const { connections, healthLogs, loading, messageStats, uptime, sparklines, instanceUptimes, fetchData: rawFetch } = useMonitoringData(checkDisconnections);
 
   const fetchData = useCallback(async (p?: TimePeriod) => {
@@ -27,7 +24,6 @@ export function useEvolutionMonitoring() {
 
   const actions = useMonitoringActions(fetchData);
 
-  // Countdown timer
   useEffect(() => {
     if (!autoRefresh) return;
     countdownRef.current = 30;
@@ -35,39 +31,27 @@ export function useEvolutionMonitoring() {
     const tick = setInterval(() => {
       countdownRef.current -= 1;
       setCountdown(countdownRef.current);
-      if (countdownRef.current <= 0) {
-        countdownRef.current = 30;
-        setCountdown(30);
-        fetchData();
-      }
+      if (countdownRef.current <= 0) { countdownRef.current = 30; setCountdown(30); fetchData(); }
     }, 1000);
     return () => clearInterval(tick);
   }, [autoRefresh, fetchData]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Realtime subscription
   useEffect(() => {
-    logMessagesSubscribe('useEvolutionMonitoring', { event: 'INSERT', table: 'messages' });
     const channel = supabase
-      .channel('monitoring-connections')
+      .channel('monitoring-status')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_connections' }, () => fetchData())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
-        wrapMessagesHandler<{ new: Record<string, unknown> }>('useEvolutionMonitoring', () => fetchData()))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
 
-  const changePeriod = useCallback((p: TimePeriod) => {
-    setPeriod(p);
-    fetchData(p);
-  }, [fetchData]);
+  const changePeriod = useCallback((p: TimePeriod) => { setPeriod(p); fetchData(p); }, [fetchData]);
 
   return {
     connections, healthLogs, loading, messageStats, uptime,
-    sparklines, instanceUptimes, notificationsEnabled, requestNotifications,
+    sparklines, instanceUptimes, notificationsEnabled, soundEnabled, setSoundEnabled, requestNotifications,
     period, changePeriod, autoRefresh, setAutoRefresh, countdown,
-    ...actions,
-    refetch: fetchData,
+    ...actions, refetch: fetchData,
   };
 }

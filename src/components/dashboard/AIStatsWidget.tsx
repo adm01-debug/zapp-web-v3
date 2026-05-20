@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAIStats, type PeriodOption, type TrendData } from '@/features/admin';
+import { useAIStats, type PeriodOption, type TrendData } from '@/hooks/useAIStats';
 
 type SentimentType = 'positive' | 'negative' | 'neutral';
 

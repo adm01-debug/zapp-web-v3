@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type RoleType = 'dev' | 'admin' | 'manager' | 'supervisor' | 'agent';
+type RoleType = 'admin' | 'supervisor' | 'agent' | 'special_agent';
 
 export interface UserWithRole {
   id: string;
@@ -45,7 +45,7 @@ export function useRolesPageState() {
   };
 
   const fetchAvailableUsers = async () => {
-    const { data, error } = await supabase.from('profiles').select('user_id, name, email').order('name');
+    const { data } = await supabase.from('profiles').select('user_id, name, email').order('name');
     if (data) {
       const usersWithRoles = users.map(u => u.user_id);
       setAvailableUsers(data.filter(u => !usersWithRoles.includes(u.user_id)) as { user_id: string; name: string; email: string }[]);
@@ -80,10 +80,9 @@ export function useRolesPageState() {
     ), [users, search]);
 
   const groupedUsers = useMemo(() => ({
-    dev: filteredUsers.filter(u => u.role === 'dev'),
     admin: filteredUsers.filter(u => u.role === 'admin'),
-    manager: filteredUsers.filter(u => u.role === 'manager'),
     supervisor: filteredUsers.filter(u => u.role === 'supervisor'),
+    special_agent: filteredUsers.filter(u => u.role === 'special_agent'),
     agent: filteredUsers.filter(u => u.role === 'agent'),
   }), [filteredUsers]);
 

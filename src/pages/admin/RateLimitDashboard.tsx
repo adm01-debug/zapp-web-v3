@@ -5,8 +5,8 @@ import {
   TrendingUp, TrendingDown, Clock, RefreshCw,
   BarChart3
 } from 'lucide-react';
-import { useRateLimitLogs } from '@/features/admin';
-import { useUserRole } from '@/features/auth';
+import { useRateLimitLogs } from '@/hooks/useRateLimitLogs';
+import { useUserRole } from '@/hooks/useUserRole';
 import { BlockedIPsPanel } from '@/components/security/BlockedIPsPanel';
 import { IPWhitelistPanel } from '@/components/security/IPWhitelistPanel';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,12 +26,11 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function RateLimitDashboard() {
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isSupervisor } = useUserRole();
   const { logs, stats, loading, refetch } = useRateLimitLogs();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Área técnica — visualização restrita a admin+ (hierarquia inclui dev).
-  if (!isAdmin) {
+  if (!isAdmin && !isSupervisor) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="max-w-md">
@@ -188,7 +187,7 @@ export default function RateLimitDashboard() {
                     <div key={endpoint.endpoint} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{i + 1}.</span>
-                        <code className="text-sm ">{endpoint.endpoint}</code>
+                        <code className="text-sm font-mono">{endpoint.endpoint}</code>
                       </div>
                       <Badge variant="secondary">{endpoint.count}</Badge>
                     </div>
@@ -214,7 +213,7 @@ export default function RateLimitDashboard() {
                     <div key={ip.ip} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{i + 1}.</span>
-                        <code className="text-sm ">{ip.ip}</code>
+                        <code className="text-sm font-mono">{ip.ip}</code>
                         {ip.blocked && (
                           <Badge variant="destructive" className="text-xs">Bloqueado</Badge>
                         )}
@@ -263,10 +262,10 @@ export default function RateLimitDashboard() {
                     {logs.slice(0, 20).map((log) => (
                       <TableRow key={log.id}>
                         <TableCell>
-                          <code className=" text-sm">{log.ip_address}</code>
+                          <code className="font-mono text-sm">{log.ip_address}</code>
                         </TableCell>
                         <TableCell>
-                          <code className=" text-sm">{log.endpoint}</code>
+                          <code className="font-mono text-sm">{log.endpoint}</code>
                         </TableCell>
                         <TableCell>{log.request_count}</TableCell>
                         <TableCell>

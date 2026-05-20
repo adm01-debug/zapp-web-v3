@@ -1,10 +1,8 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useActionFeedback } from '@/hooks/useActionFeedback';
 import { useContactsSearch } from '@/hooks/useContactsSearch';
-import { openContactInChat } from '@/lib/openContactInChat';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface ContactFormData {
   name: string;
@@ -52,19 +50,22 @@ export function useContactsCRUD() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Abre o Inbox no contato selecionado. No modo FATOR X (USE_EXTERNAL_DB),
-  // o Inbox identifica conversas pelo `remote_jid` — não pelo UUID local.
-  // Por isso passamos o `phone` (resolvido na lista carregada) para o helper
-  // central `openContactInChat`, que monta o JID e cuida do handshake.
   const openContactChat = useCallback((contactId: string) => {
-    const found = searchHook.contacts.find((c) => c.id === contactId);
-    const phone = found?.phone?.replace(/\D/g, '') || undefined;
-    void openContactInChat({
-      contactId,
-      phone,
-      remoteJid: phone ? `${phone}@s.whatsapp.net` : undefined,
-    });
-  }, [searchHook.contacts]);
+    const appWindow = window as Window & { __pendingOpenContactId?: string };
+    appWindow.__pendingOpenContactId = contactId;
+    if (window.location.hash !== '#inbox') {
+      window.location.hash = 'inbox';
+    } else {
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }
+    let attempts = 0;
+    const tryDispatch = () => {
+      attempts++;
+      window.dispatchEvent(new CustomEvent('open-contact-chat', { detail: { contactId } }));
+      if (attempts < 15) setTimeout(tryDispatch, 200);
+    };
+    setTimeout(tryDispatch, 150);
+  }, []);
 
   const generateProtocol = useCallback(() => {
     const now = new Date();
@@ -79,7 +80,7 @@ export function useContactsCRUD() {
     setIsSubmitting(true);
     await feedback.withFeedback(
       async () => {
-        const { error } = await dbFrom('contacts').insert({
+        const { error } = await supabase.from('contacts').insert({
           name: newContact.name,
           nickname: newContact.nickname || null,
           surname: newContact.surname || null,
@@ -119,7 +120,8 @@ export function useContactsCRUD() {
     setIsSubmitting(true);
     await feedback.withFeedback(
       async () => {
-        const { error } = await dbFrom('contacts')
+        const { error } = await supabase
+          .from('contacts')
           .update({
             name: editingContact.name,
             nickname: editingContact.nickname,
@@ -155,7 +157,7 @@ export function useContactsCRUD() {
   const handleDeleteContact = async (id: string) => {
     await feedback.withFeedback(
       async () => {
-        const { error } = await dbFrom('contacts').delete().eq('id', id);
+        const { error } = await supabase.from('contacts').delete().eq('id', id);
         if (error) throw error;
       },
       {

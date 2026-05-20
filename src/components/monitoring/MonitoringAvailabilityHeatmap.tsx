@@ -18,10 +18,10 @@ const HEALTHY = ['connected', 'healthy'];
 
 function getCellColor(ratio: number, total: number): string {
   if (total === 0) return 'bg-muted/30';
-  if (ratio >= 0.95) return 'bg-primary';
-  if (ratio >= 0.8) return 'bg-primary';
-  if (ratio >= 0.5) return 'bg-warning';
-  if (ratio >= 0.2) return 'bg-warning';
+  if (ratio >= 0.95) return 'bg-emerald-500';
+  if (ratio >= 0.8) return 'bg-emerald-400';
+  if (ratio >= 0.5) return 'bg-amber-400';
+  if (ratio >= 0.2) return 'bg-orange-500';
   return 'bg-destructive';
 }
 
@@ -31,21 +31,26 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
     const cells: { total: number; healthy: number; ratio: number; date: Date; hour: number }[][] = [];
     const labels: string[] = [];
 
+    // Pre-group logs by day and hour for O(N) lookup
+    const logsBySlot = new Map<string, HealthLog[]>();
+    healthLogs.forEach(log => {
+      const d = new Date(log.checked_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+      if (!logsBySlot.has(key)) logsBySlot.set(key, []);
+      logsBySlot.get(key)!.push(log);
+    });
+
     for (let d = DAYS - 1; d >= 0; d--) {
       const day = subDays(now, d);
       labels.push(format(day, 'EEE dd/MM', { locale: ptBR }));
       const row: typeof cells[0] = [];
 
       for (const h of HOURS) {
-        const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0);
-        const end = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 59, 59);
-        const logsInSlot = healthLogs.filter(l => {
-          const t = new Date(l.checked_at);
-          return t >= start && t <= end;
-        });
+        const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${h}`;
+        const logsInSlot = logsBySlot.get(key) || [];
         const healthyCount = logsInSlot.filter(l => HEALTHY.includes(l.status)).length;
         row.push({
-          date: start,
+          date: new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0),
           hour: h,
           total: logsInSlot.length,
           healthy: healthyCount,
@@ -77,8 +82,8 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
             variant="outline"
             className={cn(
               'text-sm font-bold',
-              overallUptime >= 99 ? 'text-primary border-primary/30' :
-              overallUptime >= 95 ? 'text-warning-foreground border-warning/30' : 'text-destructive border-destructive/30'
+              overallUptime >= 99 ? 'text-emerald-500 border-emerald-500/30' :
+              overallUptime >= 95 ? 'text-amber-500 border-amber-500/30' : 'text-destructive border-destructive/30'
             )}
           >
             {overallUptime}% uptime
@@ -133,7 +138,7 @@ export function MonitoringAvailabilityHeatmap({ healthLogs }: Props) {
             {/* Legend */}
             <div className="flex items-center gap-2 mt-3 ml-[100px]">
               <span className="text-[10px] text-muted-foreground">Menos</span>
-              {['bg-muted/20', 'bg-destructive', 'bg-warning', 'bg-warning', 'bg-primary', 'bg-primary'].map((c, i) => (
+              {['bg-muted/20', 'bg-destructive', 'bg-orange-500', 'bg-amber-400', 'bg-emerald-400', 'bg-emerald-500'].map((c, i) => (
                 <div key={i} className={cn('w-3 h-3 rounded-sm', c)} />
               ))}
               <span className="text-[10px] text-muted-foreground">Mais</span>

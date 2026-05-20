@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
-import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
-import { dbFrom, dbTable } from '@/integrations/datasource/db';
 
 const log = getLogger('RealtimeDashboard');
 
@@ -53,24 +51,28 @@ export function useRealtimeDashboard() {
 
     try {
       const [messagesThisHour, messagesLastHour, unread, contactsToday] = await Promise.all([
-        dbFrom('messages')
+        supabase
+          .from('messages')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', hourAgo.toISOString()),
-        dbFrom('messages')
+        supabase
+          .from('messages')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', twoHoursAgo.toISOString())
           .lt('created_at', hourAgo.toISOString()),
-        dbFrom('messages')
+        supabase
+          .from('messages')
           .select('id', { count: 'exact', head: true })
           .eq('is_read', false)
           .eq('sender', 'contact'),
-        dbFrom('contacts')
+        supabase
+          .from('contacts')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', todayStart.toISOString()),
       ]);
 
       // Get active conversations (contacts with messages in last hour)
-      const { data: activeContacts , error } = await supabase
+      const { data: activeContacts } = await supabase
         .from('messages')
         .select('contact_id')
         .gte('created_at', hourAgo.toISOString())
@@ -98,14 +100,12 @@ export function useRealtimeDashboard() {
   useEffect(() => {
     fetchInitialData();
 
-    logMessagesSubscribe('useRealtimeDashboard', { event: 'INSERT', table: dbTable('messages') });
-    logMessagesSubscribe('useRealtimeDashboard', { event: 'UPDATE', table: dbTable('messages') });
     const channel = supabase
       .channel('dashboard-realtime')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: dbTable('messages') },
-        wrapMessagesHandler<{ new: { sender?: string } }>('useRealtimeDashboard', (payload) => {
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
           log.debug('New message received in dashboard');
           minuteCountRef.current++;
           messageCountRef.current++;
@@ -116,11 +116,11 @@ export function useRealtimeDashboard() {
             lastMessageAt: new Date(),
             unreadMessages: payload.new.sender === 'contact' ? prev.unreadMessages + 1 : prev.unreadMessages,
           }));
-        })
+        }
       )
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: dbTable('contacts') },
+        { event: 'INSERT', schema: 'public', table: 'contacts' },
         () => {
           setState(prev => ({
             ...prev,
@@ -130,15 +130,15 @@ export function useRealtimeDashboard() {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: dbTable('messages') },
-        wrapMessagesHandler<{ new: { is_read?: boolean }; old?: { is_read?: boolean } }>('useRealtimeDashboard', (payload) => {
+        { event: 'UPDATE', schema: 'public', table: 'messages' },
+        (payload) => {
           if (payload.new.is_read && !payload.old?.is_read) {
             setState(prev => ({
               ...prev,
               unreadMessages: Math.max(0, prev.unreadMessages - 1),
             }));
           }
-        })
+        }
       )
       .subscribe((status) => {
         setState(prev => ({ ...prev, isConnected: status === 'SUBSCRIBED' }));

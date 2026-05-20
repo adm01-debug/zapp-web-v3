@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useState } from 'react';
+
 
 import {
   DropdownMenu,
@@ -25,13 +25,7 @@ import {
   Bell,
   BellOff,
   Pin,
-  Building2,
-  ArrowRightLeft,
-  BarChart3,
-  Activity,
 } from 'lucide-react';
-import { TransferConversationDialog } from './TransferConversationDialog';
-import { useAuth } from '@/features/auth';
 
 interface TeamChatHeaderProps {
   conversation: TeamConversation;
@@ -47,9 +41,6 @@ interface TeamChatHeaderProps {
   onVoiceChange: (voiceId: string) => void;
   onSpeedChange: (speed: number) => void;
   onToggleMute?: () => void;
-  onToggleStats?: () => void;
-  onTogglePerformance?: () => void;
-  showStats?: boolean;
 }
 
 export function TeamChatHeader({
@@ -66,15 +57,7 @@ export function TeamChatHeader({
   onVoiceChange,
   onSpeedChange,
   onToggleMute,
-  onToggleStats,
-  onTogglePerformance,
-  showStats,
 }: TeamChatHeaderProps) {
-  const [showTransfer, setShowTransfer] = useState(false);
-  const { profile } = useAuth();
-  
-  const canTransfer = profile?.role === 'admin' || profile?.department === 'Suporte';
-
   return (
     <div className="flex items-center justify-between px-3 md:px-5 h-[56px] md:h-[65px] pr-24 border-b border-border bg-card shrink-0" role="banner" aria-label="Cabeçalho da conversa">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -84,15 +67,13 @@ export function TeamChatHeader({
         <Avatar className="w-9 h-9 md:w-10 md:h-10 shrink-0">
           <AvatarImage src={conversation.avatar_url || undefined} />
           <AvatarFallback className="bg-primary/10 text-primary">
-            {conversation.type === 'department' ? <Building2 className="w-4 h-4" /> : conversation.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
+            {conversation.type === 'group' ? <Users className="w-4 h-4" /> : <User className="w-4 h-4" />}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-[14px] leading-tight text-foreground truncate">{conversation.name}</h3>
-          <p className="text-[11px] leading-tight text-muted-foreground mt-0.5">
-            {conversation.type === 'department'
-              ? 'Grupo de Departamento'
-              : conversation.type === 'group'
+          <h3 className="font-semibold text-[15px] text-foreground truncate">{conversation.name}</h3>
+          <p className="text-xs text-muted-foreground">
+            {conversation.type === 'group'
               ? `${conversation.members?.length || 0} membros`
               : 'Chat direto'}
           </p>
@@ -111,7 +92,7 @@ export function TeamChatHeader({
               <Search className="w-[18px] h-[18px]" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Buscar mensagens (⌘K)</TooltipContent>
+          <TooltipContent side="bottom">Buscar mensagens</TooltipContent>
         </Tooltip>
 
         {conversation.type === 'group' && (
@@ -122,38 +103,6 @@ export function TeamChatHeader({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">Adicionar membros</TooltipContent>
-          </Tooltip>
-        )}
-
-        {(conversation.type === 'group' || conversation.type === 'department') && onToggleStats && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn("w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted", showStats && "text-primary bg-primary/10")}
-                onClick={onToggleStats}
-              >
-                <BarChart3 className="w-[18px] h-[18px]" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Estatísticas do grupo</TooltipContent>
-          </Tooltip>
-        )}
-        
-        {onTogglePerformance && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn("w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted")}
-                onClick={onTogglePerformance}
-              >
-                <Activity className="w-[18px] h-[18px]" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Performance do Chat</TooltipContent>
           </Tooltip>
         )}
 
@@ -173,19 +122,20 @@ export function TeamChatHeader({
           </Tooltip>
         )}
 
+        
+        
+
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted"
-              aria-label="Mais ações"
-              title="Mais ações"
-              data-testid="conversation-more-actions"
-            >
-              <MoreVertical className="w-[18px] h-[18px]" />
-            </Button>
-          </DropdownMenuTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted">
+                  <MoreVertical className="w-[18px] h-[18px]" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Mais ações</TooltipContent>
+          </Tooltip>
           <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
             {onToggleMute && (
               <DropdownMenuItem onClick={onToggleMute}>
@@ -202,14 +152,6 @@ export function TeamChatHeader({
                 )}
               </DropdownMenuItem>
             )}
-            
-            {canTransfer && conversation.type === 'department' && (
-              <DropdownMenuItem onClick={() => setShowTransfer(true)} data-testid="transfer-conversation-btn">
-                <ArrowRightLeft className="w-4 h-4 mr-2" />
-                Transferir
-              </DropdownMenuItem>
-            )}
-
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled className="opacity-50">
               <Pin className="w-4 h-4 mr-2" />
@@ -222,12 +164,6 @@ export function TeamChatHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      <TransferConversationDialog 
-        open={showTransfer} 
-        onOpenChange={setShowTransfer} 
-        conversation={conversation} 
-      />
     </div>
   );
 }

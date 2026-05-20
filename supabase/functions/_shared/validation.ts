@@ -11,127 +11,6 @@ export {
   createWebhookValidator 
 } from './hmac-validation.ts';
 
-// ─── Secret Sanitization (Bug 1 fix — never log secrets) ────────────────────
-
-/**
- * Names of env vars whose values must NEVER appear in logs.
- * Inspired by the v6 hardening checklist (PROMPT_LOVABLE_ZAPPWEB_EVO_BITRIX).
- */
-const SENSITIVE_ENV_NAMES = [
-  'EVOLUTION_WEBHOOK_SECRET',
-  'WEBHOOK_SECRET',
-  'WEBHOOK_SHARED_SECRET',
-  'BITRIX_WEBHOOK_URL',
-  'BITRIX_CLIENT_SECRET',
-  'BITRIX_PORTAL',
-  'EVOLUTION_API_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
-] as const;
-
-let _sensitiveValuesCache: string[] | null = null;
-function getSensitiveValues(): string[] {
-  if (_sensitiveValuesCache) return _sensitiveValuesCache;
-  const out: string[] = [];
-  for (const name of SENSITIVE_ENV_NAMES) {
-    const v = Deno.env.get(name);
-    // Only redact non-trivial values to avoid false positives (e.g. empty / "true").
-    if (v && v.length >= 12) out.push(v);
-  }
-  // Sort longest first so substring matches do not partially mask shorter overlapping secrets.
-  _sensitiveValuesCache = out.sort((a, b) => b.length - a.length);
-  return _sensitiveValuesCache;
-}
-
-// ─── Generic PII / credential patterns ──────────────────────────────────────
-// These catch leaks even when the value isn't a known env-var secret
-// (e.g. user-supplied tokens echoed inside webhook payloads).
-const PII_PATTERNS: ReadonlyArray<{ re: RegExp; replacement: string | ((m: string) => string) }> = [
-  { re: /(authorization\s*[:=]\s*)(bearer|basic)\s+[A-Za-z0-9._\-+/=]+/gi, replacement: '$1$2 ***REDACTED***' },
-  { re: /((?:x-)?api[_-]?key\s*[:=]\s*)["']?[A-Za-z0-9._\-]{16,}["']?/gi, replacement: '$1***REDACTED***' },
-  { re: /\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\b/g, replacement: '***JWT_REDACTED***' },
-  { re: /\/rest\/(\d+)\/[A-Za-z0-9]{20,}\b/g, replacement: '/rest/$1/***REDACTED***' },
-  { re: /\b([A-Za-z0-9._%+\-]{1,64})@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/g, replacement: '***@$2' },
-  { re: /\+?\d{8,15}\b/g, replacement: (m: string) => '***' + m.slice(-4) },
-];
-
-/** Redact known secret values + generic PII patterns from any string. */
-export function redactSecrets(input: string): string {
-  if (typeof input !== 'string' || input.length === 0) return input;
-  let out = input;
-  for (const secret of getSensitiveValues()) {
-    if (out.includes(secret)) out = out.split(secret).join('***REDACTED***');
-  }
-  for (const { re, replacement } of PII_PATTERNS) {
-    out = typeof replacement === 'string'
-      ? out.replace(re, replacement)
-      : out.replace(re, replacement);
-  }
-  return out;
-}
-
-/** Recursively redact secrets in any value (depth-limited to avoid runaway). */
-function redactDeep(value: unknown, depth = 0): unknown {
-  if (depth > 3 || value == null) return value;
-  if (typeof value === 'string') return redactSecrets(value);
-  if (Array.isArray(value)) return value.map((v) => redactDeep(v, depth + 1));
-  if (typeof value === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = redactDeep(v, depth + 1);
-    }
-    return out;
-  }
-  return value;
-}
-
-/** Test-only: clear the sensitive-values cache (for unit tests that mutate Deno.env). */
-export function _resetSensitiveCacheForTests(): void {
-  _sensitiveValuesCache = null;
-}
-
-// ─── Bitrix Origin Validation (Bug 2 fix — defense in depth) ────────────────
-
-export interface OriginValidationResult {
-  ok: boolean;
-  reason?: string;
-  origin?: string;
-}
-
-/**
- * Validate that a request originates from a Bitrix24 portal.
- * Accepts:
- *   - hostname matching `*.bitrix24.com.br` (Brazilian portals)
- *   - exact match against the BITRIX_PORTAL env var (when set)
- *
- * Defense in depth — pairs with HMAC/auth on the same endpoint. CORS already
- * blocks browser-initiated cross-origin requests; this closes the
- * server-to-server vector documented in the v6 runbook.
- */
-export function validateBitrixOrigin(
-  req: Request,
-  allowedPortal: string | null = Deno.env.get('BITRIX_PORTAL') ?? null,
-): OriginValidationResult {
-  const origin = req.headers.get('origin');
-  if (!origin) return { ok: false, reason: 'missing_origin' };
-
-  // Exact portal match (e.g. https://promo-brindes.bitrix24.com.br)
-  if (allowedPortal && origin === allowedPortal) return { ok: true, origin };
-
-  let hostname: string;
-  try {
-    hostname = new URL(origin).hostname.toLowerCase();
-  } catch {
-    return { ok: false, reason: 'malformed_origin', origin };
-  }
-
-  // Strict suffix match — `fake-bitrix24.com.br.evil.com` must NOT pass.
-  if (hostname === 'bitrix24.com.br' || hostname.endsWith('.bitrix24.com.br')) {
-    return { ok: true, origin };
-  }
-
-  return { ok: false, reason: 'untrusted_origin', origin };
-}
-
 // ─── Structured Logger ───────────────────────────────────────────────────────
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -148,34 +27,22 @@ export class Logger {
   private requestId: string;
   private startTime: number;
 
-  constructor(functionName: string, req?: Request) {
+  constructor(functionName: string) {
     this.fn = functionName;
-    // Honor inbound x-request-id header to enable end-to-end tracing across
-    // client → edge function → DB. Falls back to a fresh short UUID.
-    const inbound = req?.headers.get('x-request-id')?.trim();
-    this.requestId = (inbound && inbound.length > 0 && inbound.length <= 64)
-      ? inbound
-      : crypto.randomUUID().slice(0, 8);
+    this.requestId = crypto.randomUUID().slice(0, 8);
     this.startTime = Date.now();
   }
 
-  /** Expose request id so handlers can stamp it on DB writes for tracing. */
-  getRequestId(): string {
-    return this.requestId;
-  }
-
   private log(level: LogLevel, message: string, ctx?: Record<string, unknown>) {
-    const safeMessage = redactSecrets(message);
-    const safeCtx = ctx ? (redactDeep(ctx) as Record<string, unknown>) : undefined;
     const entry = {
       level,
       fn: this.fn,
       rid: this.requestId,
       ms: Date.now() - this.startTime,
-      msg: safeMessage,
-      ...(safeCtx ?? {}),
+      msg: message,
+      ...ctx,
     };
-    const serialized = redactSecrets(JSON.stringify(entry));
+    const serialized = JSON.stringify(entry);
     if (level === 'error') console.error(serialized);
     else if (level === 'warn') console.warn(serialized);
     else console.log(serialized);
@@ -211,19 +78,6 @@ function isAllowedOrigin(origin: string): boolean {
   return EXACT_ALLOWED_ORIGINS.has(origin) || LOCAL_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
 }
 
-/** Merge comma-separated header values, normalizing casing and deduplicating tokens. */
-export function mergeCsvHeaderValues(...values: Array<string | undefined>): string {
-  const merged = new Set<string>()
-  for (const value of values) {
-    if (!value) continue
-    for (const token of value.split(',')) {
-      const normalized = token.trim().toLowerCase()
-      if (normalized) merged.add(normalized)
-    }
-  }
-  return Array.from(merged).join(', ')
-}
-
 /** Security headers applied to all responses */
 const SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
@@ -244,7 +98,7 @@ export function getCorsHeaders(req?: Request): Record<string, string> {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers':
-      'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-hub-signature-256, x-signature, x-webhook-signature, x-evolution-signature, idempotency-key, x-idempotency-key, x-correlation-id, x-request-id',
+      'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-hub-signature-256, x-signature, x-webhook-signature, x-evolution-signature',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -254,59 +108,22 @@ export function getCorsHeaders(req?: Request): Record<string, string> {
 export const corsHeaders = getCorsHeaders();
 
 /** Standard JSON error response (with origin-validated CORS) */
-export function errorResponse(message: string, status = 400, req?: Request) {
+export function errorResponse(message: string, status = 400, req?: Request, validationErrors?: Record<string, string[]>) {
   const headers = req ? getCorsHeaders(req) : corsHeaders;
+  const body = { 
+    error: message,
+    code: status,
+    timestamp: new Date().toISOString()
+  };
+  
+  if (validationErrors) {
+    Object.assign(body, { fields: validationErrors });
+  }
+
   return new Response(
-    JSON.stringify({ error: message }),
+    JSON.stringify(body),
     { status, headers: { ...headers, 'Content-Type': 'application/json' } }
   );
-}
-
-/**
- * Standardized security error response for upload/scan flows.
- * Frontend can match on `code` to render specific UX (block, retry, quarantine).
- *
- * Shape: { error: true, code, message, verdict?, scanId?, details? }
- *
- * Conventional codes:
- *  - MALWARE_DETECTED  → 422 (verdict: 'malicious')
- *  - SUSPICIOUS_FILE   → 403 (verdict: 'suspicious')
- *  - SCAN_TIMEOUT      → 408 (verdict: 'unknown')
- *  - SCAN_UNAVAILABLE  → 502 (verdict: 'unknown')
- *  - INVALID_INPUT     → 400
- *  - UNAUTHORIZED      → 401
- *  - METHOD_NOT_ALLOWED→ 405
- *  - STORAGE_ERROR     → 500
- *  - INTERNAL_ERROR    → 500
- */
-export type SecurityVerdict = 'clean' | 'malicious' | 'suspicious' | 'unknown';
-
-export interface SecurityErrorPayload {
-  code: string;
-  message: string;
-  verdict?: SecurityVerdict;
-  scanId?: string | null;
-  details?: Record<string, unknown>;
-}
-
-export function securityErrorResponse(
-  payload: SecurityErrorPayload,
-  status: number,
-  req?: Request,
-) {
-  const headers = req ? getCorsHeaders(req) : corsHeaders;
-  const body = {
-    error: true,
-    code: payload.code,
-    message: payload.message,
-    verdict: payload.verdict ?? 'unknown',
-    scanId: payload.scanId ?? null,
-    ...(payload.details ? { details: payload.details } : {}),
-  };
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...headers, 'Content-Type': 'application/json' },
-  });
 }
 
 /** Standard JSON success response (with origin-validated CORS) */

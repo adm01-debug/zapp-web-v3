@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 
 const inputVariants = cva(
-  "flex w-full rounded-xl border bg-background text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary/50 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 md:text-sm",
+  "flex w-full rounded-xl border bg-background text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 md:text-sm",
   {
     variants: {
       variant: {
-        default: "border-border bg-background focus-visible:ring-ring",
-        glow: "border-border bg-background focus-visible:ring-primary/30 focus-visible:shadow-glow-primary",
-        neon: "border-secondary/20 bg-background focus-visible:border-secondary/50 focus-visible:ring-secondary/30",
-        ghost: "border-transparent bg-muted/30 focus-visible:bg-background focus-visible:border-border",
-        underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:border-primary focus-visible:ring-0",
+        default: "border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        glow: "border-input focus-visible:outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:shadow-[0_0_15px_hsl(var(--primary)/0.3)]",
+        neon: "border-secondary/30 focus-visible:outline-none focus-visible:border-secondary focus-visible:ring-4 focus-visible:ring-secondary/20 focus-visible:shadow-[0_0_20px_hsl(var(--secondary)/0.4)]",
+        ghost: "border-transparent bg-muted/50 focus-visible:outline-none focus-visible:bg-background focus-visible:border-input",
+        underline: "border-0 border-b-2 border-input rounded-none px-0 focus-visible:outline-none focus-visible:border-primary focus-visible:ring-0",
       },
       inputSize: {
         sm: "h-9 px-3 text-sm",
@@ -21,7 +21,7 @@ const inputVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "glow",
       inputSize: "default",
     },
   }

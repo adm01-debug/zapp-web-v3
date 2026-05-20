@@ -9,10 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Clock, AlertTriangle, Target, History, Settings2, Layers } from 'lucide-react';
-import { QueueSlaPanel } from './QueueSlaPanel';
-import { useSLAMetrics, PeriodFilter } from '@/features/sla';
-import { useSLAHistory } from '@/features/sla';
+import { Clock, AlertTriangle, Target, History, Settings2 } from 'lucide-react';
+import { useSLAMetrics, PeriodFilter } from '@/hooks/useSLAMetrics';
+import { useSLAHistory } from '@/hooks/useSLAHistory';
 import { ExportButton } from '@/components/reports/ExportButton';
 import { ReportData } from '@/utils/exportReport';
 import { cn } from '@/lib/utils';
@@ -271,18 +270,12 @@ export const SLADashboard = () => {
         </motion.div>
       </div>
 
-      {/* Filas, Roteamento e Configuração */}
-      <Tabs defaultValue="queues" className="w-full">
+      {/* Configuração de Prazos */}
+      <Tabs defaultValue="global" className="w-full">
         <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="queues" className="gap-2">
-            <Layers className="h-4 w-4" /> Filas & Roteamento
-          </TabsTrigger>
           <TabsTrigger value="global">Configuração Global</TabsTrigger>
           <TabsTrigger value="granular">Regras Granulares</TabsTrigger>
         </TabsList>
-        <TabsContent value="queues" className="pt-4">
-          <QueueSlaPanel />
-        </TabsContent>
         <TabsContent value="global">
           <SLAConfigurationManager />
         </TabsContent>

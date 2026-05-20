@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/features/auth';
+import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
 
@@ -35,7 +35,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
     try {
       // Check profile
-      const { data: profile , error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('name, avatar_url')
         .eq('user_id', user.id)
@@ -44,7 +44,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
       // Check WhatsApp connection
       try {
-        const { data: connections , error: connectionsErr } = await supabase
+        const { data: connections } = await supabase
           .from('whatsapp_connections')
           .select('id')
           .eq('status', 'connected')
@@ -55,7 +55,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
       }
 
       // Check user settings
-      const { data: settings , error: settingsErr } = await supabase
+      const { data: settings } = await supabase
         .from('user_settings')
         .select('business_hours_enabled, browser_notifications_enabled, sound_enabled, theme')
         .eq('user_id', user.id)
@@ -68,7 +68,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
       }
 
       // Check templates
-      const { data: templates , error: templatesErr } = await supabase
+      const { data: templates } = await supabase
         .from('message_templates')
         .select('id')
         .eq('user_id', user.id)

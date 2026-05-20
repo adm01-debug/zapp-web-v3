@@ -87,9 +87,9 @@ export function BusinessHoursDialog({
     setLocalHours((prev) =>
       prev.map((h) => ({
         ...h,
-        is_enabled: source.is_enabled,
-        start_time: source.start_time,
-        end_time: source.end_time,
+        is_open: source.is_open,
+        open_time: source.open_time,
+        close_time: source.close_time,
       }))
     );
     toast({ title: 'Horário copiado para todos os dias' });
@@ -99,9 +99,9 @@ export function BusinessHoursDialog({
     setLocalHours((prev) =>
       prev.map((h) => ({
         ...h,
-        is_enabled: h.day_of_week >= 1 && h.day_of_week <= 5,
-        start_time: '08:00',
-        end_time: '18:00',
+        is_open: h.day_of_week >= 1 && h.day_of_week <= 5,
+        open_time: '08:00',
+        close_time: '18:00',
       }))
     );
     toast({ title: 'Template de dias úteis aplicado' });
@@ -156,7 +156,7 @@ export function BusinessHoursDialog({
                         transition={{ delay: hour.day_of_week * 0.05 }}
                         className={cn(
                           'flex items-center gap-4 p-3 rounded-lg border transition-colors',
-                          hour.is_enabled
+                          hour.is_open
                             ? 'border-primary/30 bg-primary/5'
                             : 'border-border bg-muted/30'
                         )}
@@ -164,25 +164,25 @@ export function BusinessHoursDialog({
                         <div className="w-32">
                           <div className="flex items-center gap-2">
                             <Switch
-                              checked={hour.is_enabled}
+                              checked={hour.is_open}
                               onCheckedChange={(checked) =>
-                                updateHour(hour.day_of_week, 'is_enabled', checked)
+                                updateHour(hour.day_of_week, 'is_open', checked)
                               }
                             />
-                            <span className={cn('font-medium', !hour.is_enabled && 'text-muted-foreground')}>
+                            <span className={cn('font-medium', !hour.is_open && 'text-muted-foreground')}>
                               {day?.label}
                             </span>
                           </div>
                         </div>
 
-                        {hour.is_enabled ? (
+                        {hour.is_open ? (
                           <>
                             <div className="flex items-center gap-2">
                               <Label className="text-xs text-muted-foreground">De</Label>
                               <Input
                                 type="time"
-                                value={hour.start_time}
-                                onChange={(e) => updateHour(hour.day_of_week, 'start_time', e.target.value)}
+                                value={hour.open_time}
+                                onChange={(e) => updateHour(hour.day_of_week, 'open_time', e.target.value)}
                                 className="w-28"
                               />
                             </div>
@@ -190,8 +190,8 @@ export function BusinessHoursDialog({
                               <Label className="text-xs text-muted-foreground">Até</Label>
                               <Input
                                 type="time"
-                                value={hour.end_time}
-                                onChange={(e) => updateHour(hour.day_of_week, 'end_time', e.target.value)}
+                                value={hour.close_time}
+                                onChange={(e) => updateHour(hour.day_of_week, 'close_time', e.target.value)}
                                 className="w-28"
                               />
                             </div>

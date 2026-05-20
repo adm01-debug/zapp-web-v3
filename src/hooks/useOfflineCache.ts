@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ConversationWithMessages } from '@/features/inbox';
+import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('OfflineCache');

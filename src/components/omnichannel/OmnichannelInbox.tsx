@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EmailChatInbox } from '@/components/email/EmailChatInbox';
-import { dbFrom } from '@/integrations/datasource/db';
 
 type ChannelType = 'whatsapp' | 'instagram' | 'telegram' | 'messenger' | 'email' | 'webchat';
 
@@ -53,7 +52,7 @@ export function OmnichannelInbox() {
   }, []);
 
   const loadConnections = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('channel_connections_safe')
       .select('*')
       .eq('is_active', true);
@@ -64,7 +63,8 @@ export function OmnichannelInbox() {
   const loadUnifiedInbox = async () => {
     setLoading(true);
     try {
-      const { data: contacts, error } = await dbFrom('contacts')
+      const { data: contacts, error } = await supabase
+        .from('contacts')
         .select('id, name, phone, channel_type, updated_at, assigned_to')
         .order('updated_at', { ascending: false })
         .limit(200);

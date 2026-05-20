@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fromTable } from '@/lib/supabaseHelpers';
 import { toast } from 'sonner';
-import { newRequestId } from '@/lib/withRequestId';
 
 export interface TalkXCampaign {
   id: string;
@@ -84,7 +83,7 @@ export function useTalkX() {
 
   const createCampaign = useMutation({
     mutationFn: async (campaign: CampaignPayload) => {
-      const { data: profile , error: profileErr } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .single();
@@ -157,11 +156,9 @@ export function useTalkX() {
   });
 
   const startCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-start');
     try {
       const { data, error } = await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'start' },
-        headers: trace.headers,
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
@@ -174,11 +171,9 @@ export function useTalkX() {
   }, [queryClient]);
 
   const pauseCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-pause');
     try {
       await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'pause' },
-        headers: trace.headers,
       });
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
       toast.info('Campanha pausada');
@@ -189,11 +184,9 @@ export function useTalkX() {
   }, [queryClient]);
 
   const cancelCampaign = useCallback(async (campaignId: string) => {
-    const trace = newRequestId('talkx-cancel');
     try {
       await supabase.functions.invoke('talkx-send', {
         body: { campaignId, action: 'cancel' },
-        headers: trace.headers,
       });
       queryClient.invalidateQueries({ queryKey: ['talkx-campaigns'] });
       toast.info('Campanha cancelada');
@@ -202,35 +195,6 @@ export function useTalkX() {
       toast.error(`Erro ao cancelar: ${msg}`);
     }
   }, [queryClient]);
-
-  /**
-   * Pré-valida números via `evolution-api/check-numbers` antes de iniciar a
-   * campanha. Retorna a partição `{ valid, invalid }` para que o caller
-   * possa decidir se segue, avisa o usuário ou remove inválidos.
-   * Falhas de rede tornam-se "todos válidos" — best-effort, nunca bloqueia.
-   */
-  const validateRecipientsViaWhatsApp = useCallback(async (
-    instanceName: string,
-    phones: string[],
-  ): Promise<{ valid: string[]; invalid: string[] }> => {
-    const unique = Array.from(new Set(phones.map((p) => p.replace(/\D/g, '')).filter(Boolean)));
-    if (unique.length === 0) return { valid: [], invalid: [] };
-    try {
-      const { data, error } = await supabase.functions.invoke('evolution-api/check-numbers', {
-        body: { instanceName, numbers: unique },
-      });
-      if (error) throw error;
-      const list = Array.isArray((data as { numbers?: unknown[] })?.numbers)
-        ? ((data as { numbers: Array<{ number: string; exists?: boolean }> }).numbers)
-        : [];
-      const validSet = new Set(list.filter((n) => n.exists).map((n) => n.number.replace(/\D/g, '')));
-      const valid = unique.filter((p) => validSet.has(p));
-      const invalid = unique.filter((p) => !validSet.has(p));
-      return { valid, invalid };
-    } catch {
-      return { valid: unique, invalid: [] };
-    }
-  }, []);
 
   return {
     campaigns: campaignsQuery.data || [],
@@ -246,7 +210,6 @@ export function useTalkX() {
     startCampaign,
     pauseCampaign,
     cancelCampaign,
-    validateRecipientsViaWhatsApp,
     refetchCampaigns: campaignsQuery.refetch,
   };
 }

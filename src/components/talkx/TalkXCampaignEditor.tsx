@@ -76,7 +76,7 @@ export function TalkXCampaignEditor({ campaign, onClose }: Props) {
                 {VARIABLES.map((v) => (
                   <Tooltip key={v.key}>
                     <TooltipTrigger asChild><Badge variant="outline" className="cursor-pointer hover:bg-primary/10 transition-colors text-xs" onClick={() => ed.insertVariable(v.key)}><Wand2 className="w-3 h-3 mr-1" />{v.label}</Badge></TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[200px]"><p className=" text-[10px] text-primary mb-0.5">{v.key}</p><p className="text-xs">{v.desc}</p></TooltipContent>
+                    <TooltipContent side="top" className="max-w-[200px]"><p className="font-mono text-[10px] text-primary mb-0.5">{v.key}</p><p className="text-xs">{v.desc}</p></TooltipContent>
                   </Tooltip>
                 ))}
                 <DropdownMenu>
@@ -90,7 +90,7 @@ export function TalkXCampaignEditor({ campaign, onClose }: Props) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <Textarea value={ed.messageTemplate} onChange={(e) => ed.setMessageTemplate(e.target.value)} placeholder="{{saudacao}}, {{nome}}! Tudo bem? 😊" rows={5} className="resize-none  text-sm" />
+              <Textarea value={ed.messageTemplate} onChange={(e) => ed.setMessageTemplate(e.target.value)} placeholder="{{saudacao}}, {{nome}}! Tudo bem? 😊" rows={5} className="resize-none font-mono text-sm" />
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">{ed.messageTemplate.length} caracteres</span>
                 <Button size="sm" variant="ghost" onClick={() => ed.setShowPreview(!ed.showPreview)} className="gap-1"><Eye className="w-3.5 h-3.5" />{ed.showPreview ? 'Ocultar' : 'Preview'}</Button>
@@ -147,13 +147,13 @@ export function TalkXCampaignEditor({ campaign, onClose }: Props) {
             <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4 text-primary" />Simulação Humana</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <div className="flex justify-between mb-3"><Label>Tempo digitando</Label><span className="text-xs  text-muted-foreground">{ed.typingDelay[0]}s – {ed.typingDelay[1]}s</span></div>
+                <div className="flex justify-between mb-3"><Label>Tempo digitando</Label><span className="text-xs font-mono text-muted-foreground">{ed.typingDelay[0]}s – {ed.typingDelay[1]}s</span></div>
                 <Slider value={ed.typingDelay} onValueChange={ed.setTypingDelay} min={0.5} max={10} step={0.5} />
                 <p className="text-xs text-muted-foreground mt-1">Tempo que aparece "digitando..." para o contato</p>
               </div>
               <Separator />
               <div>
-                <div className="flex justify-between mb-3"><Label>Intervalo entre envios</Label><span className="text-xs  text-muted-foreground">{ed.sendInterval[0]}s – {ed.sendInterval[1]}s</span></div>
+                <div className="flex justify-between mb-3"><Label>Intervalo entre envios</Label><span className="text-xs font-mono text-muted-foreground">{ed.sendInterval[0]}s – {ed.sendInterval[1]}s</span></div>
                 <Slider value={ed.sendInterval} onValueChange={ed.setSendInterval} min={3} max={60} step={1} />
                 <p className="text-xs text-muted-foreground mt-1">Pausa aleatória entre cada mensagem enviada</p>
               </div>

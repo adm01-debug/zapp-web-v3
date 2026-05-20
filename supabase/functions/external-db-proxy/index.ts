@@ -1,149 +1,110 @@
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-import {
-  corsHeaders,
-  shortRid,
-  logEvent,
-  recordMetric
-} from './lib/utils.ts'
-import { handleRpc, handleQuery } from './lib/handlers.ts'
-import { QueryLogContext } from './lib/types.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
-const CORRELATION_HEADER = 'x-correlation-id'
-const REQUEST_ID_HEADER = 'x-request-id'
-const SCHEMA_ALLOWLIST = new Set(['public', 'evo_api'])
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-// Client cache to avoid re-initializing for every request
-const clientCache = new Map<string, SupabaseClient>()
-
-async function handler(req: Request): Promise<Response> {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
-  }
-
-  if (req.method === 'GET') {
-    return new Response(
-      JSON.stringify({ ok: true, fn: 'external-db-proxy', ts: Date.now() }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-  }
-
-  const startedAt = Date.now()
-  const rid = shortRid()
-  let cid: string = req.headers.get(CORRELATION_HEADER) || shortRid()
-  
-  let jsonHeaders: Record<string, string> = {
-    ...corsHeaders,
-    'Content-Type': 'application/json',
-    [CORRELATION_HEADER]: cid,
-    [REQUEST_ID_HEADER]: rid,
-  }
-
-  const reqMeta = {
-    method: req.method,
-    ua: req.headers.get('user-agent')?.slice(0, 80),
-    has_auth: !!req.headers.get('authorization'),
-    cid_from_header: !!req.headers.get(CORRELATION_HEADER),
-  }
-
-  const finish = (resp: Response, action: string, extra: Record<string, any> = {}) => {
-    const total = Date.now() - startedAt
-    logEvent({ phase: 'end', cid, rid, action, status: resp.status, total_ms: total, ...extra })
-    
-    const skipMetrics = action === 'config_error' || action === 'bad_request'
-    if (!skipMetrics) {
-      recordMetric({
-        cid, rid, op: action,
-        target: (extra?.table as string) || (extra?.rpc as string) || action,
-        status: resp.status, ms: total,
-        ok: resp.status >= 200 && resp.status < 400,
-        timeout_fired: !!extra?.timeout_fired,
-        pg_timeout: !!extra?.pg_timeout,
-      })
-    }
-    return resp
   }
 
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
     const key = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')
-    if (!url || !key) {
-      logEvent({ phase: 'start', cid, rid, ...reqMeta, error: 'missing_env' })
-      return finish(
-        new Response(JSON.stringify({ error: 'External DB not configured', cid, rid }), { status: 500, headers: jsonHeaders }),
-        'config_error'
-      )
-    }
 
-    let body: any
-    try {
-      body = await req.json()
-    } catch (e: any) {
-      logEvent({ phase: 'start', cid, rid, ...reqMeta, error: 'invalid_json', err_msg: e.message })
-      return finish(
-        new Response(JSON.stringify({ error: 'Invalid JSON body', cid, rid }), { status: 400, headers: jsonHeaders }),
-        'bad_request'
-      )
-    }
-
-    if (!req.headers.get(CORRELATION_HEADER) && typeof body.__cid === 'string' && body.__cid) {
-      cid = body.__cid
-      jsonHeaders[CORRELATION_HEADER] = cid
-    }
-
-    const rawAction = typeof body.action === 'string' ? body.action : undefined
-    const rpc = typeof body.rpc === 'string' ? body.rpc : undefined
-    const table = typeof body.table === 'string' ? body.table : undefined
-    const action = rawAction ?? (rpc ? 'rpc' : table ? 'select' : undefined)
-    const { schema } = body
-    const requestedSchema = typeof schema === 'string' && schema.length > 0 ? schema : 'public'
-    
-    if (!SCHEMA_ALLOWLIST.has(requestedSchema)) {
-      return finish(
-        new Response(JSON.stringify({ error: `Schema not allowed: ${requestedSchema}`, cid, rid }), { status: 400, headers: jsonHeaders }),
-        'bad_request'
-      )
-    }
-
-    const cacheKey = `${url}:${requestedSchema}`
-    let client = clientCache.get(cacheKey)
-
-    if (!client) {
-      client = createClient(url, key, {
-        auth: { persistSession: false, autoRefreshToken: false },
-        db: { schema: requestedSchema },
-        global: { 
-          headers: { 'x-statement-timeout': '12000' },
-          fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' })
-        },
+    // If external DB is not configured, return empty result gracefully
+    // (avoids 503 errors that break the UI when the integration is optional)
+    if (!url || !key || url.includes('PLACEHOLDER') || !url.startsWith('https://')) {
+      return new Response(JSON.stringify({ data: [], count: 0, notConfigured: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
-      clientCache.set(cacheKey, client)
-      
-      // Clear cache if it grows too large (unlikely given allowlist but good practice)
-      if (clientCache.size > 10) clientCache.clear()
     }
 
-    const ctx: QueryLogContext = { cid, rid, op: action || 'select', target: (rpc || table || 'unknown'), startedAt }
+    const ext = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
 
-    logEvent({ phase: 'start', cid, rid, ...reqMeta, action: action ?? 'select', table, rpc })
+    const body = await req.json()
+    const { action, table, select, filters, order, limit, offset, countMode, rpc, params, data, match } = body
 
+    // RPC call
     if (action === 'rpc' && rpc) {
-      return finish(await handleRpc(client, rpc, body.params || {}, ctx, jsonHeaders), 'rpc', { rpc })
+      const { data: rpcData, error } = await ext.rpc(rpc, params || {})
+      if (error) return new Response(JSON.stringify({ error: error.message }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+      return new Response(JSON.stringify({ data: rpcData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    if ((action === 'select' || action === 'update') && table) {
-      return finish(await handleQuery(client, action, table, body, ctx, jsonHeaders), action, { table })
+    // Mutation: insert
+    if (action === 'insert' && table && data) {
+      const { data: result, error } = await ext.from(table).insert(data).select()
+      if (error) return new Response(JSON.stringify({ error: error.message }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+      return new Response(JSON.stringify({ data: result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    return finish(
-      new Response(JSON.stringify({ error: 'Missing action, table or rpc', cid, rid }), { status: 400, headers: jsonHeaders }),
-      'bad_request'
-    )
+    // Mutation: update
+    if (action === 'update' && table && data && match) {
+      let q = ext.from(table).update(data)
+      for (const [k, v] of Object.entries(match)) q = q.eq(k, v as string)
+      const { data: result, error } = await q.select()
+      if (error) return new Response(JSON.stringify({ error: error.message }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+      return new Response(JSON.stringify({ data: result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
 
-  } catch (e: any) {
-    const total = Date.now() - startedAt
-    logEvent({ phase: 'crash', cid, rid, err: e.message, stack: e.stack, total_ms: total })
-    return new Response(JSON.stringify({ error: 'Internal server error', cid, rid }), { status: 500, headers: jsonHeaders })
+    // SELECT query (default)
+    if (!table) {
+      return new Response(JSON.stringify({ error: 'Missing table parameter' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    let query = ext.from(table).select(select || '*', { count: countMode || undefined })
+
+    if (filters && Array.isArray(filters)) {
+      for (const f of filters) {
+        query = query.filter(f.column, f.operator, f.value)
+      }
+    }
+
+    if (order) {
+      query = query.order(order.column, { ascending: order.ascending ?? true })
+    }
+
+    const effectiveLimit = limit || 50
+    const effectiveOffset = offset || 0
+    query = query.range(effectiveOffset, effectiveOffset + effectiveLimit - 1)
+
+    const { data: queryData, error: queryError, count } = await query
+
+    if (queryError) {
+      return new Response(JSON.stringify({ error: queryError.message }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    return new Response(JSON.stringify({
+      data: queryData || [],
+      count: count ?? (Array.isArray(queryData) ? queryData.length : 0),
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
   }
-}
-
-Deno.serve(handler)
+})

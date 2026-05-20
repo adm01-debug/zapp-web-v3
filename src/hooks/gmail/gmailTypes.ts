@@ -1,262 +1,76 @@
-/**
- * emailTypes.ts — Tipos TypeScript completos para o módulo Email
- *
- * Zero uso de `as any`.
- * Alinhado com o schema do banco (email_accounts, email_threads, email_messages, etc.)
- */
-
-// ── Conta Email ────────────────────────────────────────────────────────────
-
-export interface EmailAccount {
-  id:           string;
-  user_id:      string;
-  email:        string;
-  display_name: string | null;
-  is_active:    boolean;
-  token_expiry: string | null;
-  watch_expiry: string | null;
-  created_at?:  string;
-  updated_at?:  string;
-  /** @deprecated Foto de perfil legada. */
-  picture_url?: string | null;
+export interface GmailAccount {
+  id: string;
+  email_address: string;
+  is_active: boolean;
+  sync_status: 'pending' | 'syncing' | 'synced' | 'error';
+  last_sync_at: string | null;
+  created_at: string;
 }
-
-export type EmailTokenStatus  = 'valid' | 'expiring_soon' | 'expired' | 'no_token';
-export type EmailWatchStatus  = 'active' | 'expiring_soon' | 'expired' | 'no_watch';
-export type EmailSLAStatus    = 'ok' | 'warning' | 'breached' | 'met' | null;
-
-export interface EmailTokenInfo {
-  account_id:           string;
-  email:                string;
-  is_active:            boolean;
-  token_status:         EmailTokenStatus;
-  token_expiry:         string | null;
-  watch_status:         EmailWatchStatus;
-  watch_expiry:         string | null;
-  minutes_until_expiry: number | null;
-}
-
-// ── Thread ─────────────────────────────────────────────────────────────────
 
 export interface EmailThread {
-  id:               string;
-  account_id:       string;
-  email_thread_id:  string;
-  /** @deprecated Alias legado para `email_thread_id`. */
-  thread_id?:       string;
-  subject:          string | null;
-  snippet:          string | null;
-  from_email:       string | null;
-  from_name:        string | null;
-  label_ids:        string[];
-  unread_count:     number;
-  message_count:    number;
-  is_starred:       boolean;
-  is_important:     boolean;
-  sla_status:       EmailSLAStatus;
-  assigned_to:      string | null;
-  last_message_at:  string | null;
-  first_reply_at:   string | null;
-  created_at:       string;
-  updated_at?:      string;
-  /** @deprecated Lista de e-mails dos participantes (legado). */
-  participant_emails?: string[];
-  /** @deprecated Flag legada. */
-  is_unread?:       boolean;
-  /** @deprecated Contato vinculado (legado). */
-  contact?:         { id?: string; name?: string | null; phone?: string | null } | null;
+  id: string;
+  gmail_account_id: string;
+  gmail_thread_id: string;
+  contact_id: string | null;
+  subject: string;
+  snippet: string;
+  label_ids: string[];
+  message_count: number;
+  is_unread: boolean;
+  is_starred: boolean;
+  is_important: boolean;
+  last_message_at: string;
+  assigned_to: string | null;
+  status: 'open' | 'pending' | 'resolved' | 'archived';
+  priority: 'high' | 'medium' | 'low';
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  contact?: { id: string; name: string; email: string; avatar_url: string | null };
 }
-
-export interface EmailThreadFilters {
-  accountId?:   string;
-  label?:       EmailLabelId;
-  query?:       string;
-  isUnread?:    boolean;
-  isStarred?:   boolean;
-  slaStatus?:   EmailSLAStatus;
-  assignedTo?:  string | null;
-  limit?:       number;
-  offset?:      number;
-}
-
-// ── Mensagem ───────────────────────────────────────────────────────────────
 
 export interface EmailMessage {
-  id:              string;
-  thread_id:       string;
-  email_msg_id:    string;
-  /** @deprecated Alias legado para `email_msg_id`. */
-  message_id?:     string;
-  from_email:      string | null;
-  from_name:       string | null;
-  to_emails:       string[] | null;
-  cc_emails:       string[] | null;
-  subject:         string | null;
-  snippet:         string | null;
-  body_html:       string | null;
-  body_text:       string | null;
-  /** @deprecated Alias legado para `body_text`. */
-  body_plain?:     string | null;
-  is_read:         boolean;
-  /** @deprecated Indica se foi enviada pela conta (legado). */
-  is_sent?:        boolean;
-  date:            string | null;
-  /** @deprecated Timestamp interno do Email (legado). */
-  internal_date?:  string | null;
+  id: string;
+  thread_id: string;
+  gmail_message_id: string;
+  gmail_account_id: string;
+  from_address: string;
+  from_name: string | null;
+  to_addresses: string[];
+  cc_addresses: string[];
+  bcc_addresses: string[];
+  reply_to_address: string | null;
+  subject: string;
+  body_text: string;
+  body_html: string;
+  snippet: string;
+  label_ids: string[];
+  is_read: boolean;
+  is_starred: boolean;
   has_attachments: boolean;
-  in_reply_to:     string | null;
-  references:      string[] | null;
-  /** @deprecated Lista de label ids (legado, use a tabela própria). */
-  label_ids?:      string[];
-  created_at:      string;
+  in_reply_to: string | null;
+  references_header: string | null;
+  internal_date: string;
+  direction: 'inbound' | 'outbound';
+  created_at: string;
 }
-
-// ── Anexo ─────────────────────────────────────────────────────────────────
 
 export interface EmailAttachment {
-  id:             string;
-  message_id:     string;
-  email_att_id:   string;
-  filename:       string;
-  mime_type:      string;
-  size:           number;
-  /** @deprecated Alias legado para `size`. */
-  size_bytes?:    number;
-  storage_url:    string | null;
-  created_at:     string;
+  id: string;
+  email_message_id: string;
+  gmail_attachment_id: string;
+  filename: string;
+  mime_type: string;
+  size_bytes: number;
+  storage_path: string | null;
 }
-
-// ── Rascunho ──────────────────────────────────────────────────────────────
-
-export interface EmailDraft {
-  id:          string;
-  account_id:  string;
-  email_draft_id: string | null;
-  to_emails:   string[];
-  cc_emails:   string[];
-  subject:     string | null;
-  body_html:   string | null;
-  thread_id:   string | null;
-  auto_saved:  boolean;
-  created_at:  string;
-  updated_at:  string;
-}
-
-// ── Label ─────────────────────────────────────────────────────────────────
-
-export type EmailLabelId = 'INBOX' | 'SENT' | 'DRAFTS' | 'STARRED' | 'IMPORTANT' | 'TRASH' | 'SPAM' | string;
 
 export interface EmailLabel {
-  id:             string;
-  account_id:     string;
-  email_label_id: EmailLabelId;
-  name:           string;
-  type:           'system' | 'user';
-  color:          string | null;
-  thread_count?:  number;
-  unread_count?:  number;
-  created_at:     string;
-}
-
-// ── Assinatura ────────────────────────────────────────────────────────────
-
-export interface EmailSignature {
-  id:           string;
-  account_id:   string;
-  name:         string;
-  html_content: string;
-  is_default:   boolean;
-  created_at:   string;
-  updated_at:   string;
-}
-
-// ── Envio ─────────────────────────────────────────────────────────────────
-
-export interface EmailSendParams {
-  to:          string | string[];
-  cc?:         string | string[];
-  bcc?:        string | string[];
-  subject:     string;
-  bodyHtml:    string;
-  threadId?:   string;
-  inReplyTo?:  string;
-  references?: string[];
-  attachments?: EmailSendAttachment[];
-  signature?:  boolean;
-}
-
-export interface EmailSendAttachment {
-  name:        string;
-  /** @deprecated Alias legado para `name`. */
-  filename?:   string;
-  mimeType:    string;
-  base64Data?: string;
-  /** @deprecated Alias legado para `base64Data`. */
-  data?:       string;
-  size?:       number;
-}
-
-export interface EmailSendResult {
-  success:    boolean;
-  messageId?: string;
-  threadId?:  string;
-  error?:     string;
-}
-
-// ── Métricas diárias ─────────────────────────────────────────────────────
-
-export interface EmailDailyMetrics {
-  id:                      string;
-  account_id:              string;
-  date:                    string;
-  threads_received:        number;
-  threads_replied:         number;
-  avg_first_reply_minutes: number | null;
-  sla_met_count:           number;
-  sla_breached_count:      number;
-  created_at:              string;
-  updated_at:              string;
-}
-
-// ── Pub/Sub webhook payload ───────────────────────────────────────────────
-
-export interface EmailPubSubMessage {
-  emailAddress:  string;
-  historyId:     string;
-}
-
-export interface EmailHistoryEvent {
-  id:              string;
-  messages?:       Array<{ id: string; threadId: string }>;
-  messagesAdded?:  Array<{ message: { id: string; threadId: string; labelIds: string[] } }>;
-  labelsAdded?:    Array<{ message: { id: string; threadId: string }; labelIds: string[] }>;
-  labelsRemoved?:  Array<{ message: { id: string; threadId: string }; labelIds: string[] }>;
-}
-
-// ── Type guards ──────────────────────────────────────────────────────────
-
-export function isEmailThread(obj: unknown): obj is EmailThread {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'email_thread_id' in obj &&
-    'account_id' in obj
-  );
-}
-
-export function isEmailMessage(obj: unknown): obj is EmailMessage {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'email_msg_id' in obj &&
-    'thread_id' in obj
-  );
-}
-
-export function isEmailTokenExpired(tokenInfo: EmailTokenInfo): boolean {
-  return tokenInfo.token_status === 'expired';
-}
-
-export function isEmailWatchExpired(tokenInfo: EmailTokenInfo): boolean {
-  return tokenInfo.watch_status === 'expired';
+  id: string;
+  gmail_label_id: string;
+  name: string;
+  label_type: 'system' | 'user';
+  color: string | null;
+  message_count: number;
+  unread_count: number;
 }

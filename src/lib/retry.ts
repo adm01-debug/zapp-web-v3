@@ -1,5 +1,4 @@
 import { getLogger, generateCorrelationId } from '@/lib/logger';
-import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('RetryUtil');
 
@@ -16,7 +15,7 @@ interface RetryOptions {
  * Works with any async operation (Supabase, fetch, etc).
  *
  * @example
- * const data = await withRetry(() => dbFrom('contacts').select('*'), {
+ * const data = await withRetry(() => supabase.from('contacts').select('*'), {
  *   maxRetries: 3,
  *   onRetry: (err, attempt) => console.log(`Retry ${attempt}`, err),
  * });

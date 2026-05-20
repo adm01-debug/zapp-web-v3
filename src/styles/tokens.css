@@ -1,23 +1,19 @@
 /* ===== DESIGN TOKENS — Light & Dark mode CSS variables ===== */
 
-
-  :root {
-    /* ===== FONTS — Inter (ZAPP Web brand) ===== */
-    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
+:root {
+    /* ===== FONTS ===== */
+    --font-sans: 'Outfit', system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 
     /* ===== TYPOGRAPHY SCALE (fluid clamp) ===== */
-    --text-xs: 12px;
-    --text-sm: 13.5px;
-    --chat-font-size: 13.5px;
-    --text-base: 16px;
-    --text-lg: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
-    --text-xl: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);
-    --text-2xl: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
-    --text-3xl: clamp(1.375rem, 1.2rem + 0.6vw, 1.625rem);
-    --text-4xl: clamp(1.625rem, 1.5rem + 0.8vw, 2rem);
+    --text-xs: clamp(0.6875rem, 0.65rem + 0.1vw, 0.75rem);
+    --text-sm: clamp(0.8125rem, 0.78rem + 0.1vw, 0.875rem);
+    --text-base: clamp(0.875rem, 0.84rem + 0.15vw, 1rem);
+    --text-lg: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+    --text-xl: clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem);
+    --text-2xl: clamp(1.25rem, 1.15rem + 0.4vw, 1.5rem);
+    --text-3xl: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+    --text-4xl: clamp(1.875rem, 1.7rem + 0.8vw, 2.25rem);
 
     /* ===== LINE HEIGHT SCALE ===== */
     --leading-none: 1;
@@ -56,7 +52,7 @@
     --z-max: 9999;
 
     /* ===== BASE (Light Mode - Corporate Blue) ===== */
-    --background: 221 25% 98%;
+    --background: 221 20% 97%;
     --foreground: 221 20% 12%;
     --card: 0 0% 100%;
     --card-foreground: 221 20% 12%;
@@ -74,33 +70,29 @@
     --secondary-foreground: 0 0% 100%;
 
     /* ===== MUTED ===== */
-    --muted: 221 20% 92%;
-    --muted-foreground: 221 15% 30%;
+    --muted: 221 15% 92%;
+    --muted-foreground: 221 10% 45%;
 
     /* ===== ACCENT ===== */
-    --accent: 221 80% 94%;
-    --accent-foreground: 221 90% 40%;
+    --accent: 221 55% 95%;
+    --accent-foreground: 221 83% 45%;
 
     /* ===== DESTRUCTIVE ===== */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 84% 96%;
-    --destructive-border: 0 84% 90%;
 
     /* ===== BORDAS E INPUTS ===== */
     --border: 221 15% 90%;
     --input: 221 15% 93%;
     --ring: 221 83% 53%;
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
     /* ===== ESTADOS ===== */
-    --success: 142 76% 45%;
+    --success: 160 70% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 100% 50%;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 38 100% 96%;
-    --warning-border: 38 100% 90%;
-    --info: 214 100% 50%;
+    --info: 210 80% 55%;
     --info-foreground: 0 0% 100%;
 
     /* ===== GAMIFICAÇÃO ===== */
@@ -157,27 +149,27 @@
     --priority-low: 210 25% 48%;
 
     /* ===== GRADIENTS ===== */
-    --gradient-primary: linear-gradient(135deg, hsl(221 100% 55%), hsl(215 100% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(215 100% 60%), hsl(230 100% 65%));
-    --gradient-success: linear-gradient(135deg, hsl(142 100% 45%), hsl(142 100% 55%));
-    --gradient-xp: linear-gradient(90deg, hsl(221 100% 55%), hsl(230 100% 65%));
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 50%), hsl(38 100% 55%));
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(215 70% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(215 70% 55%), hsl(230 78% 59%));
+    --gradient-success: linear-gradient(135deg, hsl(160 70% 42%), hsl(160 70% 52%));
+    --gradient-xp: linear-gradient(90deg, hsl(221 83% 53%), hsl(230 78% 59%));
+    --gradient-gold: linear-gradient(135deg, hsl(45 93% 50%), hsl(38 92% 55%));
     --gradient-surface: linear-gradient(180deg, hsl(221 20% 97%), hsl(221 15% 95%));
-    --gradient-divider: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+    --gradient-divider: linear-gradient(90deg, transparent, hsl(221 15% 88% / 0.5), transparent);
     --gradient-vibrant: linear-gradient(135deg, hsl(221 83% 53%), hsl(210 80% 55%), hsl(230 78% 59%));
     --gradient-purple-green: linear-gradient(135deg, hsl(221 83% 53%), hsl(160 70% 42%));
 
     /* ===== SHADOWS ===== */
-    --shadow-xs: 0 1px 2px hsl(var(--foreground) / 0.05);
-    --shadow-sm: 0 1px 3px hsl(var(--foreground) / 0.1);
-    --shadow-md: 0 4px 6px -1px hsl(var(--foreground) / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(var(--foreground) / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(var(--foreground) / 0.1);
-    --shadow-glow-primary: 0 4px 14px hsl(221 83% 53%);
-    --shadow-glow-secondary: 0 4px 14px hsl(215 70% 55%);
-    --shadow-glow-success: 0 4px 14px hsl(160 70% 42%);
-    --shadow-glow-accent: 0 4px 14px hsl(230 78% 59%);
-    --shadow-glow-purple: 0 4px 14px hsl(221 83% 53%);
+    --shadow-xs: 0 1px 2px hsl(221 20% 12% / 0.04);
+    --shadow-sm: 0 1px 3px hsl(221 20% 12% / 0.06), 0 1px 2px hsl(221 20% 12% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(221 20% 12% / 0.07), 0 2px 4px -2px hsl(221 20% 12% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(221 20% 12% / 0.08), 0 4px 6px -4px hsl(221 20% 12% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(221 20% 12% / 0.1), 0 8px 10px -6px hsl(221 20% 12% / 0.06);
+    --shadow-glow-primary: 0 4px 14px hsl(221 83% 53% / 0.25);
+    --shadow-glow-secondary: 0 4px 14px hsl(215 70% 55% / 0.2);
+    --shadow-glow-success: 0 4px 14px hsl(160 70% 42% / 0.2);
+    --shadow-glow-accent: 0 4px 14px hsl(230 78% 59% / 0.25);
+    --shadow-glow-purple: 0 4px 14px hsl(221 83% 53% / 0.3);
     --shadow-header: 0 1px 3px hsl(221 20% 12% / 0.06);
 
     /* ===== GLASS ===== */
@@ -213,120 +205,115 @@
     --chart-sentiment-positive: 160 70% 42%;
     --chart-sentiment-neutral: 220 10% 50%;
     --chart-sentiment-negative: 0 84% 60%;
-  }
+}
 
-  /* ===== DARK MODE - Vivid Corporate Blue (sem neblina) ===== */
-  .dark {
-    --background: 0 0% 0%; /* PRETO VIVO (OLED Black) */
-    --foreground: 210 20% 98%;
-    --card: 0 0% 0%; /* Preto OLED puro */
-    --card-foreground: 210 20% 98%;
-    --card-elevated: 0 0% 3%;
-    --popover: 0 0% 0%; /* Preto OLED puro */
-    --popover-foreground: 210 20% 98%;
-    --primary: 221 95% 60%;
+/* ===== DARK MODE - Corporate Blue ===== */
+.dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 97%;
+    --card: 240 7% 11%;
+    --card-foreground: 0 0% 97%;
+    --card-elevated: 240 7% 16%;
+    --popover: 240 7% 13%;
+    --popover-foreground: 0 0% 97%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 225 100% 65%;
-    --secondary: 215 90% 60%;
+    --primary-glow: 230 86% 59%;
+    --secondary: 215 70% 55%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 8%; /* Ajustado para OLED */
-    --muted-foreground: 215 20% 70%;
-    --accent: 221 80% 15%; /* Mais profundo */
-    --accent-foreground: 221 100% 95%;
-    --destructive: 0 95% 62%;
+    --muted: 240 8% 16%;
+    --muted-foreground: 220 20% 72%;
+    --accent: 221 60% 22%;
+    --accent-foreground: 221 83% 80%;
+    --destructive: 0 90% 60%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 95% 10%;
-    --destructive-border: 0 95% 20%;
-    --border: 0 0% 10%; /* Borda sutil no OLED */
-    --input: 0 0% 6%;
-    --ring: 221 95% 60%;
-    --success: 142 90% 50%;
+    --border: 240 8% 20%;
+    --input: 240 8% 16%;
+    --ring: 221 83% 53%;
+    --success: 155 80% 50%;
     --success-foreground: 0 0% 100%;
-    --warning: 42 100% 55%;
-    --warning-foreground: 0 0% 5%;
-    --warning-soft: 42 100% 10%;
-    --warning-border: 42 100% 20%;
-    --info: 210 100% 60%;
+    --warning: 42 100% 58%;
+    --warning-foreground: 0 0% 8%;
+    --info: 210 95% 62%;
     --info-foreground: 0 0% 100%;
-    --xp: 221 95% 60%;
+    --xp: 221 83% 53%;
     --xp-foreground: 0 0% 100%;
-    --coins: 42 100% 60%;
+    --coins: 42 100% 58%;
     --coins-foreground: 0 0% 8%;
-    --streak: 18 100% 62%;
+    --streak: 20 100% 60%;
     --streak-foreground: 0 0% 100%;
-    --rank-gold: 42 100% 60%;
+    --rank-gold: 42 100% 58%;
     --rank-gold-foreground: 42 100% 95%;
     --rank-silver: 220 25% 80%;
     --rank-silver-foreground: 220 20% 95%;
-    --rank-bronze: 28 75% 60%;
+    --rank-bronze: 28 70% 58%;
     --rank-bronze-foreground: 28 60% 95%;
-    --whatsapp: 142 85% 52%;
-    --whatsapp-dark: 142 85% 42%;
-    --online: 152 85% 50%;
-    --away: 42 100% 60%;
+    --whatsapp: 142 76% 50%;
+    --whatsapp-dark: 142 76% 40%;
+    --online: 155 80% 50%;
+    --away: 42 100% 58%;
     --offline: 0 0% 45%;
-    --unread: 0 95% 62%;
-    --sidebar-background: 0 0% 0%; /* Sincronizado com background */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 221 95% 60%;
+    --unread: 0 90% 60%;
+    --sidebar-background: 240 8% 9%;
+    --sidebar-foreground: 0 0% 97%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 221 75% 12%;
-    --sidebar-accent-foreground: 221 100% 95%;
-    --sidebar-border: 0 0% 8%; /* Borda sidebar sutil */
-    --sidebar-ring: 221 95% 60%;
-    --chat-bubble-sent: 221 95% 55%;
+    --sidebar-accent: 221 50% 20%;
+    --sidebar-accent-foreground: 221 83% 80%;
+    --sidebar-border: 240 8% 18%;
+    --sidebar-ring: 221 83% 53%;
+    --chat-bubble-sent: 221 83% 53%;
     --chat-bubble-sent-foreground: 0 0% 100%;
-    --chat-bubble-received: 0 0% 8%; /* Levemente mais escuro para OLED */
-    --chat-bubble-received-foreground: 0 0% 98%;
-    --chat-header: 0 0% 0%;
-    --chat-input-bg: 0 0% 0%;
-    --status-open: 221 95% 60%;
-    --status-pending: 42 100% 60%;
-    --status-resolved: 152 85% 50%;
-    --status-waiting: 205 100% 62%;
-    --priority-high: 0 95% 62%;
-    --priority-medium: 38 100% 60%;
-    --priority-low: 210 40% 62%;
-    --gradient-primary: linear-gradient(135deg, hsl(221 100% 60%), hsl(230 100% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(215 100% 65%), hsl(230 100% 70%));
-    --gradient-success: linear-gradient(135deg, hsl(142 100% 50%), hsl(165 100% 55%));
-    --gradient-xp: linear-gradient(90deg, hsl(221 100% 60%), hsl(230 100% 65%));
-    --gradient-gold: linear-gradient(135deg, hsl(42 100% 60%), hsl(35 100% 65%));
-    --gradient-surface: linear-gradient(180deg, hsl(222 30% 8%), hsl(222 30% 6%));
-    --gradient-divider: linear-gradient(90deg, transparent, hsl(221 80% 45%), transparent);
-    --gradient-vibrant: linear-gradient(135deg, hsl(221 95% 58%), hsl(205 100% 62%), hsl(230 95% 62%));
-    --gradient-purple-green: linear-gradient(135deg, hsl(221 95% 58%), hsl(152 85% 50%));
-    --shadow-xs: none;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: none;
-    --shadow-xl: none;
-    --shadow-glow-primary: 0 4px 28px hsl(221 95% 60%);
-    --shadow-glow-secondary: 0 4px 28px hsl(215 90% 60%);
-    --shadow-glow-success: 0 4px 24px hsl(152 85% 50%);
-    --shadow-glow-accent: 0 4px 28px hsl(230 95% 62%);
-    --shadow-glow-purple: 0 4px 28px hsl(221 95% 60%);
+    --chat-bubble-received: 240 8% 16%;
+    --chat-bubble-received-foreground: 0 0% 97%;
+    --chat-header: 240 7% 11%;
+    --chat-input-bg: 240 7% 13%;
+    --status-open: 221 83% 53%;
+    --status-pending: 42 100% 58%;
+    --status-resolved: 155 80% 50%;
+    --status-waiting: 210 95% 62%;
+    --priority-high: 0 90% 60%;
+    --priority-medium: 38 100% 58%;
+    --priority-low: 210 35% 60%;
+    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(230 78% 57%));
+    --gradient-secondary: linear-gradient(135deg, hsl(215 70% 55%), hsl(230 62% 60%));
+    --gradient-success: linear-gradient(135deg, hsl(155 80% 50%), hsl(165 75% 55%));
+    --gradient-xp: linear-gradient(90deg, hsl(221 83% 53%), hsl(230 78% 57%));
+    --gradient-gold: linear-gradient(135deg, hsl(42 100% 58%), hsl(35 95% 52%));
+    --gradient-surface: linear-gradient(180deg, hsl(240 7% 11%), hsl(240 8% 7%));
+    --gradient-divider: linear-gradient(90deg, transparent, hsl(221 50% 35% / 0.5), transparent);
+    --gradient-vibrant: linear-gradient(135deg, hsl(221 83% 53%), hsl(210 95% 62%), hsl(230 78% 57%));
+    --gradient-purple-green: linear-gradient(135deg, hsl(221 83% 53%), hsl(155 80% 50%));
+    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.5);
+    --shadow-sm: 0 1px 3px hsl(0 0% 0% / 0.6), 0 1px 2px hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.6), 0 2px 4px -2px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.6), 0 4px 6px -4px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.7), 0 8px 10px -6px hsl(0 0% 0% / 0.6);
+    --shadow-glow-primary: 0 4px 24px hsl(221 83% 53% / 0.45);
+    --shadow-glow-secondary: 0 4px 24px hsl(215 70% 55% / 0.4);
+    --shadow-glow-success: 0 4px 20px hsl(155 80% 50% / 0.4);
+    --shadow-glow-accent: 0 4px 24px hsl(230 78% 59% / 0.4);
+    --shadow-glow-purple: 0 4px 24px hsl(221 83% 53% / 0.5);
     --shadow-header: 0 1px 3px hsl(0 0% 0% / 0.6);
-    --glass-bg: 222 28% 10% / 1;
-    --glass-border: 221 80% 38% / 1;
-    --elevated: 222 28% 14%;
-    --elevated-hover: 222 28% 18%;
-    --chart-1: 221 95% 62%;
-    --chart-2: 205 100% 65%;
-    --chart-3: 152 85% 55%;
+    --glass-bg: 240 7% 11% / 1;
+    --glass-border: 221 50% 30% / 1;
+    --elevated: 240 7% 16%;
+    --elevated-hover: 240 7% 20%;
+    --chart-1: 221 83% 58%;
+    --chart-2: 210 95% 64%;
+    --chart-3: 155 80% 52%;
     --chart-4: 42 100% 62%;
-    --chart-5: 335 95% 65%;
-    --chart-6: 175 85% 55%;
-    --chart-7: 18 100% 62%;
-    --chart-8: 0 95% 65%;
-    --chart-9: 230 95% 65%;
-    --chart-10: 190 90% 58%;
-    --chart-status-resolved: 152 85% 55%;
+    --chart-5: 340 90% 65%;
+    --chart-6: 175 75% 55%;
+    --chart-7: 20 100% 62%;
+    --chart-8: 0 85% 62%;
+    --chart-9: 230 78% 60%;
+    --chart-10: 190 80% 55%;
+    --chart-status-resolved: 155 80% 52%;
     --chart-status-pending: 42 100% 62%;
-    --chart-status-waiting: 205 100% 65%;
-    --chart-status-open: 221 95% 62%;
-    --chart-sentiment-positive: 152 85% 55%;
+    --chart-status-waiting: 210 95% 64%;
+    --chart-status-open: 221 83% 58%;
+    --chart-sentiment-positive: 155 80% 52%;
     --chart-sentiment-neutral: 220 25% 65%;
-    --chart-sentiment-negative: 0 95% 65%;
-  }
-
+    --chart-sentiment-negative: 0 85% 62%;
+}

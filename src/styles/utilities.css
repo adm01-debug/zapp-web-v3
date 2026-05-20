@@ -1,7 +1,6 @@
 /* ===== UTILITY CLASSES — Typography, gradients, shadows, scrollbar ===== */
 
-
-  .font-display {
+.font-display {
     font-family: var(--font-display);
   }
 
@@ -57,19 +56,18 @@
   }
 
   .text-code {
-    font-family: var(--font-mono);
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
     @apply text-sm;
   }
 
-
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.15) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
-  .scrollbar-thin::-webkit-scrollbar { width: 3px; height: 3px; }
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.15); border-radius: 9999px; }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.3); }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.2); border-radius: 2px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.35); }
 
   /* Gradient Text */
   .gradient-text { @apply bg-clip-text text-transparent; background-image: var(--gradient-primary); }
@@ -105,7 +103,7 @@
   .glow-purple-pulse-slow { box-shadow: var(--shadow-glow-purple); }
   .glow-purple-pulse-fast { box-shadow: var(--shadow-glow-purple); }
   .glow-gradient-pulse { box-shadow: var(--shadow-glow-primary); }
-  .border-glow-purple { border-color: hsl(var(--primary)); }
+  .border-glow-purple { border-color: hsl(var(--primary) / 0.3); }
 
   /* Scroll fade indicators — apply to scrollable containers */
   .scroll-fade-y {
@@ -123,5 +121,4 @@
 
   .shadow-sticky {
     box-shadow: 0 1px 3px hsl(var(--foreground) / 0.04), 0 1px 1px hsl(var(--foreground) / 0.02);
-  }
-
+}

@@ -1,11 +1,8 @@
 import React, { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Star } from 'lucide-react';
-import { useUserRole } from '@/features/auth';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover';
-
-export type NavRequiredRole = 'dev' | 'admin' | 'supervisor' | 'agent';
 
 export interface NavItemConfig {
   id: string;
@@ -13,8 +10,6 @@ export interface NavItemConfig {
   label: string;
   shortcut?: string;
   badge?: number;
-  /** Optional role gate — item is hidden from users without one of these roles. */
-  requiredRoles?: NavRequiredRole[];
 }
 
 const SHORTCUT_MAP: Record<string, string> = {
@@ -27,52 +22,42 @@ interface SidebarNavItemProps {
   currentView: string;
   onViewChange: (v: string) => void;
   badge?: number;
-  badgeVariant?: 'destructive' | 'warning' | 'info';
-  badgeTitle?: string;
   collapsed?: boolean;
   onToggleFavorite?: (id: string) => void;
   isFavorite?: boolean;
 }
 
-export const SidebarNavItem = React.memo(function SidebarNavItem({ item, currentView, onViewChange, badge, badgeVariant = 'destructive', badgeTitle, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavItemProps) {
-  const { hasRole } = useUserRole();
-  const { prefetch } = usePrefetchOnHover();
-  
-  const hasAccess = !item.requiredRoles || item.requiredRoles.some(role => hasRole(role));
-
+export const SidebarNavItem = React.memo(function SidebarNavItem({ item, currentView, onViewChange, badge, collapsed = true, onToggleFavorite, isFavorite }: SidebarNavItemProps) {
   const Icon = item.icon;
   const isActive = currentView === item.id;
   const shortcut = item.shortcut || SHORTCUT_MAP[item.id];
   const badgeCount = badge ?? item.badge;
+  const { prefetch } = usePrefetchOnHover();
 
   const handleMouseEnter = useCallback(() => {
     if (!isActive) prefetch(item.id);
   }, [isActive, item.id, prefetch]);
-
-  if (!hasAccess) {
-    return null;
-  }
 
   const button = (
     <button
       data-tour={item.id}
       onClick={() => onViewChange(item.id)}
       onMouseEnter={handleMouseEnter}
-      aria-label={badgeCount ? `${item.label} (${badgeTitle ?? `${badgeCount} não lidas`})` : item.label}
+      aria-label={badgeCount ? `${item.label} (${badgeCount} não lidas)` : item.label}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'relative rounded-full flex items-center gap-2.5 transition-all duration-200 ease-out group/item',
         collapsed ? 'w-[38px] h-[38px] justify-center' : 'w-full h-[36px] px-3 rounded-xl',
         isActive
-          ? 'text-primary'
-          : 'text-sidebar-foreground/70 hover:bg-muted/10 hover:text-foreground active:scale-[0.97]'
+          ? 'text-secondary-foreground'
+          : 'text-sidebar-foreground/80 hover:bg-muted/60 hover:text-foreground active:scale-[0.97]'
       )}
     >
       {isActive && (
         <>
           <div
             className={cn(
-              'absolute inset-0 bg-primary/10 transition-all duration-300 ease-out',
+              'absolute inset-0 bg-secondary/20 border border-secondary/30 shadow-[0_0_12px_hsl(var(--secondary)/0.3)] transition-all duration-300 ease-out',
               collapsed ? 'rounded-full' : 'rounded-xl'
             )}
           />
@@ -104,12 +89,8 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
       )}
       {badgeCount != null && badgeCount > 0 && (
         <span
-          title={badgeTitle}
           className={cn(
-            'z-20 min-w-[16px] h-[16px] px-1 rounded-full text-[9px] font-bold flex items-center justify-center leading-none shadow-none animate-scale-in',
-            badgeVariant === 'warning' && 'bg-warning text-warning-foreground',
-            badgeVariant === 'info' && 'bg-info text-info-foreground',
-            badgeVariant === 'destructive' && 'bg-destructive text-destructive-foreground',
+            'z-20 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow-sm animate-scale-in',
             collapsed ? 'absolute -top-0.5 -right-0.5' : 'relative',
             !collapsed && !onToggleFavorite && 'ml-auto'
           )}
@@ -127,7 +108,7 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
         <TooltipContent side="right" sideOffset={8} className="bg-popover border-border text-xs font-medium flex items-center gap-2">
           <span>{item.label}</span>
           {shortcut && (
-            <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]  text-muted-foreground">
+            <kbd className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono text-muted-foreground">
               {shortcut}
             </kbd>
           )}

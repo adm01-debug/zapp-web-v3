@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { useSLANotifications } from '@/features/sla';
+import { useSLANotifications } from '@/hooks/useSLANotifications';
 
 export const SLANotificationProvider = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
   function SLANotificationProvider({ children }, _ref) {

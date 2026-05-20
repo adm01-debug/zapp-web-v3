@@ -1,11 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getCorsHeaders, handleCors, redactSecrets } from "../_shared/validation.ts";
+import { getCorsHeaders, handleCors, errorResponse } from "../_shared/validation.ts";
+import { parseBody, WebhookPayloadSchema } from "../_shared/schemas.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
-  handleReactionEvent, redactJid, generateRequestId,
-  sha256Hex, markEventProcessed, auditWebhookEvent,
-  type WebhookPayload,
+  handleReactionEvent,
 } from "../_shared/evolution-helpers.ts";
 import { parseMessageContent } from "../_shared/evolution-media.ts";
 import {
@@ -14,139 +13,50 @@ import {
   handleLabelsEdit, handleLabelsAssociation, handleCallEvent,
   handleChatsDelete, handleApplicationStartup, handleMessagesSet,
   handleContactsSet, handleChatsSet, handleMessagesEdited,
-  handleLogoutInstance, handleGroupsUpsert, handleGroupParticipantsUpdate,
 } from "../_shared/evolution-webhook-handlers.ts";
 import {
   handleIncomingMessage, handleOutgoingWhatsAppMessage,
 } from "../_shared/evolution-webhook-messages.ts";
-import { createWebhookValidator, readWebhookSecretsFromEnv } from "../_shared/hmac-validation.ts";
-import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
-
-// Multi-secret support enables zero-downtime rotation:
-//   - EVOLUTION_WEBHOOK_SECRETS=new,old  → validate both, sign with `new`
-//   - EVOLUTION_WEBHOOK_SECRET=single    → legacy single-secret mode
-// Falls back to the older WEBHOOK_SECRET env name for backwards compatibility.
-const WEBHOOK_SECRETS = (() => {
-  const evo = readWebhookSecretsFromEnv('EVOLUTION_WEBHOOK');
-  if (evo.length > 0) return evo;
-  const legacy = Deno.env.get('WEBHOOK_SECRET');
-  return legacy ? [legacy] : [];
-})();
-const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLowerCase() !== 'false';
-const validateWebhook = WEBHOOK_SECRETS.length > 0
-  ? createWebhookValidator(WEBHOOK_SECRETS, STRICT_MODE)
-  : null;
 
 serve(async (req) => {
-  const requestId = generateRequestId();
-  const startedAt = Date.now();
-  const baseHeaders = { 'Content-Type': 'application/json', 'x-request-id': requestId };
-
   const corsResponse = handleCors(req);
   if (corsResponse) return corsResponse;
-  const corsHeaders = { ...getCorsHeaders(req), ...baseHeaders };
+  const corsHeaders = getCorsHeaders(req);
 
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-  // HMAC validation before reading body as JSON so we can verify on raw text.
-  let rawBody: string;
-  // Tenta extrair instância do header (alguns webhooks Evolution mandam) p/ contar falhas
-  // antes mesmo de parsear o body. Cai em 'unknown' se não houver.
-  const headerInstance = req.headers.get('x-evolution-instance') || req.headers.get('x-instance') || null;
-
-  if (validateWebhook) {
-    const result = await validateWebhook(req);
-    if (!result.valid) {
-      console.warn(redactSecrets(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`));
-      // Auto-pause: conta invalid_signature na janela e persiste o evento
-      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
-      await auditWebhookEvent(supabase, {
-        request_id: requestId, status: 'rejected',
-        error_message: result.error ?? 'invalid_signature',
-        duration_ms: Date.now() - startedAt,
-      });
-      return new Response(
-        JSON.stringify({ error: 'unauthorized', reason: result.error ?? 'invalid_signature', requestId }),
-        { status: 401, headers: corsHeaders },
-      );
-    }
-    rawBody = result.payload ?? '';
-  } else {
-    console.warn(redactSecrets(`[webhook][${requestId}] WEBHOOK_SECRET not configured — signature validation skipped`));
-    rawBody = await req.text();
-  }
-
-  let payload: WebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as WebhookPayload;
-  } catch {
-    await auditWebhookEvent(supabase, {
-      request_id: requestId, status: 'rejected', error_message: 'invalid_json',
-      duration_ms: Date.now() - startedAt,
-    });
-    return new Response(JSON.stringify({ error: 'invalid_json', requestId }), { status: 400, headers: corsHeaders });
-  }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const event = normalizeEventName(payload.event);
-  const instance = payload.instance;
-  const data = payload.data ?? {};
-  const baseData = isRecord(data) ? data : {};
+    const parsed = parseBody(WebhookPayloadSchema, await req.json());
+    if (!parsed.success) return errorResponse(parsed.error, 422, req, parsed.fieldErrors);
 
-  // Pause guard: se a instância foi pausada (manual ou auto), descarta o evento
-  // com 503 e audit 'rejected'. A Evolution costuma retry-arr, mas durante a
-  // janela de pausa preferimos isso a continuar processando lixo.
-  if (await isInstancePaused(supabase, instance)) {
-    await auditWebhookEvent(supabase, {
-      request_id: requestId, instance, event_type: event, status: 'rejected',
-      error_message: 'instance_paused',
-      duration_ms: Date.now() - startedAt,
-    });
-    console.warn(`[webhook][${requestId}] instance=${instance} is paused — skipping event ${event}`);
-    return new Response(
-      JSON.stringify({ error: 'instance_paused', instance, requestId }),
-      { status: 503, headers: { ...corsHeaders, 'Retry-After': '60' } },
-    );
-  }
+    const payload = parsed.data;
+    const event = normalizeEventName(payload.event);
+    const instance = payload.instance;
+    const data = payload.data;
+    const baseData = isRecord(data) ? data : {};
 
-  // Idempotency guard: dedup by hash of (instance + event + body). Evolution retries reuse
-  // the same payload, so if we have seen this event_id we short-circuit with 200.
-  const bodyHash = await sha256Hex(rawBody);
-  const eventId = `${instance || 'unknown'}:${event}:${bodyHash}`;
-  const isNew = await markEventProcessed(supabase, eventId, instance, event);
-  if (!isNew) {
-    await auditWebhookEvent(supabase, {
-      request_id: requestId, instance, event_type: event, status: 'duplicate',
-      duration_ms: Date.now() - startedAt,
-    });
-    console.log(`[webhook][${requestId}] duplicate event_id=${eventId.slice(0, 48)}… skipped`);
-    return new Response(JSON.stringify({ success: true, duplicate: true, requestId }), { status: 200, headers: corsHeaders });
-  }
+    console.log('Evolution webhook received:', payload.event, '->', event, instance);
 
-  console.log(`[webhook][${requestId}] received raw=${payload.event} norm=${event} instance=${instance}`);
-
-  try {
     if (event === 'connection.update') await handleConnectionUpdate(supabase, instance, baseData);
-
-    if (event === 'logout.instance') await handleLogoutInstance(supabase, instance, baseData);
 
     if (event === 'qrcode.updated') {
       const qrCode = (baseData.qrcode as Record<string, string>)?.base64;
       if (qrCode) {
         await supabase.from('whatsapp_connections')
-          .update({ qr_code: qrCode, status: 'qr_pending', updated_at: new Date().toISOString() })
-          .eq('instance_name', instance);
+          .update({ qr_code: qrCode, status: 'pending', updated_at: new Date().toISOString() })
+          .eq('instance_id', instance);
       }
     }
 
     if (event === 'messages.upsert') {
       const entries = toEventRecords(data, ['messages']);
-      console.log(`[webhook][${requestId}][msg.upsert] entries=${entries.length} instance=${instance}`);
+      console.log(`[MSG_UPSERT] Processing ${entries.length} entries for instance ${instance}`);
       for (const entry of entries) {
         const keySource = isRecord(entry.key) ? entry.key : isRecord(baseData.key) ? baseData.key : null;
         const externalId =
@@ -156,7 +66,7 @@ serve(async (req) => {
           null;
 
         if (!externalId) {
-          console.log(`[webhook][${requestId}][msg.upsert] ignored: missing id`);
+          console.log('[MSG_UPSERT] Ignored: missing message id', { instance, entryKeys: Object.keys(entry) });
           continue;
         }
 
@@ -186,19 +96,20 @@ serve(async (req) => {
             (typeof keySource?.participantAlt === 'string' ? keySource.participantAlt : undefined),
         };
 
-        const hasReaction = !!(entry.message as Record<string,unknown>)?.reactionMessage
-          || !!(baseData.message as Record<string,unknown>)?.reactionMessage;
-        console.log(`[webhook][${requestId}][msg.upsert] id=${externalId} fromMe=${key.fromMe} jid=${redactJid(key.remoteJid)} reaction=${hasReaction}`);
+        console.log(`[MSG_UPSERT] id=${externalId} fromMe=${key.fromMe} remoteJid=${key.remoteJid} hasReaction=${!!(entry.message as Record<string,unknown>)?.reactionMessage || !!(baseData.message as Record<string,unknown>)?.reactionMessage}`);
 
         const msg = (entry.message || baseData.message) as Record<string, unknown> | undefined;
         if (msg?.reactionMessage) {
+          console.log(`[MSG_UPSERT] Processing reaction for ${externalId}`);
           await handleReactionEvent(supabase, msg.reactionMessage as Record<string, unknown>, !!key.fromMe);
           continue;
         }
 
         if (!key.fromMe) {
+          console.log(`[MSG_UPSERT] -> handleIncomingMessage for ${externalId}`);
           await handleIncomingMessage(supabase, instance, { ...baseData, ...entry }, key, supabaseUrl, supabaseServiceKey);
         } else {
+          console.log(`[MSG_UPSERT] -> handleOutgoingWhatsAppMessage for ${externalId}`);
           await handleOutgoingWhatsAppMessage(supabase, instance, { ...baseData, ...entry }, key);
         }
       }
@@ -212,11 +123,15 @@ serve(async (req) => {
     if (event === 'chats.upsert' || event === 'chats.update') await handleChatsUpdate(supabase, instance, data);
 
     if (event === 'groups.upsert' || event === 'group.update') {
-      await handleGroupsUpsert(supabase, instance, data);
+      const groupData = isRecord(data) ? data : {};
+      const groupJid = groupData.id as string;
+      const subject = groupData.subject as string;
+      if (groupJid && subject) console.log(`Group update: ${groupJid} — ${subject}`);
     }
 
     if (event === 'group.participants.update' || event === 'group-participants.update') {
-      await handleGroupParticipantsUpdate(supabase, instance, data);
+      const participantData = isRecord(data) ? data : {};
+      console.log(`Group ${participantData.id} participants ${participantData.action}: ${(participantData.participants as string[])?.join(', ')}`);
     }
 
     if (event === 'labels.edit') await handleLabelsEdit(supabase, instance, data);
@@ -229,23 +144,14 @@ serve(async (req) => {
     if (event === 'chats.set') await handleChatsSet(supabase, instance, data);
     if (event === 'messages.edited' || event === 'messages.edit') await handleMessagesEdited(supabase, data, baseData);
 
-    await auditWebhookEvent(supabase, {
-      request_id: requestId, instance, event_type: event, status: 'processed',
-      duration_ms: Date.now() - startedAt,
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-    return new Response(JSON.stringify({ success: true, requestId }), { status: 200, headers: corsHeaders });
   } catch (error: unknown) {
-    // Logical/handler errors: log the detail internally, return 200 to evo so it does not
-    // retry-storm the same event. The idempotency guard above makes retries safe.
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(redactSecrets(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`));
-    await auditWebhookEvent(supabase, {
-      request_id: requestId, instance, event_type: event, status: 'error',
-      duration_ms: Date.now() - startedAt, error_message: detail.slice(0, 500),
+    console.error('Evolution webhook error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-    return new Response(
-      JSON.stringify({ success: false, error: 'internal_error', requestId }),
-      { status: 200, headers: corsHeaders },
-    );
   }
 });

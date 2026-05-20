@@ -8,7 +8,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface HeatmapData {
   day: number; // 0-6 (Sunday-Saturday)
@@ -33,7 +32,8 @@ function useHeatmapData() {
   return useQuery({
     queryKey: ['conversation-heatmap'],
     queryFn: async () => {
-      const { data, error } = await dbFrom('messages')
+      const { data, error } = await supabase
+        .from('messages')
         .select('created_at')
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
       

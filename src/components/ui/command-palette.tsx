@@ -60,12 +60,11 @@ export function CommandPalette({
 
   const allItems = React.useMemo(() => groupedCommands.flatMap(g => g.items), [groupedCommands]);
 
-  const debouncedSearch = useDebounce((async (...args: unknown[]) => {
-    const q = args[0] as string;
+  const debouncedSearch = useDebounce(async (q: string) => {
     if (!onSearch || q.length < 2) { setSearchResults([]); return; }
     setIsSearching(true);
     try { setSearchResults(await onSearch(q)); } catch (e) { log.error('Search error:', e); setSearchResults([]); } finally { setIsSearching(false); }
-  }) as (...args: unknown[]) => unknown, 300);
+  }, 300);
 
   const handleQueryChange = (v: string) => { setQuery(v); setSelectedIndex(0); debouncedSearch(v); };
 
@@ -112,11 +111,11 @@ export function CommandPalette({
 
         <div className="flex items-center justify-between px-4 py-2 bg-muted/30 text-xs text-muted-foreground border-b border-border">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded ">↑↓</kbd>navegar</span>
-            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded ">Enter</kbd>selecionar</span>
-            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded ">Esc</kbd>fechar</span>
+            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded font-mono">↑↓</kbd>navegar</span>
+            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded font-mono">Enter</kbd>selecionar</span>
+            <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-muted rounded font-mono">Esc</kbd>fechar</span>
           </div>
-          <div className="flex items-center gap-1"><Command className="h-3 w-3" /><kbd className="px-1.5 py-0.5 bg-muted rounded ">K</kbd></div>
+          <div className="flex items-center gap-1"><Command className="h-3 w-3" /><kbd className="px-1.5 py-0.5 bg-muted rounded font-mono">K</kbd></div>
         </div>
 
         <ScrollArea className="max-h-[400px]">
@@ -148,7 +147,7 @@ export function CommandPalette({
                         <span className="text-muted-foreground group-hover:text-foreground transition-colors">{cmd.icon}</span>
                         <div><span className="text-sm font-medium">{cmd.title}</span>{cmd.description && <p className="text-xs text-muted-foreground">{cmd.description}</p>}</div>
                       </div>
-                      {cmd.shortcut && <div className="flex gap-1">{cmd.shortcut.map((k, i) => <kbd key={i} className="px-1.5 py-0.5 bg-muted rounded text-[10px]  text-muted-foreground">{k}</kbd>)}</div>}
+                      {cmd.shortcut && <div className="flex gap-1">{cmd.shortcut.map((k, i) => <kbd key={i} className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono text-muted-foreground">{k}</kbd>)}</div>}
                     </button>
                   ))}
                 </div>
@@ -179,7 +178,7 @@ export function CommandPalette({
                           </div>
                           <div className="flex items-center gap-2">
                             {item.badge && <Badge variant="secondary" className="text-[10px]">{item.badge}</Badge>}
-                            {item.shortcut && <div className="flex gap-1">{item.shortcut.map((k, i) => <kbd key={i} className="px-1.5 py-0.5 bg-muted rounded text-[10px]  text-muted-foreground">{k}</kbd>)}</div>}
+                            {item.shortcut && <div className="flex gap-1">{item.shortcut.map((k, i) => <kbd key={i} className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono text-muted-foreground">{k}</kbd>)}</div>}
                           </div>
                         </motion.button>
                       );

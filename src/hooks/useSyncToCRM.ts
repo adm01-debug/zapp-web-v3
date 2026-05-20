@@ -11,9 +11,7 @@
  * Usage: call syncConversation() when a conversation is resolved/closed.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { dbRpc } from '@/integrations/datasource/db';
-import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { log } from '@/lib/logger';
 
 interface SyncParams {
@@ -46,7 +44,7 @@ export function useSyncToCRM() {
     mutationFn: async (params) => {
       if (!isExternalConfigured) return null;
 
-      const { data, error } = await dbRpc(RPC.syncInteractionFromZapp, {
+      const { data, error } = await getExternalSupabase().rpc('sync_interaction_from_zapp', {
         p_phone: params.phone,
         p_channel: params.channel || 'whatsapp',
         p_direction: params.direction || 'inbound',

@@ -24,7 +24,6 @@ import {
   FileText,
   Globe,
   Inbox,
-  Bell,
   FileBarChart,
   ClipboardList,
   AlertTriangle,
@@ -49,7 +48,6 @@ import {
   Building2,
   Sparkles,
   RefreshCw,
-  Pause,
   Landmark,
   HeartPulse,
   BarChartHorizontal,
@@ -58,19 +56,18 @@ import {
   Code2,
   Webhook,
   BrainCircuit,
-  Search,
 } from 'lucide-react';
 import type { NavItemConfig } from './SidebarNavItem';
 
 // ── Primary (always visible, ≤8 items) ────────────────────
 export const primaryNav: readonly NavItemConfig[] = [
   { id: 'inbox', icon: MessageSquare, label: 'Chat' },
-  { id: 'team-chat', icon: UsersRound, label: 'Teams' },
+  { id: 'team-chat', icon: MessagesSquare, label: 'Teams' },
   { id: 'email-chat', icon: Mail, label: 'Email' },
   { id: 'contacts', icon: User, label: 'Contatos' },
   { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
   { id: 'pipeline', icon: Kanban, label: 'Pipeline' },
-  { id: 'campaigns', icon: Megaphone, label: 'Campanhas' },
+  { id: 'talkx', icon: Sparkles, label: 'Campanhas' },
   { id: 'settings', icon: Settings, label: 'Configurações' },
 ] as const;
 
@@ -110,7 +107,8 @@ export const analyticsNav: readonly NavItemConfig[] = [
 
 // ── Connections & Integrations ────────────────────────────
 export const connectionsNav: readonly NavItemConfig[] = [
-  { id: 'connections', icon: Plug, label: 'Conexões & Integrações' },
+  { id: 'connections', icon: Link2, label: 'Conexões' },
+  { id: 'integrations', icon: Plug, label: 'Integrações' },
   { id: 'omni-inbox', icon: Inbox, label: 'Omnichannel' },
   { id: 'voip', icon: PhoneCall, label: 'VoIP' },
   { id: 'meta-capi', icon: Activity, label: 'Meta CAPI' },
@@ -119,12 +117,10 @@ export const connectionsNav: readonly NavItemConfig[] = [
 
 // ── System & Admin ────────────────────────────────────────
 export const systemNav: readonly NavItemConfig[] = [
-  { id: 'agents-system', icon: Phone, label: 'TEAMS' },
-  { id: 'agents-ops', icon: UsersRound, label: 'Atendentes Online', requiredRoles: ['supervisor'] },
+  { id: 'agents', icon: Phone, label: 'Equipe' },
   { id: 'security', icon: Shield, label: 'Segurança' },
   { id: 'privacy', icon: ShieldCheck, label: 'LGPD' },
   { id: 'admin', icon: UserCog, label: 'Admin' },
-  { id: 'admin-connections', icon: Link2, label: 'BD Externo', requiredRoles: ['admin'] },
   { id: 'themes', icon: Palette, label: 'Skins' },
   { id: 'docs', icon: BookOpen, label: 'Documentação' },
 ] as const;
@@ -137,28 +133,12 @@ export const advancedNav: readonly NavItemConfig[] = [
   { id: 'diagnostics', icon: Compass, label: 'Diagnóstico' },
   { id: 'performance', icon: Cpu, label: 'Performance' },
   { id: 'telemetry', icon: BarChartHorizontal, label: 'Telemetria BD' },
-  { id: 'failed-messages', icon: AlertTriangle, label: 'DLQ — Falhas envio', requiredRoles: ['admin'] },
-  { id: 'failed-auth-messages', icon: ShieldCheck, label: 'Falhas de Autenticação', requiredRoles: ['admin'] },
-  { id: 'webhook-events', icon: Webhook, label: 'Webhook Events' },
-  { id: 'webhook-overview', icon: BarChart3, label: 'Overview Webhook', requiredRoles: ['admin'] },
   { id: 'ai-usage', icon: BrainCircuit, label: 'Consumo IA' },
   { id: 'public-api', icon: Code2, label: 'API Pública' },
-  { id: 'email-webhook', icon: Webhook, label: 'Email Webhook' },
+  { id: 'gmail-webhook', icon: Webhook, label: 'Gmail Webhook' },
   { id: 'media-migration', icon: HardDrive, label: 'Migração Mídia' },
   { id: 'sicoob-bridge', icon: Landmark, label: 'Sicoob Bridge' },
   { id: 'evolution-monitor', icon: Activity, label: 'Monitor Evolution' },
-  { id: 'evolution-api-logs', icon: Activity, label: 'Logs Evolution API', requiredRoles: ['admin'] },
-  { id: 'alert-history', icon: Bell, label: 'Histórico de Alertas', requiredRoles: ['admin'] },
-  { id: 'webhook-secret', icon: ShieldCheck, label: 'Webhook Secret' },
-  { id: 'instance-pauses', icon: Pause, label: 'Pausas de Instância' },
-  { id: 'search-insights', icon: Search, label: 'Search Insights', requiredRoles: ['admin'] },
-  { id: 'realtime-monitor', icon: Activity, label: 'Monitor em Tempo Real', requiredRoles: ['supervisor'] },
-  { id: 'dispatch-errors-history', icon: ScrollText, label: 'Histórico Erros Dispatch', requiredRoles: ['supervisor'] },
-  { id: 'inbox-sync-status', icon: Activity, label: 'Status do Inbox', requiredRoles: ['supervisor'] },
-  { id: 'evo-api-health', icon: HeartPulse, label: 'Evo API Health', requiredRoles: ['admin'] },
-  { id: 'bridge-status', icon: Activity, label: 'Bridge Status', requiredRoles: ['admin', 'supervisor'] },
-  { id: 'email-status', icon: Mail, label: 'Status Email', requiredRoles: ['admin'] },
-  { id: 'email-audit', icon: ScrollText, label: 'Auditoria Email', requiredRoles: ['admin'] },
 ] as const;
 
 // ── Backward-compat re-exports ────────────────────────────
@@ -167,8 +147,8 @@ export const communicationNav = automationNav;
 // ── Group definitions for collapsible sidebar (≤5 groups) ──
 export const sidebarGroups = [
   { label: 'Vendas & CRM', icon: Kanban, items: salesNav },
-  { label: 'Robôs & IA', icon: Bot, items: automationNav },
-  { label: 'Análise', icon: BarChart3, items: analyticsNav },
-  { label: 'Canais', icon: Plug, items: connectionsNav },
+  { label: 'Automação & IA', icon: Bot, items: automationNav },
+  { label: 'Analytics', icon: BarChart3, items: analyticsNav },
+  { label: 'Conexões', icon: Plug, items: connectionsNav },
   { label: 'Sistema', icon: Lock, items: systemNav },
 ] as const;

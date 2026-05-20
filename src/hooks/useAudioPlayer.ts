@@ -2,17 +2,13 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import type { MediaRefreshKey } from '@/types/mediaRefresh';
-import { audioPlaybackBus } from '@/features/inbox';
 
 interface UseAudioPlayerOptions {
   audioUrl: string;
   messageId: string;
-  /** Optional Evolution refresh key — enables `getMediaBase64` fallback when the URL expires (410/403). */
-  refreshKey?: MediaRefreshKey;
 }
 
-export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlayerOptions) {
+export function useAudioPlayer({ audioUrl, messageId }: UseAudioPlayerOptions) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -21,67 +17,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [resolvedUrl, setResolvedUrl] = useState<string>(audioUrl);
-  const [volume, setVolumeState] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('audio-player:volume');
-      const n = saved !== null ? parseFloat(saved) : 1;
-      return isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
-    } catch { return 1; }
-  });
   const audioRef = useRef<HTMLAudioElement>(null);
-  /**
-   * Último volume não-zero — usado pelo `toggleMute` para restaurar o volume
-   * anterior quando o usuário desmuta. Evita que mute deixe o player em "0
-   * permanente" se o usuário só queria um silêncio momentâneo.
-   */
-  const lastNonZeroVolumeRef = useRef<number>(volume > 0 ? volume : 1);
-
-  const setVolume = useCallback((v: number) => {
-    const clamped = Math.min(1, Math.max(0, v));
-    if (clamped > 0) lastNonZeroVolumeRef.current = clamped;
-    setVolumeState(clamped);
-    if (audioRef.current) audioRef.current.volume = clamped;
-    try { localStorage.setItem('audio-player:volume', String(clamped)); } catch { /* noop */ }
-  }, []);
-
-  /**
-   * Toggle entre mute (volume 0) e o último volume audível conhecido. Usado
-   * tanto pelo botão da UI quanto pelo atalho global `M` via `audioPlaybackBus`.
-   */
-  const toggleMute = useCallback((): { muted: boolean; volume: number } => {
-    if (volume > 0) {
-      lastNonZeroVolumeRef.current = volume;
-      setVolume(0);
-      return { muted: true, volume: 0 };
-    }
-    const restored = lastNonZeroVolumeRef.current || 1;
-    setVolume(restored);
-    return { muted: false, volume: restored };
-  }, [volume, setVolume]);
-
-  // Apply volume whenever audio element re-mounts or volume changes
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
-  }, [volume, resolvedUrl]);
-
-  /**
-   * Registra/desregistra este player no `audioPlaybackBus` enquanto está
-   * tocando. Permite que o atalho global de mute (`M`) atue sobre o player
-   * ATIVO, sem precisar de foco em nenhum elemento. Apenas um player ativo
-   * por vez (último que deu play).
-   */
-  useEffect(() => {
-    if (!isPlaying) {
-      audioPlaybackBus.clearActive(messageId);
-      return;
-    }
-    audioPlaybackBus.setActive({
-      messageId,
-      toggleMute,
-      getVolume: () => volume,
-    });
-    return () => audioPlaybackBus.clearActive(messageId);
-  }, [isPlaying, messageId, toggleMute, volume]);
 
   const waveformHeights = useMemo(
     () => Array.from({ length: 30 }, () => Math.random() * 60 + 20),
@@ -98,7 +34,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
           if (idx !== -1) {
             const pathWithQuery = url.substring(idx + marker.length);
             const path = decodeURIComponent(pathWithQuery.split('?')[0]);
-            const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
+            const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
             if (data?.signedUrl) return data.signedUrl;
           }
         }
@@ -108,51 +44,25 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
     }
 
     // Try a HEAD check to see if the URL is reachable
-    let urlExpired = false;
     try {
       const resp = await fetch(url, { method: 'HEAD', mode: 'cors' });
       if (resp.ok) return url;
-      // 410 Gone / 403 Forbidden are typical WhatsApp URL expirations.
-      if (resp.status === 410 || resp.status === 403 || resp.status === 404) urlExpired = true;
     } catch (err) { log.error('Unexpected error in useAudioPlayer:', err); }
 
-    // Try to find the file in known buckets by messageId (storage fallback)
+    // Last resort: try to find the file in known buckets by messageId
     try {
       const buckets = ['whatsapp-media', 'audio-messages'];
       for (const bucket of buckets) {
-        const { data: files , error: filesErr } = await supabase.storage.from(bucket).list('', { search: messageId, limit: 5 });
+        const { data: files } = await supabase.storage.from(bucket).list('', { search: messageId, limit: 5 });
         if (files && files.length > 0) {
-          const { data, error } = await supabase.storage.from(bucket).createSignedUrl(files[0].name, 3600);
+          const { data } = await supabase.storage.from(bucket).createSignedUrl(files[0].name, 3600);
           if (data?.signedUrl) return data.signedUrl;
         }
       }
     } catch (err) { log.error('Unexpected error in useAudioPlayer:', err); }
 
-    // Last resort: ask Evolution for a fresh base64 payload (works for any
-    // expired WhatsApp media as long as we have the original message key).
-    if (refreshKey && urlExpired) {
-      try {
-        const { data, error } = await supabase.functions.invoke('evolution-api/get-media-base64', {
-          method: 'POST',
-          body: {
-            instanceName: refreshKey.instanceName,
-            message: { key: { remoteJid: refreshKey.remoteJid, fromMe: refreshKey.fromMe, id: refreshKey.id } },
-          },
-        });
-        if (!error) {
-          const payload = (data as { base64?: string; mimetype?: string } | null) ?? null;
-          if (payload?.base64) {
-            const mime = payload.mimetype || 'audio/ogg';
-            return `data:${mime};base64,${payload.base64}`;
-          }
-        }
-      } catch (err) {
-        log.error('Evolution audio refresh failed:', err);
-      }
-    }
-
     return url;
-  }, [messageId, refreshKey]);
+  }, [messageId]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -259,7 +169,6 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
   return {
     audioRef, resolvedUrl, isPlaying, isLoading, hasError,
     playbackRate, progress, duration, currentTime, waveformHeights,
-    volume, setVolume, toggleMute,
     togglePlay, handleSeek, cycleSpeed, formatTime, resolveAudioUrl,
   };
 }

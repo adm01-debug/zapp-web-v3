@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PasswordStrengthMeter } from '@/features/auth';
+import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
 import { toast } from 'sonner';
 
 const passwordSchema = z.string()
@@ -54,7 +54,7 @@ export default function ResetPassword() {
       passwordSchema.parse(password);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
+        setError(err.errors[0].message);
         return;
       }
     }

@@ -202,7 +202,7 @@ export function ChatbotFlowsView() {
                             <TriggerIcon className="w-3 h-3" /> {trigger.label}
                           </span>
                           {flow.trigger_value && (
-                            <span className="bg-secondary/30 px-2 py-0.5 rounded text-xs ">
+                            <span className="bg-secondary/30 px-2 py-0.5 rounded text-xs font-mono">
                               {flow.trigger_value}
                             </span>
                           )}

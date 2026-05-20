@@ -1,6 +1,5 @@
 // Centralized logging utility with correlation IDs and structured output
 // Logs are automatically filtered in production builds
-import * as Sentry from "@sentry/react";
 
 const isDev = import.meta.env.DEV;
 
@@ -37,16 +36,6 @@ class Logger {
     return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] [sid:${sessionId.slice(0, 8)}] ${message}`;
   }
 
-  private addToSentryBreadcrumb(level: LogLevel, message: string, ...args: unknown[]): void {
-    if (!import.meta.env.PROD) return;
-    Sentry.addBreadcrumb({
-      category: 'log',
-      message: `${this.module}: ${message}`,
-      level: level === 'error' ? 'error' : level === 'warn' ? 'warning' : 'info',
-      data: args.length > 0 ? { args: JSON.stringify(args) } : undefined,
-    });
-  }
-
   private shouldLog(level: LogLevel): boolean {
     if (!isDev && (level === 'debug' || level === 'info')) {
       return false;
@@ -55,26 +44,23 @@ class Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('debug')) console.debug(this.formatMessage('debug', message), ...args);
-    this.addToSentryBreadcrumb('debug', message, ...args);
+    if (!this.shouldLog('debug')) return;
+    console.debug(this.formatMessage('debug', message), ...args);
   }
 
   info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('info')) console.info(this.formatMessage('info', message), ...args);
-    this.addToSentryBreadcrumb('info', message, ...args);
+    if (!this.shouldLog('info')) return;
+    console.info(this.formatMessage('info', message), ...args);
   }
 
   warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('warn')) console.warn(this.formatMessage('warn', message), ...args);
-    this.addToSentryBreadcrumb('warn', message, ...args);
+    if (!this.shouldLog('warn')) return;
+    console.warn(this.formatMessage('warn', message), ...args);
   }
 
   error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('error')) console.error(this.formatMessage('error', message), ...args);
-    this.addToSentryBreadcrumb('error', message, ...args);
-    if (import.meta.env.PROD) {
-      Sentry.captureException(new Error(`${this.module}: ${message}`), { extra: { args } });
-    }
+    if (!this.shouldLog('error')) return;
+    console.error(this.formatMessage('error', message), ...args);
   }
 
   /** Log with explicit correlation ID for request tracing */

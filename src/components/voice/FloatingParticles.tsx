@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo } from 'react';
-import type { VoiceAgentPhase } from '@/features/inbox';
+import type { VoiceAgentPhase } from '@/hooks/voice/types';
 
 interface FloatingParticlesProps {
   phase: VoiceAgentPhase;

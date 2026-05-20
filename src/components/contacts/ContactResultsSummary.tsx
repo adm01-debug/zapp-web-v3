@@ -43,9 +43,9 @@ export function ContactResultsSummary({
       <div className="flex items-center gap-3">
         {search && <span className="text-xs italic">Buscando por "{search}"</span>}
         <div className="hidden lg:flex items-center gap-2 text-[10px] text-muted-foreground/50">
-          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 ">Ctrl+N</kbd><span>Novo</span>
-          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 ">Ctrl+A</kbd><span>Selecionar</span>
-          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 ">Esc</kbd><span>Limpar</span>
+          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 font-mono">Ctrl+N</kbd><span>Novo</span>
+          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 font-mono">Ctrl+A</kbd><span>Selecionar</span>
+          <kbd className="px-1.5 py-0.5 rounded border border-border/40 bg-muted/40 font-mono">Esc</kbd><span>Limpar</span>
         </div>
       </div>
     </div>

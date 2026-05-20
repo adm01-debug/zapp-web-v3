@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ContactFormV3, type ContactV3FormData } from '@/components/contacts/ContactFormV3';
+import { ContactForm } from '@/components/contacts/ContactForm';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription,
@@ -8,20 +8,36 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, Copy, Plus, Trash2, UserPlus } from 'lucide-react';
+import { CheckCircle2, Copy, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Contact } from './useContactsCRUD';
 
+interface ContactFormValues {
+  name: string;
+  nickname?: string | null;
+  surname?: string | null;
+  job_title?: string | null;
+  company?: string | null;
+  phone: string;
+  email?: string | null;
+  contact_type?: string | null;
+}
+
 interface ContactDialogsProps {
-  workspaceId: string;
   // Add dialog
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;
-  onContactSaved: () => void;
+  newContact: ContactFormValues;
+  handleNewContactChange: (field: string, value: string) => void;
+  handleAddContact: () => void;
+  handleCancelForm: () => void;
+  isSubmitting: boolean;
   // Edit dialog
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   editingContact: Contact | null;
+  handleEditContactChange: (field: string, value: string) => void;
+  handleEditContact: () => void;
   // Success dialog
   showSuccess: { name: string; protocol: string } | null;
   setShowSuccess: (val: { name: string; protocol: string } | null) => void;
@@ -32,59 +48,51 @@ interface ContactDialogsProps {
 }
 
 export function ContactDialogs({
-  workspaceId,
-  isAddDialogOpen, setIsAddDialogOpen, onContactSaved,
-  isEditDialogOpen, setIsEditDialogOpen, editingContact,
+  isAddDialogOpen, setIsAddDialogOpen, newContact, handleNewContactChange,
+  handleAddContact, handleCancelForm, isSubmitting,
+  isEditDialogOpen, setIsEditDialogOpen, editingContact, handleEditContactChange, handleEditContact,
   showSuccess, setShowSuccess,
   deleteTarget, setDeleteTarget, handleDeleteContact,
 }: ContactDialogsProps) {
-  
-  const handleSaved = () => {
-    setIsAddDialogOpen(false);
-    setIsEditDialogOpen(false);
-    onContactSaved();
-  };
-
   return (
     <>
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogTrigger asChild>
+          <Button className="bg-whatsapp hover:bg-whatsapp-dark text-primary-foreground">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Contato
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-primary" />
-              Adicionar Contato
-            </DialogTitle>
+            <DialogTitle>Adicionar Contato</DialogTitle>
           </DialogHeader>
-          <ContactFormV3
-            workspaceId={workspaceId}
-            mode="create"
-            onSaved={handleSaved}
-            onCancel={() => setIsAddDialogOpen(false)}
+          <ContactForm
+            values={newContact}
+            onChange={handleNewContactChange}
+            onSubmit={handleAddContact}
+            onCancel={handleCancelForm}
+            submitLabel="Adicionar"
+            isSubmitting={isSubmitting}
           />
         </DialogContent>
       </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar Contato</DialogTitle>
           </DialogHeader>
           {editingContact && (
-            <ContactFormV3
-              workspaceId={workspaceId}
-              mode="edit"
-              initial={{
-                id: editingContact.id,
-                name: editingContact.name,
-                phone: editingContact.phone,
-                email: editingContact.email || '',
-                company: editingContact.company || '',
-                tags: (editingContact as any).tags || [],
-              }}
-              onSaved={handleSaved}
-              onCancel={() => setIsEditDialogOpen(false)}
+            <ContactForm
+              values={editingContact}
+              onChange={handleEditContactChange}
+              onSubmit={handleEditContact}
+              onCancel={handleCancelForm}
+              submitLabel="Salvar"
+              isSubmitting={isSubmitting}
             />
           )}
         </DialogContent>
@@ -109,7 +117,7 @@ export function ContactDialogs({
               <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                 <p className="text-xs text-muted-foreground">Protocolo</p>
                 <div className="flex items-center justify-center gap-2">
-                  <code className="text-sm font-semibold text-foreground">{showSuccess?.protocol}</code>
+                  <code className="text-sm font-mono font-semibold text-foreground">{showSuccess?.protocol}</code>
                   <Button
                     variant="ghost" size="icon" className="w-6 h-6"
                     onClick={() => {

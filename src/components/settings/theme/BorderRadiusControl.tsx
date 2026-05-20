@@ -16,7 +16,7 @@ export function BorderRadiusControl({ borderRadius, onChange }: BorderRadiusCont
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm">Raio da Borda</CardTitle>
-          <span className="text-xs  text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
+          <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
             {borderRadius}px
           </span>
         </div>
@@ -24,7 +24,7 @@ export function BorderRadiusControl({ borderRadius, onChange }: BorderRadiusCont
       <CardContent className="space-y-5">
         {/* Slider */}
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-muted-foreground/60  w-4">0</span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono w-4">0</span>
           <Slider
             value={[borderRadius]}
             onValueChange={onChange}
@@ -33,7 +33,7 @@ export function BorderRadiusControl({ borderRadius, onChange }: BorderRadiusCont
             step={1}
             className="flex-1"
           />
-          <span className="text-[10px] text-muted-foreground/60  w-5">20</span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono w-5">20</span>
         </div>
 
         {/* Live preview */}

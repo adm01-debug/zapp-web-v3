@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { log } from '@/lib/logger';
-import { dbFrom } from '@/integrations/datasource/db';
 
 export interface Queue {
   id: string;
@@ -64,7 +63,8 @@ export function useQueues() {
       if (membersError) throw membersError;
 
       // Fetch waiting counts per queue
-      const { data: waitingData, error: waitingError } = await dbFrom('contacts')
+      const { data: waitingData, error: waitingError } = await supabase
+        .from('contacts')
         .select('queue_id')
         .not('queue_id', 'is', null)
         .is('assigned_to', null);
@@ -239,7 +239,8 @@ export function useQueues() {
 
   const assignContactToQueue = async (contactId: string, queueId: string | null) => {
     try {
-      const { error } = await dbFrom('contacts')
+      const { error } = await supabase
+        .from('contacts')
         .update({ queue_id: queueId, assigned_to: null })
         .eq('id', contactId);
 

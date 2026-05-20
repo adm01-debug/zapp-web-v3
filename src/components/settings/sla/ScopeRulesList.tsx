@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useSLARules, SLARule, SLARuleScope } from '@/features/sla';
+import { useSLARules, SLARule, SLARuleScope } from '@/hooks/useSLARules';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,7 +9,6 @@ import { Plus, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { SLARuleRow } from './SLARuleRow';
 import { SLARuleFormDialog } from './SLARuleFormDialog';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface ScopeRulesListProps {
   scope: SLARuleScope;
@@ -29,7 +28,7 @@ export function ScopeRulesList({ scope }: ScopeRulesListProps) {
     queryKey: ['sla-contact-names', contactIds],
     queryFn: async () => {
       if (contactIds.length === 0) return {};
-      const { data, error } = await supabase.from('contacts').select('id, name, phone').in('id', contactIds);
+      const { data } = await supabase.from('contacts').select('id, name, phone').in('id', contactIds);
       const map: Record<string, string> = {};
       (data || []).forEach(c => { map[c.id] = `${c.name} (${c.phone})`; });
       return map;
@@ -41,7 +40,7 @@ export function ScopeRulesList({ scope }: ScopeRulesListProps) {
     queryKey: ['sla-queue-names', queueIds],
     queryFn: async () => {
       if (queueIds.length === 0) return {};
-      const { data, error } = await supabase.from('queues').select('id, name').in('id', queueIds);
+      const { data } = await supabase.from('queues').select('id, name').in('id', queueIds);
       const map: Record<string, string> = {};
       (data || []).forEach(q => { map[q.id] = q.name; });
       return map;
@@ -53,7 +52,7 @@ export function ScopeRulesList({ scope }: ScopeRulesListProps) {
     queryKey: ['sla-agent-names', agentIds],
     queryFn: async () => {
       if (agentIds.length === 0) return {};
-      const { data, error } = await supabase.from('profiles').select('id, name').in('id', agentIds);
+      const { data } = await supabase.from('profiles').select('id, name').in('id', agentIds);
       const map: Record<string, string> = {};
       (data || []).forEach(a => { map[a.id] = a.name; });
       return map;

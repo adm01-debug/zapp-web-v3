@@ -11,13 +11,11 @@ import {
   Wifi, WifiOff, RefreshCw, AlertTriangle, CheckCircle2, XCircle,
   Clock, MessageSquare, ArrowUpDown, Activity, Server, Database,
   HardDrive, Zap, Bug, FileWarning, Loader2, Shield, HeartPulse, Send,
-  Mail,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useDiagnosticsData, type SystemHealth } from '@/features/admin';
-import { EmailStatusPanel } from '@/components/gmail/GmailStatusPanel';
+import { useDiagnosticsData, type SystemHealth } from '@/hooks/useDiagnosticsData';
 
 // ─── Helpers ───
 function StatusDot({ status }: { status: string }) {
@@ -134,7 +132,6 @@ export function DiagnosticsView() {
           <TabsTrigger value="connections" className="gap-2"><Wifi className="w-4 h-4" />Conexões</TabsTrigger>
           <TabsTrigger value="messages" className="gap-2"><MessageSquare className="w-4 h-4" />Mensagens</TabsTrigger>
           <TabsTrigger value="health" className="gap-2"><Server className="w-4 h-4" />System Health</TabsTrigger>
-          <TabsTrigger value="email-status" className="gap-2"><Mail className="w-4 h-4" />Email Status</TabsTrigger>
           <TabsTrigger value="connection-health" className="gap-2"><HeartPulse className="w-4 h-4" />Connection Health</TabsTrigger>
           <TabsTrigger value="logs" className="gap-2 relative">
             <FileWarning className="w-4 h-4" />Logs de Erros
@@ -281,11 +278,6 @@ export function DiagnosticsView() {
           {/* Connection Health */}
           <TabsContent value="connection-health" className="px-6 py-4">
             <ConnectionHealthPanel />
-          </TabsContent>
-
-          {/* Email Status */}
-          <TabsContent value="email-status" className="px-6 py-4">
-            <EmailStatusPanel />
           </TabsContent>
 
           {/* Logs */}

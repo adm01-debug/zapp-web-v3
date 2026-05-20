@@ -77,7 +77,7 @@ export interface Message {
   sender: 'contact' | 'agent';
   agentId?: string;
   timestamp: Date;
-  status: 'sending' | 'retrying' | 'sent' | 'delivered' | 'read' | 'played' | 'failed' | 'failed_auth' | 'failed_retries';
+  status: 'sent' | 'delivered' | 'read' | 'failed';
   // Interactive message data
   interactive?: InteractiveMessage;
   // Button response data (when user clicks a button)
@@ -110,17 +110,6 @@ export interface Message {
   senderName?: string;
   created_at?: string;
   updated_at?: string;
-  // Persisted retry counters (survive page reload)
-  retry_attempt?: number | null;
-  retry_total?: number | null;
-  /** Cache do avatar do contato para mensagens recebidas. */
-  contactAvatar?: string | null;
-  /** Indica se a mensagem é interna (whisper/nota). */
-  isWhisper?: boolean;
-  /** @internal Flag used for optimistic updates in the UI */
-  _optimistic?: boolean;
-  /** Meta-informações brutas (Evolution/WhatsApp API). */
-  media_meta?: any;
 }
 
 
@@ -139,12 +128,6 @@ export interface Conversation {
   // Sentiment tracking
   sentiment?: 'positive' | 'neutral' | 'negative' | 'critical';
   sentimentScore?: number;
-  // SLA Overrides
-  sla_warning_threshold_minutes?: number;
-  sla_critical_threshold_minutes?: number;
-  sla_notification_message?: string;
-  sla_enabled?: boolean;
-  is_muted?: boolean;
 }
 
 export interface Agent {
@@ -152,7 +135,7 @@ export interface Agent {
   name: string;
   email: string;
   avatar?: string;
-  role: 'dev' | 'admin' | 'supervisor' | 'agent';
+  role: 'admin' | 'supervisor' | 'agent' | 'special_agent';
   status: 'online' | 'away' | 'offline';
   activeChats: number;
   maxChats: number;

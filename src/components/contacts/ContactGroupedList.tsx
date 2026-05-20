@@ -38,11 +38,13 @@ export function ContactGroupedList({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const toggleGroup = (key: string) => {
-    setCollapsed(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
+    const next = new Set(collapsed);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    setCollapsed(next);
   };
 
   return (

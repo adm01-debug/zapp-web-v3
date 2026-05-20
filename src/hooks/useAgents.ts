@@ -1,158 +1,150 @@
-/**
- * useAgents.ts
- * AI Agents hook using the agents table (real schema + agent_status enum).
- * Provides CRUD, status management, and smart assignment.
- */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { sanitizeText } from '@/lib/sanitize';
+import { useQuery } from '@tanstack/react-query';
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-export interface Agent {
-  id:                string;
-  user_id:           string | null;
-  name:              string;
-  mission:           string | null;
-  persona:           string | null;
-  avatar_emoji:      string;
-  model:             string | null;
-  status:            string;
-  version:           number;
-  config:            Record<string, unknown>;
-  tags:              string[];
-  is_template:       boolean;
-  template_category: string | null;
-  workspace_id:      string | null;
-  created_at:        string;
-  updated_at:        string;
+export interface AgentProfile {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  job_title: string | null;
+  department: string | null;
+  phone: string | null;
+  is_active: boolean | null;
+  max_chats: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
-// Valid agent_status enum values:
-// draft | configured | testing | staging | review | production | monitoring | deprecated | archived
+export interface AgentWithStats extends AgentProfile {
+  activeChats: number;
+  status: 'online' | 'away' | 'offline';
+  queues: Array<{ id: string; name: string; color: string }>;
+}
 
-export const AGENT_STATUS_FLOW = [
-  'draft', 'configured', 'testing', 'staging', 'review', 'production', 'monitoring',
-] as const;
-
-export const AGENT_STATUS_LABELS: Record<string, string> = {
-  draft:        '📝 Rascunho',
-  configured:   '⚙️ Configurado',
-  testing:      '🧪 Em teste',
-  staging:      '🎭 Homologação',
-  review:       '👀 Em revisão',
-  production:   '🚀 Produção',
-  monitoring:   '📊 Monitorando',
-  deprecated:   '⚠️ Descontinuado',
-  archived:     '📦 Arquivado',
+// Simulated presence status - in a real app, this would come from Supabase Presence
+const getAgentStatus = (lastActivity?: string): 'online' | 'away' | 'offline' => {
+  if (!lastActivity) return 'offline';
+  const now = new Date();
+  const lastActive = new Date(lastActivity);
+  const diffMinutes = (now.getTime() - lastActive.getTime()) / (1000 * 60);
+  
+  if (diffMinutes < 5) return 'online';
+  if (diffMinutes < 30) return 'away';
+  return 'offline';
 };
 
-export const AGENT_STATUS_COLORS: Record<string, string> = {
-  draft:        'bg-muted text-muted-foreground',
-  configured:   'bg-primary/20 text-primary',
-  testing:      'bg-accent text-accent-foreground',
-  staging:      'bg-secondary text-secondary-foreground',
-  review:       'bg-primary/10 text-primary/80',
-  production:   'bg-primary text-primary-foreground',
-  monitoring:   'bg-success/10 text-success',
-  deprecated:   'bg-destructive/10 text-destructive',
-  archived:     'bg-muted text-muted-foreground/50',
-};
+export function useAgents() {
+  // Fetch profiles
+  const { data: profiles, isLoading: loadingProfiles, error: profilesError, refetch: refetchProfiles } = useQuery({
+    queryKey: ['agents-profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('name');
 
-// ── Hook ───────────────────────────────────────────────────────────────────
-
-export function useAgents(workspaceId?: string) {
-  const { toast } = useToast();
-  const [agents,  setAgents]  = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const mapRow = (row: Record<string, unknown>): Agent => ({
-    id:                String(row.id),
-    user_id:           row.user_id as string | null,
-    name:              sanitizeText(row.name as string),
-    mission:           row.mission ? sanitizeText(row.mission as string) : null,
-    persona:           row.persona ? sanitizeText(row.persona as string) : null,
-    avatar_emoji:      String(row.avatar_emoji ?? '🤖'),
-    model:             row.model as string | null,
-    status:            String(row.status ?? 'draft'),
-    version:           Number(row.version ?? 1),
-    config:            (row.config as Record<string, unknown>) ?? {},
-    tags:              Array.isArray(row.tags) ? row.tags as string[] : [],
-    is_template:       Boolean(row.is_template ?? false),
-    template_category: row.template_category as string | null,
-    workspace_id:      row.workspace_id as string | null,
-    created_at:        String(row.created_at ?? ''),
-    updated_at:        String(row.updated_at ?? ''),
+      if (error) throw error;
+      return data as AgentProfile[];
+    },
   });
 
-  const loadAgents = useCallback(async () => {
-    setLoading(true);
-    try {
-      let q: any = (supabase as any)
-        .from('agents')
-        .select('id,user_id,name,mission,persona,avatar_emoji,model,status,version,config,tags,is_template,template_category,workspace_id,created_at,updated_at')
-        .not('status', 'in', '("deprecated","archived")')
-        .order('updated_at', { ascending: false });
+  // Fetch queues and memberships
+  const { data: queuesData, isLoading: loadingQueues } = useQuery({
+    queryKey: ['agents-queues'],
+    queryFn: async () => {
+      const [queuesResult, membersResult] = await Promise.all([
+        supabase.from('queues').select('id, name, color').eq('is_active', true),
+        supabase.from('queue_members').select('queue_id, profile_id').eq('is_active', true),
+      ]);
 
-      if (workspaceId) q = q.eq('workspace_id', workspaceId);
+      if (queuesResult.error) throw queuesResult.error;
+      if (membersResult.error) throw membersResult.error;
 
-      const { data, error } = await q;
+      return {
+        queues: queuesResult.data,
+        members: membersResult.data,
+      };
+    },
+  });
+
+  // Fetch active chats count per agent
+  const { data: activeChatsData } = useQuery({
+    queryKey: ['agents-active-chats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('assigned_to')
+        .not('assigned_to', 'is', null);
+
       if (error) throw error;
-      setAgents((data ?? []).map((r: any) => mapRow(r)));
-    } catch (err) {
-      console.error('[useAgents]', err);
-    } finally { setLoading(false); }
-  }, [workspaceId]);
 
-  useEffect(() => { loadAgents(); }, [loadAgents]);
+      // Count contacts per agent
+      const chatCounts: Record<string, number> = {};
+      data?.forEach((contact) => {
+        if (contact.assigned_to) {
+          chatCounts[contact.assigned_to] = (chatCounts[contact.assigned_to] || 0) + 1;
+        }
+      });
 
-  // ── Promote to production ────────────────────────────────────────────
+      return chatCounts;
+    },
+  });
 
-  const promoteToProduction = useCallback(async (id: string) => {
-    const { error } = await (supabase as any)
-      .from('agents')
-      .update({ status: 'production', updated_at: new Date().toISOString() })
-      .eq('id', id);
+  // Combine data into AgentWithStats
+  const agents: AgentWithStats[] = useMemo(() => {
+    if (!profiles) return [];
 
-    if (error) throw error;
-    setAgents((prev) => prev.map((a) => a.id === id ? { ...a, status: 'production' } : a));
-    toast({ title: '🚀 Agente em produção!', duration: 3_000 });
-  }, [toast]);
+    return profiles.map((profile) => {
+      // Get queues for this agent
+      const agentQueues = queuesData?.members
+        ?.filter((m) => m.profile_id === profile.id)
+        .map((m) => {
+          const queue = queuesData.queues?.find((q) => q.id === m.queue_id);
+          return queue ? { id: queue.id, name: queue.name, color: queue.color } : null;
+        })
+        .filter(Boolean) as Array<{ id: string; name: string; color: string }> || [];
 
-  // ── Deprecate ────────────────────────────────────────────────────────
+      // Get active chats count
+      const activeChats = activeChatsData?.[profile.id] || 0;
 
-  const deprecateAgent = useCallback(async (id: string) => {
-    const { error } = await (supabase as any)
-      .from('agents')
-      .update({ status: 'deprecated', updated_at: new Date().toISOString() })
-      .eq('id', id);
-    if (error) throw error;
-    setAgents((prev) => prev.filter((a) => a.id !== id));
-    toast({ title: '⚠️ Agente descontinuado', duration: 3_000 });
-  }, [toast]);
+      // Simulate status based on updated_at
+      const status = getAgentStatus(profile.updated_at);
 
-  // ── Smart assign ─────────────────────────────────────────────────────
-
-  const smartAssignToConversation = useCallback(async (conversationId: string) => {
-    const { data, error } = await (supabase as any).rpc('smart_assign_conversation', {
-      p_conversation_id: conversationId,
-      p_workspace_id:    workspaceId ?? null,
+      return {
+        ...profile,
+        activeChats,
+        status,
+        queues: agentQueues,
+      };
     });
-    if (error) throw error;
-    const result = data as Record<string, unknown>;
-    if (result?.error) throw new Error(String(result.error));
-    toast({ title: '🤖 Atribuído automaticamente!', description: `Agente com menor carga alocado.`, duration: 3_000 });
-    return result;
-  }, [workspaceId, toast]);
+  }, [profiles, queuesData, activeChatsData]);
 
-  // Computed: production agents
-  const productionAgents = agents.filter((a) => a.status === 'production');
+  const isLoading = loadingProfiles || loadingQueues;
+
+  // Stats calculations
+  const stats = useMemo(() => {
+    const onlineCount = agents.filter((a) => a.status === 'online').length;
+    const awayCount = agents.filter((a) => a.status === 'away').length;
+    const offlineCount = agents.filter((a) => a.status === 'offline').length;
+    const totalActiveChats = agents.reduce((sum, a) => sum + a.activeChats, 0);
+
+    return {
+      onlineCount,
+      awayCount,
+      offlineCount,
+      totalActiveChats,
+      totalAgents: agents.length,
+    };
+  }, [agents]);
 
   return {
-    agents, loading, productionAgents,
-    loadAgents,
-    promoteToProduction, deprecateAgent,
-    smartAssignToConversation,
+    agents,
+    stats,
+    isLoading,
+    error: profilesError,
+    refetch: refetchProfiles,
   };
 }

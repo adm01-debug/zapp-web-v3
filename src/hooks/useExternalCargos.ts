@@ -7,8 +7,6 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { dbRpc } from '@/integrations/datasource/db';
-import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { log } from '@/lib/logger';
 
 export function useExternalCargos() {
@@ -34,7 +32,7 @@ export function useExternalCargos() {
       }
 
       // 2. Extract cargos from search_contacts_advanced RPC (bypasses RLS)
-      const { data: searchData, error: e2 } = await dbRpc(RPC.searchContactsAdvanced, {
+      const { data: searchData, error: e2 } = await getExternalSupabase().rpc('search_contacts_advanced', {
         p_search: null,
         p_vendedor: null,
         p_ramo: null,

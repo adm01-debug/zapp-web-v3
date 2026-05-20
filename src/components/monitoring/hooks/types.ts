@@ -12,6 +12,8 @@ export const periodBuckets: Record<TimePeriod, number> = {
   '1h': 6, '6h': 6, '12h': 12, '24h': 24, '7d': 7,
 };
 
+export const HEALTHY_STATUSES = ['connected', 'healthy'];
+
 export interface DiagnosticResult {
   timestamp: string;
   diagnostics: Array<{

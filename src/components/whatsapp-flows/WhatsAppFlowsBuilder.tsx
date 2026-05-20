@@ -61,7 +61,7 @@ export function WhatsAppFlowsBuilder() {
 
   const fetchFlows = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('whatsapp_flows').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('whatsapp_flows').select('*').order('created_at', { ascending: false });
     if (data) {
       setFlows(data.map((f) => ({
         ...f,
@@ -83,11 +83,11 @@ export function WhatsAppFlowsBuilder() {
         { id: crypto.randomUUID(), type: 'Footer', label: 'Continuar' },
       ],
     }];
-    const { error: insertError } = await supabase.from('whatsapp_flows').insert({
+    const { error } = await supabase.from('whatsapp_flows').insert({
       name: formName, description: formDescription || null,
       screens: defaultScreens as unknown as Json,
     });
-    if (insertError) { toast({ title: 'Erro', description: insertError.message, variant: 'destructive' }); return; }
+    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Flow criado!' });
     setShowCreateDialog(false); setFormName(''); setFormDescription('');
     fetchFlows();

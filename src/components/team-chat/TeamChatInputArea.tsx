@@ -4,16 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { RichTextToolbar, RichTextToggle } from '@/features/inbox';
-import { AIRewriteButton } from '@/features/inbox';
-import { TextToAudioButton } from '@/features/inbox';
-import { MentionAutocomplete, useMentions } from '@/features/inbox';
-import { MarkdownPreview } from '@/features/inbox';
-import { StickerPicker } from '@/features/inbox';
-import { AudioMemePicker } from '@/features/inbox';
-import { VoiceChangerPicker } from '@/features/inbox';
-import { CustomEmojiPicker } from '@/features/inbox';
-import { AudioRecorder } from '@/features/inbox';
+import { RichTextToolbar, RichTextToggle } from '@/components/inbox/chat/RichTextToolbar';
+import { AIRewriteButton } from '@/components/inbox/chat/AIRewriteButton';
+import { TextToAudioButton } from '@/components/inbox/TextToAudioButton';
+import { MentionAutocomplete, useMentions } from '@/components/inbox/chat/MentionAutocomplete';
+import { MarkdownPreview } from '@/components/inbox/chat/MarkdownPreview';
+import { StickerPicker } from '@/components/inbox/StickerPicker';
+import { AudioMemePicker } from '@/components/inbox/AudioMemePicker';
+import { VoiceChangerPicker } from '@/components/inbox/VoiceChangerPicker';
+import { CustomEmojiPicker } from '@/components/inbox/CustomEmojiPicker';
+import { AudioRecorder } from '@/components/inbox/AudioRecorder';
 import { VoiceDictationButton } from '@/components/mobile/VoiceDictationButton';
 import { TeamFileUploader } from './TeamFileUploader';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -82,8 +82,8 @@ export function TeamChatInputArea({
     <>
       <AIRewriteButton inputValue={text} onRewrite={(newText) => setText(newText)} />
       <StickerPicker onSendSticker={onSendSticker} />
-      <AudioMemePicker onSendAudioMeme={(meme) => onSendAudioMeme(meme.audio_url)} />
-      <VoiceChangerPicker onSendAudio={(url) => onSendAudioMeme(url)} />
+      <AudioMemePicker onSendAudio={onSendAudioMeme} />
+      <VoiceChangerPicker onSendAudio={onSendAudioMeme} />
       <CustomEmojiPicker onSendEmoji={onSendCustomEmoji} />
       <RichTextToggle active={showRichToolbar} onToggle={() => setShowRichToolbar(!showRichToolbar)} />
       <VoiceDictationButton onTranscript={handleVoiceDictation} disabled={isRecordingAudio} />
@@ -135,18 +135,14 @@ export function TeamChatInputArea({
           <div className="flex-1 min-w-0 relative">
             <MentionAutocomplete inputValue={text} cursorPosition={mentionCursorPos} onSelect={handleMentionSelect} onClose={closeMention} isOpen={mentionOpen} />
             <textarea ref={textareaRef} value={text}
-              aria-label="Digite sua mensagem para o chat da equipe"
-              aria-multiline="true"
-              tabIndex={0}
               onChange={(e) => { setText(e.target.value); checkForMention(e.target.value, e.target.selectionStart ?? 0); }}
               onKeyDown={handleKeyDown} onPaste={draft.handlePaste}
-              autoFocus
               onClick={(e) => { const t = e.target as HTMLTextAreaElement; checkForMention(t.value, t.selectionStart ?? 0); }}
               placeholder="Digite uma mensagem... (/ para comandos, @ para mencionar)" rows={1}
               className={cn("w-full bg-transparent border border-border/50 rounded-xl outline-none text-sm text-foreground placeholder:text-muted-foreground resize-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/20",
                 isMobile ? "px-3 py-2.5 text-[16px] min-h-[42px] max-h-[200px]" : "px-3 py-2 min-h-[40px] max-h-[200px]",
                 draft.isOverLimit && "border-destructive/50 focus:border-destructive focus:ring-destructive/20")}
-              aria-describedby={draft.charCount > 0 ? "team-char-counter" : undefined}
+              aria-label="Digite sua mensagem" aria-describedby={draft.charCount > 0 ? "team-char-counter" : undefined}
             />
             {draft.charCount > 100 && (
               <span id="team-char-counter" className={cn("absolute bottom-1 right-2 text-[10px] select-none pointer-events-none",

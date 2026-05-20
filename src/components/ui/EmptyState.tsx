@@ -156,7 +156,7 @@ export function EmptyState({
       <motion.div
         animate={floatAnimation}
         className={cn(
-          'w-20 h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-6 shadow-none',
+          'w-20 h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-6 shadow-lg',
           config.gradient
         )}
       >

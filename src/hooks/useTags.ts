@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 export interface Tag {
@@ -94,7 +94,7 @@ export function useTags() {
   // Update tag mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { id: string; name: string; color: string; description?: string }) => {
-      const { data: tag, error: tagErr } = await supabase
+      const { data: tag, error } = await supabase
         .from('tags')
         .update({
           name: data.name,

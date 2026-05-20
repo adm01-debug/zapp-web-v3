@@ -6,7 +6,6 @@ import { Palette, RefreshCw, GraduationCap, LayoutGrid } from 'lucide-react';
 import { AvatarUpload } from '@/components/settings/AvatarUpload';
 import { motion } from '@/components/ui/motion';
 import { useDensity, type DensityMode } from '@/hooks/useDensity';
-import { ChatThemeSettings } from '@/components/theme/ChatThemeSettings';
 
 interface AppearanceSettingsProps {
   settings: {
@@ -87,10 +86,6 @@ export function AppearanceSettings({ settings, updateSettings, onResetOnboarding
             </Label>
             <p className="text-sm text-muted-foreground">Controle o espaçamento geral da UI</p>
             <DensitySelector />
-          </div>
-
-          <div className="pt-4 border-t border-border">
-            <ChatThemeSettings />
           </div>
 
           <div className="pt-4 border-t border-border">

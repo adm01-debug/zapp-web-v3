@@ -5,7 +5,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
 import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { validateEntityAccess, validateRpcAccess } from '@/integrations/datasource/sentinel';
 import type {
   ExternalDBFilter,
   ExternalDBOrder,
@@ -23,7 +22,6 @@ async function queryExternal<T = unknown>(params: {
   offset?: number;
   countMode?: 'exact' | 'planned' | 'estimated';
 }): Promise<ExternalDBQueryResult<T>> {
-  validateEntityAccess(params.table, 'external');
   const start = performance.now();
 
   let query = getExternalSupabase()
@@ -104,7 +102,6 @@ export function useExternalRPC<T = unknown>(options: UseExternalRPCOptions) {
   return useQuery({
     queryKey: ['external-db', 'rpc', options.rpc, options.params],
     queryFn: async () => {
-      validateRpcAccess(options.rpc, 'external');
       const start = performance.now();
       const { data, error } = await getExternalSupabase().rpc(options.rpc, options.params || {});
       const duration = Math.round(performance.now() - start);
@@ -133,7 +130,7 @@ export function useExternalTableBrowser<T = Record<string, unknown>>(tableName: 
     order,
     limit: pageSize,
     offset: page * pageSize,
-    countMode: 'estimated',
+    countMode: 'exact',
     staleTime: 2 * 60 * 1000,
   });
 
@@ -197,7 +194,6 @@ export function useExternalMutation() {
       data?: Record<string, unknown> | Record<string, unknown>[];
       match?: Record<string, unknown>;
     }) => {
-      validateEntityAccess(params.table, 'external');
       if (params.action === 'insert') {
         const { data, error } = await getExternalSupabase().from(params.table).insert(params.data as any).select();
         if (error) throw new Error(error.message);

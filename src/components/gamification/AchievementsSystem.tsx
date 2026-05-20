@@ -31,8 +31,8 @@ const iconMap = { trophy: Trophy, star: Star, medal: Medal, target: Target, zap:
 const rarityConfig = {
   common: { label: 'Comum', color: 'bg-muted', border: 'border-border/30' },
   rare: { label: 'Raro', color: 'bg-info', border: 'border-info/30' },
-  epic: { label: 'Épico', color: 'bg-primary', border: 'border-primary/30' },
-  legendary: { label: 'Lendário', color: 'bg-warning', border: 'border-warning/30' },
+  epic: { label: 'Épico', color: 'bg-primary', border: 'border-purple-500/30' },
+  legendary: { label: 'Lendário', color: 'bg-warning', border: 'border-yellow-500/30' },
 };
 const categoryConfig = {
   messages: { label: 'Mensagens', icon: MessageSquare },

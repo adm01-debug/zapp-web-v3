@@ -1,13 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { playNotificationSound, showBrowserNotification } from '@/utils/notificationSounds';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth } from 'date-fns';
 import type { Json } from '@/integrations/supabase/types';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface GoalConfiguration {
   id: string;
@@ -115,7 +114,8 @@ export function useGoalNotifications() {
           // Calculate current progress based on goal type
           switch (goal.goal_type) {
             case 'messages_sent': {
-              const { count } = await dbFrom('messages')
+              const { count } = await supabase
+                .from('messages')
                 .select('*', { count: 'exact', head: true })
                 .eq('sender', 'agent')
                 .eq('agent_id', profile.id)

@@ -6,9 +6,7 @@
  * Direct queries to 'companies' table are blocked by RLS for anon role.
  */
 import { useQuery } from '@tanstack/react-query';
-import { isExternalConfigured } from '@/integrations/supabase/externalClient';
-import { dbRpc } from '@/integrations/datasource/db';
-import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { log } from '@/lib/logger';
 
 export function useExternalEmpresas() {
@@ -23,7 +21,7 @@ export function useExternalEmpresas() {
       // Use search_contacts_advanced RPC which has SECURITY DEFINER
       // Fetch multiple pages to build a comprehensive company list
       while (page < maxPages) {
-        const { data, error } = await dbRpc(RPC.searchContactsAdvanced, {
+        const { data, error } = await getExternalSupabase().rpc('search_contacts_advanced', {
           p_search: null,
           p_vendedor: null,
           p_ramo: null,
