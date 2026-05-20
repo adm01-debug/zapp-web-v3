@@ -54,10 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    console.log('[BOOT] AuthProvider initialized, starting session check');
+    log.info('[BOOT] AuthProvider initialized, starting session check');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('[BOOT] Auth state change:', event, session ? 'Authenticated' : 'Unauthenticated');
+        log.info('[BOOT] Auth state change:', event, session ? 'Authenticated' : 'Unauthenticated');
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -70,14 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[BOOT] Initial session retrieved:', session ? 'User Found' : 'No User');
+      log.info('[BOOT] Initial session retrieved:', session ? 'User Found' : 'No User');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
       }
       setLoading(false);
-      console.log('[BOOT] Auth loading finished');
+      log.info('[BOOT] Auth loading finished');
     }).catch(err => {
       console.error('[BOOT] Error fetching session:', err);
       setLoading(false);

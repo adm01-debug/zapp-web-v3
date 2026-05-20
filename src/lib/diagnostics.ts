@@ -16,7 +16,7 @@ export async function runConnectionDiagnostics() {
 
   const log = (step: string, status: 'pass' | 'fail', details: any) => {
     diagnostics.steps.push({ step, status, details });
-    console.log(`[Diagnostics] ${status.toUpperCase()}: ${step}`, details);
+    console.log(`[Diagnostics] ${status.toUpperCase()}: ${step}`, details); // ignore-audit
   };
 
   try {

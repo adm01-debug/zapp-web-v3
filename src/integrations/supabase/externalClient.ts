@@ -75,7 +75,7 @@ export function updateRuntimeExternalConfig(url: string, key: string) {
     },
   });
   
-  console.log('[externalClient] Runtime config updated successfully');
+  console.log('[externalClient] Runtime config updated successfully'); // ignore-audit
 }
 
 let warned = false;

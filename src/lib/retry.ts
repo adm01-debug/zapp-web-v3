@@ -18,7 +18,7 @@ interface RetryOptions {
  * @example
  * const data = await withRetry(() => dbFrom('contacts').select('*'), {
  *   maxRetries: 3,
- *   onRetry: (err, attempt) => console.log(`Retry ${attempt}`, err),
+ *   onRetry: (err, attempt) => log.warn(`Retry ${attempt}`, err),
  * });
  */
 export async function withRetry<T>(
