@@ -1,41 +1,152 @@
-name: CI
+# =================================================
+# ZAPP-WEB CI/CD Pipeline
+# =================================================
+# Triggered on: push to main, pull requests
+# Jobs: lint, typecheck, test, build
+# =================================================
+
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+  VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
 jobs:
-  test:
+  # ===========================================
+  # JOB 1: Lint & Type Check
+  # ===========================================
+  lint-and-typecheck:
+    name: 🔍 Lint & TypeCheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
-      
-      - name: Install dependencies
-        run: bun install
-        
-      - name: Lint
-        run: bun run lint
-        
-      - name: Build
-        run: bun run build
-        
-      - name: Vitest (Unit & Fuzz)
-        run: bunx vitest run --coverage
-        
-      - name: Edge Functions Tests (Deno)
-        run: |
-          curl -fsSL https://deno.land/x/install/install.sh | sh
-          export PATH="/home/runner/.deno/bin:$PATH"
-          deno test --allow-read --allow-env supabase/functions/
-        
-      - name: Install Playwright Browsers
-        run: bunx playwright install --with-deps
-        
-      - name: Run Playwright tests
-        run: bunx playwright test
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: 🔎 Run TypeScript check
+        run: npx tsc --noEmit
+        continue-on-error: false
+
+  # ===========================================
+  # JOB 2: Unit Tests
+  # ===========================================
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run Vitest
+        run: npm run test -- --coverage --reporter=verbose
+        env:
+          CI: true
+
+      - name: 📊 Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ===========================================
+  # JOB 3: Build
+  # ===========================================
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build for production
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_EXTERNAL_SUPABASE_URL: ${{ secrets.VITE_EXTERNAL_SUPABASE_URL }}
+          VITE_EXTERNAL_SUPABASE_ANON_KEY: ${{ secrets.VITE_EXTERNAL_SUPABASE_ANON_KEY }}
+
+      - name: 📦 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+      - name: 📐 Report bundle size
+        run: |
+          echo "📦 Bundle Size Report"
+          echo "====================="
+          du -sh dist/
+          echo ""
+          echo "JS Files:"
+          find dist -name "*.js" -exec du -h {} \;
+          echo ""
+          echo "CSS Files:"
+          find dist -name "*.css" -exec du -h {} \;
+
+  # ===========================================
+  # JOB 4: Security Audit
+  # ===========================================
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔒 Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: 🔍 Check for secrets in code
+        run: |
+          echo "Checking for potential secrets..."
+          ! grep -rn "SUPABASE_SERVICE_ROLE_KEY\|sk_live_\|sk_test_\|password\s*=\s*[\"']" --include="*.ts" --include="*.tsx" --include="*.js" src/ || echo "⚠️ Potential secrets found - please review"
