@@ -2365,6 +2365,98 @@ export type Database = {
           },
         ]
       }
+      conversation_transfers: {
+        Row: {
+          accepted_at: string | null
+          completed_at: string | null
+          context_summary: string | null
+          conversation_id: string
+          created_at: string | null
+          from_agent_id: string | null
+          from_queue_id: string | null
+          id: string
+          metadata: Json | null
+          priority: string | null
+          return_reason: string | null
+          sla_deadline: string | null
+          status: string
+          ticket_number: string
+          to_agent_id: string | null
+          to_queue_id: string | null
+          transfer_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          context_summary?: string | null
+          conversation_id: string
+          created_at?: string | null
+          from_agent_id?: string | null
+          from_queue_id?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          return_reason?: string | null
+          sla_deadline?: string | null
+          status?: string
+          ticket_number: string
+          to_agent_id?: string | null
+          to_queue_id?: string | null
+          transfer_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          context_summary?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          from_agent_id?: string | null
+          from_queue_id?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string | null
+          return_reason?: string | null
+          sla_deadline?: string | null
+          status?: string
+          ticket_number?: string
+          to_agent_id?: string | null
+          to_queue_id?: string | null
+          transfer_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
+            columns: ["from_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
+            columns: ["from_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
+            columns: ["to_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
+            columns: ["to_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crisis_room_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -3254,6 +3346,105 @@ export type Database = {
             columns: ["queue_id"]
             isOneToOne: false
             referencedRelation: "queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instance_registry: {
+        Row: {
+          api_key: string | null
+          api_url: string | null
+          connection_status: string | null
+          created_at: string | null
+          display_name: string | null
+          error_logs: string | null
+          id: string
+          instance_name: string
+          is_master: boolean | null
+          last_connected_at: string | null
+          message_count_received: number | null
+          message_count_sent: number | null
+          metadata: Json | null
+          owner_id: string | null
+          phone_number: string | null
+          profile_picture: string | null
+          proxy_host: string | null
+          proxy_pass: string | null
+          proxy_port: string | null
+          proxy_user: string | null
+          settings: Json | null
+          status: string | null
+          updated_at: string | null
+          webhook_enabled: boolean | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_url?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          error_logs?: string | null
+          id?: string
+          instance_name: string
+          is_master?: boolean | null
+          last_connected_at?: string | null
+          message_count_received?: number | null
+          message_count_sent?: number | null
+          metadata?: Json | null
+          owner_id?: string | null
+          phone_number?: string | null
+          profile_picture?: string | null
+          proxy_host?: string | null
+          proxy_pass?: string | null
+          proxy_port?: string | null
+          proxy_user?: string | null
+          settings?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_enabled?: boolean | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_url?: string | null
+          connection_status?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          error_logs?: string | null
+          id?: string
+          instance_name?: string
+          is_master?: boolean | null
+          last_connected_at?: string | null
+          message_count_received?: number | null
+          message_count_sent?: number | null
+          metadata?: Json | null
+          owner_id?: string | null
+          phone_number?: string | null
+          profile_picture?: string | null
+          proxy_host?: string | null
+          proxy_pass?: string | null
+          proxy_port?: string | null
+          proxy_user?: string | null
+          settings?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_enabled?: boolean | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instance_registry_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instance_registry_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -5909,6 +6100,62 @@ export type Database = {
           },
         ]
       }
+      transfer_comments: {
+        Row: {
+          agent_id: string
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          transfer_id: string
+        }
+        Insert: {
+          agent_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          transfer_id: string
+        }
+        Update: {
+          agent_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_comments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_comments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_comments_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_comments_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "v_pending_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_devices: {
         Row: {
           browser: string | null
@@ -6954,6 +7201,61 @@ export type Database = {
         }
         Relationships: []
       }
+      v_pending_transfers: {
+        Row: {
+          accepted_at: string | null
+          completed_at: string | null
+          contact_name: string | null
+          context_summary: string | null
+          conversation_id: string | null
+          created_at: string | null
+          from_agent_id: string | null
+          from_agent_name: string | null
+          from_queue_id: string | null
+          id: string | null
+          metadata: Json | null
+          priority: string | null
+          return_reason: string | null
+          sla_deadline: string | null
+          status: string | null
+          ticket_number: string | null
+          to_agent_id: string | null
+          to_agent_name: string | null
+          to_queue_id: string | null
+          transfer_type: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
+            columns: ["from_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_from_agent_id_fkey"
+            columns: ["from_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
+            columns: ["to_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_transfers_to_agent_id_fkey"
+            columns: ["to_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_connections_agent: {
         Row: {
           id: string | null
@@ -7094,6 +7396,23 @@ export type Database = {
       }
       decrypt_gmail_token: { Args: { p_encrypted: string }; Returns: string }
       encrypt_gmail_token: { Args: { p_token: string }; Returns: string }
+      fn_accept_transfer: {
+        Args: { p_agent_id: string; p_transfer_id: string }
+        Returns: boolean
+      }
+      fn_create_transfer: {
+        Args: {
+          p_context_summary?: string
+          p_conversation_id: string
+          p_from_agent_id: string
+          p_priority?: string
+          p_to_agent_id?: string
+          p_to_queue_id?: string
+          p_transfer_type?: string
+        }
+        Returns: string
+      }
+      generate_transfer_ticket: { Args: never; Returns: string }
       get_channel_credentials: {
         Args: { _connection_id: string }
         Returns: Json
