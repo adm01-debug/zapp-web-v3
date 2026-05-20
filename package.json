@@ -39,7 +39,7 @@
   "dependencies": {
     "@axe-core/react": "^4.11.1",
     "@elevenlabs/react": "^0.12.3",
-    "@hello-pangea/dnd": "^17.0.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.1.1",
     "@playwright/test": "^1.59.1",
