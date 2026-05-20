@@ -17,8 +17,12 @@ export interface Agent {
   mission:           string | null;
   persona:           string | null;
   avatar_emoji:      string;
+  avatar_url?:       string | null;
   model:             string | null;
   status:            string;
+  is_active?:        boolean;
+  activeChats?:      number;
+  max_chats?:        number;
   version:           number;
   config:            Record<string, unknown>;
   tags:              string[];
@@ -74,8 +78,12 @@ export function useAgents(workspaceId?: string) {
     mission:           row.mission ? sanitizeText(row.mission as string) : null,
     persona:           row.persona ? sanitizeText(row.persona as string) : null,
     avatar_emoji:      String(row.avatar_emoji ?? '🤖'),
+    avatar_url:        row.avatar_url as string | null,
     model:             row.model as string | null,
     status:            String(row.status ?? 'draft'),
+    is_active:         row.status === 'production' || row.status === 'monitoring',
+    activeChats:       0,
+    max_chats:         5,
     version:           Number(row.version ?? 1),
     config:            (row.config as Record<string, unknown>) ?? {},
     tags:              Array.isArray(row.tags) ? row.tags as string[] : [],

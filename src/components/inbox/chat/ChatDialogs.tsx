@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { log } from '@/lib/logger';
 import { toast } from '@/hooks/use-toast';
-import { Conversation, Message, InteractiveMessage, InteractiveButton, LocationMessage } from '@/types/chat';
+import { Conversation, Message, InteractiveMessage, LocationMessage } from '@/types/chat';
 import { ExternalProduct } from '@/hooks/useExternalCatalog';
 import { ExternalProductCatalog } from '@/components/catalog/ExternalProductCatalog';
 
@@ -15,9 +15,9 @@ const LocationPicker = lazy(() => import('../LocationPicker').then(m => ({ defau
 const CloseConversationDialog = lazy(() => import('../CloseConversationDialog').then(m => ({ default: m.CloseConversationDialog })));
 const RealtimeTranscription = lazy(() => import('../RealtimeTranscription').then(m => ({ default: m.RealtimeTranscription })));
 
-type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' |
-  'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' |
-  'locationPicker' | 'aiAssistant' | 'catalogDirect' | 'whisper' | 'templatesWithVars' |
+type DialogKey = 'quickReplies' | 'slashCommands' | 'transferDialog' | 'scheduleDialog' | 
+  'callDialog' | 'globalSearch' | 'chatSearch' | 'interactiveBuilder' | 'forwardDialog' | 
+  'locationPicker' | 'aiAssistant' | 'catalogDirect' | 'whisper' | 'templatesWithVars' | 
   'realtimeTranscription' | 'closeDialog';
 
 type DialogState = Record<DialogKey, boolean>;
@@ -30,29 +30,37 @@ interface ChatDialogsProps {
   forwardMessage: Message | null;
   callDirection: 'inbound' | 'outbound';
   contactId: string;
-  onTransfer: (data: {
-    type: 'agent' | 'queue' | 'connection';
-    targetId: string;
-    priority: 'P1' | 'P2' | 'P3' | 'P4';
-    message?: string;
-  }) => void;
+  onTransfer: () => void;
   onScheduleMessage: (message: string, scheduledAt: Date, attachment?: File) => Promise<void>;
   onSendInteractiveMessage: (interactive: InteractiveMessage) => void;
   onForwardToTargets: (targetIds: string[], targetType: 'contact' | 'group') => void;
   onSendLocation: (location: LocationMessage) => void;
   onSendProduct: (product: ExternalProduct) => void;
   onSetInputValue: (value: string | ((prev: string) => string)) => void;
+  remoteJid: string;
+  sourceInstance: string;
+  operatorName: string;
 }
 
 export function ChatDialogs({
   dialogs, openDialog, closeDialog, conversation, forwardMessage, callDirection,
-  contactId, onTransfer, onScheduleMessage, onSendInteractiveMessage,
+  contactId, onScheduleMessage, onSendInteractiveMessage,
   onForwardToTargets, onSendLocation, onSendProduct, onSetInputValue,
+  remoteJid, sourceInstance, operatorName
 }: ChatDialogsProps) {
   return (
     <>
       <Suspense fallback={null}>
-        {dialogs.transferDialog && <TransferDialog open={dialogs.transferDialog} onOpenChange={(v) => v ? openDialog('transferDialog') : closeDialog('transferDialog')} onTransfer={onTransfer} />}
+        {dialogs.transferDialog && (
+          <TransferDialog 
+            open={dialogs.transferDialog} 
+            onOpenChange={(v) => v ? openDialog('transferDialog') : closeDialog('transferDialog')}
+            conversationId={conversation.id}
+            remoteJid={remoteJid}
+            sourceInstance={sourceInstance}
+            operatorName={operatorName}
+          />
+        )}
         {dialogs.scheduleDialog && <ScheduleMessageDialog open={dialogs.scheduleDialog} onOpenChange={(v) => v ? openDialog('scheduleDialog') : closeDialog('scheduleDialog')} onSchedule={onScheduleMessage} />}
         {dialogs.callDialog && <CallDialog open={dialogs.callDialog} onOpenChange={(v) => v ? openDialog('callDialog') : closeDialog('callDialog')} contact={{ name: conversation.contact.name, phone: conversation.contact.phone, avatar: conversation.contact.avatar }} direction={callDirection} onEnd={() => closeDialog('callDialog')} />}
         {dialogs.globalSearch && <GlobalSearch open={dialogs.globalSearch} onOpenChange={(v) => v ? openDialog('globalSearch') : closeDialog('globalSearch')} onSelectResult={(result) => { log.debug('Selected:', result); toast({ title: 'Resultado selecionado', description: result.title }); }} />}
