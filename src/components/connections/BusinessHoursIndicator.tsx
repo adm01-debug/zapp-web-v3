@@ -1,6 +1,6 @@
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useBusinessHours } from '@/hooks/useBusinessHours';
+import { useBusinessHours, BusinessHour } from '@/hooks/useBusinessHours';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BusinessHoursIndicatorProps {
@@ -9,20 +9,20 @@ interface BusinessHoursIndicatorProps {
 }
 
 export function BusinessHoursIndicator({ connectionId, className }: BusinessHoursIndicatorProps) {
-  const { businessHours, loading } = useBusinessHours(connectionId);
+  const { businessHours, isLoading } = useBusinessHours(connectionId);
 
-  if (loading || !businessHours.length) return null;
+  if (isLoading || !businessHours.length) return null;
 
   const getDayStatus = (day: number) => {
-    const dayConfig = businessHours.find((h: any) => h.day_of_week === day);
+    const dayConfig = businessHours.find((h: BusinessHour) => h.day_of_week === day);
     if (!dayConfig) return { status: 'disabled', label: 'Fechado' };
     
-    const isOpen = dayConfig.is_open;
-    if (!isOpen) return { status: 'closed', label: 'Fechado' };
+    const isEnabled = dayConfig.is_enabled;
+    if (!isEnabled) return { status: 'closed', label: 'Fechado' };
 
     return { 
       status: 'open', 
-      label: `${dayConfig.open_time} - ${dayConfig.close_time}` 
+      label: `${dayConfig.start_time} - ${dayConfig.end_time}` 
     };
   };
 
