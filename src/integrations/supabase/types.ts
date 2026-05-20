@@ -3354,17 +3354,31 @@ export type Database = {
         Row: {
           api_key: string | null
           api_url: string | null
+          auto_reply_enabled: boolean | null
+          auto_reply_message: string | null
+          bitrix_integration: Json | null
+          business_hours_enabled: boolean | null
+          config: Json | null
           connection_status: string | null
           created_at: string | null
+          department: string | null
           display_name: string | null
           error_logs: string | null
           id: string
           instance_name: string
+          is_active: boolean | null
           is_master: boolean | null
           last_connected_at: string | null
+          max_concurrent_chats: number | null
           message_count_received: number | null
           message_count_sent: number | null
           metadata: Json | null
+          n8n_workflows: Json | null
+          notes: string | null
+          operator_email: string | null
+          operator_name: string | null
+          operator_phone: string | null
+          operator_since: string | null
           owner_id: string | null
           phone_number: string | null
           profile_picture: string | null
@@ -3373,25 +3387,43 @@ export type Database = {
           proxy_port: string | null
           proxy_user: string | null
           settings: Json | null
+          sla_first_response_minutes: number | null
+          sla_resolution_hours: number | null
+          slot_name: string | null
           status: string | null
           updated_at: string | null
+          usage_type: string | null
           webhook_enabled: boolean | null
           webhook_url: string | null
         }
         Insert: {
           api_key?: string | null
           api_url?: string | null
+          auto_reply_enabled?: boolean | null
+          auto_reply_message?: string | null
+          bitrix_integration?: Json | null
+          business_hours_enabled?: boolean | null
+          config?: Json | null
           connection_status?: string | null
           created_at?: string | null
+          department?: string | null
           display_name?: string | null
           error_logs?: string | null
           id?: string
           instance_name: string
+          is_active?: boolean | null
           is_master?: boolean | null
           last_connected_at?: string | null
+          max_concurrent_chats?: number | null
           message_count_received?: number | null
           message_count_sent?: number | null
           metadata?: Json | null
+          n8n_workflows?: Json | null
+          notes?: string | null
+          operator_email?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          operator_since?: string | null
           owner_id?: string | null
           phone_number?: string | null
           profile_picture?: string | null
@@ -3400,25 +3432,43 @@ export type Database = {
           proxy_port?: string | null
           proxy_user?: string | null
           settings?: Json | null
+          sla_first_response_minutes?: number | null
+          sla_resolution_hours?: number | null
+          slot_name?: string | null
           status?: string | null
           updated_at?: string | null
+          usage_type?: string | null
           webhook_enabled?: boolean | null
           webhook_url?: string | null
         }
         Update: {
           api_key?: string | null
           api_url?: string | null
+          auto_reply_enabled?: boolean | null
+          auto_reply_message?: string | null
+          bitrix_integration?: Json | null
+          business_hours_enabled?: boolean | null
+          config?: Json | null
           connection_status?: string | null
           created_at?: string | null
+          department?: string | null
           display_name?: string | null
           error_logs?: string | null
           id?: string
           instance_name?: string
+          is_active?: boolean | null
           is_master?: boolean | null
           last_connected_at?: string | null
+          max_concurrent_chats?: number | null
           message_count_received?: number | null
           message_count_sent?: number | null
           metadata?: Json | null
+          n8n_workflows?: Json | null
+          notes?: string | null
+          operator_email?: string | null
+          operator_name?: string | null
+          operator_phone?: string | null
+          operator_since?: string | null
           owner_id?: string | null
           phone_number?: string | null
           profile_picture?: string | null
@@ -3427,8 +3477,12 @@ export type Database = {
           proxy_port?: string | null
           proxy_user?: string | null
           settings?: Json | null
+          sla_first_response_minutes?: number | null
+          sla_resolution_hours?: number | null
+          slot_name?: string | null
           status?: string | null
           updated_at?: string | null
+          usage_type?: string | null
           webhook_enabled?: boolean | null
           webhook_url?: string | null
         }
