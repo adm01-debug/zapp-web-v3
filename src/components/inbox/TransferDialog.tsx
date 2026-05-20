@@ -43,7 +43,7 @@ export function TransferDialog({ open, onOpenChange, onTransfer }: TransferDialo
   const [connections, setConnections] = useState<{ id: string; name: string; phone_number: string; status: string }[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(false);
 
-  const { agents, isLoading: loadingAgents } = useAgents();
+  const { agents, loading: loadingAgents } = useAgents();
   const { queues, loading: loadingQueues } = useQueues();
 
   // Fetch WhatsApp connections
