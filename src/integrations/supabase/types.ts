@@ -2811,6 +2811,7 @@ export type Database = {
       }
       department_invitations: {
         Row: {
+          code: string | null
           created_at: string | null
           created_by: string | null
           department_id: string | null
@@ -2822,6 +2823,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           department_id?: string | null
@@ -2833,6 +2835,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          code?: string | null
           created_at?: string | null
           created_by?: string | null
           department_id?: string | null
@@ -5078,6 +5081,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          _admin_user_id: string | null
           access_level: string | null
           avatar_url: string | null
           birthday: string | null
@@ -5101,6 +5105,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          _admin_user_id?: string | null
           access_level?: string | null
           avatar_url?: string | null
           birthday?: string | null
@@ -5124,6 +5129,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          _admin_user_id?: string | null
           access_level?: string | null
           avatar_url?: string | null
           birthday?: string | null
@@ -5160,6 +5166,7 @@ export type Database = {
         Row: {
           connected_at: string | null
           connection_id: string | null
+          connection_name: string | null
           created_at: string | null
           error_code: string | null
           error_message: string | null
@@ -5172,6 +5179,7 @@ export type Database = {
         Insert: {
           connected_at?: string | null
           connection_id?: string | null
+          connection_name?: string | null
           created_at?: string | null
           error_code?: string | null
           error_message?: string | null
@@ -5184,6 +5192,7 @@ export type Database = {
         Update: {
           connected_at?: string | null
           connection_id?: string | null
+          connection_name?: string | null
           created_at?: string | null
           error_code?: string | null
           error_message?: string | null
@@ -8470,6 +8479,11 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      rpc_dlq_log_item_action: {
+        Args: { p_action: string; p_item_id: string; p_reason?: string }
+        Returns: boolean
+      }
+      rpc_dlq_retry_now: { Args: { p_item_id: string }; Returns: boolean }
       rpc_instance_auth_event_summary: {
         Args: { p_instance: string }
         Returns: {
@@ -8480,9 +8494,14 @@ export type Database = {
       rpc_instance_auth_event_trend: {
         Args: { p_hours?: number; p_instance: string }
         Returns: {
+          auth_401: number
+          auth_403: number
           bucket: string
           failure_count: number
+          instance_name: string
+          invalid_signature: number
           success_count: number
+          total: number
         }[]
       }
       rpc_list_dispatch_error_logs: {
