@@ -3048,31 +3048,108 @@ export type Database = {
         }
         Relationships: []
       }
-      evolution_instance_credentials: {
+      evolution_health_logs: {
         Row: {
           connection_id: string | null
           created_at: string | null
+          error_count: number | null
           id: string
-          instance_name: string
-          instance_token: string | null
-          updated_at: string | null
-          webhook_url: string | null
+          instance_name: string | null
+          response_time_ms: number | null
+          status: string | null
+          success_count: number | null
         }
         Insert: {
           connection_id?: string | null
           created_at?: string | null
+          error_count?: number | null
           id?: string
-          instance_name: string
-          instance_token?: string | null
-          updated_at?: string | null
-          webhook_url?: string | null
+          instance_name?: string | null
+          response_time_ms?: number | null
+          status?: string | null
+          success_count?: number | null
         }
         Update: {
           connection_id?: string | null
           created_at?: string | null
+          error_count?: number | null
+          id?: string
+          instance_name?: string | null
+          response_time_ms?: number | null
+          status?: string | null
+          success_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_health_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_health_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_agent"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_health_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_health_logs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_connections_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_instance_credentials: {
+        Row: {
+          api_key: string | null
+          api_url: string | null
+          connection_id: string | null
+          created_at: string | null
+          health_status: string | null
+          id: string
+          instance_name: string
+          instance_token: string | null
+          is_active: boolean | null
+          last_health_check: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_url?: string | null
+          connection_id?: string | null
+          created_at?: string | null
+          health_status?: string | null
+          id?: string
+          instance_name: string
+          instance_token?: string | null
+          is_active?: boolean | null
+          last_health_check?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_url?: string | null
+          connection_id?: string | null
+          created_at?: string | null
+          health_status?: string | null
           id?: string
           instance_name?: string
           instance_token?: string | null
+          is_active?: boolean | null
+          last_health_check?: string | null
           updated_at?: string | null
           webhook_url?: string | null
         }
@@ -4865,6 +4942,7 @@ export type Database = {
           connection_id: string | null
           created_at: string | null
           error_code: string | null
+          expired_at: string | null
           id: string
           metadata: Json | null
           status: string | null
@@ -4874,6 +4952,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string | null
           error_code?: string | null
+          expired_at?: string | null
           id?: string
           metadata?: Json | null
           status?: string | null
@@ -4883,6 +4962,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string | null
           error_code?: string | null
+          expired_at?: string | null
           id?: string
           metadata?: Json | null
           status?: string | null
@@ -8092,6 +8172,10 @@ export type Database = {
           is_locked: boolean
           locked_until: string
         }[]
+      }
+      rpc_upsert_contact: {
+        Args: { p_instance: string; p_push_name?: string; p_remote_jid: string }
+        Returns: string
       }
       search_contacts: {
         Args: {
