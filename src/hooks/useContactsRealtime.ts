@@ -41,6 +41,11 @@ export function useContactsRealtime({
 }: UseContactsRealtimeOptions = {}) {
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  // Keep latest callbacks in a ref so the channel is not torn down and
+  // re-subscribed on every render when callers pass inline functions.
+  const callbacksRef = useRef({ onInsert, onUpdate, onDelete, onAny });
+  callbacksRef.current = { onInsert, onUpdate, onDelete, onAny };
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -59,6 +64,7 @@ export function useContactsRealtime({
         },
         (payload) => {
           const { eventType, new: newRow, old: oldRow } = payload;
+          const { onInsert, onUpdate, onDelete, onAny } = callbacksRef.current;
 
           onAny?.();
 
@@ -104,7 +110,7 @@ export function useContactsRealtime({
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [instanceName, enabled, onInsert, onUpdate, onDelete, onAny]);
+  }, [instanceName, enabled]);
 
   return {
     /** Manually unsubscribe from realtime updates */

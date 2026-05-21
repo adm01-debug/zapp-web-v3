@@ -285,7 +285,7 @@ export function useRealtimeMessages() {
     if (user) {
       await supabase.from('profiles')
         .update({ last_seen: new Date().toISOString() })
-        .eq('id', user.id);
+        .eq('user_id', user.id);
     }
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId

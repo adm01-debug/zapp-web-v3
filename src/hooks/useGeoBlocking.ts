@@ -30,7 +30,7 @@ export function useGeoBlocking() {
 
   const fetchData = async () => {
     try {
-      const { data: settingsData , error } = await supabase.from('geo_blocking_settings').select('*').limit(1).single();
+      const { data: settingsData , error } = await supabase.from('geo_blocking_settings').select('*').limit(1).maybeSingle();
       if (settingsData) setSettings(settingsData as GeoSettings);
 
       const { data: allowedData , error: allowedDataErr } = await supabase.from('allowed_countries').select('*').order('created_at', { ascending: false });

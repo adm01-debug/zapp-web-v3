@@ -108,7 +108,7 @@ export async function sendMessageToContact(
     .from('profiles')
     .select('id')
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-    .single();
+    .maybeSingle();
 
   const { data, error } = await supabase
     .from('messages')

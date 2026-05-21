@@ -136,7 +136,7 @@ export function useConversations() {
 
   const loadConversations = useCallback(async (overrideFilters?: Partial<ConversationFilters>) => {
     const f = { ...filters, ...overrideFilters };
-    setLoading(true); setConversations([]); cursorRef.current = null;
+    setLoading(true); setConversations([]); cursorRef.current = null; offsetRef.current = 0;
     try {
       const { data, count, error } = await buildQuery(f);
       if (error) throw error;
@@ -148,6 +148,7 @@ export function useConversations() {
       setConversations(items);
       setTotal(count ?? items.length);
       setHasMore(items.length === PAGE_SIZE);
+      offsetRef.current = items.length;
     } catch (err) {
       console.error('[useConversations]', err);
       toast({ title: 'Erro ao carregar conversas', description: String(err), variant: 'destructive' });

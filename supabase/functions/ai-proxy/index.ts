@@ -46,9 +46,9 @@ async function getProvider(supabase: ReturnType<typeof createClient>, useFor: st
 
 function injectSystemPrompt(messages: Array<{ role: string; content: string }>, systemPrompt: string) {
   const result = [...messages];
-  const hasSystem = result.some(m => m.role === 'system');
-  if (hasSystem) {
-    result[0] = { role: 'system', content: systemPrompt + '\n\n' + result[0].content };
+  const systemIdx = result.findIndex(m => m.role === 'system');
+  if (systemIdx >= 0) {
+    result[systemIdx] = { role: 'system', content: systemPrompt + '\n\n' + result[systemIdx].content };
   } else {
     result.unshift({ role: 'system', content: systemPrompt });
   }

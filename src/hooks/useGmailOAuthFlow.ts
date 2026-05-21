@@ -178,6 +178,7 @@ export function useEmailOAuthFlow(): UseEmailOAuthFlowReturn {
 
         // Listener para message do popup (após callback bem-sucedido)
         const onMessage = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
           if (event.data?.type === 'email-oauth-success') {
             window.removeEventListener('message', onMessage);
             popup?.close();

@@ -130,7 +130,7 @@ export async function sendMessageToContact(
     .from('profiles')
     .select('id')
     .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-    .single();
+    .maybeSingle();
 
   // If we already have an optimisticId (local bubble already created), we don't insert yet.
   // We'll update the record after the API call or use the existing one if we were doing server-side optimistic.
