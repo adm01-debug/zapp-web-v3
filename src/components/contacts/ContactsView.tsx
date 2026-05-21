@@ -108,7 +108,7 @@ export function ContactsView() {
         }
       />
 
-      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImportComplete={refetch} />
+      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} workspaceId="wpp2" onImportComplete={refetch} />
       <ContactMergeDialog
         open={isMergeOpen} onOpenChange={setIsMergeOpen}
         contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
