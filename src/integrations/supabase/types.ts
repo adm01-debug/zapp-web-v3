@@ -8441,6 +8441,16 @@ export type Database = {
       manage_department_member:
         | {
             Args: {
+              _admin_user_id?: string
+              _target_profile_id?: string
+              p_action?: string
+              p_department_id?: string
+              p_profile_id?: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
               p_action: string
               p_department_id: string
               p_profile_id: string
@@ -8478,7 +8488,9 @@ export type Database = {
           locked_until: string
         }[]
       }
-      rpc_dlq_abandon: { Args: { p_item_id: string }; Returns: boolean }
+      rpc_dlq_abandon:
+        | { Args: { p_item_id: string }; Returns: boolean }
+        | { Args: { p_id?: string; p_item_id?: string }; Returns: boolean }
       rpc_dlq_bulk_abandon: { Args: { p_ids: string[] }; Returns: boolean }
       rpc_dlq_list_audit: {
         Args: { p_limit?: number }
@@ -8511,7 +8523,9 @@ export type Database = {
             Args: { p_action: string; p_item_id: string; p_reason?: string }
             Returns: boolean
           }
-      rpc_dlq_retry_now: { Args: { p_item_id: string }; Returns: boolean }
+      rpc_dlq_retry_now:
+        | { Args: { p_item_id: string }; Returns: boolean }
+        | { Args: { p_id?: string; p_item_id?: string }; Returns: boolean }
       rpc_instance_auth_event_summary: {
         Args: { p_instance: string }
         Returns: {
