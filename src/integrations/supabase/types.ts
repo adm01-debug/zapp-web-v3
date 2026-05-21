@@ -2816,6 +2816,7 @@ export type Database = {
           created_by: string | null
           department_id: string | null
           email: string
+          expires_at: string | null
           id: string
           invited_by: string | null
           role: string
@@ -2828,6 +2829,7 @@ export type Database = {
           created_by?: string | null
           department_id?: string | null
           email: string
+          expires_at?: string | null
           id?: string
           invited_by?: string | null
           role?: string
@@ -2840,6 +2842,7 @@ export type Database = {
           created_by?: string | null
           department_id?: string | null
           email?: string
+          expires_at?: string | null
           id?: string
           invited_by?: string | null
           role?: string
@@ -5174,6 +5177,7 @@ export type Database = {
           id: string
           instance_id: string | null
           metadata: Json | null
+          requested_by: string | null
           status: string | null
         }
         Insert: {
@@ -5187,6 +5191,7 @@ export type Database = {
           id?: string
           instance_id?: string | null
           metadata?: Json | null
+          requested_by?: string | null
           status?: string | null
         }
         Update: {
@@ -5200,6 +5205,7 @@ export type Database = {
           id?: string
           instance_id?: string | null
           metadata?: Json | null
+          requested_by?: string | null
           status?: string | null
         }
         Relationships: [
@@ -8432,14 +8438,24 @@ export type Database = {
         }
         Returns: undefined
       }
-      manage_department_member: {
-        Args: {
-          p_action: string
-          p_department_id: string
-          p_profile_id: string
-        }
-        Returns: boolean
-      }
+      manage_department_member:
+        | {
+            Args: {
+              p_action: string
+              p_department_id: string
+              p_profile_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _admin_user_id?: string
+              p_action: string
+              p_department_id: string
+              p_profile_id: string
+            }
+            Returns: boolean
+          }
       pause_instance: {
         Args: {
           p_instance: string
@@ -8462,6 +8478,8 @@ export type Database = {
           locked_until: string
         }[]
       }
+      rpc_dlq_abandon: { Args: { p_item_id: string }; Returns: boolean }
+      rpc_dlq_bulk_abandon: { Args: { p_ids: string[] }; Returns: boolean }
       rpc_dlq_list_audit: {
         Args: { p_limit?: number }
         Returns: {
@@ -8479,10 +8497,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      rpc_dlq_log_item_action: {
-        Args: { p_action: string; p_item_id: string; p_reason?: string }
-        Returns: boolean
-      }
+      rpc_dlq_log_item_action:
+        | {
+            Args: {
+              p_action?: string
+              p_ids?: string[]
+              p_item_id?: string
+              p_reason?: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: { p_action: string; p_item_id: string; p_reason?: string }
+            Returns: boolean
+          }
       rpc_dlq_retry_now: { Args: { p_item_id: string }; Returns: boolean }
       rpc_instance_auth_event_summary: {
         Args: { p_instance: string }
