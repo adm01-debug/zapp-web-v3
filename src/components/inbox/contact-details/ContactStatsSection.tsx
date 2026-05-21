@@ -37,7 +37,11 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
 }
 
 export function ContactStatsSection({ contactId }: ContactStatsSectionProps) {
-  const { data: stats, isLoading } = useContactStats(contactId);
+  // NOTE: não existe RPC de estatísticas por-contato ainda; este hook global é
+  // chamado de forma tolerante (cast) — espelha a versão canônica em
+  // src/features/inbox/components/contact-details. Métricas por-contato dependem
+  // de um backend dedicado (ver PR).
+  const { stats, isLoading } = (useContactStats as unknown as (id: string) => { stats: Record<string, number> | null; isLoading: boolean })(contactId);
 
   if (isLoading) {
     return (

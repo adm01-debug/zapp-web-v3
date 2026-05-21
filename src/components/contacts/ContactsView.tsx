@@ -50,21 +50,31 @@ export function ContactsView() {
     activeFiltersCount, clearFilters, page, setPage, pageSize,
     loadMore, loadPrevious, refetch,
     profile, scrollContainerRef,
-    isSubmitting, deleteTarget, setDeleteTarget,
+    deleteTarget, setDeleteTarget,
     showSuccess, setShowSuccess,
     isAddDialogOpen, setIsAddDialogOpen,
     isEditDialogOpen, setIsEditDialogOpen,
     editingContact, showFilters, setShowFilters,
     isCRMSearchOpen, setIsCRMSearchOpen,
     selectedIds, setSelectedIds,
-    newContact, openContactChat,
-    handleAddContact, handleEditContact, handleDeleteContact,
-    openEditDialog, handleCancelForm,
-    handleNewContactChange, handleEditContactChange,
+    openContactChat,
+    handleDeleteContact,
+    openEditDialog,
   } = crud;
+
+  // Workspace de contatos (convenção do módulo — ver ContactContentArea / ContactsRichView).
+  const workspaceId = 'wpp2';
 
   const contactPhones = useMemo(() => filteredContacts.map(c => c.phone), [filteredContacts]);
   const { lookup: getCRMData } = useExternalContact360Batch(contactPhones);
+
+  // ContactMergeDialog opera sobre exatamente dois contatos selecionados.
+  const mergePair = useMemo(() => {
+    const sel = filteredContacts.filter(c => selectedIds.includes(c.id));
+    if (sel.length < 2) return null;
+    const toMerge = (c: (typeof sel)[number]) => ({ ...c, tags: c.tags ?? [], channel: null });
+    return { primary: toMerge(sel[0]), secondary: toMerge(sel[1]) };
+  }, [filteredContacts, selectedIds]);
 
   return (
     <div ref={scrollContainerRef} className="p-6 space-y-5 overflow-y-auto h-full relative bg-background">
@@ -93,13 +103,11 @@ export function ContactsView() {
               <FileSpreadsheet className="w-4 h-4 mr-2" />Exportar
             </Button>
             <ContactDialogs
+              workspaceId={workspaceId}
               isAddDialogOpen={isAddDialogOpen} setIsAddDialogOpen={setIsAddDialogOpen}
-              newContact={newContact} handleNewContactChange={handleNewContactChange}
-              handleAddContact={handleAddContact} handleCancelForm={handleCancelForm}
-              isSubmitting={isSubmitting}
+              onContactSaved={() => { refetch(); }}
               isEditDialogOpen={isEditDialogOpen} setIsEditDialogOpen={setIsEditDialogOpen}
-              editingContact={editingContact} handleEditContactChange={handleEditContactChange}
-              handleEditContact={handleEditContact}
+              editingContact={editingContact}
               showSuccess={showSuccess} setShowSuccess={setShowSuccess}
               deleteTarget={deleteTarget} setDeleteTarget={setDeleteTarget}
               handleDeleteContact={handleDeleteContact}
@@ -108,12 +116,15 @@ export function ContactsView() {
         }
       />
 
-      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImportComplete={refetch} />
-      <ContactMergeDialog
-        open={isMergeOpen} onOpenChange={setIsMergeOpen}
-        contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
-        onMergeComplete={() => { setSelectedIds([]); refetch(); }}
-      />
+      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} workspaceId={workspaceId} onImportComplete={refetch} />
+      {mergePair && (
+        <ContactMergeDialog
+          open={isMergeOpen} onOpenChange={setIsMergeOpen}
+          primaryContact={mergePair.primary}
+          secondaryContact={mergePair.secondary}
+          onMergeComplete={() => { setSelectedIds([]); refetch(); }}
+        />
+      )}
       <ContactCompareDialog
         open={isCompareOpen} onOpenChange={setIsCompareOpen}
         contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
@@ -236,9 +247,10 @@ export function ContactsView() {
 
       <BulkActionsBar
         selectedIds={selectedIds}
+        workspaceId={workspaceId}
+        totalCount={totalCount}
         onClearSelection={() => setSelectedIds([])}
-        onActionComplete={() => { setSelectedIds([]); refetch(); }}
-        availableTags={uniqueTags}
+        onDeleted={() => { setSelectedIds([]); refetch(); }}
       />
     </div>
   );
