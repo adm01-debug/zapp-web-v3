@@ -1470,6 +1470,36 @@ export type Database = {
           },
         ]
       }
+      connection_alert_preferences: {
+        Row: {
+          alert_on_degraded: boolean | null
+          alert_on_disconnected: boolean | null
+          created_at: string | null
+          email_enabled: boolean | null
+          push_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_on_degraded?: boolean | null
+          alert_on_disconnected?: boolean | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          push_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_on_degraded?: boolean | null
+          alert_on_disconnected?: boolean | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          push_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       connection_health_logs: {
         Row: {
           checked_at: string
@@ -2779,6 +2809,36 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          whatsapp_api_key: string | null
+          whatsapp_mode: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          whatsapp_api_key?: string | null
+          whatsapp_mode?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          whatsapp_api_key?: string | null
+          whatsapp_mode?: string | null
+        }
+        Relationships: []
+      }
       email_labels: {
         Row: {
           color: string | null
@@ -3053,31 +3113,43 @@ export type Database = {
           connection_id: string | null
           created_at: string | null
           error_count: number | null
+          error_message: string | null
           id: string
           instance_name: string | null
+          online_instances: number | null
+          performed_at: string | null
           response_time_ms: number | null
           status: string | null
           success_count: number | null
+          total_instances: number | null
         }
         Insert: {
           connection_id?: string | null
           created_at?: string | null
           error_count?: number | null
+          error_message?: string | null
           id?: string
           instance_name?: string | null
+          online_instances?: number | null
+          performed_at?: string | null
           response_time_ms?: number | null
           status?: string | null
           success_count?: number | null
+          total_instances?: number | null
         }
         Update: {
           connection_id?: string | null
           created_at?: string | null
           error_count?: number | null
+          error_message?: string | null
           id?: string
           instance_name?: string | null
+          online_instances?: number | null
+          performed_at?: string | null
           response_time_ms?: number | null
           status?: string | null
           success_count?: number | null
+          total_instances?: number | null
         }
         Relationships: [
           {
@@ -4942,6 +5014,7 @@ export type Database = {
           connection_id: string | null
           created_at: string | null
           error_code: string | null
+          error_message: string | null
           expired_at: string | null
           id: string
           metadata: Json | null
@@ -4952,6 +5025,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string | null
           error_code?: string | null
+          error_message?: string | null
           expired_at?: string | null
           id?: string
           metadata?: Json | null
@@ -4962,6 +5036,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string | null
           error_code?: string | null
+          error_message?: string | null
           expired_at?: string | null
           id?: string
           metadata?: Json | null
