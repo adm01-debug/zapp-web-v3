@@ -194,12 +194,12 @@ export function ContactTypeFilter({ value, onChange, conversations }: ContactTyp
 
 // ---------- helper for filtering ----------
 
-export function filterByContactType(
-  conversations: ConversationWithMessages[],
+export function filterByContactType<T>(
+  conversations: T[],
   contactType: string | null,
-): ConversationWithMessages[] {
+): T[] {
   if (!contactType || contactType === 'all') return conversations;
   const option = FILTER_OPTIONS.find((o) => o.value === contactType);
   if (!option) return conversations;
-  return conversations.filter(option.match);
+  return conversations.filter((c) => option.match(c as ConversationWithMessages));
 }
