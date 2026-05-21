@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { sanitizeForSearch } from '@/lib/sanitize';
 import { newRequestId } from '@/lib/withRequestId';
 import { z } from 'zod';
 import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from '@/shared/criticalPayloadSchemas';
@@ -48,7 +49,7 @@ export function useNewConversation(
       setIsLoading(true);
       const { data, error } = await supabase.from('contacts')
         .select('id, name, phone, avatar_url')
-        .or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)
+        .or(`name.ilike.%${sanitizeForSearch(searchQuery)}%,phone.ilike.%${sanitizeForSearch(searchQuery)}%`)
         .limit(10);
       setContacts(data || []);
       setIsLoading(false);
