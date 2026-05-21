@@ -2809,32 +2809,79 @@ export type Database = {
           },
         ]
       }
+      department_invitations: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          email: string
+          id: string
+          invited_by: string | null
+          role: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_invitations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string | null
           description: string | null
           id: string
+          is_active: boolean | null
           name: string
           updated_at: string | null
           whatsapp_api_key: string | null
+          whatsapp_instance_id: string | null
           whatsapp_mode: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
           updated_at?: string | null
           whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
           whatsapp_mode?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
           updated_at?: string | null
           whatsapp_api_key?: string | null
+          whatsapp_instance_id?: string | null
           whatsapp_mode?: string | null
         }
         Relationships: []
@@ -4947,6 +4994,7 @@ export type Database = {
           can_download: boolean
           created_at: string
           department: string | null
+          department_id: string | null
           email: string | null
           id: string
           is_active: boolean | null
@@ -4969,6 +5017,7 @@ export type Database = {
           can_download?: boolean
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -4991,6 +5040,7 @@ export type Database = {
           can_download?: boolean
           created_at?: string
           department?: string | null
+          department_id?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
@@ -5006,7 +5056,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       qr_attempts: {
         Row: {
@@ -6521,6 +6579,52 @@ export type Database = {
           {
             foreignKeyName: "team_conversations_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_message_receipts: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string | null
+          profile_id: string | null
+          read_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          profile_id?: string | null
+          read_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          profile_id?: string | null
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_message_receipts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "team_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_message_receipts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_message_receipts_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
             referencedColumns: ["id"]
@@ -8225,6 +8329,14 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      manage_department_member: {
+        Args: {
+          p_action: string
+          p_department_id: string
+          p_profile_id: string
+        }
+        Returns: boolean
       }
       pause_instance: {
         Args: {
