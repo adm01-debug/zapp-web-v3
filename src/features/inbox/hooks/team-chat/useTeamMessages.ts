@@ -34,7 +34,7 @@ export function useTeamMessages(conversationId: string | null, searchQuery: stri
 
       if (pageParam) {
         const [createdAt, id] = (pageParam as string).split('|');
-        query = query.or(`created_at.lt."${createdAt}",and(created_at.eq."${createdAt}",id.lt."${id}"))`);
+        query = query.or(`created_at.lt."${createdAt}",and(created_at.eq."${createdAt}",id.lt."${id}")`);
       }
 
       if (searchQuery.trim()) {

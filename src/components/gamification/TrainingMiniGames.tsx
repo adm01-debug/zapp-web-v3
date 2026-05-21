@@ -6,6 +6,7 @@ import { Gamepad2, Star, Trophy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useCelebration } from '@/components/effects/Confetti';
 import { GAMES, type GameType } from './miniGamesData';
+import { safeJsonParse } from '@/lib/safeJsonParse';
 import { SpeedTypingGame, QuizGame, EmojiDecodeGame } from './MiniGameDialogs';
 
 interface TrainingMiniGamesProps {
@@ -17,8 +18,7 @@ export function TrainingMiniGames({ onXPEarned }: TrainingMiniGamesProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [highScores, setHighScores] = useState<Record<GameType, number>>(() => {
-    const saved = localStorage.getItem('miniGameHighScores');
-    return saved ? JSON.parse(saved) : {};
+    return safeJsonParse<Record<GameType, number>>(localStorage.getItem('miniGameHighScores'), {} as Record<GameType, number>);
   });
   const { celebrate } = useCelebration();
 

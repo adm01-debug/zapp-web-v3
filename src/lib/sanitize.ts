@@ -101,6 +101,7 @@ export function sanitizeForSearch(input: unknown): string {
   if (!input) return '';
   return sanitizeText(input)
     .replace(/[%_\\]/g, '\\$&') // escape SQL LIKE special chars
+    .replace(/[(),]/g, ' ')      // neutralize PostgREST .or() control chars (separators/groups)
     .slice(0, 200);              // max 200 chars for search
 }
 

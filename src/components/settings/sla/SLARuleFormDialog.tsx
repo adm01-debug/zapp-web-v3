@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { sanitizeForSearch } from '@/lib/sanitize';
 import { toast } from 'sonner';
 import { Search, Loader2, Bell, FileText } from 'lucide-react';
 import { CONTACT_TYPES, SCOPE_LABELS } from './sla-utils';
@@ -95,7 +96,7 @@ export function SLARuleFormDialog({ open, onOpenChange, scope, editingRule }: SL
     queryKey: ['sla-scope-contacts', contactSearch],
     queryFn: async () => {
       const { data, error } = await supabase.from('contacts').select('id, name, phone')
-        .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
+        .or(`name.ilike.%${sanitizeForSearch(contactSearch)}%,phone.ilike.%${sanitizeForSearch(contactSearch)}%`)
         .limit(20);
       return data || [];
     },

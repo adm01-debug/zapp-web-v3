@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sanitizeText } from '@/lib/sanitize';
+import { sanitizeText, sanitizeForSearch } from '@/lib/sanitize';
 import { formatPhoneForDisplay } from '@/lib/phoneUtils';
 import { dbFrom } from '@/integrations/datasource/db';
 
@@ -106,7 +106,7 @@ export const ContactExportDialog: React.FC<Props> = ({
         if (activeFilters?.channel) q = q.eq('lead_status', activeFilters.channel);
         if (activeFilters?.tags?.length) q = q.overlaps('tags', activeFilters.tags);
         if (activeFilters?.search?.trim()) {
-          const s = activeFilters.search.trim();
+          const s = sanitizeForSearch(activeFilters.search);
           q = q.or(`full_name.ilike.%${s}%,phone_number.ilike.%${s}%,email.ilike.%${s}%`);
         }
       }

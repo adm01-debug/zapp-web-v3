@@ -9,7 +9,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { sanitizeContactFields } from '@/lib/sanitize';
+import { sanitizeContactFields, sanitizeForSearch } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 
@@ -149,7 +149,7 @@ export function useContacts() {
     if (f.assigned_to)  q = q.eq('assigned_to', f.assigned_to);
     if (f.tags.length)  q = q.overlaps('tags', f.tags);
     if (f.search?.trim()) {
-      const s = f.search.trim();
+      const s = sanitizeForSearch(f.search);
       q = q.or(`full_name.ilike.%${s}%,phone_number.ilike.%${s}%,email.ilike.%${s}%,push_name.ilike.%${s}%`);
     }
 

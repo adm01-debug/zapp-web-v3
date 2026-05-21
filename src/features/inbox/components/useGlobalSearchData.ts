@@ -7,6 +7,7 @@ import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { subDays, subMonths, startOfDay } from 'date-fns';
 import { dbFrom, dbRpc } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
+import { sanitizeForSearch } from '@/lib/sanitize';
 
 export interface SearchResult {
   id: string;
@@ -154,7 +155,7 @@ export function useGlobalSearchData(open: boolean) {
 
       if (types.has('contact')) {
         let contactQuery = dbFrom('contacts').select('id, name, surname, phone, email, created_at, tags');
-        if (cleanQuery.length >= 2) contactQuery = contactQuery.or(`name.ilike.%${cleanQuery}%,surname.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%,email.ilike.%${cleanQuery}%`);
+        if (cleanQuery.length >= 2) { const sq = sanitizeForSearch(cleanQuery); contactQuery = contactQuery.or(`name.ilike.%${sq}%,surname.ilike.%${sq}%,phone.ilike.%${sq}%,email.ilike.%${sq}%`); }
 
         const { data: contacts } = await contactQuery.order('name', { ascending: true }).limit(10);
         if (contacts) {

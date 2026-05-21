@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
 import { dbFrom } from '@/integrations/datasource/db';
+import { sanitizeForSearch } from '@/lib/sanitize';
 
 const log = getLogger('useSendProduct');
 
@@ -30,7 +31,7 @@ export function useContactSearch(step: 'configure' | 'selectContact') {
       const { data, error } = await supabase
         .from('contacts')
         .select('id, name, phone, avatar_url')
-        .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)
+        .or(`name.ilike.%${sanitizeForSearch(contactSearch)}%,phone.ilike.%${sanitizeForSearch(contactSearch)}%`)
         .limit(15);
       setContactResults(data || []);
       setSearchingContacts(false);

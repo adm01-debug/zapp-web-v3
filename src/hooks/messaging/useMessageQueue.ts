@@ -3,6 +3,7 @@ import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import { eventBus } from '@/lib/eventBus';
 import { log } from '@/lib/logger';
 import { useToast } from '@/hooks/use-toast';
+import { safeJsonParse } from '@/lib/safeJsonParse';
 
 export interface PendingMessage {
   id: string;
@@ -18,8 +19,7 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
   const { toast } = useToast();
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>(() => {
     if (typeof window === 'undefined') return [];
-    const saved = localStorage.getItem(`pending_msgs_${instanceName}`);
-    return saved ? JSON.parse(saved) : [];
+    return safeJsonParse<PendingMessage[]>(localStorage.getItem(`pending_msgs_${instanceName}`), []);
   });
   const queueRef = useRef<PendingMessage[]>([]);
   const isProcessingRef = useRef(false);

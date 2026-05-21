@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useThemeAudit } from '@/hooks/useThemeAudit';
+import { safeJsonParse } from '@/lib/safeJsonParse';
 
 interface ValidationItem {
   id: string;
@@ -27,8 +28,7 @@ const DEFAULT_ITEMS: ValidationItem[] = [
 export function VisualValidationChecklist({ onClose }: { onClose: () => void }) {
   const audit = useThemeAudit();
   const [items, setItems] = useState<ValidationItem[]>(() => {
-    const saved = localStorage.getItem('visual-validation-checklist');
-    return saved ? JSON.parse(saved) : DEFAULT_ITEMS;
+    return safeJsonParse<ValidationItem[]>(localStorage.getItem('visual-validation-checklist'), DEFAULT_ITEMS);
   });
 
   useEffect(() => {

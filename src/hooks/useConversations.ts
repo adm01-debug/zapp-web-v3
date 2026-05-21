@@ -6,7 +6,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sanitizeText } from '@/lib/sanitize';
+import { sanitizeText, sanitizeForSearch } from '@/lib/sanitize';
 import { dbFrom, dbTable, dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { eventBus } from '@/lib/eventBus';
@@ -96,7 +96,7 @@ export function useConversations() {
     if (f.assigned_to) q = q.eq('assigned_to', f.assigned_to);
     if (f.priority) q = q.eq('priority', f.priority);
     if (f.search?.trim()) {
-      const s = sanitizeText(f.search.trim());
+      const s = sanitizeForSearch(f.search);
       q = q.or(`remote_jid.ilike.%${s}%,subject.ilike.%${s}%,last_message_content.ilike.%${s}%`);
     }
 
