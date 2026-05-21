@@ -3048,6 +3048,48 @@ export type Database = {
         }
         Relationships: []
       }
+      evolution_retry_metrics: {
+        Row: {
+          action: string
+          attempt_count: number | null
+          created_at: string | null
+          final_http_status: number | null
+          final_status: string | null
+          id: string
+          idempotency_key: string | null
+          instance_name: string | null
+          method: string | null
+          retry_reasons: Json | null
+          total_duration_ms: number | null
+        }
+        Insert: {
+          action: string
+          attempt_count?: number | null
+          created_at?: string | null
+          final_http_status?: number | null
+          final_status?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instance_name?: string | null
+          method?: string | null
+          retry_reasons?: Json | null
+          total_duration_ms?: number | null
+        }
+        Update: {
+          action?: string
+          attempt_count?: number | null
+          created_at?: string | null
+          final_http_status?: number | null
+          final_status?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instance_name?: string | null
+          method?: string | null
+          retry_reasons?: Json | null
+          total_duration_ms?: number | null
+        }
+        Relationships: []
+      }
       favorite_contacts: {
         Row: {
           contact_id: string
@@ -3404,6 +3446,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      instance_auth_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          instance_name: string
+          meta: Json | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          instance_name: string
+          meta?: Json | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          instance_name?: string
+          meta?: Json | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
+      instance_processing_pauses: {
+        Row: {
+          created_at: string | null
+          id: string
+          instance_name: string
+          paused_until: string
+          reason: string | null
+          trigger_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          paused_until: string
+          reason?: string | null
+          trigger_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          paused_until?: string
+          reason?: string | null
+          trigger_count?: number | null
+        }
+        Relationships: []
       }
       instance_registry: {
         Row: {
@@ -4533,6 +4629,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      processed_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string | null
+          instance: string | null
+          processed_at: string | null
+        }
+        Insert: {
+          event_id: string
+          event_type?: string | null
+          instance?: string | null
+          processed_at?: string | null
+        }
+        Update: {
+          event_id?: string
+          event_type?: string | null
+          instance?: string | null
+          processed_at?: string | null
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -6659,6 +6776,27 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_cloud_webhook_pings: {
+        Row: {
+          created_at: string | null
+          id: string
+          kind: string
+          meta: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          kind: string
+          meta?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          kind?: string
+          meta?: Json | null
+        }
+        Relationships: []
+      }
       whatsapp_connection_queues: {
         Row: {
           created_at: string
@@ -7682,6 +7820,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      pause_instance: {
+        Args: {
+          p_instance: string
+          p_minutes: number
+          p_reason: string
+          p_trigger_count?: number
+        }
+        Returns: string
+      }
       reassign_absent_agents: {
         Args: { inactive_minutes?: number }
         Returns: number
@@ -7738,6 +7885,7 @@ export type Database = {
         }[]
       }
       skill_based_assign: { Args: { p_queue_id: string }; Returns: string }
+      unpause_instance: { Args: { p_instance: string }; Returns: number }
       update_own_profile: {
         Args: {
           p_avatar_url?: string
