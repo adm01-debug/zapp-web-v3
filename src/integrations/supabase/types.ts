@@ -2812,6 +2812,7 @@ export type Database = {
       department_invitations: {
         Row: {
           created_at: string | null
+          created_by: string | null
           department_id: string | null
           email: string
           id: string
@@ -2822,6 +2823,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
           department_id?: string | null
           email: string
           id?: string
@@ -2832,6 +2834,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
           department_id?: string | null
           email?: string
           id?: string
@@ -2883,6 +2886,60 @@ export type Database = {
           whatsapp_api_key?: string | null
           whatsapp_instance_id?: string | null
           whatsapp_mode?: string | null
+        }
+        Relationships: []
+      }
+      dispatch_error_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          error_type: string | null
+          id: string
+          instance_name: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          id?: string
+          instance_name?: string | null
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      dlq_audit_log: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          id: string
+          item_id: string | null
+          performed_by: string | null
+          reason: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          id?: string
+          item_id?: string | null
+          performed_by?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          id?: string
+          item_id?: string | null
+          performed_by?: string | null
+          reason?: string | null
         }
         Relationships: []
       }
@@ -3342,6 +3399,39 @@ export type Database = {
           method?: string | null
           retry_reasons?: Json | null
           total_duration_ms?: number | null
+        }
+        Relationships: []
+      }
+      failed_messages: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          instance_name: string | null
+          message_id: string | null
+          next_retry_at: string | null
+          retry_count: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          instance_name?: string | null
+          message_id?: string | null
+          next_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          instance_name?: string | null
+          message_id?: string | null
+          next_retry_at?: string | null
+          retry_count?: number | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -5075,6 +5165,7 @@ export type Database = {
           error_message: string | null
           expired_at: string | null
           id: string
+          instance_id: string | null
           metadata: Json | null
           status: string | null
         }
@@ -5086,6 +5177,7 @@ export type Database = {
           error_message?: string | null
           expired_at?: string | null
           id?: string
+          instance_id?: string | null
           metadata?: Json | null
           status?: string | null
         }
@@ -5097,6 +5189,7 @@ export type Database = {
           error_message?: string | null
           expired_at?: string | null
           id?: string
+          instance_id?: string | null
           metadata?: Json | null
           status?: string | null
         }
@@ -8359,6 +8452,74 @@ export type Database = {
           is_locked: boolean
           locked_until: string
         }[]
+      }
+      rpc_dlq_list_audit: {
+        Args: { p_limit?: number }
+        Returns: {
+          action: string | null
+          created_at: string | null
+          id: string
+          item_id: string | null
+          performed_by: string | null
+          reason: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dlq_audit_log"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      rpc_instance_auth_event_summary: {
+        Args: { p_instance: string }
+        Returns: {
+          event_type: string
+          total: number
+        }[]
+      }
+      rpc_instance_auth_event_trend: {
+        Args: { p_hours?: number; p_instance: string }
+        Returns: {
+          bucket: string
+          failure_count: number
+          success_count: number
+        }[]
+      }
+      rpc_list_dispatch_error_logs: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string | null
+          error_message: string | null
+          error_type: string | null
+          id: string
+          instance_name: string | null
+          metadata: Json | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dispatch_error_logs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      rpc_list_failed_messages: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          instance_name: string | null
+          message_id: string | null
+          next_retry_at: string | null
+          retry_count: number | null
+          status: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "failed_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       rpc_upsert_contact: {
         Args: { p_instance: string; p_push_name?: string; p_remote_jid: string }
