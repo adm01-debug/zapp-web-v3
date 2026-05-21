@@ -45,9 +45,12 @@ export function useOfflineQueue() {
       if (processingRef.current || queueRef.current.length === 0) return;
       processingRef.current = true;
 
+      // Snapshot the batch so actions enqueued mid-flight aren't lost when we
+      // rewrite the queue below.
+      const batch = queueRef.current.slice();
       const remaining: QueuedAction[] = [];
 
-      for (const action of queueRef.current) {
+      for (const action of batch) {
         try {
           const success = await handler(action);
           if (!success) {
@@ -64,11 +67,12 @@ export function useOfflineQueue() {
         }
       }
 
-      queueRef.current = remaining;
-      setQueueLength(remaining.length);
+      const enqueuedDuringProcessing = queueRef.current.slice(batch.length);
+      queueRef.current = [...remaining, ...enqueuedDuringProcessing];
+      setQueueLength(queueRef.current.length);
       processingRef.current = false;
 
-      log.info(`[OfflineQueue] Processed, ${remaining.length} remaining`);
+      log.info(`[OfflineQueue] Processed, ${queueRef.current.length} remaining`);
     },
     [],
   );
