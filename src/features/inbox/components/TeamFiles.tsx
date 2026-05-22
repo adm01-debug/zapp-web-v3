@@ -24,9 +24,9 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
     queryKey: ['team-files', contactId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('whisper_files')
+        .from('whisper_files' as any)
         .select('*')
-        .eq('contact_id', contactId)
+        .eq('contact_id' as any, contactId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -50,7 +50,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
         .from('whatsapp-media')
         .getPublicUrl(filePath);
 
-      const { error: dbError } = await supabase.from('whisper_files').insert({
+      const { error: dbError } = await supabase.from('whisper_files' as any).insert({
         contact_id: contactId,
         file_name: file.name,
         file_url: publicUrl,
@@ -73,7 +73,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('whisper_files').delete().eq('id', id);
+      const { error } = await supabase.from('whisper_files' as any).delete().eq('id' as any, id);
       if (error) throw error;
     },
     onSuccess: () => {
