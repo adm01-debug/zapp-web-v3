@@ -130,13 +130,17 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       <div className="flex flex-col items-center gap-1.5 pt-1.5 pb-3 shrink-0">
         <div className="mx-3 h-px bg-border self-stretch" />
         {!collapsed && <div className="px-3 self-stretch flex items-center gap-1.5 pb-0.5"><span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Controles rápidos</span></div>}
-        <div className={cn('flex items-center gap-1 rounded-2xl border border-border/40 bg-muted/20 px-1.5 py-1.5 shadow-none transition-all duration-300', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
-          <ScreenProtectionToggle className="w-[36px] h-[36px]" />
-          <PushNotificationToggle className="w-[36px] h-[36px]" />
-          <SoundMuteToggle className="w-[36px] h-[36px]" />
-          <StatusLabelToggle className="w-[36px] h-[36px]" />
+        <div className={cn('flex items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/20 px-2 py-2 shadow-sm transition-all duration-300 hover:bg-muted/30', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
+          <ScreenProtectionToggle className="w-[36px] h-[36px] touch-manipulation" />
+          <PushNotificationToggle className="w-[36px] h-[36px] touch-manipulation" />
+          <SoundMuteToggle className="w-[36px] h-[36px] touch-manipulation" />
+          <StatusLabelToggle className="w-[36px] h-[36px] touch-manipulation" />
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
-            <button onClick={() => setTheme(isDark ? 'light' : 'dark')} className={cn("w-[36px] h-[36px] rounded-lg flex items-center justify-center transition-all duration-200 text-muted-foreground hover:bg-muted/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none", isDark && "text-primary")} aria-label={isDark ? 'Modo claro' : 'Modo escuro'}>
+            <button 
+              onClick={() => setTheme(isDark ? 'light' : 'dark')} 
+              className={cn("w-[36px] h-[36px] rounded-lg flex items-center justify-center transition-all duration-300 text-muted-foreground hover:bg-muted/20 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:outline-none touch-manipulation", isDark && "text-primary bg-primary/5")} 
+              aria-label={isDark ? 'Mudar para modo claro' : 'Mudar para modo escuro'}
+            >
               {isDark ? <Sun className="w-[16px] h-[16px]" /> : <Moon className="w-[16px] h-[16px]" />}
             </button>
           </TooltipTrigger><TooltipContent side="right" sideOffset={8} className="text-xs">{isDark ? 'Modo claro' : 'Modo escuro'}</TooltipContent></Tooltip>

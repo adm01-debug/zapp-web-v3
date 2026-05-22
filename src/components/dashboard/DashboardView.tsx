@@ -100,14 +100,14 @@ export function DashboardView() {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden glow-gradient-pulse"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-xl shadow-primary/10 glow-gradient-pulse"
               style={{ background: 'var(--gradient-primary)' }}
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <TrendingUp className="w-6 h-6 text-primary-foreground relative z-10" />
             </motion.div>
             <div>
-              <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground neon-underline">
+              <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="font-display text-3xl sm:text-4xl font-black tracking-tight text-foreground neon-underline bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
                 {greeting}
               </motion.h1>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-muted-foreground text-sm">
