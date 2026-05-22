@@ -235,8 +235,8 @@ export function ContactsView() {
 
       <BulkActionsBar
         selectedIds={selectedIds}
+        workspaceId="default"
         onClearSelection={() => setSelectedIds([])}
-        onActionComplete={() => { refetch(); }}
         availableTags={uniqueTags}
       />
     </div>
