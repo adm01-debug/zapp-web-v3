@@ -137,7 +137,7 @@ export function BulkActionsToolbar({
       <TransferDialog
         open={showTransferDialog}
         onOpenChange={setShowTransferDialog}
-        onTransfer={handleTransfer}
+        onTransfer={handleTransfer as any}
       />
     </>
   );

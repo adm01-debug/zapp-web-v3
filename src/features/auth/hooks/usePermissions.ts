@@ -119,7 +119,7 @@ export function usePermissions() {
   const addPermissionToRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
-      .insert({ role, permission_id: permissionId });
+      .insert({ role, permission_id: permissionId } as any);
 
     if (!error) {
       await fetchRolePermissions();
@@ -131,7 +131,7 @@ export function usePermissions() {
     const { error } = await supabase
       .from('role_permissions')
       .delete()
-      .eq('role', role)
+      .eq('role', role as any)
       .eq('permission_id', permissionId);
 
     if (!error) {
