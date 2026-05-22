@@ -22,7 +22,7 @@ const log = getLogger('useRealtimeInbox');
 // O projeto migrou todo o domínio WhatsApp/CRM para FATOR X. O caminho
 // legado (public.messages/contacts) está desativado em produção e os envios
 // caíam para `failed_retries` sem refletir entradas vindas do webhook.
-const USE_EXTERNAL_DB = false;
+const USE_EXTERNAL_DB = true;
 
 export function useRealtimeInbox() {
   // Local DB source (original)
@@ -193,8 +193,8 @@ export function useRealtimeInbox() {
 
   // Load fallback contact
   const selectedConversation = useMemo(
-    () => cachedConversations.find((c) => c.contact.id === selectedContactId) || null,
-    [cachedConversations, selectedContactId]
+    () => conversations.find((c) => (c.contact.id === selectedContactId || (c.contact as any).remote_jid === selectedContactId)) || null,
+    [conversations, selectedContactId]
   );
 
   useEffect(() => {
@@ -322,11 +322,15 @@ export function useRealtimeInbox() {
     // Pegar as últimas 10 mensagens para reconciliar (caso algum webhook tenha chegado)
     const recent = selectedMessages.slice(-10);
     recent.forEach(msg => {
-      if (msg.external_id && msg.sender === 'agent') {
+      if (msg.external_id && (msg.sender === 'agent' || msg.sender === 'bot')) {
         const status = (msg.status === 'failed' || msg.status === 'failed_auth' || msg.status === 'failed_retries') 
           ? 'failed' 
           : 'confirmed';
         messageQueue.reconcileWithDelivery(selectedContactId, msg.external_id, status);
+      }
+      // Reconciliar por conteúdo para bot
+      else if (msg.content && msg.sender === 'bot') {
+        messageQueue.reconcileWithDelivery(selectedContactId, msg.content, msg.status === 'failed' ? 'failed' : 'confirmed');
       }
     });
   }, [selectedMessages, selectedContactId]);
@@ -337,21 +341,39 @@ export function useRealtimeInbox() {
     // Webhook reconciliation - remove if already delivered/confirmed externally
     const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
     const lastMsg = messagesToCheck[messagesToCheck.length - 1];
-    if (lastMsg?.external_id && lastMsg.sender === 'agent') {
+    if (lastMsg?.external_id && (lastMsg.sender === 'agent' || lastMsg.sender === 'bot')) {
       messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
+    }
+    // Fallback: reconciliar usando o conteúdo para mensagens de bot que podem vir sem external_id imediato
+    else if (lastMsg?.content && lastMsg.sender === 'bot') {
+      messageQueue.reconcileWithDelivery(contactId, lastMsg.content, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
     }
 
     // Auto-assign on first reply if pending
+    // Auto-assign on first reply if pending
     try {
-      const { data: conv } = await dbFrom('team_conversations')
-        .select('id, routing_status')
-        .eq('id', contactId)
-        .maybeSingle();
-        
-      if (conv && conv.routing_status === 'pending') {
-        await dbFrom('team_conversations')
-          .update({ routing_status: 'assigned' })
-          .eq('id', contactId);
+      if (USE_EXTERNAL_DB) {
+        const { data: conv } = await dbFrom('evolution_contacts')
+          .select('remote_jid, routing_status')
+          .eq('remote_jid', contactId)
+          .maybeSingle();
+          
+        if (conv && conv.routing_status === 'pending') {
+          await dbFrom('evolution_contacts')
+            .update({ routing_status: 'assigned' })
+            .eq('remote_jid', contactId);
+        }
+      } else {
+        const { data: conv } = await dbFrom('team_conversations')
+          .select('id, routing_status')
+          .eq('id', contactId)
+          .maybeSingle();
+          
+        if (conv && conv.routing_status === 'pending') {
+          await dbFrom('team_conversations')
+            .update({ routing_status: 'assigned' })
+            .eq('id', contactId);
+        }
       }
     } catch (err) {
       log.error('Error auto-assigning on reply:', err);

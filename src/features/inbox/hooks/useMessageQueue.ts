@@ -286,7 +286,7 @@ export function useMessageQueue(
 
   const reconcileWithDelivery = useCallback((contactId: string, externalId: string, status: 'confirmed' | 'failed') => {
     setQueue(prev => {
-      const item = prev.find(i => i.contactId === contactId && i.externalId === externalId);
+      const item = prev.find(i => i.contactId === contactId && (i.externalId === externalId || i.content === externalId));
       if (!item) return prev;
 
       if (status === 'confirmed') {

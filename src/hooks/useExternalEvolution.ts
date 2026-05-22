@@ -461,9 +461,14 @@ export function useExternalConversations(enabled = true) {
 
   return {
     conversations: query.data || [],
+    allConversations: query.data || [],
     loading: query.isLoading,
     error: query.error?.message || null,
     refetch: query.refetch,
+    // Compatibilidade com filtros locais
+    search: '', setSearch: () => {},
+    statusFilter: 'all', setStatusFilter: () => {},
+    sortBy: 'lastMessage', setSortBy: () => {}
   };
 }
 
