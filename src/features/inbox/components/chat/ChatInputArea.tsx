@@ -289,12 +289,16 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className={cn(
-        "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-xl border-t border-border/10 relative flex flex-col gap-2 shrink-0  transition-all duration-500 ease-in-out", 
-        isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/30 shadow-[0_-8px_30px_rgba(245,158,11,0.05)]",
-        !isWhisper && "focus-within:shadow-[0_-8px_30px_rgba(var(--primary-rgb),0.04)]",
-        logic.isMobile && "px-3 py-2 safe-area-bottom"
-      )}>
+      <div 
+        className={cn(
+          "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-2xl border-t border-border/40 relative flex flex-col gap-2 shrink-0 transition-all duration-500 ease-in-out shadow-[0_-8px_40px_rgba(0,0,0,0.04)]", 
+          isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/40 shadow-[0_-8px_30px_rgba(245,158,11,0.08)]",
+          !isWhisper && "focus-within:shadow-[0_-8px_40px_rgba(var(--primary-rgb),0.06)]",
+          logic.isMobile && "px-3 py-2 safe-area-bottom"
+        )}
+        role="form"
+        aria-label="Área de composição de mensagem"
+      >
         <AnimatePresence>
           {isRecordingAudio && isV2AudioEnabled && (
             <motion.div 

@@ -165,10 +165,16 @@ export function RealtimeInboxView() {
 
       <ConversationListSidebar inbox={inbox} inboxFilters={inboxFilters} bulkActions={bulkActions} pullToRefresh={pullToRefresh} />
 
-      <div className={cn('flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden', isMobile && !inbox.selectedContactId && 'hidden')}>
+      <div 
+        className={cn(
+          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out', 
+          isMobile && !inbox.selectedContactId && 'hidden',
+          isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
+        )}
+      >
         {inbox.legacyConversation ? (
           <Suspense fallback={<ChatFallback />}>
-            <>
+            <div className="flex-1 flex min-w-0 min-h-0 relative h-full overflow-hidden">
               <div className="flex-1 min-w-0 min-h-0 relative h-full overflow-hidden">
                 {inbox.selectedContactId && (
                   <SectionErrorBoundary sectionName="Chat" className="h-full">
@@ -186,14 +192,10 @@ export function RealtimeInboxView() {
                       showDetails={isMobile ? false : inbox.showDetails}
                       onToggleDetails={() => inbox.setShowDetails(!inbox.showDetails)}
                       initialHighlightMessageId={inbox.pendingMessageId}
-                       isLoading={inbox.selectedMessagesLoading}
-                       messageQueue={inbox.messageQueue}
+                      isLoading={inbox.selectedMessagesLoading}
+                      messageQueue={inbox.messageQueue}
                       onHighlightConsumed={() => {
                         inbox.setPendingMessageId(null);
-                        // Strip the one-shot ?message= param so refresh
-                        // / future navigations don't replay the highlight.
-                        // Keep ?contact= so a refresh still lands on the
-                        // same conversation (deep-link friendly).
                         try {
                           const url = new URL(window.location.href);
                           if (url.searchParams.has('message')) {
@@ -202,22 +204,27 @@ export function RealtimeInboxView() {
                           }
                         } catch { /* noop */ }
                       }}
-                      onBack={isMobile ? () => {
+                      onBack={() => {
                         if (inbox.legacyConversation) {
-                          inbox.setPipContact({ name: inbox.legacyConversation.contact.name, avatar: inbox.legacyConversation.contact.avatar, lastMessage: inbox.legacyConversation.lastMessage?.content, contactId: inbox.legacyConversation.id });
+                          inbox.setPipContact({ 
+                            name: inbox.legacyConversation.contact.name, 
+                            avatar: inbox.legacyConversation.contact.avatar, 
+                            lastMessage: inbox.legacyConversation.lastMessage?.content, 
+                            contactId: inbox.legacyConversation.id 
+                          });
                         }
                         inbox.setSelectedContactId(null);
-                      } : undefined}
+                      }}
                     />
                   </SectionErrorBoundary>
                 )}
               </div>
-              {inbox.showDetails && (
+              {inbox.showDetails && !isMobile && (
                 <SectionErrorBoundary sectionName="Detalhes do Contato">
                   <ContactDetailsResponsive key={`details-${inbox.legacyConversation.id}`} conversation={inbox.legacyConversation} onClose={() => inbox.setShowDetails(false)} />
                 </SectionErrorBoundary>
               )}
-            </>
+            </div>
           </Suspense>
         ) : <InboxEmptyChat />}
       </div>

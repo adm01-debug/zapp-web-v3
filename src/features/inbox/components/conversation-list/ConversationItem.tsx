@@ -186,13 +186,15 @@ export function ConversationItem({
           data-testid="conversation-item"
           data-density="compact"
           onClick={() => onSelect(conversation)}
-          whileHover={{ x: 2 }}
+          whileHover={{ x: 4, backgroundColor: 'rgba(var(--primary-rgb), 0.05)' }}
           whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          aria-selected={isSelected}
+          role="option"
           className={cn(
-            'relative p-2.5 rounded-lg cursor-pointer transition-all duration-200 mx-2 min-h-[64px] flex items-center gap-2',
-            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/30 border border-transparent',
-            isMultiSelected && 'bg-primary/15'
+            'relative p-2.5 rounded-xl cursor-pointer transition-all duration-300 mx-2 min-h-[64px] flex items-center gap-2 group',
+            isSelected ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20' : 'hover:bg-muted/40 border-transparent',
+            isMultiSelected && 'bg-primary/20 shadow-inner'
           )}
         >
           {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-primary" />}
@@ -344,14 +346,16 @@ export function ConversationItem({
           data-testid="conversation-item"
           data-density="comfortable"
           onClick={() => onSelect(conversation)}
+          aria-selected={isSelected}
+          role="option"
           className={cn(
             'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3',
-            'hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:z-10',
+            'hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:z-10',
             isSelected
-              ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]'
-              : 'hover:bg-muted/30 bg-background',
-            isMultiSelected && 'bg-primary/15',
-            isPinned && !isSelected && 'bg-muted/30'
+              ? 'bg-primary/[0.08] shadow-[inset_0_0_24px_rgba(var(--primary-rgb),0.04)]'
+              : 'hover:bg-muted/40 bg-background dark:bg-card/50',
+            isMultiSelected && 'bg-primary/20 shadow-inner',
+            isPinned && !isSelected && 'bg-muted/40'
           )}
         >
           {isSelected && (

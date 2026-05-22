@@ -63,10 +63,10 @@ export function ChatPanelHeader({
   const { avatarUrl } = useContactAvatar(conversation.contact.id, conversation.contact.avatar);
 
   return (
-    <div className="flex items-center justify-between px-3 md:px-6 h-[56px] md:h-[72px] border-b border-border/50 bg-background/95 backdrop-blur-md sticky top-0 z-30 shrink-0 transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+    <div className="flex items-center justify-between px-3 md:px-6 h-[56px] md:h-[72px] border-b border-border/40 bg-background/95 backdrop-blur-xl sticky top-0 z-30 shrink-0 transition-all duration-500 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {isMobile && onBack && (
-          <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl shrink-0 touch-manipulation" onClick={onBack} aria-label="Voltar">
+          <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl shrink-0 touch-manipulation hover:bg-muted active:scale-95 transition-all" onClick={onBack} aria-label="Voltar">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         )}
