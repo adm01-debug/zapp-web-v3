@@ -167,7 +167,7 @@ export function RealtimeInboxView() {
 
       <div 
         className={cn(
-          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out shadow-xl', 
+          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out', 
           isMobile && !inbox.selectedContactId && 'hidden',
           isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
         )}
@@ -230,7 +230,7 @@ export function RealtimeInboxView() {
       </div>
 
       {inbox.usingCache && (
-        <div className="absolute top-0 left-0 right-0 z-50 bg-warning/90 text-warning-foreground text-xs text-center py-1.5 font-medium">📡 Modo offline — exibindo dados em cache</div>
+        <div className="absolute top-0 left-0 right-0 z-50 bg-warning/90 text-warning-foreground text-xs text-center py-1.5 font-medium shadow-sm backdrop-blur-md">📡 Modo offline — exibindo dados em cache</div>
       )}
 
       {isMobile && inbox.pipContact && !inbox.selectedContactId && (
