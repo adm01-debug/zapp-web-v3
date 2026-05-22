@@ -369,10 +369,11 @@ export function useRealtimeMessages() {
         if (statusFilter === 'unread') return conv.unreadCount > 0;
         // Logic for open/closed: check ticket status or last message direction
         if (statusFilter === 'open') {
-          return !conv.lastMessage || conv.lastMessage.sender === 'contact';
+          // No FATOR X (external), consideramos aberto se houver tickets pendentes ou se a última mensagem for do contato
+          return !conv.lastMessage || conv.lastMessage.sender === 'contact' || (conv.contact as any).routing_status === 'pending';
         }
         if (statusFilter === 'closed') {
-          return conv.lastMessage?.sender === 'agent';
+          return conv.lastMessage?.sender === 'agent' && (conv.contact as any).routing_status !== 'pending';
         }
         return true; 
       });
