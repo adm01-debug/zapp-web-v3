@@ -23,10 +23,10 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['team-files', contactId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('whisper_files' as any)
-        .select('*')
-        .eq('contact_id' as any, contactId)
+        .select('*') as any)
+        .eq('contact_id', contactId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -160,7 +160,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
             </p>
           </div>
         ) : (
-          filteredFiles.map((file) => (
+          filteredFiles.map((file: any) => (
             <div key={file.id} className="flex items-center gap-3 p-2 rounded-xl bg-warning/50 border border-warning hover:bg-warning/50 transition-colors group">
               <div className="w-8 h-8 rounded-lg bg-warning flex items-center justify-center shrink-0">
                 <File className="w-4 h-4 text-warning-foreground" />

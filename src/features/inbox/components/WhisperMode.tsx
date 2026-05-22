@@ -57,7 +57,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
         query = query.is('whisper_thread_id', null);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await (query as any).limit(50);
       
       if (!data) return [];
 
@@ -84,7 +84,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
         });
       }
 
-      return data.map(w => ({
+      return data.map((w: any) => ({
         ...w,
         sender_name: nameMap.get(w.sender_id) || 'Supervisor',
         reply_count: threadCounts[w.id] || 0,
