@@ -78,8 +78,8 @@ export function ConversationList({
     <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden ">
       {/* Header */}
       <div className={cn(
-        "border-b border-border bg-background shrink-0",
-        isCompactMode ? "p-2 space-y-2" : "p-3 space-y-3"
+        "border-b border-border/40 bg-background/50 backdrop-blur-md shrink-0 transition-all duration-300",
+        isCompactMode ? "p-2 space-y-2" : "p-4 space-y-4"
       )}>
         <div className="flex items-center justify-between">
           <h2 className={cn(
@@ -109,7 +109,7 @@ export function ConversationList({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={cn(
-              "pl-9 pr-4 bg-muted/30 border-none rounded-xl text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-background transition-all",
+              "pl-9 pr-4 bg-muted/40 hover:bg-muted/60 focus:bg-background border-none rounded-2xl text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-300 shadow-sm",
               isCompactMode ? "h-[30px] text-[12px]" : "h-[36px] text-sm"
             )}
           />

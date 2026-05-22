@@ -5,7 +5,7 @@ import { MessageSquare, MessageSquarePlus, Search as SearchIcon } from 'lucide-r
 export function InboxEmptyChat() {
   return (
     <div className="flex-1 flex items-center justify-center bg-background min-h-0 overflow-hidden">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }} className="text-center p-8 max-w-md">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="text-center p-8 max-w-lg">
         <div className="relative w-20 h-20 mx-auto mb-6">
           <motion.div
             animate={{ rotate: [0, 3, -3, 0] }}
@@ -30,10 +30,10 @@ export function InboxEmptyChat() {
           </motion.div>
         </div>
 
-        <h3 className="text-[14px] font-semibold text-foreground mb-1 tracking-tight">Selecione uma conversa</h3>
-        <p className="text-muted-foreground text-[12px] leading-relaxed mb-6">Escolha uma conversa na lista ao lado para visualizar e responder mensagens</p>
+        <h3 className="text-[18px] font-bold text-foreground mb-2 tracking-tight">Sua central de atendimento</h3>
+        <p className="text-muted-foreground text-[14px] leading-relaxed mb-8">Selecione uma conversa na lista para começar. Utilize os atalhos de teclado para uma navegação ultra-rápida.</p>
         
-        <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30">
+        <div className="inline-flex flex-wrap items-center justify-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border/10 shadow-xl shadow-primary/5">
           <div className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 rounded-md bg-muted text-[10px]  text-muted-foreground border border-border/40 shadow-sm">↑</kbd>
             <kbd className="px-1.5 py-0.5 rounded-md bg-muted text-[10px]  text-muted-foreground border border-border/40 shadow-sm">↓</kbd>
