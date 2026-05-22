@@ -67,7 +67,7 @@ export const MobileHeader = forwardRef<HTMLElement, MobileHeaderProps>(
         animate={{ y: 0 }}
         className="fixed top-0 left-0 right-0 z-50 safe-area-top"
       >
-        <div className="flex items-center justify-between px-3 h-12 bg-card/90 backdrop-blur-xl border-b border-border/40">
+        <div className="flex items-center justify-between px-4 h-14 bg-background/80 backdrop-blur-2xl border-b border-border/10 shadow-sm">
           {/* Left: Menu + Avatar */}
           <div className="flex items-center gap-2">
             <Button
@@ -81,7 +81,7 @@ export const MobileHeader = forwardRef<HTMLElement, MobileHeaderProps>(
             </Button>
 
             <div className="relative">
-              <Avatar className="w-7 h-7">
+              <Avatar className="w-8 h-8 shadow-sm">
                 <AvatarImage src={agentAvatar} alt={agentName} />
                 <AvatarFallback className="bg-primary/15 text-primary text-[9px] font-bold">
                   {initials}
@@ -104,7 +104,7 @@ export const MobileHeader = forwardRef<HTMLElement, MobileHeaderProps>(
               key={currentView}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-display font-semibold text-sm text-foreground truncate max-w-[180px]"
+              className="font-display font-black text-[15px] text-foreground truncate max-w-[180px] tracking-tight"
             >
               {viewLabels[currentView] || currentView.charAt(0).toUpperCase() + currentView.slice(1)}
             </motion.h1>

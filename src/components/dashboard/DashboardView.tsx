@@ -78,7 +78,7 @@ export function DashboardView() {
   );
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto h-full w-full relative bg-background">
+    <div className="p-4 md:p-8 space-y-8 overflow-y-auto h-full w-full relative bg-background scrollbar-none">
       <AuroraBorealis />
       <FloatingParticles />
 
@@ -100,18 +100,18 @@ export function DashboardView() {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 200 }}
-              className="w-12 h-12 rounded-xl flex items-center justify-center relative overflow-hidden glow-gradient-pulse"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-xl shadow-primary/10 glow-gradient-pulse"
               style={{ background: 'var(--gradient-primary)' }}
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <TrendingUp className="w-6 h-6 text-primary-foreground relative z-10" />
             </motion.div>
             <div>
-              <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground neon-underline">
+              <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="font-display text-3xl sm:text-4xl font-black tracking-tight text-foreground neon-underline bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
                 {greeting}
               </motion.h1>
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-muted-foreground text-sm">
-                Visão geral do atendimento em tempo real
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-muted-foreground text-sm font-medium">
+                Sua central de comando inteligente em tempo real
               </motion.p>
             </div>
           </div>
@@ -126,23 +126,23 @@ export function DashboardView() {
         </div>
       </motion.div>
 
-      <div className="relative z-10 border-t border-border/20" />
+      <div className="relative z-10 border-t border-border/10 mt-2" />
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="relative z-10">
         <DashboardFilters filters={filters} onFiltersChange={setFilters} onRefresh={handleRefresh} isRefreshing={isRefreshing} />
       </motion.div>
 
       <Tabs defaultValue="overview" className="relative z-10">
-        <TabsList className="mb-4 bg-muted/50 border border-border/30 flex-wrap">
-          <TabsTrigger value="overview" className="flex items-center gap-2"><TrendingUp className="w-4 h-4" />Visão Geral</TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2"><BarChart3 className="w-4 h-4" />Analytics</TabsTrigger>
-          <TabsTrigger value="goals" className="flex items-center gap-2"><Target className="w-4 h-4" />Metas</TabsTrigger>
-          <TabsTrigger value="ai" className="flex items-center gap-2"><Brain className="w-4 h-4" />Inteligência Artificial</TabsTrigger>
-          <TabsTrigger value="sla" className="flex items-center gap-2"><Clock className="w-4 h-4" />Métricas SLA</TabsTrigger>
-          <TabsTrigger value="team" className="flex items-center gap-2"><Award className="w-4 h-4" />Equipe</TabsTrigger>
-          <TabsTrigger value="satisfaction" className="flex items-center gap-2"><Heart className="w-4 h-4" />Satisfação</TabsTrigger>
-          <TabsTrigger value="sentiment" className="flex items-center gap-2"><Smile className="w-4 h-4" />Sentimento</TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2"><FileText className="w-4 h-4" />Relatórios</TabsTrigger>
+        <TabsList className="mb-6 bg-muted/30 p-1.5 border border-border/20 flex-wrap h-auto gap-1 rounded-2xl backdrop-blur-md">
+          <TabsTrigger value="overview" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><TrendingUp className="w-4 h-4" />Visão Geral</TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><BarChart3 className="w-4 h-4" />Analytics</TabsTrigger>
+          <TabsTrigger value="goals" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Target className="w-4 h-4" />Metas</TabsTrigger>
+          <TabsTrigger value="ai" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Brain className="w-4 h-4" />IA</TabsTrigger>
+          <TabsTrigger value="sla" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Clock className="w-4 h-4" />SLA</TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Award className="w-4 h-4" />Equipe</TabsTrigger>
+          <TabsTrigger value="satisfaction" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Heart className="w-4 h-4" />Satisfação</TabsTrigger>
+          <TabsTrigger value="sentiment" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Smile className="w-4 h-4" />Sentimento</TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><FileText className="w-4 h-4" />Relatórios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">

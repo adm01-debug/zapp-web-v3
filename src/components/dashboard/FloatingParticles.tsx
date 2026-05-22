@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { motion } from 'framer-motion';
 import { useMemo, forwardRef } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
 interface Particle {
   id: number;
@@ -13,7 +14,10 @@ interface Particle {
 }
 
 export const FloatingParticles = forwardRef<HTMLDivElement>((_, ref) => {
+  const prefersReducedMotion = useReducedMotion();
+  
   const particles = useMemo<Particle[]>(() => {
+    if (prefersReducedMotion) return [];
     return Array.from({ length: 30 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,

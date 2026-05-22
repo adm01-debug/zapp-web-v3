@@ -152,13 +152,13 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
               <button
                 onClick={toggleZen}
                 className={cn(
-                  'absolute top-3 right-3 z-30 h-8 rounded-full flex items-center gap-1.5 transition-all duration-200',
-                  'border border-border/40 shadow-none',
+                  'absolute top-3 right-3 z-30 h-9 rounded-full flex items-center gap-2 transition-all duration-500',
+                  'border border-border/40 shadow-sm backdrop-blur-md touch-manipulation focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none',
                   isZen
-                    ? 'px-3 bg-primary/15 border-primary/30 text-primary hover:bg-primary/25 hover:border-primary/50 shadow-primary/10'
-                    : 'px-2.5 bg-foreground border-border/40 text-muted-foreground/60 hover:text-foreground hover:bg-muted/10 hover:border-border/70'
+                    ? 'px-4 bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 hover:border-primary/60 shadow-lg shadow-primary/10'
+                    : 'px-3.5 bg-background/80 border-border/40 text-muted-foreground/80 hover:text-foreground hover:bg-background hover:border-border/80'
                 )}
-                aria-label={isZen ? 'Sair do modo zen' : 'Modo zen'}
+                aria-label={isZen ? 'Sair do modo zen' : 'Entrar no modo zen'}
               >
                 {isZen ? <Minimize2 className="w-3.5 h-3.5" /> : <Target className="w-4 h-4" />}
                 <span className="text-[11px] font-medium tracking-wide">
@@ -197,8 +197,8 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           <TooltipTrigger asChild>
             <button
               onClick={() => setVoiceOpen(true)}
-              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-none hover:scale-105 transition-all flex items-center justify-center border border-primary/20"
-              aria-label="Assistente de voz"
+              className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-500 flex items-center justify-center border border-primary/20 touch-manipulation focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label="Assistente de voz inteligente"
             >
               <Mic className="w-6 h-6" />
             </button>

@@ -1,7 +1,17 @@
 // @ts-nocheck
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export function AuroraBorealis() {
+  const prefersReducedMotion = useReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-secondary/10 via-transparent to-transparent opacity-30" />
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none z-0">
       {/* Base gradient layer */}

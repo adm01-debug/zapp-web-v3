@@ -62,11 +62,11 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
       aria-label={badgeCount ? `${item.label} (${badgeTitle ?? `${badgeCount} não lidas`})` : item.label}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'relative rounded-2xl flex items-center gap-2.5 transition-all duration-300 ease-out group/item',
-        collapsed ? 'w-[40px] h-[40px] justify-center' : 'w-full h-[40px] px-3.5 rounded-2xl',
+        'relative rounded-2xl flex items-center gap-3 transition-all duration-500 ease-out group/item outline-none',
+        collapsed ? 'w-[44px] h-[44px] justify-center' : 'w-full h-[44px] px-3.5 rounded-2xl',
         isActive
-          ? 'text-primary font-bold shadow-sm'
-          : 'text-sidebar-foreground/80 hover:bg-muted/15 hover:text-foreground active:scale-[0.96]'
+          ? 'text-primary font-black shadow-md shadow-primary/5'
+          : 'text-sidebar-foreground/70 hover:bg-muted/20 hover:text-foreground active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1'
       )}
     >
       {isActive && (
