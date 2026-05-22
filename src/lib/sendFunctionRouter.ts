@@ -11,7 +11,8 @@
  * This is the ONLY place that knows about the api_type split. The Inbox,
  * hooks, and message senders remain agnostic.
  */
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase: any = _sb;
 
 type FnName = 'evolution-api' | 'whatsapp-cloud-api';
 

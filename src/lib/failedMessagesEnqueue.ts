@@ -14,7 +14,8 @@
  * Fire-and-forget: NUNCA relança erro pra não interferir no UX do envio.
  * RLS já cobre a permissão (apenas usuários autenticados inserem).
  */
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase: any = _sb;
 import { getLogger } from '@/lib/logger';
 import { sha256Hex, stableStringify } from '@/lib/idempotency';
 
