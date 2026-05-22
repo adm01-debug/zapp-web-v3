@@ -61,7 +61,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
       
       if (!data) return [];
 
-      const senderIds = [...new Set(data.map(w => w.sender_id))];
+      const senderIds = [...new Set(data.map((w: any) => w.sender_id))];
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name')
@@ -71,13 +71,13 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
       
       let threadCounts: Record<string, number> = {};
       if (!activeThreadId && data.length > 0) {
-        const parentIds = data.map(d => d.id);
+        const parentIds = data.map((d: any) => d.id);
         const { data: counts } = await supabase
           .from('whisper_messages')
           .select('whisper_thread_id')
           .in('whisper_thread_id', parentIds);
         
-        counts?.forEach(c => {
+        counts?.forEach((c: any) => {
           if (c.whisper_thread_id) {
             threadCounts[c.whisper_thread_id] = (threadCounts[c.whisper_thread_id] || 0) + 1;
           }

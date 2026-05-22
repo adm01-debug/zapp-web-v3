@@ -152,7 +152,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
       <div className="space-y-2 min-h-[100px]">
         {isLoading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-warning-foreground" /></div>
-        ) : filteredFiles.length === 0 ? (
+        ) : (filteredFiles as any[]).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center opacity-40 grayscale">
             <File className="w-8 h-8 mb-2" />
             <p className="text-[10px]">

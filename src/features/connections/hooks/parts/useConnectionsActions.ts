@@ -14,11 +14,10 @@ export function useConnectionsActions(
   setNewConnection: (v: any) => void,
   handleShowQrCode: (conn: any) => void,
   disconnectInstance: (instance: string) => Promise<any>,
-  deleteInstance: (instance: string) => Promise<any>
+  deleteInstance: (instance: string) => Promise<any>,
+  newConnection: any
 ) {
   const { toast } = useToast();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newConnection, setNewConnection] = useState({ name: '', phone_number: '', api_type: 'evolution' });
 
   const handleAddConnection = useCallback(async () => {
     if (!newConnection.name) {

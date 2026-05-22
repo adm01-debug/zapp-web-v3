@@ -149,7 +149,7 @@ export function useConnectionsManager() {
 
   const actions = useConnectionsActions(
     connections, setConnections, setIsCreating, setIsAddDialogOpen, setNewConnection,
-    handleShowQrCode, disconnectInstance, deleteInstance
+    handleShowQrCode, disconnectInstance, deleteInstance, newConnection
   );
 
   useConnectionsRealtime(setConnections, qrCodeDialog, setQrCodeDialog, announceConnected);
