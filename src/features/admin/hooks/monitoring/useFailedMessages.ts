@@ -118,7 +118,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
         p_offset: page * pageSize,
       });
       if (error) throw error;
-      const list = (data ?? []) as RpcRow[];
+      const list = (data ?? []) as any[];
       // Client-side filters (RPC keeps API surface small).
       const filtered = list.filter((r) => {
         if (errorCode) {
@@ -131,7 +131,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
         return true;
       });
       const total = list[0]?.total_count != null ? Number(list[0].total_count) : 0;
-      const rows: FailedMessageRow[] = filtered.map(({ total_count: _t, ...rest }) => rest);
+      const rows: FailedMessageRow[] = filtered.map(({ total_count: _t, ...rest }) => rest as FailedMessageRow);
       return { rows, total };
     },
     staleTime: 15_000,
@@ -292,7 +292,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       if (ids.length === 0) return 0;
       const { data, error } = await supabase.rpc('rpc_dlq_bulk_abandon', { p_ids: ids, p_reason: reason });
       if (error) throw error;
-      const affected = (data as number) ?? 0;
+      const affected = (data as any) ?? 0;
       if (affected > 0) await logItemAction('bulk_abandon', ids, reason);
       return affected;
     },
@@ -310,7 +310,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       // Audit trail: register who triggered the manual reprocess. Best-effort —
       // never blocks the actual reprocess invocation.
       try {
-        await supabase.rpc('rpc_dlq_log_reprocess_trigger', { p_source: 'panel' });
+        await supabase.rpc('rpc_dlq_log_reprocess_trigger' as any, { p_source: 'panel' });
       } catch (logErr) {
         console.warn('[dlq] failed to log reprocess trigger', logErr);
       }
@@ -322,7 +322,7 @@ export function useFailedMessages(filters: FailedMessagesFilters = {}) {
       const processed = data?.processed ?? 0;
       // Persist the result of the reprocess execution for audit trail.
       try {
-        await supabase.rpc('rpc_dlq_log_reprocess_result', {
+        await supabase.rpc('rpc_dlq_log_reprocess_result' as any, {
           p_processed: processed,
           p_succeeded: data?.succeeded ?? 0,
           p_failed: data?.failed ?? 0,
@@ -375,7 +375,7 @@ export function useFailedMessagesStats() {
   return useQuery<DlqStats>({
     queryKey: ['failed-messages-stats'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('rpc_dlq_stats');
+      const { data, error } = await supabase.rpc('rpc_dlq_stats' as any);
       if (error) throw error;
       return (data ?? {
         total: 0, total_24h: 0, oldest_pending_at: null, by_status: {}, by_instance: [],
