@@ -6,17 +6,27 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('useConnectionsActions');
 
-export function useConnectionsActions(connections: any[], fetchData: () => void, handleShowQrCode: (conn: any) => void) {
+export function useConnectionsActions(
+  connections: any[],
+  setConnections: (updater: (prev: any[]) => any[]) => void,
+  setIsCreating: (v: boolean) => void,
+  setIsAddDialogOpen: (v: boolean) => void,
+  setNewConnection: (v: any) => void,
+  handleShowQrCode: (conn: any) => void,
+  disconnectInstance: (instance: string) => Promise<any>,
+  deleteInstance: (instance: string) => Promise<any>
+) {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newConnection, setNewConnection] = useState({ name: '', phone_number: '', api_type: 'evolution' });
 
-  const handleCreateConnection = useCallback(async () => {
+  const handleAddConnection = useCallback(async () => {
     if (!newConnection.name) {
       toast({ title: 'Nome é obrigatório', variant: 'destructive' });
       return;
     }
     
+    setIsCreating(true);
     const isOfficial = newConnection.api_type === 'official';
     const instanceName = isOfficial ? `official_${Date.now().toString(36)}` : whatsappConnectionService.generateInstanceName(newConnection.name);
     
@@ -31,6 +41,9 @@ export function useConnectionsActions(connections: any[], fetchData: () => void,
       }) as any).select().single();
       
       if (error) throw error;
+      
+      setConnections(prev => [...prev, data]);
+      
       toast({
         title: 'Conexão criada!',
         description: isOfficial
@@ -40,29 +53,45 @@ export function useConnectionsActions(connections: any[], fetchData: () => void,
       setIsAddDialogOpen(false);
       setNewConnection({ name: '', phone_number: '', api_type: 'evolution' });
       if (data && !isOfficial) handleShowQrCode(data);
-      fetchData();
     } catch (error: any) {
       log.error('Error creating connection:', error);
       toast({ title: 'Erro ao criar conexão', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsCreating(false);
     }
-  }, [newConnection, connections, fetchData, handleShowQrCode, toast]);
+  }, [newConnection, connections, setIsAddDialogOpen, setNewConnection, handleShowQrCode, toast, setIsCreating, setConnections]);
 
-  const handleDeleteConnection = useCallback(async (id: string) => {
-    const { error } = await supabase.from('whatsapp_connections' as any).delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Erro ao deletar', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Conexão removida' });
-      fetchData();
+  const handleSetDefault = useCallback(async (id: string) => {
+    try {
+      await (supabase.from('whatsapp_connections' as any).update({ is_default: false }) as any).neq('id', id);
+      const { error } = await (supabase.from('whatsapp_connections' as any).update({ is_default: true }) as any).eq('id', id);
+      if (error) throw error;
+      setConnections(prev => prev.map(c => ({ ...c, is_default: c.id === id })));
+      toast({ title: 'Conexão padrão atualizada' });
+    } catch (error: any) {
+      toast({ title: 'Erro ao definir padrão', description: error.message, variant: 'destructive' });
     }
-  }, [fetchData, toast]);
+  }, [setConnections, toast]);
+
+  const handleDelete = useCallback(async (connection: any) => {
+    try {
+      if (connection.instance_id) {
+        await deleteInstance(connection.instance_id).catch(e => log.warn('Failed to delete evolution instance:', e));
+      }
+      const { error } = await supabase.from('whatsapp_connections' as any).delete().eq('id', connection.id);
+      if (error) throw error;
+      setConnections(prev => prev.filter(c => c.id !== connection.id));
+      toast({ title: 'Conexão removida' });
+    } catch (error: any) {
+      toast({ title: 'Erro ao deletar', description: error.message, variant: 'destructive' });
+    }
+  }, [setConnections, toast, deleteInstance]);
 
   return {
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    newConnection,
-    setNewConnection,
-    handleCreateConnection,
-    handleDeleteConnection,
+    handleCreateConnection: handleAddConnection,
+    handleDeleteConnection: handleDelete,
+    handleSetDefault,
+    handleAddConnection,
+    handleDelete,
   };
 }
