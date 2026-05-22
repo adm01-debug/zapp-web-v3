@@ -120,8 +120,9 @@ export function DepartmentManagementDialog({ department: initialDepartment, open
         department_id: department.id,
         created_by: currentUser.id,
         code,
+        email: 'default@temp.com', // Added dummy email to fix TS error
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {

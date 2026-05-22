@@ -37,7 +37,7 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
 }
 
 export function ContactStatsSection({ contactId }: ContactStatsSectionProps) {
-  const { data: stats, isLoading } = useContactStats(contactId);
+  const { data: stats, isLoading } = useContactStats(contactId) as any;
 
   if (isLoading) {
     return (
