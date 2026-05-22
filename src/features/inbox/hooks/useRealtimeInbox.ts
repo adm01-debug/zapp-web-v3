@@ -193,8 +193,8 @@ export function useRealtimeInbox() {
 
   // Load fallback contact
   const selectedConversation = useMemo(
-    () => cachedConversations.find((c) => c.contact.id === selectedContactId) || null,
-    [cachedConversations, selectedContactId]
+    () => conversations.find((c) => (c.contact.id === selectedContactId || (c.contact as any).remote_jid === selectedContactId)) || null,
+    [conversations, selectedContactId]
   );
 
   useEffect(() => {
@@ -346,16 +346,30 @@ export function useRealtimeInbox() {
     }
 
     // Auto-assign on first reply if pending
+    // Auto-assign on first reply if pending
     try {
-      const { data: conv } = await dbFrom('team_conversations')
-        .select('id, routing_status')
-        .eq('id', contactId)
-        .maybeSingle();
-        
-      if (conv && conv.routing_status === 'pending') {
-        await dbFrom('team_conversations')
-          .update({ routing_status: 'assigned' })
-          .eq('id', contactId);
+      if (USE_EXTERNAL_DB) {
+        const { data: conv } = await dbFrom('evolution_contacts')
+          .select('remote_jid, routing_status')
+          .eq('remote_jid', contactId)
+          .maybeSingle();
+          
+        if (conv && conv.routing_status === 'pending') {
+          await dbFrom('evolution_contacts')
+            .update({ routing_status: 'assigned' })
+            .eq('remote_jid', contactId);
+        }
+      } else {
+        const { data: conv } = await dbFrom('team_conversations')
+          .select('id, routing_status')
+          .eq('id', contactId)
+          .maybeSingle();
+          
+        if (conv && conv.routing_status === 'pending') {
+          await dbFrom('team_conversations')
+            .update({ routing_status: 'assigned' })
+            .eq('id', contactId);
+        }
       }
     } catch (err) {
       log.error('Error auto-assigning on reply:', err);
