@@ -29,6 +29,9 @@ vi.mock('@/integrations/supabase/client', () => {
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'user-1' } }),
 }));
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({ user: { id: 'user-1' } }),
+}));
 
 vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
@@ -36,6 +39,7 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/lib/logger', () => ({
   log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
+  getLogger: () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() }),
 }));
 
 import { useCalls } from '../useCalls';

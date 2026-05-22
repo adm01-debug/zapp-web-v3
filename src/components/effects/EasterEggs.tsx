@@ -66,7 +66,7 @@ export const EasterEggsProvider = forwardRef<HTMLDivElement, EasterEggsProviderP
   // Shake Detection (for mobile)
   useEffect(() => {
     let lastX = 0, lastY = 0, lastZ = 0;
-    let shakeThreshold = 15;
+    const shakeThreshold = 15;
 
     const handleMotion = (e: DeviceMotionEvent) => {
       const { x, y, z } = e.accelerationIncludingGravity || {};

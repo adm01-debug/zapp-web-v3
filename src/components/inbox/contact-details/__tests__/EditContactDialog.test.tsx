@@ -26,6 +26,14 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock('@/hooks/useExternalCargos', () => ({
+  useExternalCargos: () => ({ data: ['Dev', 'Manager', 'Designer'] }),
+}));
+
+vi.mock('@/hooks/useExternalEmpresas', () => ({
+  useExternalEmpresas: () => ({ data: ['Acme', 'OtherCo'] }),
+}));
+
 const baseContact = {
   id: 'c1',
   name: 'John Doe',

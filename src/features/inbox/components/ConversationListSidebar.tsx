@@ -33,7 +33,7 @@ import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
 import { toast } from 'sonner';
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 interface ConversationListSidebarProps {
   inbox: any;
   inboxFilters: any;

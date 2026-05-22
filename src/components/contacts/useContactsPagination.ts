@@ -71,7 +71,7 @@ export function useContactsPagination(workspaceId: string) {
 
       try {
         let data: ContactListItem[] = [];
-        let countData: { count: number } | null = null;
+        const countData: { count: number } | null = null;
 
         if (f.search.trim()) {
           // Use full-text search RPC (handles unaccent + trigram)
