@@ -256,7 +256,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
             <SlashCommands inputValue={inputValue} onSelectCommand={onSlashCommand} onClose={onCloseSlashCommands} isOpen={showSlashCommands} />
             <Textarea ref={textareaRef} value={inputValue} onChange={handleInputChange} onKeyDown={handleKeyDown} onBlur={onTypingStop}
               placeholder={replyToMessage ? "Digite sua resposta..." : isMobile ? "Mensagem..." : "Digite / para comandos... (Shift+Enter para nova linha)"}
-              className={cn("min-h-[40px] max-h-[120px] resize-none pr-10 glass border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all  text-[13.5px] font-medium tracking-normal", isMobile ? "py-2.5 text-[16px] rounded-2xl leading-snug" : "py-2.5", isSending && "opacity-50 pointer-events-none")}
+              className={cn("min-h-[44px] max-h-[120px] resize-none pr-10 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all  text-[14px] font-medium tracking-normal rounded-2xl", isMobile ? "py-2.5 text-[16px] leading-snug" : "py-3", isSending && "opacity-50 pointer-events-none")}
               rows={1}
               disabled={isSending}
             />

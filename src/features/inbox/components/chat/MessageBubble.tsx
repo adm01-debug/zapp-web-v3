@@ -213,24 +213,7 @@ export function MessageBubble({
               )}
             >
               {/* Bubble Tail */}
-              {isFirstInGroup && !message.is_deleted && !message.isWhisper && (
-                <div 
-                  className={cn(
-                    "absolute top-0 w-3 h-3 overflow-hidden pointer-events-none",
-                    isSent ? "-right-2" : "-left-2"
-                  )}
-                  aria-hidden="true"
-                >
-                  <div 
-                    className={cn(
-                      "w-3 h-3 rotate-45 transform origin-top",
-                      isSent 
-                        ? "bg-chat-sent -translate-x-1.5" 
-                        : "bg-chat-received translate-x-1.5"
-                    )} 
-                  />
-                </div>
-              )}
+              {/* Bubble Tail Removal for cleaner modern look - keeping only rounded corners */}
 
               {message.replyTo && <QuotedMessage replyTo={message.replyTo} isSent={isSent} onClick={() => onScrollToMessage(message.replyTo!.messageId)} />}
               {message.buttonResponse && <ButtonResponseBadge buttonTitle={message.buttonResponse.buttonTitle} isSent={isSent} />}

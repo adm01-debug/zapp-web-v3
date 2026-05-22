@@ -216,7 +216,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               value={contactSearch}
               onChange={(e) => handleContactSearch(e.target.value)}
               className={cn(
-                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/10 focus:border-primary/30 rounded-2xl  text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
+                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/20 focus:border-primary/30 rounded-2xl  text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
                 isMobile ? "h-[46px] text-[16px]" : (density === 'compact' ? "h-[34px] text-[12px]" : "h-[40px] text-[13px]")
               )}
               aria-label="Buscar conversa"
