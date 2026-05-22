@@ -245,7 +245,7 @@ export function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-semibold text-[14px] leading-[1.2] truncate block min-w-0',
+                          ' font-bold text-[14px] leading-[1.2] truncate block min-w-0',
                           isSelected ? 'text-primary' : 'text-foreground'
                         )}
                       >

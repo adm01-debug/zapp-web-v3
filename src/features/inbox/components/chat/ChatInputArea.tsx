@@ -366,8 +366,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none self-end",
-                    logic.isMobile ? "w-10 h-10 mb-1" : "w-[42px] h-[42px] mb-[3px]"
+                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-muted/10 shrink-0 transition-all rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary self-end",
+                    logic.isMobile ? "w-11 h-11 mb-0.5" : "w-[42px] h-[42px] mb-[3px]"
                   )}
                   aria-label="Mais opções de mensagem"
                 >
