@@ -78,7 +78,7 @@ export function DashboardView() {
   );
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto h-full w-full relative bg-background">
+    <div className="p-4 md:p-8 space-y-8 overflow-y-auto h-full w-full relative bg-background scrollbar-none">
       <AuroraBorealis />
       <FloatingParticles />
 
@@ -110,8 +110,8 @@ export function DashboardView() {
               <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="font-display text-3xl sm:text-4xl font-black tracking-tight text-foreground neon-underline bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
                 {greeting}
               </motion.h1>
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-muted-foreground text-sm">
-                Visão geral do atendimento em tempo real
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-muted-foreground text-sm font-medium">
+                Sua central de comando inteligente em tempo real
               </motion.p>
             </div>
           </div>
@@ -126,7 +126,7 @@ export function DashboardView() {
         </div>
       </motion.div>
 
-      <div className="relative z-10 border-t border-border/20" />
+      <div className="relative z-10 border-t border-border/10 mt-2" />
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="relative z-10">
         <DashboardFilters filters={filters} onFiltersChange={setFilters} onRefresh={handleRefresh} isRefreshing={isRefreshing} />
