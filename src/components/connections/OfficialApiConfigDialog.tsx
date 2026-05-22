@@ -52,7 +52,7 @@ export function OfficialApiConfigDialog({
           .eq('connection_id', connectionId)
           .maybeSingle();
         if (cancelled) return;
-        if (data) setForm({ ...EMPTY, ...data });
+        if (data) setForm({ ...EMPTY, ...data } as CredentialsForm);
         else setForm(EMPTY);
       } finally {
         if (!cancelled) setLoading(false);
@@ -76,7 +76,7 @@ export function OfficialApiConfigDialog({
       .upsert({
         connection_id: connectionId,
         ...form,
-        created_by: userData.user?.id ?? null,
+        created_by: (userData as any).user?.id ?? null,
       }, { onConflict: 'connection_id' });
     setSaving(false);
     if (error) {
