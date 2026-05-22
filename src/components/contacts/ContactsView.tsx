@@ -237,7 +237,6 @@ export function ContactsView() {
         selectedIds={selectedIds}
         workspaceId="default"
         onClearSelection={() => setSelectedIds([])}
-        availableTags={uniqueTags}
       />
     </div>
   );
