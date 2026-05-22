@@ -120,15 +120,15 @@ export function BottomNavigation({
   return (
     <nav
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-50',
-        'bg-card/98 backdrop-blur-2xl border-t border-border/30',
-        'safe-area-bottom shadow-[0_-4px_20px_hsl(var(--foreground)/0.05)]',
+        'fixed bottom-0 left-0 right-0 z-[100]',
+        'bg-background/80 backdrop-blur-2xl border-t border-border/10',
+        'safe-area-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.3)]',
         className
       )}
       role="navigation"
       aria-label="Navegação principal"
     >
-      <div className="flex items-center justify-around h-[60px] px-1">
+      <div className="flex items-center justify-around h-[64px] px-2">
         {items.map((item) => {
           const isActive = item.id === activeId;
           return (
@@ -150,7 +150,7 @@ export function BottomNavigation({
               {isActive && (
                 <motion.div
                   layoutId="bottomNavIndicator"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-b-full bg-primary shadow-[0_2px_8px_hsl(var(--primary)/0.4)]"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-[4px] rounded-b-full bg-primary shadow-[0_4px_12px_rgba(var(--primary-rgb),0.5)]"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
