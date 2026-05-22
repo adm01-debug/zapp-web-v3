@@ -133,16 +133,16 @@ export function DashboardView() {
       </motion.div>
 
       <Tabs defaultValue="overview" className="relative z-10">
-        <TabsList className="mb-4 bg-muted/50 border border-border/30 flex-wrap">
-          <TabsTrigger value="overview" className="flex items-center gap-2"><TrendingUp className="w-4 h-4" />Visão Geral</TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2"><BarChart3 className="w-4 h-4" />Analytics</TabsTrigger>
-          <TabsTrigger value="goals" className="flex items-center gap-2"><Target className="w-4 h-4" />Metas</TabsTrigger>
-          <TabsTrigger value="ai" className="flex items-center gap-2"><Brain className="w-4 h-4" />Inteligência Artificial</TabsTrigger>
-          <TabsTrigger value="sla" className="flex items-center gap-2"><Clock className="w-4 h-4" />Métricas SLA</TabsTrigger>
-          <TabsTrigger value="team" className="flex items-center gap-2"><Award className="w-4 h-4" />Equipe</TabsTrigger>
-          <TabsTrigger value="satisfaction" className="flex items-center gap-2"><Heart className="w-4 h-4" />Satisfação</TabsTrigger>
-          <TabsTrigger value="sentiment" className="flex items-center gap-2"><Smile className="w-4 h-4" />Sentimento</TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2"><FileText className="w-4 h-4" />Relatórios</TabsTrigger>
+        <TabsList className="mb-6 bg-muted/30 p-1.5 border border-border/20 flex-wrap h-auto gap-1 rounded-2xl backdrop-blur-md">
+          <TabsTrigger value="overview" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><TrendingUp className="w-4 h-4" />Visão Geral</TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><BarChart3 className="w-4 h-4" />Analytics</TabsTrigger>
+          <TabsTrigger value="goals" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Target className="w-4 h-4" />Metas</TabsTrigger>
+          <TabsTrigger value="ai" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Brain className="w-4 h-4" />IA</TabsTrigger>
+          <TabsTrigger value="sla" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Clock className="w-4 h-4" />SLA</TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Award className="w-4 h-4" />Equipe</TabsTrigger>
+          <TabsTrigger value="satisfaction" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Heart className="w-4 h-4" />Satisfação</TabsTrigger>
+          <TabsTrigger value="sentiment" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><Smile className="w-4 h-4" />Sentimento</TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg active:scale-95"><FileText className="w-4 h-4" />Relatórios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
