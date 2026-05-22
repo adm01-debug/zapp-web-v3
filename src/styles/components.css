@@ -13,11 +13,11 @@
   .card-interactive:hover { @apply border-primary/50 bg-accent/30 shadow-md; transform: translateY(-3px); }
   .card-interactive:active { transform: translateY(0) scale(0.995); transition-duration: 0.1s; }
 
-  .card-glow-purple { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300; shadow-sm; }
-  .card-glow-purple:hover { shadow-glow-primary; @apply border-primary/50; transform: translateY(-3px); }
+  .card-glow-purple { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300 shadow-sm; }
+  .card-glow-purple:hover { @apply shadow-glow-primary border-primary/50; transform: translateY(-3px); }
 
-  .card-glow-gradient { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300; shadow-sm; }
-  .card-glow-gradient:hover { shadow-glow-primary; transform: translateY(-2px); }
+  .card-glow-gradient { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300 shadow-sm; }
+  .card-glow-gradient:hover { @apply shadow-glow-primary; transform: translateY(-2px); }
 
   .glass-card { @apply rounded-xl p-6 border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); }
   .glass-card:hover { border-color: hsl(var(--primary)); box-shadow: 0 8px 32px hsl(var(--primary) / 0.15); }
