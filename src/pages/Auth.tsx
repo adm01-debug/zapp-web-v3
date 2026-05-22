@@ -45,9 +45,9 @@ export default function Auth() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
           {/* Header */}
           <div className="text-center mb-8">
-            <motion.div initial={{ scale: 0.8, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} whileHover={{ scale: 1.05, rotate: 5 }} className="relative w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl" style={{ background: 'var(--gradient-primary)' }}>
-              <Smartphone className="w-10 h-10 text-primary-foreground" />
-              <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-xl -z-10" />
+            <motion.div initial={{ scale: 0.8, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} whileHover={{ scale: 1.05, rotate: 5 }} className="relative w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl overflow-visible" style={{ background: 'var(--gradient-primary)' }}>
+              <Smartphone className="w-12 h-12 text-primary-foreground" />
+              <div className="absolute inset-0 rounded-[2rem] bg-primary/40 blur-2xl -z-10 opacity-60" />
               <motion.div animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0 }} className="absolute -top-2 -right-2">
                 <Sparkles className="w-4 h-4 text-primary" />
               </motion.div>
@@ -65,7 +65,7 @@ export default function Auth() {
 
           {/* Card */}
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
-            <Card className="border-border/50 shadow-none">
+            <Card className="border-border/40 shadow-xl shadow-black/5 bg-card/80 backdrop-blur-sm rounded-[1.5rem] overflow-hidden">
               <CardContent className="pt-6">
                 <AnimatePresence>
                   {lockStatus.isLocked && (

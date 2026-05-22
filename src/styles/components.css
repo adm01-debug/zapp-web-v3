@@ -1,16 +1,16 @@
 /* ===== COMPONENT STYLES — Cards, hover effects, chat, gamification ===== */
 
 
-  /* ===== CARD STYLES — Removida "neblina" e opacidades excessivas ===== */
-  .card-base { @apply bg-card rounded-xl border border-border p-6 transition-all duration-200; }
-  .card-elevated { @apply bg-card-elevated rounded-xl border border-border p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
-  .card-elevated:hover { box-shadow: var(--shadow-md); @apply border-primary; transform: translateY(-1px); }
+  /* ===== CARD STYLES — Crisp & Premium ===== */
+  .card-base { @apply bg-card rounded-2xl border border-border/60 p-6 transition-all duration-300; }
+  .card-elevated { @apply bg-card rounded-2xl border border-border/50 p-6 transition-all duration-300 shadow-sm; }
+  .card-elevated:hover { @apply border-primary/40 shadow-md; transform: translateY(-2px); }
 
   .card-interactive {
-    @apply relative bg-card rounded-xl border border-border p-6 cursor-pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply relative bg-card rounded-2xl border border-border/60 p-6 cursor-pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
   }
-  .card-interactive:hover { @apply border-primary bg-accent; box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card-interactive:hover { @apply border-primary/50 bg-accent/30 shadow-md; transform: translateY(-3px); }
   .card-interactive:active { transform: translateY(0) scale(0.995); transition-duration: 0.1s; }
 
   .card-glow-purple { @apply relative bg-card rounded-xl border border-primary p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
