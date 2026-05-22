@@ -14,7 +14,7 @@
   .card-interactive:active { transform: translateY(0) scale(0.995); transition-duration: 0.1s; }
 
   .card-glow-purple { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300 shadow-sm; }
-  .card-glow-purple:hover { @apply border-primary/50 shadow-glow-primary; transform: translateY(-3px); }
+  .card-glow-purple:hover { @apply shadow-glow-primary border-primary/50; transform: translateY(-3px); }
 
   .card-glow-gradient { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300 shadow-sm; }
   .card-glow-gradient:hover { @apply shadow-glow-primary; transform: translateY(-2px); }
