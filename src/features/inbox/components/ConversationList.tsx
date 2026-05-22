@@ -145,17 +145,19 @@ export function ConversationList({
       {/* Conversations List */}
       <div ref={parentRef} className="flex-1 overflow-y-auto scrollbar-none" role="listbox" aria-label="Lista de conversas">
         {isLoading ? (
-          <div className="space-y-0">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="p-3 border-b border-border animate-pulse flex items-start gap-3.5">
-                <div className="w-[49px] h-[49px] rounded-full bg-muted shrink-0" />
-                <div className="flex-1 min-w-0 space-y-2 py-1">
+          <div className="space-y-0 animate-in fade-in duration-500">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="p-3 border-b border-border/40 flex items-start gap-3.5 relative overflow-hidden">
+                <div className="w-[49px] h-[49px] rounded-full bg-muted/40 shrink-0 animate-pulse" />
+                <div className="flex-1 min-w-0 space-y-2.5 py-1">
                   <div className="flex justify-between items-center">
-                    <div className="h-4 w-24 bg-muted rounded" />
-                    <div className="h-3 w-10 bg-muted rounded" />
+                    <div className="h-4 w-32 bg-muted/40 rounded-lg animate-pulse" />
+                    <div className="h-3 w-12 bg-muted/30 rounded-lg animate-pulse" />
                   </div>
-                  <div className="h-3.5 w-full bg-muted rounded" />
+                  <div className="h-3.5 w-full bg-muted/20 rounded-lg animate-pulse" />
+                  <div className="h-3 w-1/2 bg-muted/10 rounded-lg animate-pulse" />
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/5 to-transparent -translate-x-full animate-shimmer" />
               </div>
             ))}
           </div>

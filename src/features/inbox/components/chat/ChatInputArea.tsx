@@ -294,7 +294,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
           "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-2xl border-t border-border/40 relative flex flex-col gap-2 shrink-0 transition-all duration-500 ease-in-out shadow-[0_-8px_40px_rgba(0,0,0,0.04)]", 
           isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/40 shadow-[0_-8px_30px_rgba(245,158,11,0.08)]",
           !isWhisper && "focus-within:shadow-[0_-8px_40px_rgba(var(--primary-rgb),0.06)]",
-          logic.isMobile && "px-3 py-2 safe-area-bottom"
+          logic.isMobile && "px-3 py-3 safe-area-bottom"
         )}
         role="form"
         aria-label="Área de composição de mensagem"
@@ -366,8 +366,8 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-transparent shrink-0 transition-all rounded-full outline-none self-end",
-                    logic.isMobile ? "w-10 h-10 mb-1" : "w-[42px] h-[42px] mb-[3px]"
+                    "inline-flex items-center justify-center text-[hsl(var(--muted-foreground))] hover:bg-muted/10 shrink-0 transition-all rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary self-end",
+                    logic.isMobile ? "w-11 h-11 mb-0.5" : "w-[42px] h-[42px] mb-[3px]"
                   )}
                   aria-label="Mais opções de mensagem"
                 >

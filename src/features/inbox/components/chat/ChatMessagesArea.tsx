@@ -381,15 +381,23 @@ export const ChatMessagesArea = memo(forwardRef<ChatMessagesAreaRef, ChatMessage
   }, [messages]);
 
   return (
-    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" aria-relevant="additions" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-3 scrollbar-none bg-background/50 relative transition-all duration-500 text-[15px] font-medium tracking-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20" tabIndex={0}>
+    <div ref={scrollContainerRef} role="log" aria-label="Mensagens da conversa" aria-live="polite" aria-relevant="additions" className="flex-1 min-h-0 min-w-0 overflow-y-auto px-4 py-4 md:px-24 space-y-3 scrollbar-none bg-background/50 relative transition-all duration-500 text-[15px] font-medium tracking-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 outline-none" tabIndex={0}>
       <ChatWatermark />
       
       {isLoading && (
-        <div className="space-y-6 pt-10">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={cn("flex flex-col gap-2", i % 2 === 0 ? "items-start" : "items-end")}>
-              <Skeleton className={cn("h-16 rounded-2xl", i % 2 === 0 ? "w-2/3 rounded-tl-none" : "w-1/2 rounded-tr-none")} />
-              <Skeleton className="h-3 w-12 rounded" />
+        <div className="space-y-8 pt-10 animate-in fade-in duration-700">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={cn("flex flex-col gap-3", i % 2 === 0 ? "items-start" : "items-end")}>
+              <div className="flex items-center gap-2">
+                {i % 2 === 0 && <div className="w-8 h-8 rounded-full bg-muted/40 animate-pulse" />}
+                <div className={cn(
+                  "h-16 rounded-2xl relative overflow-hidden bg-muted/30", 
+                  i % 2 === 0 ? "w-64 rounded-tl-none" : "w-56 rounded-tr-none bg-primary/5"
+                )}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent -translate-x-full animate-shimmer" />
+                </div>
+              </div>
+              <div className="h-3 w-16 bg-muted/20 rounded animate-pulse" />
             </div>
           ))}
         </div>

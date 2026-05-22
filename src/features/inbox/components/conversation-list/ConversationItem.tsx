@@ -192,7 +192,7 @@ export function ConversationItem({
           aria-selected={isSelected}
           role="option"
           className={cn(
-            'relative p-2.5 rounded-xl cursor-pointer transition-all duration-300 mx-2 min-h-[64px] flex items-center gap-2 group',
+            'relative p-2.5 rounded-xl cursor-pointer transition-all duration-300 mx-2 min-h-[64px] flex items-center gap-2 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
             isSelected ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20' : 'hover:bg-muted/40 border-transparent',
             isMultiSelected && 'bg-primary/20 shadow-inner'
           )}
@@ -245,7 +245,7 @@ export function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-semibold text-[14px] leading-[1.2] truncate block min-w-0',
+                          ' font-bold text-[14px] leading-[1.2] truncate block min-w-0',
                           isSelected ? 'text-primary' : 'text-foreground'
                         )}
                       >
@@ -349,7 +349,7 @@ export function ConversationItem({
           aria-selected={isSelected}
           role="option"
           className={cn(
-            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3',
+            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-[-2px]',
             'hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:z-10',
             isSelected
               ? 'bg-primary/[0.08] shadow-[inset_0_0_24px_rgba(var(--primary-rgb),0.04)]'
