@@ -13,23 +13,23 @@
   .card-interactive:hover { @apply border-primary/50 bg-accent/30 shadow-md; transform: translateY(-3px); }
   .card-interactive:active { transform: translateY(0) scale(0.995); transition-duration: 0.1s; }
 
-  .card-glow-purple { @apply relative bg-card rounded-xl border border-primary p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
-  .card-glow-purple:hover { box-shadow: var(--shadow-glow-primary); @apply border-primary; transform: translateY(-2px); }
+  .card-glow-purple { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300; shadow-sm; }
+  .card-glow-purple:hover { shadow-glow-primary; @apply border-primary/50; transform: translateY(-3px); }
 
-  .card-glow-gradient { @apply relative bg-card rounded-xl border border-primary p-6 transition-all duration-200; box-shadow: var(--shadow-sm); }
-  .card-glow-gradient:hover { box-shadow: var(--shadow-glow-primary); transform: translateY(-1px); }
+  .card-glow-gradient { @apply relative bg-card rounded-2xl border border-primary/30 p-6 transition-all duration-300; shadow-sm; }
+  .card-glow-gradient:hover { shadow-glow-primary; transform: translateY(-2px); }
 
   .glass-card { @apply rounded-xl p-6 border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); }
   .glass-card:hover { border-color: hsl(var(--primary)); box-shadow: 0 8px 32px hsl(var(--primary) / 0.15); }
 
   .glass-panel { @apply border transition-all duration-200; background: hsl(var(--card)); border-color: hsl(var(--border)); box-shadow: var(--shadow-lg); }
 
-  .stat-card { @apply bg-card rounded-xl border border-border p-4; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-  .stat-card:hover { @apply border-primary; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+  .stat-card { @apply bg-card rounded-2xl border border-border/60 p-5 transition-all duration-300; }
+  .stat-card:hover { @apply border-primary/40 shadow-sm; transform: translateY(-2px); }
 
-  .card-subtle { @apply bg-muted border-transparent; }
-  .card-prominent { @apply bg-card-elevated border-primary; box-shadow: var(--shadow-md); }
-  .card-featured { @apply bg-card-elevated border-primary ring-1 ring-primary; box-shadow: var(--shadow-lg); }
+  .card-subtle { @apply bg-muted/30 border-transparent rounded-2xl; }
+  .card-prominent { @apply bg-card rounded-2xl border-primary/40 shadow-md; }
+  .card-featured { @apply bg-card rounded-2xl border-primary ring-1 ring-primary/30 shadow-lg; }
 
   /* Shimmer highlight */
   .card-shimmer { @apply relative overflow-hidden; }
@@ -75,13 +75,13 @@
 
   /* ===== CONVERSATION ITEM ===== */
   .conversation-item {
-    @apply flex items-center gap-3 p-3 rounded-xl cursor-pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    @apply hover:bg-accent;
+    @apply flex items-center gap-3.5 p-3.5 rounded-2xl cursor-pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    @apply hover:bg-accent/40;
   }
   .conversation-item.active {
-    @apply bg-primary/20 border-l-[3px] border-primary;
-    box-shadow: none; /* No inner shadows on OLED */
+    @apply bg-primary/10 border-l-4 border-primary shadow-sm;
+    box-shadow: none;
   }
 
   /* ===== MESSAGE BUBBLES ===== */

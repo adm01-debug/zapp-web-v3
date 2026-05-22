@@ -61,25 +61,25 @@ export const SidebarNavItem = React.memo(function SidebarNavItem({ item, current
       aria-label={badgeCount ? `${item.label} (${badgeTitle ?? `${badgeCount} não lidas`})` : item.label}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'relative rounded-full flex items-center gap-2.5 transition-all duration-200 ease-out group/item',
-        collapsed ? 'w-[38px] h-[38px] justify-center' : 'w-full h-[36px] px-3 rounded-xl',
+        'relative rounded-2xl flex items-center gap-2.5 transition-all duration-300 ease-out group/item',
+        collapsed ? 'w-[40px] h-[40px] justify-center' : 'w-full h-[40px] px-3.5 rounded-2xl',
         isActive
-          ? 'text-primary'
-          : 'text-sidebar-foreground/70 hover:bg-muted/10 hover:text-foreground active:scale-[0.97]'
+          ? 'text-primary font-bold shadow-sm'
+          : 'text-sidebar-foreground/80 hover:bg-muted/15 hover:text-foreground active:scale-[0.96]'
       )}
     >
       {isActive && (
         <>
           <div
             className={cn(
-              'absolute inset-0 bg-primary/10 transition-all duration-300 ease-out',
-              collapsed ? 'rounded-full' : 'rounded-xl'
-            )}
+            'absolute inset-0 bg-primary/10 transition-all duration-500 ease-out',
+            collapsed ? 'rounded-2xl' : 'rounded-2xl'
+          )}
           />
           {/* Active indicator bar — highly visible in collapsed mode */}
           <div className={cn(
-            'absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-primary transition-all duration-200',
-            collapsed ? 'h-5 -left-[11px]' : 'h-4 -left-[8px]'
+            'absolute left-0 top-1/2 -translate-y-1/2 w-[4px] rounded-r-full bg-primary transition-all duration-300',
+            collapsed ? 'h-6 -left-[12px]' : 'h-5 -left-[8px]'
           )} />
         </>
       )}
