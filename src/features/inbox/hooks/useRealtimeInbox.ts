@@ -340,6 +340,10 @@ export function useRealtimeInbox() {
     if (lastMsg?.external_id && (lastMsg.sender === 'agent' || lastMsg.sender === 'bot')) {
       messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
     }
+    // Fallback: reconciliar usando o conteúdo para mensagens de bot que podem vir sem external_id imediato
+    else if (lastMsg?.content && lastMsg.sender === 'bot') {
+      messageQueue.reconcileWithDelivery(contactId, lastMsg.content, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
+    }
 
     // Auto-assign on first reply if pending
     try {
