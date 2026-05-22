@@ -18,13 +18,13 @@ function fetchRoles(path: string): Promise<void> {
     try {
       const { data, error } = await supabase
         .from('role_permissions' as any)
-        .select('allowed_roles')
+        .select('*')
         .eq('path', path)
         .maybeSingle();
       if (error || !data) {
         cache.set(path, null);
       } else {
-        cache.set(path, (data.allowed_roles as AppRole[]) ?? []);
+        cache.set(path, ((data as any).allowed_roles as AppRole[]) ?? []);
       }
     } catch {
       cache.set(path, null);

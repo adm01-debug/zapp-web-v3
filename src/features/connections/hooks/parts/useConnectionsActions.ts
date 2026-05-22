@@ -43,7 +43,7 @@ export function useConnectionsActions(
         instance_id: instanceName,
         status: 'disconnected',
         is_default: connections.length === 0,
-        api_type: newConnection.api_type,
+        api_type: newConnection.api_type as any,
       }).select().single();
       
       if (error) throw error;

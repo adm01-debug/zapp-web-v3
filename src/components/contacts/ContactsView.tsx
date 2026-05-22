@@ -93,25 +93,24 @@ export function ContactsView() {
               <FileSpreadsheet className="w-4 h-4 mr-2" />Exportar
             </Button>
             <ContactDialogs
+              workspaceId="default"
               isAddDialogOpen={isAddDialogOpen} setIsAddDialogOpen={setIsAddDialogOpen}
-              newContact={newContact} handleNewContactChange={handleNewContactChange}
-              handleAddContact={handleAddContact} handleCancelForm={handleCancelForm}
-              isSubmitting={isSubmitting}
+              onContactSaved={() => refetch()}
               isEditDialogOpen={isEditDialogOpen} setIsEditDialogOpen={setIsEditDialogOpen}
-              editingContact={editingContact} handleEditContactChange={handleEditContactChange}
-              handleEditContact={handleEditContact}
+              editingContact={editingContact as any}
               showSuccess={showSuccess} setShowSuccess={setShowSuccess}
-              deleteTarget={deleteTarget} setDeleteTarget={setDeleteTarget}
+              deleteTarget={deleteTarget as any} setDeleteTarget={setDeleteTarget}
               handleDeleteContact={handleDeleteContact}
             />
           </div>
         }
       />
 
-      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImportComplete={refetch} />
+      <ContactImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} workspaceId="default" onImportComplete={refetch} />
       <ContactMergeDialog
         open={isMergeOpen} onOpenChange={setIsMergeOpen}
-        contacts={filteredContacts.filter(c => selectedIds.includes(c.id))}
+        primaryContact={filteredContacts.filter(c => selectedIds.includes(c.id))[0] as any}
+        secondaryContact={filteredContacts.filter(c => selectedIds.includes(c.id))[1] as any}
         onMergeComplete={() => { setSelectedIds([]); refetch(); }}
       />
       <ContactCompareDialog
@@ -236,9 +235,8 @@ export function ContactsView() {
 
       <BulkActionsBar
         selectedIds={selectedIds}
+        workspaceId="default"
         onClearSelection={() => setSelectedIds([])}
-        onActionComplete={() => { setSelectedIds([]); refetch(); }}
-        availableTags={uniqueTags}
       />
     </div>
   );

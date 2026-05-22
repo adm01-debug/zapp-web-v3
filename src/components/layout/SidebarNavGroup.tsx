@@ -36,11 +36,11 @@ export function SidebarNavGroup({ label, icon: GroupIcon, items, currentView, on
     <button
       onClick={() => setIsOpen(!isOpen)}
       className={cn(
-        'rounded-lg flex items-center transition-all duration-200 group/trigger',
-        collapsed ? 'w-full h-[30px] justify-center gap-0.5' : 'w-full h-[30px] px-2.5 gap-2 hover:bg-muted/10',
+        'rounded-xl flex items-center transition-all duration-300 group/trigger',
+        collapsed ? 'w-full h-[34px] justify-center gap-0.5' : 'w-full h-[34px] px-3 gap-2 hover:bg-muted/15',
         hasActiveItem
-          ? 'text-primary'
-          : 'text-muted-foreground/80 hover:text-foreground'
+          ? 'text-primary font-bold'
+          : 'text-muted-foreground hover:text-foreground'
       )}
       aria-expanded={isOpen}
       aria-label={`${label} — ${isOpen ? 'recolher' : 'expandir'}`}

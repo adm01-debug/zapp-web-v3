@@ -10,18 +10,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-none hover:bg-primary/90 hover:shadow-glow-primary",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-none hover:shadow-glow-destructive",
-        outline: "border border-border bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/50",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-none hover:shadow-glow-secondary",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline font-medium",
-        whatsapp: "bg-whatsapp text-primary-foreground hover:bg-whatsapp-dark shadow-none hover:shadow-glow-success",
-        glowPurple: "bg-secondary/20 text-secondary hover:bg-secondary/30 border border-secondary/30 shadow-none hover:shadow-glow-secondary",
-        glowGradient: "bg-primary text-primary-foreground border border-border shadow-none hover:shadow-glow-primary",
-        neon: "bg-transparent border border-secondary text-secondary hover:bg-secondary/10 shadow-none hover:shadow-glow-secondary",
-        neonOutline: "bg-transparent border border-secondary/40 text-secondary hover:border-secondary shadow-none hover:bg-secondary/10 hover:shadow-glow-secondary",
-        success: "bg-success text-success-foreground hover:bg-success/90 shadow-none hover:shadow-glow-success",
+        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/95 hover:shadow-glow-primary active:scale-[0.98]",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/95 shadow-sm hover:shadow-glow-destructive active:scale-[0.98]",
+        outline: "border border-border/80 bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/40 active:scale-[0.98]",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/95 shadow-sm hover:shadow-glow-secondary active:scale-[0.98]",
+        ghost: "hover:bg-accent/80 hover:text-accent-foreground active:scale-[0.98]",
+        link: "text-primary underline-offset-4 hover:underline font-semibold",
+        whatsapp: "bg-whatsapp text-primary-foreground hover:bg-whatsapp-dark shadow-sm hover:shadow-glow-success active:scale-[0.98]",
+        glowPurple: "bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/20 shadow-none hover:shadow-glow-secondary active:scale-[0.98]",
+        glowGradient: "bg-primary text-primary-foreground border border-primary/20 shadow-sm hover:shadow-glow-primary active:scale-[0.98]",
+        neon: "bg-transparent border border-secondary text-secondary hover:bg-secondary/10 shadow-none hover:shadow-glow-secondary active:scale-[0.98]",
+        neonOutline: "bg-transparent border border-secondary/40 text-secondary hover:border-secondary shadow-none hover:bg-secondary/10 hover:shadow-glow-secondary active:scale-[0.98]",
+        success: "bg-success text-success-foreground hover:bg-success/95 shadow-sm hover:shadow-glow-success active:scale-[0.98]",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -86,9 +86,9 @@ const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(
     return (
       <motion.button
         ref={ref}
-        whileHover={{ 
-          scale: disabled || isLoading ? 1 : 1.02, 
-          y: disabled || isLoading ? 0 : -2,
+        whileHover={disabled || isLoading ? undefined : { 
+          scale: 1.02, 
+          y: -2,
           transition: { duration: 0.2, ease: "easeOut" }
         }}
         whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}

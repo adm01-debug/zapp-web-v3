@@ -137,7 +137,10 @@ export function BulkActionsToolbar({
       <TransferDialog
         open={showTransferDialog}
         onOpenChange={setShowTransferDialog}
-        onTransfer={handleTransfer}
+        conversationId="bulk"
+        remoteJid="bulk"
+        sourceInstance="bulk"
+        operatorName="bulk"
       />
     </>
   );

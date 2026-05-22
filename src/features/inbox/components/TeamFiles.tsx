@@ -24,9 +24,9 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
     queryKey: ['team-files', contactId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('whisper_files')
+        .from('whisper_files' as any)
         .select('*')
-        .eq('contact_id', contactId)
+        .eq('contact_id' as any, contactId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -50,7 +50,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
         .from('whatsapp-media')
         .getPublicUrl(filePath);
 
-      const { error: dbError } = await supabase.from('whisper_files').insert({
+      const { error: dbError } = await supabase.from('whisper_files' as any).insert({
         contact_id: contactId,
         file_name: file.name,
         file_url: publicUrl,
@@ -73,7 +73,7 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('whisper_files').delete().eq('id', id);
+      const { error } = await supabase.from('whisper_files' as any).delete().eq('id' as any, id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -96,12 +96,14 @@ export function TeamFiles({ contactId }: TeamFilesProps) {
   };
 
   const filteredFiles = files.filter(file => {
-    const matchesSearch = file.file_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const fileName = (file as any).file_name || '';
+    const fileType = (file as any).file_type || '';
+    const matchesSearch = fileName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || 
-      (typeFilter === 'image' && file.file_type?.startsWith('image/')) ||
-      (typeFilter === 'pdf' && file.file_type === 'application/pdf') ||
-      (typeFilter === 'doc' && (file.file_type?.includes('word') || file.file_type?.includes('document'))) ||
-      (typeFilter === 'other' && !file.file_type?.startsWith('image/') && file.file_type !== 'application/pdf' && !file.file_type?.includes('word'));
+      (typeFilter === 'image' && fileType.startsWith('image/')) ||
+      (typeFilter === 'pdf' && fileType === 'application/pdf') ||
+      (typeFilter === 'doc' && (fileType.includes('word') || fileType.includes('document'))) ||
+      (typeFilter === 'other' && !fileType.startsWith('image/') && fileType !== 'application/pdf' && !fileType.includes('word'));
     return matchesSearch && matchesType;
   });
 

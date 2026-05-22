@@ -55,9 +55,9 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       className={cn('flex flex-col h-screen border-r border-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-hidden', collapsed ? 'w-[62px]' : 'w-[220px]')}>
 
       {/* Logo + Toggle */}
-      <div className={cn('flex items-center h-[56px] shrink-0 px-3', collapsed ? 'justify-center' : 'justify-between')}>
-        <button onClick={() => onViewChange('inbox')} className="w-[36px] h-[36px] rounded-xl flex items-center justify-center bg-primary hover:bg-primary/90 transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="ZAPP — Ir para Inbox">
-          <span className="text-primary-foreground font-bold text-sm tracking-tight">Z</span>
+      <div className={cn('flex items-center h-[64px] shrink-0 px-4', collapsed ? 'justify-center' : 'justify-between')}>
+        <button onClick={() => onViewChange('inbox')} className="w-[40px] h-[40px] rounded-2xl flex items-center justify-center bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-glow-primary shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="ZAPP — Ir para Inbox">
+          <span className="text-primary-foreground font-bold text-lg tracking-tighter">Z</span>
         </button>
         {!collapsed && <span className="text-sm font-bold text-foreground tracking-tight ml-2 mr-auto">ZAPP</span>}
         {!collapsed && (
@@ -129,7 +129,7 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
       <div className="flex flex-col items-center gap-1.5 pt-1.5 pb-3 shrink-0">
         <div className="mx-3 h-px bg-border self-stretch" />
         {!collapsed && <div className="px-3 self-stretch flex items-center gap-1.5 pb-0.5"><span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Controles rápidos</span></div>}
-        <div className={cn('flex items-center gap-1 rounded-xl border border-border bg-muted/20 px-1.5 py-1.5 shadow-none', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
+        <div className={cn('flex items-center gap-1 rounded-2xl border border-border/40 bg-muted/20 px-1.5 py-1.5 shadow-none transition-all duration-300', collapsed ? 'flex-col' : 'flex-row self-stretch mx-2')}>
           <ScreenProtectionToggle className="w-[36px] h-[36px]" />
           <PushNotificationToggle className="w-[36px] h-[36px]" />
           <SoundMuteToggle className="w-[36px] h-[36px]" />

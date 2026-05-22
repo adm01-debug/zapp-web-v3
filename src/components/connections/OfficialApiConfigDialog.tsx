@@ -52,8 +52,20 @@ export function OfficialApiConfigDialog({
           .eq('connection_id', connectionId)
           .maybeSingle();
         if (cancelled) return;
-        if (data) setForm({ ...EMPTY, ...data });
-        else setForm(EMPTY);
+        if (data) {
+          const mapped: CredentialsForm = {
+            phone_number_id: (data as any).phone_number_id ?? '',
+            waba_id: (data as any).waba_id ?? '',
+            business_account_id: (data as any).business_account_id ?? '',
+            access_token: (data as any).access_token ?? '',
+            app_secret: (data as any).app_secret ?? '',
+            verify_token: (data as any).verify_token ?? '',
+            graph_api_version: (data as any).graph_api_version ?? 'v21.0',
+          };
+          setForm(mapped);
+        } else {
+          setForm(EMPTY);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -69,15 +81,20 @@ export function OfficialApiConfigDialog({
       toast({ title: 'Campos obrigatórios', description: 'Preencha Phone Number ID, Access Token, App Secret e Verify Token.', variant: 'destructive' });
       return;
     }
-    setSaving(true);
-    const { data: userData , error: userError } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
     const { error } = await supabase
       .from('whatsapp_official_credentials')
       .upsert({
         connection_id: connectionId,
-        ...form,
+        phone_number_id: form.phone_number_id,
+        waba_id: form.waba_id || null,
+        business_account_id: form.business_account_id || null,
+        access_token: form.access_token,
+        app_secret: form.app_secret,
+        verify_token: form.verify_token,
+        graph_api_version: form.graph_api_version || 'v21.0',
         created_by: userData.user?.id ?? null,
-      }, { onConflict: 'connection_id' });
+      } as any, { onConflict: 'connection_id' });
     setSaving(false);
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
