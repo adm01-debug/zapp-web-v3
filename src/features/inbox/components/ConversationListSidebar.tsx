@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';

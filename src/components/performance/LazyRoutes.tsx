@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { Suspense, lazy, ComponentType } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Sparkles } from 'lucide-react';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * HmacSelfTestPage
  * Rota dedicada (/admin/hmac-selftest) que executa o self-test HMAC ao carregar

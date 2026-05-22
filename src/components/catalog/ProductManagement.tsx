@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';

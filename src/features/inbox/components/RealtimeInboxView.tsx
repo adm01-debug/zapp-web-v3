@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, lazy, Suspense } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';

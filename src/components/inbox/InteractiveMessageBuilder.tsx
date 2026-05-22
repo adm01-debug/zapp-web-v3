@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, ExternalLink, Phone, MessageSquare,

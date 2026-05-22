@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';

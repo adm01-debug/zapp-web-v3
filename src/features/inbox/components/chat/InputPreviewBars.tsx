@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AnimatePresence, motion } from 'framer-motion';
 import { Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';

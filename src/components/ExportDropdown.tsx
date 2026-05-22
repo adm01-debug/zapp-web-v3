@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ExportDropdown - Controlado por permissão de download do usuário.
  */

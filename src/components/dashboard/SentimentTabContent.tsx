@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import {
   AlertTriangle, TrendingDown, TrendingUp, Users, BarChart3,

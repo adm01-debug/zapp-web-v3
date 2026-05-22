@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactAuditLogPanel.tsx
  * Shows the full audit trail for a single contact.

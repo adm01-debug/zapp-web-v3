@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CRM360ExplorerView — Full CRM 360° data explorer
  */

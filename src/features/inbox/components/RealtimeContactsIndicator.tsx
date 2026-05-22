@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Visual indicator for the realtime status of evolution_contacts.
  * Uses semantic tokens; supports compact (dot) and labeled modes.

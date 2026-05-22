@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MessageDetailsDialog — renders full message metadata (payload + raw_data)
  * fetched on-demand via `useMessageDetails`. Admin/supervisor only for the

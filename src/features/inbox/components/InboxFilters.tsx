@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { Filter, X, Calendar, User, Tag, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

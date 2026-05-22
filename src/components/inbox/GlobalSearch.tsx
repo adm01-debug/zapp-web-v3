@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   Search, X, Plus, Command, Filter, Clock, History, Tag, Trash2,

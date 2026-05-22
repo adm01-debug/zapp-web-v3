@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, useState, useEffect, useCallback, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';

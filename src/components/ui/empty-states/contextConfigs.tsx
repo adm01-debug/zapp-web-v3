@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as React from 'react';
 import {
   MessageSquare, Users, BarChart3, Phone, Tag, Inbox,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';

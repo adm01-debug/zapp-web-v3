@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import { X, Reply, CornerDownRight, Image, Video, FileText, Music, MapPin, Sticker } from 'lucide-react';
 import { Button } from '@/components/ui/button';

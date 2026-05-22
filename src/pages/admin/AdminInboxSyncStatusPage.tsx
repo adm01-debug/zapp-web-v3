@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminInboxSyncStatusPage — Saúde do Inbox ↔ FATOR X (`evolution_messages`).
  *

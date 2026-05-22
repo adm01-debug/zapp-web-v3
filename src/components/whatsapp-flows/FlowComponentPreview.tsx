@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CalendarDays, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

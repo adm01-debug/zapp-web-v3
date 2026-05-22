@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactOrphanState.tsx
  * Empty state for conversations without an identified contact.

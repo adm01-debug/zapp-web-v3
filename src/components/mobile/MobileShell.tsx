@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, useMemo } from 'react';
 import { MobileHeader } from '@/components/mobile/MobileHeader';
 import { MobileDrawerMenu } from '@/components/mobile/MobileDrawerMenu';

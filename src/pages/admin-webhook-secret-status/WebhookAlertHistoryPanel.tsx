@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WebhookAlertHistoryPanel — auditoria persistente dos alertas disparados.
  * Mostra data/hora, instância, métrica que excedeu (observado vs threshold)

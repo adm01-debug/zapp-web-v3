@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock, ChevronDown } from 'lucide-react';

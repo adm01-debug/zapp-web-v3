@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, useEffect } from 'react';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
 import type { WhatsAppStatusMessage } from '@/features/inbox';

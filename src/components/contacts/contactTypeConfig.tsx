@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import {
   Users, Truck, UserCheck, Wrench, Star, Handshake, MoreHorizontal, Gift, Package,

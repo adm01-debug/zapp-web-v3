@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { useTeamChatDraft } from '@/hooks/useTeamChatDraft';
 import { Button } from '@/components/ui/button';

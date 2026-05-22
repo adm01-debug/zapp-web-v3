@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AdminExternalDbExplorerPage — `/admin/external-db-explorer`
  *

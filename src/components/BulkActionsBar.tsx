@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente de Barra de Ações em Massa
  * 

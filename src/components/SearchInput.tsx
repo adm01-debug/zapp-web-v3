@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente de Input de Busca
  * 

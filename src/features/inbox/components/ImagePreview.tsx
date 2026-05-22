@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { forwardRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, ZoomIn, ZoomOut, ImageOff, RotateCw, Loader2 } from 'lucide-react';

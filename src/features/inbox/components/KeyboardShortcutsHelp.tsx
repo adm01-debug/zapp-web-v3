@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Keyboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

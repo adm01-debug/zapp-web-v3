@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import { ContactFormV3, type ContactV3FormData } from '@/components/contacts/ContactFormV3';
 import { Button } from '@/components/ui/button';

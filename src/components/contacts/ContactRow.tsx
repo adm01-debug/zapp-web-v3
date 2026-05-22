@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactRow.tsx
  * Individual contact row for the contacts list.

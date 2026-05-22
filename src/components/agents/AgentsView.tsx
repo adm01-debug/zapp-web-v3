@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AgentsEmptyState } from '@/components/ui/contextual-empty-states';

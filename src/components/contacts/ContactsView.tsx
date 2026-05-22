@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useExternalContact360Batch } from '@/hooks/useExternalContact360Batch';

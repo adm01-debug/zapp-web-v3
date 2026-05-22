@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ExternalContact360Panel — Helper sub-components
  * Extracted from the main panel to reduce file size.

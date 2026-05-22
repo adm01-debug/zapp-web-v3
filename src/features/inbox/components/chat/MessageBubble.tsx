@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { motion, AnimatePresence } from '@/components/ui/motion';

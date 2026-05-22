@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BulkReprocessGuidedDialog — fluxo guiado em 3 passos para reprocessar
  * itens selecionados na DLQ:

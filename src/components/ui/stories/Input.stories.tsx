@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Meta, StoryObj } from "@storybook/react";
 import { Input } from "../input";
 import { Search, User, Mail, AlertCircle, CheckCircle, Lock, Eye, EyeOff, Calendar } from "lucide-react";

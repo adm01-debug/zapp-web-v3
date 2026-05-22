@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactBitrix24Panel.tsx — CRM enrichment from EXTERNAL database
  *

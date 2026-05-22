@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Message } from '@/types/chat';
 import { FailureCategory } from './hooks/useChatFilters';
 

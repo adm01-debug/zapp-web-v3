@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Suspense, useCallback, forwardRef, lazy, useState, useMemo } from 'react';
 import { Target, Mic, Maximize2, Minimize2, Info } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';

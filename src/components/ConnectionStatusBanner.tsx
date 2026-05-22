@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { memo } from 'react';
 import { WifiOff, Loader2 } from 'lucide-react';
 

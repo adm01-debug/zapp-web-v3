@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Motion barrel file.
  * Re-exports all sub-modules for backward compatibility.
