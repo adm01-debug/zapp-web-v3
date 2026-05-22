@@ -322,7 +322,7 @@ export function useRealtimeInbox() {
     // Pegar as últimas 10 mensagens para reconciliar (caso algum webhook tenha chegado)
     const recent = selectedMessages.slice(-10);
     recent.forEach(msg => {
-      if (msg.external_id && msg.sender === 'agent') {
+      if (msg.external_id && (msg.sender === 'agent' || msg.sender === 'bot')) {
         const status = (msg.status === 'failed' || msg.status === 'failed_auth' || msg.status === 'failed_retries') 
           ? 'failed' 
           : 'confirmed';
@@ -337,7 +337,7 @@ export function useRealtimeInbox() {
     // Webhook reconciliation - remove if already delivered/confirmed externally
     const messagesToCheck = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
     const lastMsg = messagesToCheck[messagesToCheck.length - 1];
-    if (lastMsg?.external_id && lastMsg.sender === 'agent') {
+    if (lastMsg?.external_id && (lastMsg.sender === 'agent' || lastMsg.sender === 'bot')) {
       messageQueue.reconcileWithDelivery(contactId, lastMsg.external_id, lastMsg.status === 'failed' ? 'failed' : 'confirmed');
     }
 
