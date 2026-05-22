@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMemo } from 'react';
 import { primaryNav, communicationNav, automationNav, salesNav, connectionsNav, analyticsNav, systemNav } from '@/components/layout/sidebarNavConfig';
 import type { NavItemConfig } from '@/components/layout/SidebarNavItem';

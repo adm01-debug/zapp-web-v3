@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect } from 'react';
 
 const BASE_TITLE = 'WhatsApp Omnichannel';

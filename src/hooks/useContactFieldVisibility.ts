@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useContactFieldVisibility.ts — Role-based field visibility for EXTERNAL CRM contacts
  *

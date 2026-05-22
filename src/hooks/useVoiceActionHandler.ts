@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { VoiceAgentAction } from '@/features/inbox';

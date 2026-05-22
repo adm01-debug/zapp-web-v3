@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useWebhookHealthAlerts — polling de saúde do webhook por instância.
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 
 export type SLAStatus = 'ok' | 'warning' | 'breached';

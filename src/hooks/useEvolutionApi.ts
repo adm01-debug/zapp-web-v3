@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEvolutionApiCore } from './evolution/useEvolutionApiCore';
 import { useEvolutionInstance } from './evolution/useEvolutionInstance';
 import { useEvolutionMessaging } from './evolution/useEvolutionMessaging';

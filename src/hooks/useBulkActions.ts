@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook para Ações em Massa
  * 

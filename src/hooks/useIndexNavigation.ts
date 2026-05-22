@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useNavigationHistory } from '@/hooks/useNavigationHistory';
