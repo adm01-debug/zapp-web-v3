@@ -8,7 +8,8 @@
  * 3. Targeting specific agent IDs.
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase: any = _sb;
 import { log } from '@/lib/logger';
 
 type FeatureFlag =

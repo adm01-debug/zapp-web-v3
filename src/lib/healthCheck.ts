@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase: any = _sb;
 import { loadFeatureFlags } from './featureFlags';
 import { log } from './logger';
 

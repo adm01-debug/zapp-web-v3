@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase: any = _sb;
 import { toast } from 'sonner';
 
 type RoleType = 'dev' | 'admin' | 'manager' | 'supervisor' | 'agent';
