@@ -167,7 +167,7 @@ export function RealtimeInboxView() {
 
       <div 
         className={cn(
-          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out', 
+          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out shadow-xl', 
           isMobile && !inbox.selectedContactId && 'hidden',
           isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
         )}
