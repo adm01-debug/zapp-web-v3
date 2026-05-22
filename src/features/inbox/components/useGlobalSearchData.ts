@@ -203,14 +203,14 @@ export function useGlobalSearchData(open: boolean) {
       if (cleanQuery.length >= 2) {
         addToHistory(cleanQuery, searchResults.length);
         // Fire-and-forget telemetry — never blocks UI.
-        supabase
+        (supabase as any)
           .rpc('rpc_log_search_event', {
             p_query: cleanQuery,
             p_entities: Array.from(types),
             p_result_count: searchResults.length,
             p_used_vector: false,
           })
-          .then(({ data, error }) => {
+          .then(({ data, error }: { data: any, error: any }) => {
             if (error) log.warn('rpc_log_search_event failed', error);
             else if (typeof data === 'string') lastSearchEventIdRef.current = data;
           });
