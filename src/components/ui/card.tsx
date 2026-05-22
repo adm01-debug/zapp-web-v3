@@ -57,7 +57,6 @@ const MotionCardComponent = React.forwardRef<HTMLDivElement, MotionCardProps>(
       whileHover={hover ? { 
         y: hoverY, 
         scale: hoverScale,
-        borderColor: "hsl(var(--primary) / 0.5)",
         transition: { duration: 0.2, ease: "easeOut" }
       } : undefined}
       whileTap={hover ? { scale: 0.99 } : undefined}

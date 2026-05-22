@@ -86,9 +86,9 @@ const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(
     return (
       <motion.button
         ref={ref}
-        whileHover={{ 
-          scale: disabled || isLoading ? 1 : 1.02, 
-          y: disabled || isLoading ? 0 : -2,
+        whileHover={disabled || isLoading ? undefined : { 
+          scale: 1.02, 
+          y: -2,
           transition: { duration: 0.2, ease: "easeOut" }
         }}
         whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
