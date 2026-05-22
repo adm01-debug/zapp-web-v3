@@ -86,16 +86,16 @@ export function AudioMessagePlayer({ audioUrl, messageId, isSent, existingTransc
     const fetchStatus = async () => {
       const { data } = await supabase
         .from('voice_conversion_queue' as any)
-        .select('id, status, error_message')
+        .select('*')
         .eq('message_id' as any, messageId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
       
       if (data) {
-        setVoiceStatus(data.status);
-        setVoiceError(data.error_message);
-        setVoiceTaskId(data.id);
+        setVoiceStatus((data as any).status);
+        setVoiceError((data as any).error_message);
+        setVoiceTaskId((data as any).id);
       }
     };
     
