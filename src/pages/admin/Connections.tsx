@@ -265,7 +265,7 @@ export default function AdminConnectionsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-full">
+    <div className="p-8 space-y-8 bg-background min-h-full animate-in fade-in duration-1000">
       <PageHeader 
         title="Módulo de Conexão" 
         subtitle="Gerencie integrações externas, webhooks e conectores inteligentes"
@@ -300,18 +300,18 @@ export default function AdminConnectionsPage() {
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full md:w-[600px] mb-8">
-          <TabsTrigger value="external-db" className="gap-2">
+        <TabsList className="bg-muted/30 p-1.5 border border-border/20 flex-wrap h-auto gap-1 rounded-2xl backdrop-blur-md mb-8 w-full md:w-fit">
+          <TabsTrigger value="external-db" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all duration-300 gap-2">
             <Database className="w-4 h-4" /> Banco Externo
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="gap-2">
+          <TabsTrigger value="integrations" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all duration-300 gap-2">
             <Globe className="w-4 h-4" /> Integrações
           </TabsTrigger>
-          <TabsTrigger value="webhooks" className="gap-2">
+          <TabsTrigger value="webhooks" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all duration-300 gap-2">
             <Webhook className="w-4 h-4" /> Webhooks
           </TabsTrigger>
-          <TabsTrigger value="mcp" className="gap-2">
-            <Cpu className="w-4 h-4" /> MCP (Claude)
+          <TabsTrigger value="mcp" className="rounded-xl px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all duration-300 gap-2">
+            <Cpu className="w-4 h-4" /> MCP
           </TabsTrigger>
         </TabsList>
 
@@ -320,7 +320,7 @@ export default function AdminConnectionsPage() {
           <TabsContent value="external-db">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <div className="grid gap-6 md:grid-cols-2">
-                <Card className="border-primary/20 bg-card/50 backdrop-blur-sm">
+                <Card className="border-border/40 bg-card/40 backdrop-blur-xl shadow-xl shadow-primary/5 overflow-hidden transition-all duration-500 hover:border-primary/30">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
