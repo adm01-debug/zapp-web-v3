@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

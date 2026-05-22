@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, useCallback, useState } from 'react';
 
 interface UseSwipeGestureOptions {

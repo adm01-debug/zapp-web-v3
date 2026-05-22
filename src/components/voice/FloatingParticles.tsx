@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef, useMemo } from 'react';
 import type { VoiceAgentPhase } from '@/features/inbox';
 

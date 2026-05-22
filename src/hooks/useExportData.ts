@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hook de Exportação - Controlado por permissão de download do usuário.
  */

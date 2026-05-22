@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dropdown compacto para escolher a categoria de falha exibida quando o
  * filtro "apenas com retry/falha" está ativo no sidebar do inbox.

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import { Award } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';

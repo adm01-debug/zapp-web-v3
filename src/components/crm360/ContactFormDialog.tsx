@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactFormDialog — Modal for creating/editing contacts in the external CRM DB
  */

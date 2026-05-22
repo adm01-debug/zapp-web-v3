@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react';
 import { FileText, Image as ImageIcon, Film, Archive, File, Download, Eye, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

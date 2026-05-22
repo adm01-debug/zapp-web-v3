@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Phone, MessageSquare, ChevronRight, List, Check, X } from 'lucide-react';

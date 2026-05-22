@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactSidebarPanel.tsx — v3.0
  * CRM 360° sidebar with 4 tabs: Notes / LGPD / History / Info

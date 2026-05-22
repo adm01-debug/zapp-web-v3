@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { forwardRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';

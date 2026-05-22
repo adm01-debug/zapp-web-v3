@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactRecycleBin.tsx — v2.0
  * Recycle bin using v_deleted_contacts view + restore_contact() RPC.

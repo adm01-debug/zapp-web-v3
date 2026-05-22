@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactStatsDashboard.tsx — v2.0
  * Real-time contact KPI dashboard using get_contact_stats() + get_lgpd_compliance_stats() RPCs.

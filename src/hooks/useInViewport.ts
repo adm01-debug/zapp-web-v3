@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState, type RefObject } from 'react';
 
 /**

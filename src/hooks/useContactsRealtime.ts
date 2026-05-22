@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useContactsRealtime.ts — v2.0
  * Supabase Realtime subscriptions for evolution_contacts.

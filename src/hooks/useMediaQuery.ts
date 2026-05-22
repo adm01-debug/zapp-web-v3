@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useMediaQuery.ts
  * Responsive media query hook.

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';

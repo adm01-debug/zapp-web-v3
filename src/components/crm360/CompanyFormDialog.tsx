@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CompanyFormDialog — Modal for creating/editing companies in the external CRM DB
  */

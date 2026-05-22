@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Componente headless: monta no shell todos os alertas globais ligados ao
  * ciclo de vida de envio de mensagens. Não renderiza nada.

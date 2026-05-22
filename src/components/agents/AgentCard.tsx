@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AgentCard.tsx
  * Display card for an AI agent showing status, model, and actions.

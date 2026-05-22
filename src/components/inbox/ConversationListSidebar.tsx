@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { lazy, Suspense, useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';

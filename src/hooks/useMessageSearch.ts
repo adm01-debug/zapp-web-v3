@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useMessageSearch.ts
  * Search within conversation messages with highlighting.

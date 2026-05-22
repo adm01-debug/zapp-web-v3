@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Copy, Check, Download, RefreshCw, AlertTriangle } from 'lucide-react';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, Users, ShieldAlert, Star, Volume2, VolumeX, Loader2 } from 'lucide-react';

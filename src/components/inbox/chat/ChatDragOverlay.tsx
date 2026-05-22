@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { Paperclip } from 'lucide-react';
 

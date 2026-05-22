@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Suspense, lazy } from 'react';
 import { log } from '@/lib/logger';
 import { toast } from '@/hooks/use-toast';

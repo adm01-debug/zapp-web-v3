@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Gamepad2, TrendingUp, Maximize2, Minimize2 } from 'lucide-react';

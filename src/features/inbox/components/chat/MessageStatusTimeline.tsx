@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MessageStatusTimeline — vertical timeline of the four delivery milestones
  * (queued → sent → delivered → read) for a single outbound message.

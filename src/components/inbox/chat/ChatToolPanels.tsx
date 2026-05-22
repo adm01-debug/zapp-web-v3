@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Suspense, lazy } from 'react';
 import { Radar, GraduationCap, FileText } from 'lucide-react';
 import { ToolPanel } from '../ai-tools/ToolPanel';

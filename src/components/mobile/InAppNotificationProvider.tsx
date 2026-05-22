@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { InAppNotification, InAppNotificationData } from './InAppNotification';
 

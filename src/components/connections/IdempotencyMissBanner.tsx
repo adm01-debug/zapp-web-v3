@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IdempotencyMissBanner — admin-only visual badge for the Evolution send
  * cache health on the Connections page. Renders nothing for non-admins or

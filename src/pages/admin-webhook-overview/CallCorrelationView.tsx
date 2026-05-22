@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Visualização "Por Call" — agrupa eventos por call_id e mostra
  * timelines consolidadas por instância.

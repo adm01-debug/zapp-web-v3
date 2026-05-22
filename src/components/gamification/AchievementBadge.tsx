@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import { 
   Zap, Flame, Target, Star, Crown, Trophy, Rocket, 

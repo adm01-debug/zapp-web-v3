@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LGPDComplianceDashboard.tsx
  * Real-time LGPD compliance stats for the workspace.

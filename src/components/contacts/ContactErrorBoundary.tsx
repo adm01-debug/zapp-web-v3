@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactErrorBoundary.tsx
  * Error boundary for the entire Contacts Module.

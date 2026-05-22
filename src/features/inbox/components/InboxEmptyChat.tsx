@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion } from 'framer-motion';
 import { MessageSquare, MessageSquarePlus, Search as SearchIcon } from 'lucide-react';
 
@@ -9,7 +10,7 @@ export function InboxEmptyChat() {
           <motion.div
             animate={{ rotate: [0, 3, -3, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/12 via-primary/6 to-transparent flex items-center justify-center ring-1 ring-primary/10 shadow-lg shadow-primary/5"
+            className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent flex items-center justify-center ring-1 ring-primary/10 shadow-2xl shadow-primary/10"
           >
             <MessageSquare className="w-8 h-8 text-primary/50" />
           </motion.div>

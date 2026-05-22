@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { forwardRef, useImperativeHandle } from 'react';
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';

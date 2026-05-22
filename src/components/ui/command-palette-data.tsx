@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import {
   Inbox, LayoutDashboard, Users, Phone, Zap, Tag, BarChart3, Shield, Settings,

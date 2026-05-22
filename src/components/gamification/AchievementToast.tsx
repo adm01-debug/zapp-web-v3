@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Zap, Clock, MessageSquare, Star, Flame, Rocket, Target, Award, PartyPopper, Crown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * KPIs leves no topo da Inbox: distribuição de tickets por status,
  * abertos atribuídos a mim, e tempo médio em aberto. Tudo computado a

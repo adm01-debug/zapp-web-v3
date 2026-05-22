@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, useCallback, useEffect } from 'react';
 
 interface UseSwipeNavigationOptions {

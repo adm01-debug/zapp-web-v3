@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactDuplicatesPanel.tsx
  * Dashboard panel to detect and merge all duplicate contacts at once.

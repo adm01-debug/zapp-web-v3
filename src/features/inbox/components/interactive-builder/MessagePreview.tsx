@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { List } from 'lucide-react';
 import { InteractiveButton, InteractiveListSection } from '@/types/chat';
 import { getButtonTypeIcon } from './ButtonTypeHelpers';

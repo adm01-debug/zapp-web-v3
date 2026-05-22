@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useCallback, useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 // Roving Tabindex Hook

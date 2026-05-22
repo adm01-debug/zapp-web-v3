@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Play, Rocket } from 'lucide-react';

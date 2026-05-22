@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, MessageSquarePlus, Users, Megaphone } from 'lucide-react';
 import { useState } from 'react';

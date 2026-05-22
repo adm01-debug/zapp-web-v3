@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo } from 'react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,

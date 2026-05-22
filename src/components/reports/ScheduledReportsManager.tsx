@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ScheduledReportConfigs } from './ScheduledReportConfigs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

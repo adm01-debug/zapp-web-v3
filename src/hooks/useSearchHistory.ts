@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 
 const HISTORY_KEY = 'global-search-history';

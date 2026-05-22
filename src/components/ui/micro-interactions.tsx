@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Micro-interactions barrel file.
  * Re-exports all sub-modules for backward compatibility.

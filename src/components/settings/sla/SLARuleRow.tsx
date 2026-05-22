@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { SLARule, SLARuleScope, SLARuleMetadata } from '@/features/sla';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

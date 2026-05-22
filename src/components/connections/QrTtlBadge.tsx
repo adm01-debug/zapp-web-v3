@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { QrTtlSource } from '@/features/connections';

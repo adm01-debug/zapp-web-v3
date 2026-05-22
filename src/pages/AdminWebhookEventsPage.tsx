@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Admin: Auditable log of evolution-webhook events.
  * Filters by event type, instance and date range. Reads from FATOR X

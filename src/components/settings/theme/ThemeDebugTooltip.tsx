@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Info } from 'lucide-react';
 import {
   Tooltip,

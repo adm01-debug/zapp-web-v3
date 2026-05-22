@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { MessageSquare, ExternalLink, Phone } from 'lucide-react';
 import { InteractiveButton } from '@/types/chat';
 

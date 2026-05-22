@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";

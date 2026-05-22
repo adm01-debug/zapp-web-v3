@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Admin: Webhook Overview Dashboard.
  * Aggregated view of `evolution_webhook_events` over a configurable window

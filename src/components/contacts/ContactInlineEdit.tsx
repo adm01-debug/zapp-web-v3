@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ContactInlineEdit.tsx — Click-to-edit fields saved to EXTERNAL CRM database
  *

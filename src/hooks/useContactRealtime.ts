@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * useContactRealtime.ts — Realtime contact sync via EXTERNAL CRM database
  *

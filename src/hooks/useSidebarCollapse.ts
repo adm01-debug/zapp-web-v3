@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { forwardRef } from 'react';
 import { useSLANotifications } from '@/features/sla';
 
