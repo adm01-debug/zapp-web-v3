@@ -123,12 +123,12 @@ export function MessageBubble({
         data-testid={`message-bubble-${message.id}`}
         data-message-id={message.id}
         className={cn(
-          'flex group gap-2 transition-all duration-300 focus-visible:outline-none ',
+          'flex group gap-2 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none rounded-2xl',
           isSent ? 'justify-end' : 'justify-start',
           density === 'comfortable' ? 'mb-2' : density === 'compact' ? 'mb-1.5' : 'mb-1',
           highlightedMessageIds?.has(message.id) && 'relative',
-          activeHighlightId === message.id && 'ring-2 ring-primary ring-offset-0 rounded-lg animate-[pulse_1.5s_ease-in-out_1]',
-          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/10 rounded-lg',
+          activeHighlightId === message.id && 'ring-2 ring-primary ring-offset-1 rounded-2xl animate-[pulse_1.5s_ease-in-out_1]',
+          highlightedMessageIds?.has(message.id) && activeHighlightId !== message.id && 'bg-primary/10 rounded-2xl',
         )}
       >
         {!isSent && (
@@ -207,8 +207,8 @@ export function MessageBubble({
                 'relative transition-all overflow-visible border border-transparent shadow-sm',
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-4 py-3' : 'px-3 py-2.5',
                 isSent
-                  ? cn('bg-primary text-primary-foreground shadow-md shadow-primary/10', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-muted/80 text-foreground backdrop-blur-sm border border-border/30', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                  ? cn('bg-primary text-primary-foreground shadow-md shadow-primary/10 ring-1 ring-primary/20', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-card text-foreground backdrop-blur-md border border-border/40 shadow-sm', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
                 message.isWhisper && 'bg-warning/20 border-warning/50 text-warning-foreground ring-1 ring-warning/20 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
