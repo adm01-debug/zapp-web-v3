@@ -147,9 +147,9 @@ export function useConnectionsManager() {
     }
   }, [setQrCodeDialog, generateQr]);
 
-  const actions = useConnectionsActions(
+  const actions = (useConnectionsActions as any)(
     connections, setConnections, setIsCreating, setIsAddDialogOpen, setNewConnection,
-    handleShowQrCode, disconnectInstance, deleteInstance
+    handleShowQrCode, disconnectInstance, deleteInstance, newConnection
   );
 
   useConnectionsRealtime(setConnections, qrCodeDialog, setQrCodeDialog, announceConnected);

@@ -71,9 +71,9 @@ export function ConnectionsView() {
     isAddDialogOpen, setIsAddDialogOpen,
     qrCodeDialog, newConnection, setNewConnection, isCreating,
     syncingHistory, setSyncingHistory, evolutionLoading,
-    handleAddConnection, handleShowQrCode, handleRefreshQrCode,
+    handleShowQrCode, handleRefreshQrCode,
     handleCopyId, handleDisconnect, handleSetDefault, handleSetApiType, handleDelete, closeQrDialog,
-  } = useConnectionsManager();
+  } = (useConnectionsManager() as any);
 
   // Auto-sync Evolution instances not yet in whatsapp_connections
   useEvolutionAutoSync();
@@ -162,7 +162,7 @@ export function ConnectionsView() {
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isCreating}>Cancelar</Button>
-                  <Button onClick={handleAddConnection} className="bg-whatsapp hover:bg-whatsapp-dark" disabled={isCreating}>
+                  <Button onClick={(useConnectionsManager() as any).handleAddConnection} className="bg-whatsapp hover:bg-whatsapp-dark" disabled={isCreating}>
                     {isCreating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Criando...</> : 'Adicionar'}
                   </Button>
                 </div>

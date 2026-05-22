@@ -225,28 +225,41 @@ export function useRealtimeMessages() {
   }, [commitConversations, fetchContactsByIds]);
 
   useEffect(() => {
+    let active = true;
     fetchConversations();
+    
     const client = externalSupabase || supabase;
     log.info('Subscribing to realtime', { source: externalSupabase ? 'external' : 'internal' });
     
+    const channelName = `messages-realtime-${Math.random().toString(36).slice(2, 9)}`;
     logMessagesSubscribe('useRealtimeMessages', { event: 'INSERT', table: dbTable('messages') });
     logMessagesSubscribe('useRealtimeMessages', { event: 'UPDATE', table: dbTable('messages') });
-    const channel = client.channel('messages-realtime')
+    
+    const channel = client.channel(channelName)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
         table: dbTable('messages'),
       },
-        wrapMessagesHandler('useRealtimeMessages', handleNewMessage))
+        (payload) => {
+          if (active) wrapMessagesHandler('useRealtimeMessages', handleNewMessage)(payload);
+        })
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
         table: dbTable('messages'),
-        
       },
-        wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate))
-      .subscribe((status) => { log.debug('Subscription status', { status }); });
-    return () => { client.removeChannel(channel); };
+        (payload) => {
+          if (active) wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate)(payload);
+        })
+      .subscribe((status) => { 
+        if (active) log.debug('Subscription status', { status }); 
+      });
+
+    return () => { 
+      active = false;
+      void client.removeChannel(channel); 
+    };
   }, [fetchConversations, handleNewMessage, handleMessageUpdate]);
 
   const sendMessage = async (contactId: string, content: string, messageType: string = 'text', mediaUrl?: string, mediaPayload?: string) => {

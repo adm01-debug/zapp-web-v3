@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getLogger } from '@/lib/logger';
 import { useAuth } from './useAuth';
+
+const log = getLogger('useUserRole');
 
 /**
  * Hierarquia de papéis (do mais alto ao mais baixo):
@@ -45,32 +48,41 @@ export function useUserRole() {
   const fetchRoles = useCallback(async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', user.id);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
 
-    if (!mountedRef.current) return;
+      if (!mountedRef.current) return;
 
-    if (!error && data) {
-      // Normaliza papéis legados (special_agent foi descontinuado → vira agent).
-      const userRoles = data.map((r) => {
-        const raw = r.role as string;
-        return (raw === 'special_agent' ? 'agent' : raw) as AppRole;
-      });
-      setRoles(userRoles);
+      if (error) {
+        log.error('Error fetching user roles:', error.message);
+        return;
+      }
 
-      const maxRank = userRoles.reduce(
-        (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
-        0
-      );
-      // Hierárquico: cada nível concede os abaixo.
-      setIsDev(maxRank >= ROLE_RANK.dev);
-      setIsAdmin(maxRank >= ROLE_RANK.admin);
-      setIsManager(maxRank >= ROLE_RANK.manager);
-      setIsSupervisor(maxRank >= ROLE_RANK.supervisor);
+      if (data) {
+        const userRoles = data.map((r) => {
+          const raw = r.role as string;
+          return (raw === 'special_agent' ? 'agent' : raw) as AppRole;
+        });
+        setRoles(userRoles);
+
+        const maxRank = userRoles.reduce(
+          (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
+          0
+        );
+        
+        setIsDev(maxRank >= ROLE_RANK.dev);
+        setIsAdmin(maxRank >= ROLE_RANK.admin);
+        setIsManager(maxRank >= ROLE_RANK.manager);
+        setIsSupervisor(maxRank >= ROLE_RANK.supervisor);
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

@@ -30,30 +30,37 @@ export function ProtectedRoute({
   const { roles, loading: rolesLoading, hasRole } = useUserRole();
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [permissionChecking, setPermissionChecking] = useState(false);
 
   // Dynamic override from route_permissions table.
-  // Non-blocking: returns null until fetch resolves, so we never delay render.
   const overrideRoles = useRouteRoles(routePath ?? location.pathname);
 
-  const loading = authLoading || rolesLoading;
+  const loading = authLoading || rolesLoading || permissionChecking;
 
   useEffect(() => {
-    if (!loading && user && requiredPermission) {
+    let isMounted = true;
+    
+    if (!authLoading && user && requiredPermission) {
+      setPermissionChecking(true);
       supabase.rpc('user_has_permission', {
         _user_id: user.id,
         _permission_name: requiredPermission
       }).then(({ data, error }) => {
+        if (!isMounted) return;
         if (error) {
           log.error('Permission check failed:', error.message);
           setHasPermission(false);
-          return;
+        } else {
+          setHasPermission(data === true);
         }
-        setHasPermission(data === true);
+        setPermissionChecking(false);
       });
     } else if (!requiredPermission) {
       setHasPermission(true);
     }
-  }, [loading, user, requiredPermission]);
+
+    return () => { isMounted = false; };
+  }, [authLoading, user, requiredPermission]);
 
   if (loading || (requiredPermission && hasPermission === null)) {
     return (
