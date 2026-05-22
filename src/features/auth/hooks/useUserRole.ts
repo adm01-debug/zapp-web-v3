@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getLogger } from '@/lib/logger';
 import { useAuth } from './useAuth';
+
+const log = getLogger('useUserRole');
 
 /**
  * Hierarquia de papéis (do mais alto ao mais baixo):
