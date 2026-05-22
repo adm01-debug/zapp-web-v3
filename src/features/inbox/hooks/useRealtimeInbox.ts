@@ -328,6 +328,10 @@ export function useRealtimeInbox() {
           : 'confirmed';
         messageQueue.reconcileWithDelivery(selectedContactId, msg.external_id, status);
       }
+      // Reconciliar por conteúdo para bot
+      else if (msg.content && msg.sender === 'bot') {
+        messageQueue.reconcileWithDelivery(selectedContactId, msg.content, msg.status === 'failed' ? 'failed' : 'confirmed');
+      }
     });
   }, [selectedMessages, selectedContactId]);
 
