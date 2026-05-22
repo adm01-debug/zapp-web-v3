@@ -132,7 +132,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
       <div className={cn(
         "px-4 border-b border-border/20 shrink-0 transition-all", 
-        isMobile ? "pt-2 pb-3 space-y-4" : (density === 'compact' ? "pt-3 pb-2 space-y-2 bg-accent/5" : "pt-6 pb-4 space-y-4 bg-accent/10")
+        isMobile ? "pt-2 pb-3 space-y-4" : (density === 'compact' ? "pt-3 pb-2 space-y-2 bg-muted/20" : "pt-6 pb-4 space-y-4 bg-muted/30")
       )}>
         {!isMobile && (
           <div className="flex items-center justify-between">

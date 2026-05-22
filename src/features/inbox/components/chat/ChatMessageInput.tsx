@@ -229,7 +229,7 @@ export const ChatMessageInput = forwardRef<ChatMessageInputRef, ChatMessageInput
         )}
       </AnimatePresence>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("glass-strong border-t border-border/50", isMobile ? "p-2 safe-area-bottom" : "p-4")}>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("bg-background/95 backdrop-blur-md border-t border-border/50 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]", isMobile ? "p-3 safe-area-bottom" : "p-4")}>
         <div className="flex items-end gap-1">
           <FileUploader ref={fileUploaderRef} instanceName={contactId} recipientNumber={contactPhone} contactId={contactId} connectionId={undefined}
             onFileSelect={handleFileSelect}

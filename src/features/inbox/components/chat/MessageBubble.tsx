@@ -206,9 +206,9 @@ export function MessageBubble({
                 'relative transition-all overflow-visible border border-transparent shadow-sm',
                 (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-4 py-3' : 'px-3 py-2.5',
                 isSent
-                  ? cn('bg-chat-sent text-chat-sent-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-chat-received text-chat-received-foreground font-normal', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
-                message.isWhisper && 'bg-warning dark:bg-warning/20 border-warning/50 dark:border-warning/40 text-warning-foreground dark:text-warning-foreground ring-1 ring-amber-500/30 border-dashed',
+                  ? cn('bg-primary text-primary-foreground shadow-md shadow-primary/10', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
+                  : cn('bg-muted/80 text-foreground backdrop-blur-sm border border-border/30', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
+                message.isWhisper && 'bg-warning/20 border-warning/50 text-warning-foreground ring-1 ring-warning/20 border-dashed',
                 isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
               )}
             >

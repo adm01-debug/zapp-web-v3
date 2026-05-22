@@ -345,6 +345,7 @@ export function ConversationItem({
           onClick={() => onSelect(conversation)}
           className={cn(
             'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3',
+            'hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:z-10',
             isSelected
               ? 'bg-primary/10 shadow-[inset_0_0_20px_rgba(var(--primary),0.03)]'
               : 'hover:bg-muted/30 bg-background',
@@ -417,8 +418,8 @@ export function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-semibold text-[15px] leading-[1.2] tracking-[-0.01em] truncate block min-w-0 transition-colors duration-200',
-                          isSelected ? 'text-primary' : 'text-foreground'
+                          ' font-bold text-[15px] leading-[1.2] tracking-tight truncate block min-w-0 transition-colors duration-200',
+                          isSelected ? 'text-primary' : 'text-foreground/90'
                         )}
                       >
                         {primaryLabel}
