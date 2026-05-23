@@ -291,10 +291,9 @@ export function ChatInputArea(props: ChatInputAreaProps) {
       </AnimatePresence>
       <div 
         className={cn(
-          "px-4 py-3 md:px-6 md:py-4 bg-background/95 backdrop-blur-2xl border-t border-border/40 relative flex flex-col gap-2 shrink-0 transition-all duration-500 ease-in-out shadow-[0_-8px_40px_rgba(0,0,0,0.04)]", 
-          isWhisper && "bg-warning/[0.04] dark:bg-warning/[0.08] border-t-2 border-warning/40 shadow-[0_-8px_30px_rgba(245,158,11,0.08)]",
-          !isWhisper && "focus-within:shadow-[0_-8px_40px_rgba(var(--primary-rgb),0.06)]",
-          logic.isMobile && "px-3 py-3 safe-area-bottom"
+          "px-4 py-4 md:px-12 md:py-6 bg-background border-t border-border/10 relative flex flex-col gap-3 shrink-0 transition-all duration-500 shadow-2xl", 
+          isWhisper && "bg-warning/10 border-t-2 border-warning shadow-warning/10",
+          logic.isMobile && "px-3 py-4 safe-area-bottom"
         )}
         role="form"
         aria-label="Área de composição de mensagem"

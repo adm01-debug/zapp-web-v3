@@ -349,13 +349,13 @@ export function ConversationItem({
           aria-selected={isSelected}
           role="option"
           className={cn(
-            'relative p-3 cursor-pointer transition-all duration-300 min-h-[78px] mx-0 border-b border-border/40 group flex items-start gap-3 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-[-2px]',
-            'hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:z-10',
+            'relative p-4 cursor-pointer transition-all duration-300 min-h-[88px] mx-2 my-1 rounded-2xl border border-transparent group flex items-start gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-[-2px]',
+            'hover:shadow-lg hover:z-10',
             isSelected
-              ? 'bg-primary/[0.08] shadow-[inset_0_0_24px_rgba(var(--primary-rgb),0.04)]'
-              : 'hover:bg-muted/40 bg-background dark:bg-card/50',
-            isMultiSelected && 'bg-primary/20 shadow-inner',
-            isPinned && !isSelected && 'bg-muted/40'
+              ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02] border-primary/20'
+              : 'hover:bg-muted/40 bg-card border-border/40',
+            isMultiSelected && 'ring-2 ring-primary ring-offset-2',
+            isPinned && !isSelected && 'bg-muted/30 border-dashed border-primary/20'
           )}
         >
           {isSelected && (

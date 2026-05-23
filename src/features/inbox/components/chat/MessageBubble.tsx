@@ -201,16 +201,16 @@ export function MessageBubble({
             <DeletedMessagePlaceholder isSent={isSent} content={message.content} />
           ) : (
             <motion.div
-              whileHover={{ scale: 1.002 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className={cn(
-                'relative transition-all overflow-visible border border-transparent shadow-sm',
-                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-0.5 pb-0' : density === 'comfortable' ? 'px-4 py-3' : 'px-3 py-2.5',
+                'relative transition-all overflow-visible shadow-lg',
+                (message.type === 'image' || message.type === 'video') && !message.content ? 'p-1 pb-0' : density === 'comfortable' ? 'px-5 py-3.5' : 'px-4 py-3',
                 isSent
-                  ? cn('bg-primary text-primary-foreground shadow-md shadow-primary/10 ring-1 ring-primary/20', isFirstInGroup ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl')
-                  : cn('bg-card text-foreground backdrop-blur-md border border-border/40 shadow-sm', isFirstInGroup ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'),
-                message.isWhisper && 'bg-warning/20 border-warning/50 text-warning-foreground ring-1 ring-warning/20 border-dashed',
-                isFailedTerminal && 'ring-1 ring-destructive/50 border-destructive/40'
+                  ? cn('bg-primary text-primary-foreground rounded-[1.25rem] rounded-tr-none border border-primary/20')
+                  : cn('bg-card text-foreground border border-border/60 rounded-[1.25rem] rounded-tl-none'),
+                message.isWhisper && 'bg-warning text-warning-foreground border-warning/50 border-dashed font-bold ring-4 ring-warning/5',
+                isFailedTerminal && 'ring-2 ring-destructive/50 border-destructive/40'
               )}
             >
               {/* Bubble Tail */}
