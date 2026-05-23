@@ -66,11 +66,22 @@ async function handler(req: Request): Promise<Response> {
   try {
     const url = Deno.env.get('EXTERNAL_SUPABASE_URL')
     const key = Deno.env.get('EXTERNAL_SUPABASE_ANON_KEY')
-    if (!url || !key) {
-      logEvent({ phase: 'start', cid, rid, ...reqMeta, error: 'missing_env' })
+    const isValidUrl = !!url && /^https?:\/\//i.test(url) && !url.includes('PLACEHOLDER')
+    const isValidKey = !!key && !key.includes('PLACEHOLDER')
+    if (!isValidUrl || !isValidKey) {
+      logEvent({ phase: 'start', cid, rid, ...reqMeta, error: 'missing_or_placeholder_env' })
       return finish(
-        new Response(JSON.stringify({ error: 'External DB not configured', cid, rid }), { status: 500, headers: jsonHeaders }),
-        'config_error'
+        new Response(
+          JSON.stringify({
+            error: 'EXTERNAL_DB_NOT_CONFIGURED',
+            message: 'External DB credentials are not configured (placeholder or missing).',
+            fallback: true,
+            cid,
+            rid,
+          }),
+          { status: 200, headers: jsonHeaders },
+        ),
+        'config_error',
       )
     }
 
