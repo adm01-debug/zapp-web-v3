@@ -51,10 +51,6 @@ export const statusColors = {
   waiting: 'bg-status-waiting',
 };
 
-/**
- * Wraps content in a Tooltip only when the underlying element is actually
- * truncated (scrollWidth > clientWidth). Avoids noisy tooltips for short text.
- */
 function TruncatedTooltip({
   fullText,
   children,
@@ -97,18 +93,16 @@ function TruncatedTooltip({
 }
 
 interface ConversationItemProps {
-  conversation: any; // Allow flexibility for mapped types
+  conversation: any;
   isSelected: boolean;
   onSelect: (conversation: any) => void;
   compact?: boolean;
-  // Selection Mode Props (for VirtualizedRealtimeList integration)
   selectionMode?: boolean;
   isMultiSelected?: boolean;
   onToggleSelection?: (id: string) => void;
   isPinned?: boolean;
 }
 
-/** Build "FirstName · Company" or fallbacks. */
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const company = conversation.contact?.company?.trim();
@@ -129,7 +123,6 @@ function buildFullPrimaryLabel(conversation: any): string {
   return safeName;
 }
 
-
 export function ConversationItem({ 
   conversation, 
   isSelected, 
@@ -143,18 +136,14 @@ export function ConversationItem({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
 
-  // Normalização de dados entre os tipos Conversation (legado) e ConversationWithMessages (realtime)
   const contact = conversation.contact;
   const contactId = contact?.id || conversation.id;
   const status = conversation.status || 'open';
-  const priority = conversation.priority || 'medium';
   const unreadCount = conversation.unreadCount || 0;
   const lastMessage = conversation.lastMessage;
   const tags = contact?.tags ?? [];
-  const company = contact?.company;
   const avatarUrl = contact?.avatar || contact?.avatar_url;
   
-  // Datas — sempre normalizar para Date válido (formatDistanceToNow lança em valores inválidos)
   const displayDate =
     toValidDate(conversation.updatedAt, null as any) ||
     toValidDate(lastMessage?.created_at, null as any) ||
@@ -175,8 +164,6 @@ export function ConversationItem({
   const hasTags = tags.length > 0;
   const previewText = lastMessage?.content?.trim() || 'Sem mensagens ainda';
   const visibleTags = tags.slice(0, 2);
-  const hiddenTagsCount = Math.max(0, tags.length - visibleTags.length);
-  const hiddenTagsLabel = tags.slice(2).join(', ');
 
   if (isCompactMode) {
     return (
@@ -240,7 +227,6 @@ export function ConversationItem({
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-              {/* Linha 1: Primeiro nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   {isPinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0 fill-primary" />}
@@ -277,7 +263,6 @@ export function ConversationItem({
                   )}
                 </div>
               </div>
-              {/* Linha 2: Última mensagem (com fallback) */}
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} className={cn("text-[12px] font-bold", isSelected ? "text-primary-foreground" : "text-success")} />
               ) : (
@@ -295,7 +280,6 @@ export function ConversationItem({
                   {previewText}
                 </p>
               )}
-              {/* Linha 3: Tags (com fallback vazio para manter consistência) */}
               <div data-testid="conversation-tags" className="flex flex-wrap items-center gap-1.5 mt-2">
                 {hasTags && visibleTags.map((tag) => (
                   <Badge
@@ -353,7 +337,7 @@ export function ConversationItem({
             isSelected
               ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[1.02] border-primary/20'
               : 'hover:bg-muted/40 bg-card border-border/40',
-            isMultiSelected && 'ring-2 ring-primary ring-offset-2',
+            isMultiSelected && 'ring-2 ring-primary ring-offset-2 shadow-inner',
             isPinned && !isSelected && 'bg-muted/30 border-dashed border-primary/20'
           )}
         >
@@ -412,7 +396,6 @@ export function ConversationItem({
               )}
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-1">
-              {/* Linha 1: Nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   {isPinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0 fill-primary" />}
