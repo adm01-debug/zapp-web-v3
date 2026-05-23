@@ -186,22 +186,24 @@ export function ConversationItem({
           data-testid="conversation-item"
           data-density="compact"
           onClick={() => onSelect(conversation)}
-          whileHover={{ x: 4, backgroundColor: 'rgba(var(--primary-rgb), 0.05)' }}
+          whileHover={{ scale: 1.02, x: 4 }}
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           aria-selected={isSelected}
           role="option"
           className={cn(
-            'relative p-2.5 rounded-xl cursor-pointer transition-all duration-300 mx-2 min-h-[64px] flex items-center gap-2 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
-            isSelected ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20' : 'hover:bg-muted/40 border-transparent',
-            isMultiSelected && 'bg-primary/20 shadow-inner'
+            'relative p-3.5 rounded-2xl cursor-pointer transition-all duration-300 mx-2 my-1 flex items-center gap-3 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 border border-transparent shadow-sm',
+            isSelected 
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 border-primary/20' 
+              : 'hover:bg-muted/40 bg-card border-border/40',
+            isMultiSelected && 'ring-2 ring-primary ring-offset-2 shadow-inner'
           )}
         >
-          {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full bg-primary" />}
+          {isSelected && <motion.div layoutId="conversationActiveCompact" className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full bg-white z-20" />}
           
           {selectionMode && (
             <div
-              className="flex-shrink-0 flex items-center mr-1"
+              className="flex-shrink-0 flex items-center mr-0.5"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleSelection?.(contactId);
@@ -211,7 +213,10 @@ export function ConversationItem({
                 type="checkbox" 
                 checked={isMultiSelected} 
                 onChange={() => {}} 
-                className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-primary/20" 
+                className={cn(
+                  "w-4 h-4 rounded border-border focus:ring-primary/20",
+                  isSelected ? "accent-white" : "text-primary"
+                )} 
               />
             </div>
           )}
@@ -237,81 +242,75 @@ export function ConversationItem({
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               {/* Linha 1: Primeiro nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
-                <div className="flex items-center gap-1 min-w-0 flex-1">
-                  {isPinned && <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0" />}
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  {isPinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0 fill-primary" />}
                   <TruncatedTooltip fullText={fullPrimaryLabel}>
                     {(ref) => (
                       <span
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-bold text-[14px] leading-[1.2] truncate block min-w-0',
-                          isSelected ? 'text-primary' : 'text-foreground'
+                          ' font-black text-[15px] leading-tight truncate block min-w-0 tracking-tight transition-colors duration-200',
+                          isSelected ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
                         {primaryLabel}
                       </span>
                     )}
                   </TruncatedTooltip>
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className=" text-[11px] font-normal text-muted-foreground tabular-nums">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={cn(
+                    " text-[10px] font-bold tabular-nums uppercase tracking-tighter opacity-70",
+                    isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                  )}>
                     {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
-                  {conversation.unreadCount > 0 && (
-                    <span className="min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center  text-[10px] font-medium bg-primary text-primary-foreground">
-                      {conversation.unreadCount}
+                  {unreadCount > 0 && (
+                    <span className={cn(
+                      "min-w-[18px] h-4.5 px-1 rounded-full flex items-center justify-center text-[10px] font-black tabular-nums shadow-md animate-bounce-in",
+                      isSelected ? "bg-white text-primary" : "bg-primary text-primary-foreground"
+                    )}>
+                      {unreadCount}
                     </span>
                   )}
                 </div>
               </div>
               {/* Linha 2: Última mensagem (com fallback) */}
               {isTyping ? (
-                <TypingIndicatorCompact isVisible={true} className="text-[12px]" />
+                <TypingIndicatorCompact isVisible={true} className={cn("text-[12px] font-bold", isSelected ? "text-primary-foreground" : "text-success")} />
               ) : (
                 <p
                   data-testid="conversation-preview"
                   className={cn(
-                    ' text-[12px] truncate leading-[1.35] min-w-0',
-                    conversation.lastMessage
-                      ? conversation.unreadCount > 0
-                        ? 'text-foreground font-medium'
+                    ' text-[12px] truncate leading-normal min-w-0 mt-0.5 transition-colors duration-200',
+                    isSelected 
+                      ? 'text-primary-foreground/90 font-medium'
+                      : unreadCount > 0
+                        ? 'text-foreground font-bold'
                         : 'text-muted-foreground font-normal'
-                      : 'text-muted-foreground/60 font-normal italic'
                   )}
                 >
                   {previewText}
                 </p>
               )}
               {/* Linha 3: Tags (com fallback vazio para manter consistência) */}
-              <div data-testid="conversation-tags" className="flex items-center gap-1 min-h-[16px]">
-                {hasTags ? (
-                  <>
-                    {visibleTags.map((tag) => (
-                      <TruncatedTooltip key={tag} fullText={tag}>
-                        {(ref) => (
-                          <Badge
-                            variant="outline"
-                            className=" text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[90px] overflow-hidden"
-                          >
-                            <span ref={ref} className="truncate block">{tag}</span>
-                          </Badge>
-                        )}
-                      </TruncatedTooltip>
-                    ))}
-                    {hiddenTagsCount > 0 && (
-                      <Tooltip delayDuration={300}>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className=" text-[10px] h-[15px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
-                            +{hiddenTagsCount}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs text-xs">{hiddenTagsLabel}</TooltipContent>
-                      </Tooltip>
+              <div data-testid="conversation-tags" className="flex flex-wrap items-center gap-1.5 mt-2">
+                {hasTags && visibleTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="outline"
+                    className={cn(
+                      "text-[9px] h-4.5 px-1.5 font-black uppercase tracking-wider transition-colors",
+                      isSelected 
+                        ? "bg-white/20 text-white border-white/20" 
+                        : "bg-warning/10 text-warning border-warning/30"
                     )}
-                  </>
-                ) : null}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
               </div>
               {lastMessage && (
                 <div className="mt-1 flex flex-col gap-1">
