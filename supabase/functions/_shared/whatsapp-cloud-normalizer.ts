@@ -1,4 +1,8 @@
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { MetaWebhookPayloadSchema } from "./webhook-schemas.ts";
+
 // Normalizes Meta WhatsApp Cloud API payloads to the unified Evolution model.
+
 // Meta sends webhooks shaped as:
 // { object: "whatsapp_business_account", entry: [{ id, changes: [{ value: { messaging_product, metadata, contacts, messages, statuses } }] }] }
 
@@ -80,12 +84,17 @@ interface MetaWebhookPayload {
 export function normalizeMetaPayload(payload: unknown): {
   events: NormalizedEvent[];
   phoneNumberId?: string;
+  validationError?: z.ZodError;
 } {
   const events: NormalizedEvent[] = [];
   let phoneNumberId: string | undefined;
 
-  const p = payload as MetaWebhookPayload;
-  if (!p || !Array.isArray(p.entry)) return { events };
+  const parsed = MetaWebhookPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { events, validationError: parsed.error };
+  }
+  const p = parsed.data;
+
 
   for (const entry of p.entry) {
     if (!entry?.changes) continue;

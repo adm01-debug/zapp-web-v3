@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { getCorsHeaders, handleCors, redactSecrets } from "../_shared/validation.ts";
+import { getCorsHeaders, handleCors, redactSecrets, contractErrorResponse } from "../_shared/validation.ts";
+import { WebhookPayloadSchema } from "../_shared/webhook-schemas.ts";
 import {
   isRecord, normalizeEventName, toEventRecords,
   handleReactionEvent, redactJid, generateRequestId,
@@ -84,7 +85,23 @@ serve(async (req) => {
 
   let payload: WebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as WebhookPayload;
+    const json = JSON.parse(rawBody);
+    const parsed = WebhookPayloadSchema.safeParse(json);
+    if (!parsed.success) {
+      console.warn(`[webhook][${requestId}] contract_violation:`, parsed.error.issues);
+      await auditWebhookEvent(supabase, {
+        request_id: requestId, status: 'rejected', error_message: 'contract_violation',
+        duration_ms: Date.now() - startedAt,
+      });
+      return contractErrorResponse(
+        'INVALID_WEBHOOK_PAYLOAD',
+        'Payload does not match Evolution Webhook contract',
+        parsed.error.issues,
+        requestId,
+        req
+      );
+    }
+    payload = parsed.data as WebhookPayload;
   } catch {
     await auditWebhookEvent(supabase, {
       request_id: requestId, status: 'rejected', error_message: 'invalid_json',

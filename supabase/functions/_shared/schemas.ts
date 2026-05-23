@@ -1,5 +1,21 @@
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
+export { z };
+
+/**
+ * Standard Error Format for Contract Validation (422 Unprocessable Entity)
+ */
+export interface ContractError {
+  error: true;
+  code: string;
+  message: string;
+  requestId?: string;
+  details?: Array<{
+    path: string;
+    message: string;
+  }>;
+}
+
 /** Schema para análise de conversa (ai-conversation-summary) */
 export const AiConversationSummarySchema = z.object({
   contactId: z.string().uuid().optional().nullable(),
@@ -29,7 +45,9 @@ export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
     return {
       success: false,
       error: result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', '),
+      issues: result.error.issues,
     };
   }
   return { success: true, data: result.data };
 }
+
