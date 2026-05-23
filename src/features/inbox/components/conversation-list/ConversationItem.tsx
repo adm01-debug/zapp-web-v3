@@ -241,7 +241,6 @@ export function ConversationItem({
             </div>
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               {/* Linha 1: Primeiro nome + Empresa */}
-              <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   {isPinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0 fill-primary" />}
                   <TruncatedTooltip fullText={fullPrimaryLabel}>
