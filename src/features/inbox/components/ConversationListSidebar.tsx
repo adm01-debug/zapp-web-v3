@@ -119,8 +119,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
   return (
     <div className={cn(
-      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-border/10 bg-background dark:bg-card flex flex-col overflow-hidden shadow-2xl transition-all duration-500',
-      isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : 'w-[320px] min-w-[320px] max-w-[320px]'
+      'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-border/10 bg-background dark:bg-card flex flex-col overflow-hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] transition-all duration-500',
+      isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : 'w-[340px] min-w-[340px] max-w-[340px]'
     )}>
       <BulkActionsToolbar
         selectedCount={bulkActions.selectedIds.size}
@@ -133,7 +133,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
       <div className={cn(
         "px-4 border-b border-border/20 shrink-0 transition-all", 
-        isMobile ? "pt-2 pb-3 space-y-4" : (density === 'compact' ? "pt-3 pb-2 space-y-2 bg-muted/20" : "pt-6 pb-4 space-y-4 bg-muted/40 backdrop-blur-md")
+        isMobile ? "pt-2 pb-3 space-y-4" : (density === 'compact' ? "pt-3 pb-2 space-y-2 bg-muted/20" : "pt-8 pb-5 space-y-4 bg-muted/40 backdrop-blur-3xl")
       )}>
         {!isMobile && (
           <div className="flex items-center justify-between">
