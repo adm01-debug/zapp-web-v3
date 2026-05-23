@@ -318,6 +318,32 @@ export function jsonResponse(data: unknown, status = 200, req?: Request) {
   );
 }
 
+/** Standard Contract Validation Error Response (422) */
+export function contractErrorResponse(
+  code: string,
+  message: string,
+  issues: any[] = [],
+  requestId?: string,
+  req?: Request
+) {
+  const body = {
+    error: true,
+    code,
+    message,
+    requestId,
+    details: issues.map(i => ({
+      path: i.path?.join('.') || 'root',
+      message: i.message
+    }))
+  };
+  const headers = req ? getCorsHeaders(req) : corsHeaders;
+  return new Response(
+    JSON.stringify(body),
+    { status: 422, headers: { ...headers, 'Content-Type': 'application/json' } }
+  );
+}
+
+
 /** Handle CORS preflight with origin validation */
 export function handleCors(req: Request): Response | null {
   if (req.method === 'OPTIONS') {
