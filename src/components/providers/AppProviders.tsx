@@ -6,31 +6,38 @@ import { HighContrastProvider } from "@/components/theme/HighContrastToggle";
 import { AccessibleToastProvider } from "@/components/ui/accessible-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { getLogger } from "@/lib/logger";
 
 const log = getLogger('AppProviders');
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 30,
-      retry: 2,
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: 'always',
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [errorKey, setErrorKey] = useState(0);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 3;
+
+  // Memoize QueryClient to prevent recreation on re-renders
+  const queryClient = useMemo(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 60, // 1 hour (formerly cacheTime)
+        retry: (failureCount, error) => {
+          // Don't retry for 401/403 errors
+          if (error?.status === 401 || error?.status === 403) return false;
+          return failureCount < 2;
+        },
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: 'always',
+        // Critical: Deduplicate requests and use cache effectively
+        placeholderData: (previousData) => previousData,
+      },
+      mutations: {
+        retry: 1,
+      },
+    },
+  }), []);
 
   useEffect(() => {
     setErrorKey(prev => prev + 1);
@@ -56,7 +63,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           <ThemeSync />
           <HighContrastProvider>
             <AccessibleToastProvider>
-              <TooltipProvider delayDuration={150} skipDelayDuration={100}>
+              <TooltipProvider delayDuration={100} skipDelayDuration={50}>
                 {children}
               </TooltipProvider>
             </AccessibleToastProvider>
