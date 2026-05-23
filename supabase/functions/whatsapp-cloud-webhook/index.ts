@@ -8,6 +8,8 @@
 // servido por `evolution-webhook` com validação HMAC própria (x-evolution-signature).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyHmacSignature } from "../_shared/hmac-validation.ts";
+import { contractErrorResponse } from "../_shared/validation.ts";
+import { MetaWebhookPayloadSchema } from "../_shared/webhook-schemas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -173,14 +175,21 @@ Deno.serve(async (req) => {
     );
   }
 
-  // A Meta só envia object="whatsapp_business_account". Qualquer outra coisa é descartada.
-  if (body?.object && body.object !== "whatsapp_business_account") {
-    console.warn(`[whatsapp-cloud-webhook][${rid}] unexpected object=${body.object}`);
-    return new Response(JSON.stringify({ ok: true, ignored: true, requestId: rid }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const parsed = MetaWebhookPayloadSchema.safeParse(body);
+  if (!parsed.success) {
+    console.warn(`[whatsapp-cloud-webhook][${rid}] contract_violation:`, parsed.error.issues);
+    return contractErrorResponse(
+      'INVALID_META_PAYLOAD',
+      'Payload does not match WhatsApp Cloud Webhook contract',
+      parsed.error.issues,
+      rid,
+      req
+    );
   }
+
+  // A Meta só envia object="whatsapp_business_account".
+  // Note: Schema already validates object="whatsapp_business_account" via z.literal
+  // If we reach here, it's valid.
 
   try {
     const entries = body?.entry ?? [];
