@@ -5,23 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>ZAPP Web - Plataforma de Multiatendimento</title>
-    <meta name="description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <meta name="theme-color" content="#25d366" />
+    <meta name="description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais e suporte.">
+    
+    <!-- Critical Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://uqysyzndkfiwfztbqvsl.supabase.co">
+    
+    <!-- DNS Prefetching -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://uqysyzndkfiwfztbqvsl.supabase.co">
+
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="theme-color" content="#25d366" />
+    
+    <!-- Open Graph / Social -->
     <meta property="og:title" content="ZAPP Web - Plataforma de Multiatendimento">
-  <meta name="twitter:title" content="ZAPP Web - Plataforma de Multiatendimento">
-  <meta property="og:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
-  <meta name="twitter:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
-  <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f0eb5f56-f050-48c3-9a44-c2dd38d6142a/id-preview-30420ff0--22c0b518-7895-4f4f-9ea0-978457a2c37a.lovable.app-1779360659253.png">
-  <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f0eb5f56-f050-48c3-9a44-c2dd38d6142a/id-preview-30420ff0--22c0b518-7895-4f4f-9ea0-978457a2c37a.lovable.app-1779360659253.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta property="og:type" content="website">
-</head>
+    <meta property="og:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
+    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f0eb5f56-f050-48c3-9a44-c2dd38d6142a/id-preview-30420ff0--22c0b518-7895-4f4f-9ea0-978457a2c37a.lovable.app-1779360659253.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ZAPP Web - Plataforma de Multiatendimento">
+    <meta name="twitter:description" content="Plataforma completa de multiatendimento WhatsApp para equipes comerciais.">
+    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f0eb5f56-f050-48c3-9a44-c2dd38d6142a/id-preview-30420ff0--22c0b518-7895-4f4f-9ea0-978457a2c37a.lovable.app-1779360659253.png">
+
+    <style>
+      /* Inline critical CSS to avoid CLS on initial load */
+      :root {
+        --background: 240 10% 3.9%;
+      }
+      body {
+        background-color: hsl(var(--background));
+        margin: 0;
+        min-height: 100vh;
+      }
+      #root-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: hsl(var(--background));
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      .loader-dot {
+        width: 12px;
+        height: 12px;
+        background: #25d366;
+        border-radius: 50%;
+        margin: 0 4px;
+        animation: loader-pulse 1.5s infinite ease-in-out;
+      }
+      .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+      .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes loader-pulse {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+      }
+    </style>
+  </head>
   <body>
+    <div id="root-loading" aria-hidden="true">
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('root-loading');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 300);
+        }
+      });
+    </script>
   </body>
 </html>
