@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from '@/components/ui/motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,37 +28,48 @@ import { ProgressiveDisclosureDashboard } from './ProgressiveDisclosureDashboard
 import { DashboardFilters, DashboardFiltersState, getDefaultFilters } from './DashboardFilters';
 import { ParallaxContainer } from '@/components/effects/ParallaxContainer';
 import { DashboardWidgetRenderer } from './DashboardWidgetRenderer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-export function DashboardView() {
+const MemoizedAuroraBorealis = memo(AuroraBorealis);
+const MemoizedFloatingParticles = memo(FloatingParticles);
+
+export const DashboardView = memo(function DashboardView() {
   const [filters, setFilters] = useState<DashboardFiltersState>(getDefaultFilters());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { profile } = useAuth();
+  const isMobile = useIsMobile();
 
-  const hour = new Date().getHours();
-  const greetingText = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-  const userName = profile?.name?.split(' ')[0] || '';
-  const greeting = userName ? `${greetingText}, ${userName}! 👋` : `${greetingText}! 👋`;
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    const greetingText = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    const userName = profile?.name?.split(' ')[0] || '';
+    return userName ? `${greetingText}, ${userName}! 👋` : `${greetingText}! 👋`;
+  }, [profile?.name]);
 
   const { stats, isLoading, refetch } = useDashboardData({
     dateRange: filters.dateRange,
     queueId: filters.queueId,
     agentId: filters.agentId,
   });
+  
   const {
     level1Widgets, level2Widgets, level3Widgets,
   } = useDashboardWidgets();
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await refetch();
     setTimeout(() => setIsRefreshing(false), 500);
-  };
+  }, [refetch]);
+
+  const renderWidget = useCallback((widget: DashboardWidget) => (
+    <DashboardWidgetRenderer widget={widget} stats={stats} />
+  ), [stats]);
 
   if (isLoading || !stats) {
     return (
       <div className="p-6 space-y-6 overflow-y-auto h-full w-full relative bg-background">
-        <AuroraBorealis />
-        <FloatingParticles />
+        <MemoizedAuroraBorealis />
         <div className="space-y-6 relative z-10">
           <Skeleton className="h-16 w-full" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -73,19 +84,17 @@ export function DashboardView() {
     );
   }
 
-  const renderWidget = (widget: DashboardWidget) => (
-    <DashboardWidgetRenderer widget={widget} stats={stats} />
-  );
-
   return (
-    <div className="p-4 md:p-8 space-y-8 overflow-y-auto h-full w-full relative bg-background scrollbar-none">
-      <AuroraBorealis />
-      <FloatingParticles />
+    <div className="p-4 md:p-8 space-y-8 overflow-y-auto h-full w-full relative bg-background scrollbar-none antialiased">
+      <MemoizedAuroraBorealis />
+      {!isMobile && <MemoizedFloatingParticles />}
 
-      <ParallaxContainer speed={0.3} direction="up" className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -left-24 w-64 h-64 bg-primary/8 rounded-full blur-3xl" />
-      </ParallaxContainer>
+      {!isMobile && (
+        <ParallaxContainer speed={0.3} direction="up" className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -left-24 w-64 h-64 bg-primary/8 rounded-full blur-3xl" />
+        </ParallaxContainer>
+      )}
 
       {/* Header */}
       <motion.div
@@ -173,4 +182,4 @@ export function DashboardView() {
       </Tabs>
     </div>
   );
-}
+});
