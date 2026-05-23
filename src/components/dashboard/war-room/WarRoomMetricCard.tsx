@@ -30,11 +30,11 @@ export function WarRoomMetricCard({ icon: Icon, label, value, suffix, trend, ale
         {trend === 'up' && <TrendingUp className={cn("w-4 h-4", positive ? "text-success" : "text-destructive")} />}
         {trend === 'down' && <TrendingDown className={cn("w-4 h-4", positive ? "text-destructive" : "text-success")} />}
       </div>
-      <div className="text-2xl font-bold">
+      <div className="text-2xl font-bold truncate">
         {value}
-        {suffix && <span className="text-sm font-normal text-muted-foreground">{suffix}</span>}
+        {suffix && <span className="text-sm font-normal text-muted-foreground ml-1">{suffix}</span>}
       </div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-xs text-muted-foreground break-words">{label}</div>
     </motion.div>
   );
 }

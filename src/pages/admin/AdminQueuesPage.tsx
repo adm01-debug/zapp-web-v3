@@ -346,16 +346,16 @@ export default function AdminQueuesPage() {
             const isPaused = q.status === "paused";
             return (
               <Card key={q.id} className={isPaused ? "opacity-70 border-warning/40" : undefined}>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full" style={{ background: q.color }} />
                       {q.name}
-                      <Badge variant={isPaused ? "secondary" : "default"}>
+                      <Badge variant={isPaused ? "secondary" : "default"} className="whitespace-normal h-auto py-0.5 break-words max-w-[120px]">
                         {isPaused ? "Pausada" : "Ativa"}
                       </Badge>
-                      <Badge variant="outline">{ALGO_LABEL[q.distribution_algorithm] ?? q.distribution_algorithm}</Badge>
-                      <Badge variant="outline">prioridade {q.priority}</Badge>
+                      <Badge variant="outline" className="whitespace-normal h-auto py-0.5 break-words max-w-[150px]">{ALGO_LABEL[q.distribution_algorithm] ?? q.distribution_algorithm}</Badge>
+                      <Badge variant="outline" className="whitespace-normal h-auto py-0.5 break-words">prioridade {q.priority}</Badge>
                     </CardTitle>
                     {q.description && <p className="text-sm text-muted-foreground mt-1">{q.description}</p>}
                     {isPaused && q.paused_reason && (
