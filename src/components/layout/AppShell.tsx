@@ -142,7 +142,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         tabIndex={-1}
         className={cn(
           'flex flex-1 overflow-hidden relative min-w-0 min-h-0 h-full max-h-full focus:outline-2 focus:outline-primary/40 focus:outline-offset-[-2px]',
-          isMobile && 'pt-12 pb-[56px]'
+          isMobile && 'pt-12 pb-[64px]'
         )}
       >
         {/* Zen mode toggle — desktop only, chat views */}

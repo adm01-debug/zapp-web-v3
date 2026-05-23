@@ -164,7 +164,7 @@ export default function Auth() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-center mt-6">
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} MultiChat Platform. Todos os direitos reservados.</p>
+            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Promo Brindes. Todos os direitos reservados.</p>
           </motion.div>
         </motion.div>
       </div>
