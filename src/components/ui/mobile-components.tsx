@@ -121,7 +121,7 @@ export function BottomNavigation({
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0 z-[100]',
-        'bg-background/80 backdrop-blur-2xl border-t border-border/10',
+        'bg-background/90 backdrop-blur-3xl border-t border-border/10',
         'safe-area-bottom shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.3)]',
         className
       )}
