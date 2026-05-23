@@ -167,7 +167,7 @@ export function RealtimeInboxView() {
 
       <div 
         className={cn(
-          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-background h-full overflow-hidden transition-all duration-300 ease-in-out shadow-xl', 
+          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-card/20 h-full overflow-hidden transition-all duration-300 ease-in-out', 
           isMobile && !inbox.selectedContactId && 'hidden',
           isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
         )}
@@ -226,7 +226,11 @@ export function RealtimeInboxView() {
               )}
             </div>
           </Suspense>
-        ) : <InboxEmptyChat />}
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-background/40">
+            <InboxEmptyChat />
+          </div>
+        )}
       </div>
 
       {inbox.usingCache && (
