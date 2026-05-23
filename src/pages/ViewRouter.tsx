@@ -169,22 +169,21 @@ export function ViewRouter({ currentView, userId, canGoBack, canGoForward, onGoB
 
   return (
     <WithHeader viewId={currentView}>
-      {prefersReduced ? (
-        <div key={currentView} className="h-full w-full">{content}</div>
-      ) : (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-            className="h-full w-full"
-          >
-            {content}
-          </motion.div>
-        </AnimatePresence>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={currentView}
+          initial={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.99 }}
+          animate={prefersReduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+          exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.99 }}
+          transition={{
+            duration: 0.2,
+            ease: [0.22, 1, 0.36, 1], // Custom fast-out-slow-in easing
+          }}
+          className="h-full w-full will-change-transform"
+        >
+          {content}
+        </motion.div>
+      </AnimatePresence>
     </WithHeader>
   );
 }
