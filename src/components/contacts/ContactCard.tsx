@@ -126,7 +126,7 @@ export function ContactCard({
               <HighlightText
                 text={`${contact.name} ${contact.surname || ''}`.trim()}
                 highlight={searchQuery}
-                className="font-semibold text-sm text-foreground truncate leading-tight block"
+                className="font-semibold text-sm text-foreground truncate leading-tight block max-w-[120px]"
               />
               {/* Health Score Indicator */}
               <div className={cn(
@@ -142,7 +142,7 @@ export function ContactCard({
             )}
             <Badge
               variant="outline"
-              className={cn("mt-1 text-[10px] h-5 px-1.5 font-medium gap-1", typeConfig.badgeClass)}
+              className={cn("mt-1 text-[10px] h-auto min-h-5 py-0.5 px-1.5 font-medium gap-1 max-w-full whitespace-normal", typeConfig.badgeClass)}
             >
               {typeConfig.iconNode}
               {typeConfig.label}
