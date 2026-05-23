@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
-import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, checkRateLimit, getClientIP, contractErrorResponse } from "../_shared/validation.ts";
 import { extractEvolutionMessageId } from "../_shared/evolution-message-id.ts";
 import { createCriticalPayloadSchemas, mapValidationIssuesToContractError } from "../_shared/criticalPayloadSchemas.ts";
 
@@ -54,7 +54,13 @@ Deno.serve(async (req) => {
     const parsed = publicApiSendSchema.safeParse(raw);
     if (!parsed.success) {
       const mapped = mapValidationIssuesToContractError(parsed.error.issues);
-      return errorResponse(`${mapped.message} (code: ${mapped.code})`, 400, req);
+      return contractErrorResponse(
+        mapped.code,
+        mapped.message,
+        parsed.error.issues,
+        requestId,
+        req
+      );
     }
 
     const { number, message, connectionId } = parsed.data;

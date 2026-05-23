@@ -2,13 +2,9 @@
 // Auth: requires JWT (validated below). Body schema validated with Zod.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { contractErrorResponse, getCorsHeaders } from "../_shared/validation.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const corsHeaders = getCorsHeaders();
 
 const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_CLOUD_PHONE_NUMBER_ID") ?? "";
 const ACCESS_TOKEN = Deno.env.get("WHATSAPP_CLOUD_ACCESS_TOKEN") ?? "";
@@ -122,9 +118,12 @@ Deno.serve(async (req) => {
   }
   const parsed = SendSchema.safeParse(body);
   if (!parsed.success) {
-    return jsonResponse(
-      { error: "validation_error", details: parsed.error.flatten() },
-      400
+    return contractErrorResponse(
+      "VALIDATION_ERROR",
+      "Invalid send payload",
+      parsed.error.issues,
+      undefined,
+      req
     );
   }
   const p = parsed.data;
