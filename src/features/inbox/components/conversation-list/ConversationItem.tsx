@@ -416,98 +416,75 @@ export function ConversationItem({
               {/* Linha 1: Nome + Empresa */}
               <div className="flex items-center justify-between gap-2 min-w-0">
                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  {isPinned && <Pin className="w-3 h-3 text-primary flex-shrink-0" />}
+                  {isPinned && <Pin className="w-3.5 h-3.5 text-primary flex-shrink-0 fill-primary" />}
                   <TruncatedTooltip fullText={fullPrimaryLabel}>
                     {(ref) => (
                       <span
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-bold text-[15px] leading-[1.2] tracking-tight truncate block min-w-0 transition-colors duration-200',
-                          isSelected ? 'text-primary' : 'text-foreground/90'
+                          ' font-black text-[16px] leading-[1.2] truncate block min-w-0 tracking-tight transition-colors duration-200',
+                          isSelected ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
                         {primaryLabel}
                       </span>
                     )}
                   </TruncatedTooltip>
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={false} />}
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <span className=" text-[11px] font-semibold uppercase text-[hsl(var(--muted-foreground))] tabular-nums tracking-[0.04em]">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={cn(
+                    " text-[11px] font-bold tabular-nums uppercase tracking-tighter opacity-70",
+                    isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                  )}>
                     {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
                   </span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-                        onClick={(e) => { e.stopPropagation(); openChatPopup(conversation.contact.id, conversation.contact.name); }}
-                        aria-label="Abrir em popup"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="text-xs">Abrir em popup</TooltipContent>
-                  </Tooltip>
                 </div>
               </div>
-              {/* Linha 2: Última mensagem */}
-              <div className="flex items-center justify-between gap-2 min-w-0">
-                {isTyping ? (
-                  <TypingIndicatorCompact isVisible={true} />
-                ) : (
-                  <p
-                    data-testid="conversation-preview"
+              
+              {isTyping ? (
+                <TypingIndicatorCompact isVisible={true} className={cn("text-[13px] font-bold", isSelected ? "text-primary-foreground" : "text-success")} />
+              ) : (
+                <p
+                  data-testid="conversation-preview"
+                  className={cn(
+                    ' text-[13px] truncate leading-normal min-w-0 mt-0.5',
+                    isSelected 
+                      ? 'text-primary-foreground/90 font-medium'
+                      : unreadCount > 0
+                        ? 'text-foreground font-bold'
+                        : 'text-muted-foreground font-normal'
+                  )}
+                >
+                  {previewText}
+                </p>
+              )}
+              
+              <div data-testid="conversation-tags" className="flex flex-wrap items-center gap-1.5 mt-2">
+                {hasTags && visibleTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="outline"
                     className={cn(
-                      ' text-[13.5px] leading-[1.35] truncate pr-2 min-w-0 transition-colors duration-300',
-                      lastMessage
-                        ? unreadCount > 0
-                          ? isSelected ? 'text-primary/90 font-bold' : 'text-foreground font-bold'
-                          : isSelected ? 'text-primary/70 font-medium' : 'text-muted-foreground font-normal'
-                        : 'text-muted-foreground/60 font-normal italic'
+                      "text-[10px] h-5 px-2 font-black uppercase tracking-wider transition-colors",
+                      isSelected 
+                        ? "bg-white/20 text-white border-white/20" 
+                        : "bg-warning/10 text-warning border-warning/30"
                     )}
                   >
-                    {previewText}
-                  </p>
+                    {tag}
+                  </Badge>
+                ))}
+                
+                {unreadCount > 0 && (
+                  <span className={cn(
+                    "min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[11px] font-black tabular-nums shadow-lg animate-bounce-in",
+                    isSelected ? "bg-white text-primary" : "bg-primary text-primary-foreground"
+                  )}>
+                    {unreadCount}
+                  </span>
                 )}
-                {conversation.unreadCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center  text-[11px] font-bold tabular-nums bg-[hsl(0,75%,55%)] text-foreground shadow-[0_2px_6px_hsl(0,75%,55%,0.35)]"
-                  >
-                    {conversation.unreadCount}
-                  </motion.span>
-                )}
-              </div>
-              {/* Linha 3: Tags (com fallback vazio) */}
-              <div data-testid="conversation-tags" className="flex items-center gap-1 min-h-[16px]">
-                {hasTags ? (
-                  <>
-                    {visibleTags.map((tag) => (
-                      <TruncatedTooltip key={tag} fullText={tag}>
-                        {(ref) => (
-                          <Badge
-                            variant="outline"
-                            className=" text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold uppercase tracking-wide bg-warning/15 text-warning border-warning/30 max-w-[110px] overflow-hidden"
-                          >
-                            <span ref={ref} className="truncate block">{tag}</span>
-                          </Badge>
-                        )}
-                      </TruncatedTooltip>
-                    ))}
-                    {hiddenTagsCount > 0 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className=" text-[10px] h-[16px] px-1.5 py-0 leading-none font-semibold tabular-nums bg-muted/40 text-muted-foreground border-border/40">
-                            +{hiddenTagsCount}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs text-xs">{hiddenTagsLabel}</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </>
-                ) : null}
               </div>
             </div>
             {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
