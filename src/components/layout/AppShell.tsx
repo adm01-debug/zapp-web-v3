@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Suspense, useCallback, forwardRef, lazy, useState, useMemo } from 'react';
+import { Suspense, useCallback, forwardRef, lazy, useState, useMemo, memo } from 'react';
 import { Target, Mic, Maximize2, Minimize2, Info } from 'lucide-react';
 import { useViewTransition } from '@/hooks/useViewTransition';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,11 @@ import { toast } from 'sonner';
 import { useVoiceActionHandler } from '@/hooks/useVoiceActionHandler';
 
 const LazyVoiceOverlay = lazy(() => import('@/components/voice/VoiceSearchOverlayConnected'));
+
+// Memoize sub-components to prevent unnecessary re-renders when parent state changes
+const MemoizedSidebar = memo(Sidebar);
+const MemoizedMobileShell = memo(MobileShell);
+const MemoizedViewRouter = memo(ViewRouter);
 
 interface AppShellProps {
   currentView: string;
@@ -80,18 +85,27 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
   });
 
   const appVersion = useMemo(() => {
-    // build time versioning based on today's date + minor increment
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
     return `v2.0.${today}.10-10`;
   }, []);
-  return (
-    <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative">
-      <RouteLoadingBar isLoading={loading} />
-      <FailedMessageAlertsMount />
-      <AutomationFailureAlertsMount />
-      <IntegrationMigrationMount />
 
-      {/* Skip to content — a11y */}
+  const currentAgent = useMemo(() => ({
+    name: profile?.name || userEmail || 'Usuário',
+    avatar: profile?.avatar_url || undefined,
+    status: 'online',
+  }), [profile?.name, profile?.avatar_url, userEmail]);
+
+  return (
+    <div className="flex h-screen max-h-screen min-h-screen bg-background overflow-hidden relative selection:bg-primary/20">
+      <RouteLoadingBar isLoading={loading} />
+      
+      {/* Background mounts are non-visual or global UI overlays */}
+      <Suspense fallback={null}>
+        <FailedMessageAlertsMount />
+        <AutomationFailureAlertsMount />
+        <IntegrationMigrationMount />
+      </Suspense>
+
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -99,9 +113,8 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         Pular para o conteúdo
       </a>
 
-      {/* Mobile wrapper */}
-      {isMobile && (
-        <MobileShell
+      {isMobile ? (
+        <MemoizedMobileShell
           currentView={currentView}
           setCurrentView={setCurrentView}
           profile={profile}
@@ -109,25 +122,20 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
           signOut={signOut}
           unreadNotifications={unreadNotifications}
         />
-      )}
-
-      {/* Desktop Sidebar — hidden in zen mode */}
-      {!isMobile && !isZen && (
-        <Sidebar
-          currentView={currentView}
-          onViewChange={handleViewChange}
-          currentAgent={{
-            name: profile?.name || userEmail || 'Usuário',
-            avatar: profile?.avatar_url || undefined,
-            status: 'online',
-          }}
-          onLogout={signOut}
-          inboxBadge={unreadNotifications || undefined}
-        />
+      ) : (
+        !isZen && (
+          <MemoizedSidebar
+            currentView={currentView}
+            onViewChange={handleViewChange}
+            currentAgent={currentAgent}
+            onLogout={signOut}
+            inboxBadge={unreadNotifications || undefined}
+          />
+        )
       )}
 
       {!isMobile && (
-        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px]  text-muted-foreground/60 select-none pointer-events-none group hover:opacity-100 transition-opacity">
+        <div className="fixed bottom-2 left-2 z-[60] flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/10 border border-border/10 text-[9px] text-muted-foreground/60 select-none pointer-events-none opacity-40 hover:opacity-100 transition-opacity">
           <Info className="w-2.5 h-2.5 opacity-40" />
           <span>{appVersion}</span>
           <span className="w-1 h-1 rounded-full bg-success/40" />
@@ -141,11 +149,10 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         aria-label="Conteúdo principal"
         tabIndex={-1}
         className={cn(
-          'flex flex-1 overflow-hidden relative min-w-0 min-h-0 h-full max-h-full focus:outline-2 focus:outline-primary/40 focus:outline-offset-[-2px]',
+          'flex flex-1 overflow-hidden relative min-w-0 min-h-0 h-full max-h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset',
           isMobile && 'pt-12 pb-[64px]'
         )}
       >
-        {/* Zen mode toggle — desktop only, chat views */}
         {!isMobile && isInboxView && (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -171,33 +178,33 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
             </TooltipContent>
           </Tooltip>
         )}
+        
         {showChecklist && currentView === 'dashboard' && (
-          <div className="absolute top-4 right-4 z-20 w-96 max-w-[calc(100%-2rem)]">
+          <div className="absolute top-4 right-4 z-20 w-96 max-w-[calc(100%-2rem)] animate-slide-in-right">
             <OnboardingChecklist onNavigate={handleViewChange} />
           </div>
         )}
 
         <Suspense fallback={<ViewLoadingFallback />}>
-              <ViewRouter
-                currentView={currentView}
-                userId={userId}
-                canGoBack={canGoBack}
-                canGoForward={canGoForward}
-                onGoBack={goBack}
-                onGoForward={goForward}
-                breadcrumbTrail={breadcrumbTrail}
-                onNavigateTo={handleViewChange}
-              />
+          <MemoizedViewRouter
+            currentView={currentView}
+            userId={userId}
+            canGoBack={canGoBack}
+            canGoForward={canGoForward}
+            onGoBack={goBack}
+            onGoForward={goForward}
+            breadcrumbTrail={breadcrumbTrail}
+            onNavigateTo={handleViewChange}
+          />
         </Suspense>
       </main>
 
-      {/* Voice Copilot FAB */}
       {!isMobile && (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <button
               onClick={() => setVoiceOpen(true)}
-              className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-500 flex items-center justify-center border border-primary/20 touch-manipulation focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+              className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-500 flex items-center justify-center border border-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
               aria-label="Assistente de voz inteligente"
             >
               <Mic className="w-6 h-6" />
@@ -209,7 +216,6 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         </Tooltip>
       )}
 
-      {/* Voice Overlay (lazy loaded) */}
       {voiceOpen && (
         <Suspense fallback={null}>
           <LazyVoiceOverlay
@@ -221,21 +227,8 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
         </Suspense>
       )}
 
-      {/* Accessible live region for screen reader announcements */}
-      <div
-        id="a11y-status"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      />
-      <div
-        id="a11y-alert"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-        className="sr-only"
-      />
+      <div id="a11y-status" role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
+      <div id="a11y-alert" role="alert" aria-live="assertive" aria-atomic="true" className="sr-only" />
     </div>
   );
 });
