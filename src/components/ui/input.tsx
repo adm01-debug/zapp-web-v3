@@ -51,6 +51,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           hasRightAddon && "pr-10",
           error && "border-destructive focus-visible:ring-destructive/20 focus-visible:border-destructive",
           success && "border-success focus-visible:ring-success/20 focus-visible:border-success",
+          "max-w-full",
           className,
         )}
         ref={ref}
