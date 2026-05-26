@@ -96,15 +96,15 @@ export function HeroBenefits() {
         className="hidden lg:block mt-8 p-4 rounded-xl bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20"
       >
         <p className="text-sm italic text-muted-foreground">
-          "Reduzimos o tempo de resposta em 60% e aumentamos a satisfação do cliente para 98%."
+          "Nós somos o que fazemos repetidamente; a excelência, portanto, não é um ato, mas um hábito."
         </p>
         <div className="flex items-center gap-2 mt-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground text-xs font-bold">
-            JM
+            AR
           </div>
           <div>
-            <p className="text-xs font-semibold text-foreground">João Mendes</p>
-            <p className="text-[10px] text-muted-foreground">Head de Suporte, TechCorp</p>
+            <p className="text-xs font-semibold text-foreground">Aristóteles</p>
+            <p className="text-[10px] text-muted-foreground">Filósofo</p>
           </div>
         </div>
       </motion.div>
