@@ -5708,6 +5708,33 @@ export type Database = {
           },
         ]
       }
+      route_permissions: {
+        Row: {
+          allowed_roles: string[]
+          created_at: string
+          description: string | null
+          is_system: boolean
+          path: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_roles?: string[]
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          path: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_roles?: string[]
+          created_at?: string
+          description?: string | null
+          is_system?: boolean
+          path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_deals: {
         Row: {
           assigned_to: string | null
