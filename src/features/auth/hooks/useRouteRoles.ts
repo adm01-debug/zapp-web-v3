@@ -17,7 +17,7 @@ function fetchRoles(path: string): Promise<void> {
   const p = (async () => {
     try {
       const { data, error } = await supabase
-        .from('role_permissions' as any)
+        .from('route_permissions')
         .select('*')
         .eq('path', path)
         .maybeSingle();

@@ -208,41 +208,6 @@
       ]
     }
   },
-  "skeleton": {
-    "name": "skeleton",
-    "variants": {
-      "variant": [
-        "pulse",
-        "shimmer",
-        "before",
-        "before",
-        "before",
-        "before",
-        "before",
-        "before",
-        "before",
-        "before",
-        "wave",
-        "after",
-        "after",
-        "after",
-        "after",
-        "after",
-        "after",
-        "after",
-        "after",
-        "subtle"
-      ],
-      "speed": [
-        "slow",
-        "duration",
-        "default",
-        "duration",
-        "fast",
-        "duration"
-      ]
-    }
-  },
   "toast": {
     "name": "toast",
     "variants": {
