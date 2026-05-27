@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useRef, useCallback, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { X, Minus, Maximize2, Minimize2, Send, Paperclip, Bold, Italic, Underline, Link2, Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,12 +60,12 @@ export function EmailComposer({
   useEffect(() => {
     if (defaultSignature && !selectedSignatureId) {
       setSelectedSignatureId(defaultSignature.id);
-      // Injeta assinatura no editor
       if (editorRef.current && defaultSignature.html_content) {
-        editorRef.current.innerHTML = (defaultBody || '') + '<br/><br/>' + defaultSignature.html_content;
+        editorRef.current.innerHTML =
+          DOMPurify.sanitize(defaultBody || '') + '<br/><br/>' + DOMPurify.sanitize(defaultSignature.html_content || '');
       }
     } else if (editorRef.current && defaultBody) {
-      editorRef.current.innerHTML = defaultBody;
+      editorRef.current.innerHTML = DOMPurify.sanitize(defaultBody);
     }
   }, [defaultSignature, defaultBody, selectedSignatureId]);
 

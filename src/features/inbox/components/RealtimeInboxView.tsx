@@ -72,15 +72,19 @@ export function RealtimeInboxView() {
     localStorage.setItem(key, width.toString());
   }, [profile?.id, profile?.department_id]);
 
+  const handleMouseMoveRef = useRef<(e: MouseEvent) => void>(() => {});
+  const handleTouchMoveRef = useRef<(e: TouchEvent) => void>(() => {});
+  const stopResizingRef = useRef<() => void>(() => {});
+
   const stopResizing = useCallback(() => {
     isResizing.current = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', stopResizing);
-    document.removeEventListener('touchmove', handleTouchMove);
-    document.removeEventListener('touchend', stopResizing);
+    document.removeEventListener('mousemove', handleMouseMoveRef.current);
+    document.removeEventListener('mouseup', stopResizingRef.current);
+    document.removeEventListener('touchmove', handleTouchMoveRef.current);
+    document.removeEventListener('touchend', stopResizingRef.current);
     document.body.style.cursor = 'default';
     document.body.style.userSelect = 'auto';
-  }, [handleMouseMove]);
+  }, []);
 
   const handleResize = useCallback((clientX: number) => {
     const newWidth = clientX;
@@ -101,16 +105,22 @@ export function RealtimeInboxView() {
     handleResize(e.touches[0].clientX);
   }, [handleResize]);
 
+  useEffect(() => {
+    handleMouseMoveRef.current = handleMouseMove;
+    handleTouchMoveRef.current = handleTouchMove;
+    stopResizingRef.current = stopResizing;
+  }, [handleMouseMove, handleTouchMove, stopResizing]);
+
   const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     isResizing.current = true;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', stopResizing);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', stopResizing);
+    document.addEventListener('mousemove', handleMouseMoveRef.current);
+    document.addEventListener('mouseup', stopResizingRef.current);
+    document.addEventListener('touchmove', handleTouchMoveRef.current, { passive: false });
+    document.addEventListener('touchend', stopResizingRef.current);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [handleMouseMove, handleTouchMove, stopResizing]);
+  }, []);
 
   const toggleSidebar = useCallback(() => {
     setIsCollapsed(prev => !prev);

@@ -1,16 +1,16 @@
 project_id = "allrjhkpuscmgbsnmjlv"
 
 [functions.ai-conversation-summary]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-conversation-analysis]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-suggest-reply]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-transcribe-audio]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-mapbox-token]
 verify_jwt = false
@@ -22,7 +22,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.evolution-api]
-verify_jwt = false
+verify_jwt = true
 
 [functions.evolution-webhook]
 verify_jwt = false
@@ -31,10 +31,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.elevenlabs-tts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.elevenlabs-scribe-token]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-rate-limit-alert]
 verify_jwt = false
@@ -46,7 +46,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-enhance-message]
-verify_jwt = false
+verify_jwt = true
 
 [functions.classify-audio-meme]
 verify_jwt = false
@@ -58,22 +58,22 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.elevenlabs-tts-stream]
-verify_jwt = false
+verify_jwt = true
 
 [functions.elevenlabs-webhook]
 verify_jwt = false
 
 [functions.elevenlabs-dialogue]
-verify_jwt = false
+verify_jwt = true
 
 [functions.elevenlabs-voice-design]
-verify_jwt = false
+verify_jwt = true
 
 [functions.elevenlabs-sts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.elevenlabs-sfx]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-cloud-webhook]
 verify_jwt = false
