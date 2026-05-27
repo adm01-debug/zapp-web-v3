@@ -284,6 +284,8 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             onScopeChange={inboxFilters.setScope}
             selectedQueueId={inboxFilters.selectedQueueId}
             onQueueChange={inboxFilters.setSelectedQueueId}
+            contactType={inboxFilters.selectedContactType}
+            onContactTypeChange={inboxFilters.handleContactTypeChange}
           />
         </div>
 
