@@ -142,12 +142,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
                 "font-extrabold text-foreground tracking-tight  bg-clip-text transition-all",
                 density === 'compact' ? "text-[15px]" : "text-[18px]"
               )}>Inbox</h2>
-              <span
-                title={inbox.isOnline ? 'Mensagens: tempo real ativo' : 'Mensagens: desconectado'}
-                className={cn('w-2 h-2 rounded-full ring-2 ring-background', inbox.isOnline ? 'bg-success shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-destructive shadow-[0_0_10px_rgba(244,63,94,0.5)]')}
-                aria-label={inbox.isOnline ? 'Mensagens: online' : 'Mensagens: offline'}
-              />
-              <RealtimeContactsIndicator />
               <div className="h-4 w-px bg-border/40 mx-1" />
               <WhatsAppConnectionStatus />
             </div>
