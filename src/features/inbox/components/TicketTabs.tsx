@@ -56,6 +56,8 @@ export function TicketTabs({
   onScopeChange,
   selectedQueueId,
   onQueueChange,
+  contactType = null,
+  onContactTypeChange,
 }: TicketTabsProps) {
   const { user, profile } = useAuth();
   const { isSupervisor, isManager, isAdmin, roles } = useUserRole();
