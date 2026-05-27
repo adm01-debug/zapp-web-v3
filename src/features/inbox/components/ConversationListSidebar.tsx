@@ -165,29 +165,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
           <div className={cn("shrink-0", isMobile ? "w-[130px]" : "w-[130px]")}>
             <ContactTypeFilter value={inboxFilters.selectedContactType} onChange={inboxFilters.handleContactTypeChange} conversations={inbox.cachedConversations} />
           </div>
-          <Button
-            variant={inbox.statusFilter === 'unread' ? 'default' : 'ghost'}
-            size="icon"
-            onClick={() => inbox.setStatusFilter(inbox.statusFilter === 'unread' ? 'all' : 'unread')}
-            className={cn(
-              'shrink-0 relative active:scale-90 transition-all duration-150',
-              isMobile ? 'w-8 h-8 rounded-lg' : 'w-7 h-7 rounded-md',
-              inbox.statusFilter === 'unread'
-                ? 'bg-warning text-foreground hover:bg-warning'
-                : 'hover:bg-muted/60 text-muted-foreground'
-            )}
-            aria-label={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Mostrar apenas não lidas'}
-            title={inbox.statusFilter === 'unread' ? 'Mostrar todas' : 'Apenas não lidas'}
-          >
-            <MessageCircle className={cn(isMobile ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
-            {conversationsWithUnreadCount > 0 && inbox.statusFilter !== 'unread' && (
-              <span
-                className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-warning text-foreground text-[9px] font-semibold leading-none flex items-center justify-center tabular-nums shadow-sm"
-              >
-                {conversationsWithUnreadCount > 99 ? '99+' : conversationsWithUnreadCount}
-              </span>
-            )}
-          </Button>
 
           {inboxFilters.showOnlyRetrying && (
             <FailureCategoryFilter
