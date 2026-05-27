@@ -1,6 +1,4 @@
-// @ts-nocheck
-import { supabase as _sb } from '@/integrations/supabase/client';
-const supabase: any = _sb;
+import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
 export type EmailRevalidationJob = Database['public']['Tables']['email_revalidation_jobs']['Row'];
@@ -51,8 +49,6 @@ export const emailApi = {
     return await supabase.rpc('rpc_email_token_status');
   },
   retryJob: async (jobId: string) => {
-    // Implementação de retry: atualiza o status para pending para que o worker processe novamente
-    // Ou cria um novo job baseado no anterior
     const { data: job } = await supabase
       .from('email_revalidation_jobs')
       .select('*')

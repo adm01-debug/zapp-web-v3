@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,11 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const fetchingRef = useRef(false);
+  const currentFetchingId = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
+    if (currentFetchingId.current === userId) return;
+    currentFetchingId.current = userId;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -46,19 +46,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!error && data) {
         setProfile(data as Profile);
+      } else if (error) {
+        log.error('[Auth] Error fetching profile:', error);
       }
     } catch (err: unknown) {
       log.warn('[Auth] Failed to fetch profile for user:', userId, err);
     } finally {
-      fetchingRef.current = false;
+      if (currentFetchingId.current === userId) {
+        currentFetchingId.current = null;
+      }
     }
   }, []);
 
   useEffect(() => {
-    console.log('[BOOT] AuthProvider initialized, starting session check');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('[BOOT] Auth state change:', event, session ? 'Authenticated' : 'Unauthenticated');
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -71,16 +73,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[BOOT] Initial session retrieved:', session ? 'User Found' : 'No User');
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
       }
       setLoading(false);
-      console.log('[BOOT] Auth loading finished');
     }).catch(err => {
-      console.error('[BOOT] Error fetching session:', err);
+      log.error('[Auth] Error fetching initial session:', err);
       setLoading(false);
     });
 
@@ -89,14 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      fetchingRef.current = false; // Reset guard to allow re-fetch
+      currentFetchingId.current = null; // Force re-fetch
       await fetchProfile(user.id);
     }
   }, [user, fetchProfile]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    return { error: error as Error | null };
   };
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: { name }
       }
     });
-    return { error };
+    return { error: error as Error | null };
   };
 
   const signOut = async () => {
