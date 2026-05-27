@@ -144,18 +144,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             <div className="flex items-center gap-0.5">
 
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
-                className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150"
-                aria-label={density === 'compact' ? "Modo Confortável" : "Modo Compacto"}
-                title={density === 'compact' ? "Modo Confortável" : "Modo Compacto"}
-              >
-                {density === 'compact' ? <LayoutGrid className="w-3.5 h-3.5" /> : <LayoutList className="w-3.5 h-3.5" />}
-              </Button>
-              
-              <div className="h-4 w-px bg-border/40 mx-0.5" />
               
               <Select value={inbox.sortBy} onValueChange={inbox.setSortBy}>
                 <SelectTrigger className="w-auto h-7 text-[11px] font-medium border-none bg-transparent hover:bg-muted/60 rounded-lg px-2 gap-1.5 focus:ring-0">
