@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/features/auth';
+import { usePermissions } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import { useDensity } from '@/hooks/useDensity';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
@@ -55,6 +57,8 @@ const DATE_PRESETS = [
 
 export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { profile } = useAuth();
+  const { hasPermission } = usePermissions();
   const { agents } = useAgents();
   const { tags } = useTags();
   const { density } = useDensity();
@@ -230,7 +234,21 @@ export function InboxFilters({ filters, onFiltersChange }: InboxFiltersProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os atendentes</SelectItem>
-                  {agents.map(agent => (
+                  {agents
+                    .filter(agent => {
+                      // Se o usuário tiver permissão apenas para ver o departamento, filtramos os agentes
+                      const canSeeAll = hasPermission('inbox.view_all');
+                      if (canSeeAll) return true;
+                      
+                      const canSeeDept = hasPermission('inbox.view_department');
+                      if (canSeeDept) {
+                        // Idealmente usaríamos departmentAgentIds aqui, mas InboxFilters não o recebe.
+                        // Como fallback, usamos o department do próprio perfil do usuário comparado ao do agente.
+                        return agent.department === profile?.department;
+                      }
+                      return agent.id === profile?.id;
+                    })
+                    .map(agent => (
                     <SelectItem key={agent.id} value={agent.id}>
                       <span className="flex items-center gap-1.5">
                         <span className={cn(

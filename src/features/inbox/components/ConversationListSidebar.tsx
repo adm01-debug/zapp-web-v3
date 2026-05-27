@@ -286,6 +286,9 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             onQueueChange={inboxFilters.setSelectedQueueId}
             contactType={inboxFilters.selectedContactType}
             onContactTypeChange={inboxFilters.handleContactTypeChange}
+            selectedAgentId={inboxFilters.filters.agentId}
+            onAgentChange={(agentId) => inboxFilters.setFilters({ ...inboxFilters.filters, agentId })}
+            departmentAgentIds={inboxFilters.departmentAgentIds}
           />
         </div>
 

@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle, AlertTriangle } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle, AlertTriangle, User } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import { useUserRole, usePermissions } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
@@ -42,6 +42,9 @@ interface TicketTabsProps {
   onQueueChange: (queueId: string | null) => void;
   contactType?: string | null;
   onContactTypeChange?: (value: string | null) => void;
+  selectedAgentId?: string | null;
+  onAgentChange?: (agentId: string | null) => void;
+  departmentAgentIds?: string[];
 }
 
 export function TicketTabs({
@@ -58,11 +61,15 @@ export function TicketTabs({
   onQueueChange,
   contactType = null,
   onContactTypeChange,
+  selectedAgentId = null,
+  onAgentChange,
+  departmentAgentIds = [],
 }: TicketTabsProps) {
   const { user, profile } = useAuth();
   const { isSupervisor, isManager, isAdmin, roles } = useUserRole();
   const { hasPermission } = usePermissions();
   const { queues } = useQueues();
+  const { agents } = useAgents();
   const { density } = useDensity();
   const isCompact = density === 'compact' || density === 'dense';
   const ticketStates = useAllTicketStates();
@@ -364,6 +371,43 @@ export function TicketTabs({
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Seletor de Agente Específico — visível para Coordenadores/Supervisores quando em escopo Depto ou Todos */}
+      {mainTab === 'open' && subTab === 'attending' && (scope === 'department' || scope === 'all') && (canSeeDepartment || canSeeAllDepartments) && (
+        <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
+          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="w-3 h-3 text-primary" />
+          </div>
+          <div className="flex-1">
+            <Select 
+              value={selectedAgentId || 'all'} 
+              onValueChange={(v) => onAgentChange?.(v === 'all' ? null : v)}
+            >
+              <SelectTrigger className="h-7 w-full text-[10px] font-bold border-none bg-transparent hover:bg-muted/40 px-2 gap-2 rounded-md transition-all">
+                <SelectValue placeholder="Filtrar por Colaborador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">Todos os Colaboradores</SelectItem>
+                {(scope === 'department' 
+                  ? agents.filter(a => departmentAgentIds.includes(a.id))
+                  : agents
+                ).map(agent => (
+                  <SelectItem key={agent.id} value={agent.id} className="text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn(
+                        'w-1.5 h-1.5 rounded-full',
+                        agent.status === 'online' ? 'bg-success' :
+                        agent.status === 'away' ? 'bg-warning' : 'bg-muted-foreground/40'
+                      )} />
+                      {agent.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}
