@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -21,6 +21,12 @@ export function usePermissions() {
   const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const fetchPermissions = useCallback(async () => {
     const { data, error } = await supabase
@@ -60,7 +66,7 @@ export function usePermissions() {
   }, []);
 
   const fetchUserPermissions = useCallback(async () => {
-    if (!user) return [];
+    if (!user || !mountedRef.current) return [];
 
     // Get user's roles first
     const { data: userRoles , error: userRolesErr } = await supabase
@@ -141,17 +147,28 @@ export function usePermissions() {
   }, [fetchRolePermissions]);
 
   useEffect(() => {
+    let isCancelled = false;
     const loadAll = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
-      await Promise.all([
-        fetchPermissions(),
-        fetchRolePermissions(),
-        fetchUserPermissions()
-      ]);
-      setLoading(false);
+      try {
+        await Promise.all([
+          fetchPermissions(),
+          fetchRolePermissions(),
+          fetchUserPermissions()
+        ]);
+      } finally {
+        if (mountedRef.current && !isCancelled) {
+          setLoading(false);
+        }
+      }
     };
     loadAll();
-  }, [fetchPermissions, fetchRolePermissions, fetchUserPermissions]);
+    return () => { isCancelled = true; };
+  }, [user, fetchPermissions, fetchRolePermissions, fetchUserPermissions]);
 
   return {
     permissions,
