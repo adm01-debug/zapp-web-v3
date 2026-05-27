@@ -161,34 +161,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
 
 
         <div className="flex items-center gap-1.5">
-          <div className="relative flex-1 group">
-            <SearchIcon className={cn(
-              "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 transition-all duration-300",
-              "group-focus-within:text-primary group-focus-within:scale-110"
-            )} />
-            <Input
-              ref={contactSearchRef}
-              placeholder={isMobile ? "Buscar..." : "Buscar conversas..."}
-              value={contactSearch}
-              onChange={(e) => handleContactSearch(e.target.value)}
-              className={cn(
-                "pl-9 pr-8 bg-muted/40 hover:bg-muted/60 focus:bg-background border border-border/20 focus:border-primary/30 rounded-2xl  text-xs placeholder:text-muted-foreground/30 transition-all duration-500 shadow-sm focus:shadow-md",
-                isMobile ? "h-[46px] text-[16px]" : (density === 'compact' ? "h-[34px] text-[12px]" : "h-[40px] text-[13px]")
-              )}
-              aria-label="Buscar conversa"
-            />
-            {contactSearch && (
-              <Button variant="ghost" size="icon" onClick={clearContactSearch}
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 md:w-7 md:h-7 hover:bg-transparent text-muted-foreground/40 hover:text-foreground transition-colors" aria-label="Limpar busca">
-                <X className="w-4 h-4 md:w-3.5 md:h-3.5" />
-              </Button>
-            )}
-            {!contactSearch && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 opacity-40 group-focus-within:opacity-0 transition-opacity duration-300">
-                <kbd className="h-4 px-1 rounded bg-muted text-[9px]  flex items-center border border-border/50 text-muted-foreground">K</kbd>
-              </div>
-            )}
-          </div>
 
           <div className={cn("shrink-0", isMobile ? "w-[130px]" : "w-[130px]")}>
             <ContactTypeFilter value={inboxFilters.selectedContactType} onChange={inboxFilters.handleContactTypeChange} conversations={inbox.cachedConversations} />
