@@ -3798,6 +3798,42 @@ export type Database = {
           },
         ]
       }
+      inbox_custom_scopes: {
+        Row: {
+          created_at: string
+          description: string | null
+          filter_criteria: Json
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          filter_criteria?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          filter_criteria?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       instance_auth_events: {
         Row: {
           created_at: string | null
