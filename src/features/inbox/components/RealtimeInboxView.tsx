@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
+import { useAuth } from '@/features/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { MiniChatPiP } from '@/components/mobile/MiniChatPiP';
