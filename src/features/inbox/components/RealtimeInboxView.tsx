@@ -53,6 +53,37 @@ interface SearchResult {
 export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('zapp:sidebarWidth');
+    return saved ? parseInt(saved, 10) : 340;
+  });
+  const isResizing = useRef(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResizing);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResizing);
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing.current) return;
+    const newWidth = e.clientX;
+    if (newWidth >= 280 && newWidth <= 600) {
+      setSidebarWidth(newWidth);
+      localStorage.setItem('zapp:sidebarWidth', newWidth.toString());
+    }
+  }, []);
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
   useEvolutionAutoReconnect('wpp2');
@@ -183,7 +214,25 @@ export function RealtimeInboxView() {
       )}
 
 
-      <ConversationListSidebar inbox={inbox} inboxFilters={inboxFilters} bulkActions={bulkActions} pullToRefresh={pullToRefresh} />
+      <div className="flex flex-row h-full min-h-0 w-full relative">
+        <ConversationListSidebar 
+          inbox={inbox} 
+          inboxFilters={inboxFilters} 
+          bulkActions={bulkActions} 
+          pullToRefresh={pullToRefresh}
+          width={sidebarWidth}
+        />
+        
+        {!isMobile && (
+          <div
+            onMouseDown={startResizing}
+            className="w-1.5 h-full cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors absolute z-50 group"
+            style={{ left: `${sidebarWidth}px` }}
+          >
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-transparent group-hover:bg-primary/50" />
+          </div>
+        )}
+      </div>
 
       <div 
         className={cn(

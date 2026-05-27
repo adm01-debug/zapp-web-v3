@@ -40,9 +40,10 @@ interface ConversationListSidebarProps {
   inboxFilters: any;
   bulkActions: any;
   pullToRefresh: any;
+  width?: number;
 }
 
-export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pullToRefresh }: ConversationListSidebarProps) {
+export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pullToRefresh, width = 340 }: ConversationListSidebarProps) {
   const isMobile = useIsMobile();
   const { density, setDensity } = useDensity();
   const contactSearchRef = useRef<HTMLInputElement>(null);
@@ -118,9 +119,11 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
   });
 
   return (
-    <div className={cn(
+    <div 
+      style={!isMobile ? { width: `${width}px`, minWidth: '280px', maxWidth: '600px' } : {}}
+      className={cn(
       'h-full min-h-0 flex-shrink-0 relative z-10 border-r border-border/10 bg-background dark:bg-card flex flex-col overflow-hidden shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] transition-all duration-500',
-      isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : 'w-[340px] min-w-[340px] max-w-[340px]'
+      isMobile ? (inbox.selectedContactId ? 'hidden' : 'w-full') : ''
     )}>
       <BulkActionsToolbar
         selectedCount={bulkActions.selectedIds.size}
