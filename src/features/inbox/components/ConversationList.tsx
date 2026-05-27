@@ -8,16 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConversationItem } from './conversation-list/ConversationItem';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { useDensity } from '@/hooks/useDensity';
-import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
 
-/**
- * DEV ONLY: Quando `localStorage.setItem('mockConversations', '1')` está ativo,
- * a sidebar exibe um conjunto rico de dados mockados para análise visual do layout.
- * Para desligar: `localStorage.removeItem('mockConversations')` e recarregar.
- */
-const MOCKS_FLAG =
-  typeof window !== 'undefined' &&
-  window.localStorage?.getItem('mockConversations') !== '0';
 import {
   Search,
   Filter,
@@ -57,7 +48,6 @@ export function ConversationList({
   });
 
   const counts = useMemo(() => {
-    // This could also come from the hook, but for now we calculate from the passed list
     return {
       all: conversations.length,
       open: conversations.filter(c => c.status === 'open').length,
@@ -153,7 +143,7 @@ export function ConversationList({
               </div>
             ))}
           </div>
-        ) : filteredConversations.length === 0 ? (
+        ) : conversations.length === 0 ? (
           <div className="flex items-center justify-center h-full p-4">
             <div className="text-center">
               <div className={cn(
@@ -177,7 +167,7 @@ export function ConversationList({
             }}
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
-              const conversation = filteredConversations[virtualRow.index];
+              const conversation = conversations[virtualRow.index];
               const isSelected = selectedId === conversation.id;
 
               return (
