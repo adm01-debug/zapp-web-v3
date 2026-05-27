@@ -98,13 +98,6 @@ export function TicketTabs({
       count: counts.resolved,
       activeColor: 'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]',
     },
-    { 
-      id: 'search' as MainTab, 
-      label: 'Busca', 
-      icon: Search, 
-      count: null,
-      activeColor: 'bg-muted-foreground text-background',
-    },
   ];
 
   const subTabs = [
