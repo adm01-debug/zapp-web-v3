@@ -68,6 +68,8 @@ export const ENTITY_MAP = {
   team_conversations:   { client: 'lovable', table: 'team_conversations' },
   routing_rules:        { client: 'lovable', table: 'routing_rules' },
   routing_queues:       { client: 'lovable', table: 'routing_queues' },
+  evolution_contacts:   { client: 'lovable', table: 'evolution_contacts' },
+  evolution_messages:   { client: 'lovable', table: 'evolution_messages' },
 } as const satisfies Record<LogicalEntity, EntityMapping>;
 
 export function getEntityMapping(entity: LogicalEntity): EntityMapping {
