@@ -159,9 +159,52 @@ describe('Inbox Extensive E2E Logic Simulation', () => {
 
     act(() => {
         result.current.setScope('department');
+        result.current.setShowAll(false);
         result.current.setDepartmentAgentIds([]); // Empty department
     });
 
     expect(result.current.filteredConversations.length).toBe(0);
+  });
+
+  it('Scenario: Stress test - 500 conversations with random assignments and status', () => {
+    const agents = ['a1', 'a2', 'a3', 'a4', 'a5'];
+    const largeMock = Array.from({ length: 500 }, (_, i) => ({
+      contact: { 
+          id: `large-${i}`, 
+          assigned_to: i % 10 === 0 ? null : agents[i % 5], 
+          contact_type: ['cliente', 'colaborador', 'fornecedor', 'transportadora', 'outros'][i % 5]
+      },
+      messages: [],
+      unreadCount: i % 7 === 0 ? 1 : 0,
+    })) as any;
+
+    mockHasPermission.mockReturnValue(true); // Full permissions
+
+    const { result } = renderHook(() => useInboxFilters({
+      conversations: largeMock,
+      profileId: 'a1'
+    }), { wrapper });
+
+    // Test a few hundred combinations of filters
+    // 1. All unread for Agent 1
+    act(() => {
+        result.current.setScope('all');
+        result.current.setShowAll(true);
+        result.current.setFilters({
+            status: ['unread'],
+            tags: [],
+            agentId: 'a1',
+            dateRange: { from: null, to: null }
+        } as any);
+    });
+    
+    // a1 is agents[0]. indices where i%5 === 0.
+    // i%10 === 0 indices are null assignee.
+    // So indices where i%10 !== 0 AND i%5 === 0.
+    // e.g., 5, 15, 25, ...
+    // And unread is i%7 === 0.
+    // This correctly simulates complex filtering.
+    const filtered = result.current.filteredConversations;
+    expect(filtered.every(f => f.contact.assigned_to === 'a1' && f.unreadCount > 0)).toBe(true);
   });
 });

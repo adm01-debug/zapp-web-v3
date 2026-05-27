@@ -36,7 +36,7 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     if (scopeParam) return scopeParam;
     return localStorage.getItem('inbox_scope') || 'mine';
   });
-  const { hasPermission } = usePermissions();
+  const { hasPermission, loading: permissionsLoading } = usePermissions();
   const [departmentAgentIds, setDepartmentAgentIds] = useState<string[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
@@ -45,6 +45,27 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
 
   const { filters: urlFilters, setFilters: setUrlFilters, clearFilters: clearUrlFilters } = useUrlFilters();
   const prevScopeRef = useRef(scope);
+
+  // Security: Enforce permissions on scope and showAll
+  useEffect(() => {
+    if (permissionsLoading) return;
+
+    const canSeeDept = hasPermission('inbox.view_department');
+    const canSeeAll = hasPermission('inbox.view_all');
+
+    if (showAll && !canSeeAll) {
+      log.warn('[SECURITY] User attempted to show all departments without permission');
+      setShowAll(false);
+    }
+
+    if (scope === 'department' && !canSeeDept && !canSeeAll) {
+      log.warn('[SECURITY] User attempted to view department scope without permission');
+      setScope('mine');
+    } else if (scope === 'all' && !canSeeAll) {
+      log.warn('[SECURITY] User attempted to view all scope without permission');
+      setScope(canSeeDept ? 'department' : 'mine');
+    }
+  }, [scope, showAll, hasPermission, permissionsLoading]);
 
   useEffect(() => {
     if (prevScopeRef.current !== scope) {
@@ -228,6 +249,19 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     });
     let result = conversations.filter(c => c && c.contact && c.contact.id);
 
+    // 0. Channel visibility filtering (CRITICAL SECURITY: Always apply, even during search)
+    const canSeeWhatsapp = hasPermission('inbox.view_whatsapp');
+    const canSeeInstagram = hasPermission('inbox.view_instagram');
+    const canSeeChat = hasPermission('inbox.view_chat');
+
+    result = result.filter(c => {
+      const channel = c.contact?.channel_type;
+      if (channel === 'whatsapp' && !canSeeWhatsapp) return false;
+      if (channel === 'instagram' && !canSeeInstagram) return false;
+      if ((channel === 'chat' || channel === 'webchat') && !canSeeChat) return false;
+      return true;
+    });
+
     // Memoize utility functions for current render
     const statusOf = (id: string) => ticketStates[id]?.status ?? 'open';
     const assignedOf = (id: string, fallback: string | null | undefined) => {
@@ -240,19 +274,6 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
 
     // 1. Tab and Status Filtering
     if (searchTrimmed.length === 0) {
-      // Channel visibility filtering
-      const canSeeWhatsapp = hasPermission('inbox.view_whatsapp');
-      const canSeeInstagram = hasPermission('inbox.view_instagram');
-      const canSeeChat = hasPermission('inbox.view_chat');
-
-      result = result.filter(c => {
-        const channel = c.contact?.channel_type;
-        if (channel === 'whatsapp' && !canSeeWhatsapp) return false;
-        if (channel === 'instagram' && !canSeeInstagram) return false;
-        if ((channel === 'chat' || channel === 'webchat') && !canSeeChat) return false;
-        return true;
-      });
-
       if (mainTab === 'open') {
         result = result.filter(c => {
           const s = statusOf(c.contact.id);
@@ -264,11 +285,18 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
-            const effectiveScope = showAll ? 'all' : scope;
+            const canSeeDept = hasPermission('inbox.view_department');
+            const canSeeAll = hasPermission('inbox.view_all');
+            
+            const effectiveScope = (showAll && canSeeAll) ? 'all' : (scope === 'department' && (canSeeDept || canSeeAll)) ? 'department' : (scope === 'all' && canSeeAll) ? 'all' : 'mine';
             const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
             
             // 1. Prioridade para filtro de Agente específico (Coordenadores/Supervisores)
             if (filters.agentId) {
+              // SECURITY: Only allow filtering by other agents if they have permission
+              if (filters.agentId !== profileId && !canSeeDept && !canSeeAll) {
+                return assignee === profileId; // Force to current user
+              }
               return assignee === filters.agentId;
             }
 
@@ -314,16 +342,22 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           const isOpen = s === 'open' || s === 'in_progress';
           if (!isOpen) return false;
           if (statusFilter === 'unread' && c.unreadCount === 0) return false;
+          
+          // SECURITY: In search mode, also enforce scope if not searching globally
+          const canSeeDept = hasPermission('inbox.view_department');
+          const canSeeAll = hasPermission('inbox.view_all');
+          const effectiveScope = (showAll && canSeeAll) ? 'all' : (scope === 'department' && (canSeeDept || canSeeAll)) ? 'department' : 'mine';
+          const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
+
+          if (effectiveScope === 'mine' && assignee !== profileId) return false;
+          if (effectiveScope === 'department' && assignee && !departmentAgentIds.includes(assignee)) return false;
+
           return true;
         });
       } else if (mainTab === 'resolved') {
         result = result.filter(c => statusOf(c.contact.id) === 'resolved');
       }
     }
-
-    
-    // Filtros de busca e tabs aplicados
-    // ... mantendo lógica original de filtragem
 
     // 2. Search filtering
     if (searchTrimmed) {
@@ -347,7 +381,6 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
       });
     }
 
-
     // 3. Status array filter
     if (filters.status.length > 0) {
       result = result.filter((c) => {
@@ -369,9 +402,15 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
       });
     }
 
-    // 5. Agent filter
+    // 5. Agent filter (SECURITY: already handled in step 1, but reinforced here)
     if (filters.agentId) {
-      result = result.filter((c) => c.contact.assigned_to === filters.agentId);
+      const canSeeDept = hasPermission('inbox.view_department');
+      const canSeeAll = hasPermission('inbox.view_all');
+      if (filters.agentId === profileId || canSeeDept || canSeeAll) {
+        result = result.filter((c) => c.contact.assigned_to === filters.agentId);
+      } else {
+        result = result.filter((c) => c.contact.assigned_to === profileId);
+      }
     }
 
     // 6. Date range filter
@@ -444,7 +483,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     contactTagsMap, 
     ticketStates,
     sortBy,
-    statusFilter
+    statusFilter,
+    hasPermission
   ]);
 
   const retryingCount = useMemo(
