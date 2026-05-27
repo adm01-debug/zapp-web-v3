@@ -30,7 +30,7 @@ export function VirtualizedConversationList({ conversations, selectedId, onSelec
   const parentRef = useRef<HTMLDivElement>(null);
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense' || forceCompact;
-  const itemHeight = isCompactMode ? 64 : 78; // Consistência com ConversationList.tsx
+  const itemHeight = isCompactMode ? 82 : 96; // Consistência com VirtualizedRealtimeList
 
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
