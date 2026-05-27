@@ -105,14 +105,8 @@ interface ConversationItemProps {
 
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
-  const company = conversation.contact?.company?.trim();
   const safeName = name === 'Você' ? '' : name;
-  const firstName = safeName?.split(/\s+/)[0] || safeName;
-  
-  if (firstName && company) return `${firstName} · ${company}`;
-  if (firstName) return firstName;
-  if (company) return `Contato · ${company}`;
-  return 'Contato';
+  return safeName || 'Contato';
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
@@ -121,6 +115,28 @@ function buildFullPrimaryLabel(conversation: any): string {
   const safeName = name === 'Você' ? 'Contato' : name;
   if (company) return `${safeName} · ${company}`;
   return safeName;
+}
+
+function buildSecondaryLabel(conversation: any): string | null {
+  const company = conversation.contact?.company?.trim();
+  const phone = conversation.contact?.phone?.trim();
+  return company || phone || null;
+}
+
+// Short relative time: "4min", "2h", "3d"
+function shortRelativeTime(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  const w = Math.floor(d / 7);
+  if (w < 4) return `${w}sem`;
+  const mo = Math.floor(d / 30);
+  return `${mo}mês`;
 }
 
 export function ConversationItem({ 
