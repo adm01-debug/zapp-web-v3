@@ -31,7 +31,7 @@ const ROLE_RANK: Record<AppRole, number> = {
 };
 
 export function useUserRole() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDev, setIsDev] = useState(false);
@@ -39,6 +39,7 @@ export function useUserRole() {
   const [isManager, setIsManager] = useState(false);
   const [isSupervisor, setIsSupervisor] = useState(false);
   const mountedRef = useRef(true);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -46,7 +47,13 @@ export function useUserRole() {
   }, []);
 
   const fetchRoles = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
 
     try {
       const { data, error } = await supabase
@@ -81,6 +88,7 @@ export function useUserRole() {
     } finally {
       if (mountedRef.current) {
         setLoading(false);
+        fetchingRef.current = false;
       }
     }
   }, [user]);

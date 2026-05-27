@@ -27,8 +27,8 @@ export function ProtectedRoute({
   fallback,
   routePath,
 }: ProtectedRouteProps) {
-  const { user, loading: authLoading } = useAuth();
-  const { roles, loading: rolesLoading, hasRole } = useUserRole();
+  const { user, loading: authLoading, profile } = useAuth();
+  const { roles, loading: rolesLoading, hasRole, refetch: refetchRoles } = useUserRole();
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [permissionChecking, setPermissionChecking] = useState(false);
@@ -63,12 +63,19 @@ export function ProtectedRoute({
     return () => { isMounted = false; };
   }, [authLoading, user, requiredPermission]);
 
+  // Re-fetch roles if we have a user but no roles (safety for refresh/hydration)
+  useEffect(() => {
+    if (user && !authLoading && !rolesLoading && roles.length === 0) {
+      refetchRoles();
+    }
+  }, [user, authLoading, rolesLoading, roles.length, refetchRoles]);
+
   if (loading || (requiredPermission && hasPermission === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-busy="true" aria-label="Verificando acesso">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
-          <p className="text-muted-foreground">Verificando acesso...</p>
+          <p className="text-muted-foreground animate-pulse">Verificando acesso e permissões...</p>
         </div>
       </div>
     );
