@@ -145,17 +145,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={inbox.refetch}
-                disabled={inbox.loading}
-                className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150"
-                aria-label="Atualizar"
-                title="Atualizar"
-              >
-                <RefreshCw className={cn('w-3.5 h-3.5', inbox.loading && 'animate-spin')} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
                 onClick={() => inbox.setShowNewConversation(true)}
                 className="w-7 h-7 rounded-lg text-primary hover:bg-primary/10 active:scale-90 transition-all duration-150"
                 aria-label="Nova conversa"
