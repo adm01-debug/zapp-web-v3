@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { supabase, externalSupabase } from '@/integrations/supabase/external';
+import { supabase, externalSupabase } from '@/integrations/supabase/client';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
@@ -288,6 +287,8 @@ export function useRealtimeMessages() {
     return response;
   };
 
+  const lastSeenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const markAsRead = async (contactId: string) => {
     const client = externalSupabase || supabase;
     const { error } = await client.from('messages')
@@ -297,16 +298,20 @@ export function useRealtimeMessages() {
       .eq('is_read', false);
     if (error) log.error('Error marking messages as read:', error);
     
-    // But better to update last_seen for routing load calculations
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('profiles')
-        .update({ last_seen: new Date().toISOString() })
-        .eq('id', user.id);
-    }
+    // Debounce last_seen update to avoid flooding DB during active chat
+    if (lastSeenTimerRef.current) clearTimeout(lastSeenTimerRef.current);
+    lastSeenTimerRef.current = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('profiles')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', user.id);
+      }
+    }, 5000);
+
     commitConversations((prev) =>
       prev.map((c) => c.contact.id === contactId
-        ? buildConversation(c.contact, c.messages.map((m) => ({ ...m, is_read: true })))
+        ? { ...c, messages: c.messages.map((m) => ({ ...m, is_read: true })), unreadCount: 0 }
         : c
       )
     );

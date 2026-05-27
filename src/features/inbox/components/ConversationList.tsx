@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
@@ -36,43 +35,36 @@ export function ConversationList({
   selectedId,
   onSelect,
   isLoading = false,
-}: ConversationListProps) {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  search = '',
+  setSearch,
+  filter = 'all',
+  setFilter,
+}: ConversationListProps & { 
+  search?: string; 
+  setSearch?: (v: string) => void;
+  filter?: string;
+  setFilter?: (v: string) => void;
+}) {
   const parentRef = useRef<HTMLDivElement>(null);
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense';
 
-  const sourceConversations = (!conversations || conversations.length === 0) && MOCKS_FLAG ? MOCK_CONVERSATIONS : conversations;
-
-  const filteredConversations = useMemo(() => {
-    const q = search.toLowerCase();
-    return sourceConversations.filter((conv) => {
-      const matchesSearch = !q || 
-        conv.contact.name.toLowerCase().includes(q) ||
-        conv.contact.phone.includes(q) ||
-        (conv.lastMessage?.content?.toLowerCase().includes(q));
-      const matchesFilter = filter === 'all' || conv.status === filter;
-      return matchesSearch && matchesFilter;
-    });
-  }, [sourceConversations, search, filter]);
-
-  const counts = useMemo(() => {
-    const c = { all: sourceConversations.length, open: 0, pending: 0, waiting: 0 };
-    for (const conv of sourceConversations) {
-      if (conv.status === 'open') c.open++;
-      else if (conv.status === 'pending') c.pending++;
-      else if (conv.status === 'waiting') c.waiting++;
-    }
-    return c;
-  }, [sourceConversations]);
-
   const virtualizer = useVirtualizer({
-    count: filteredConversations.length,
+    count: conversations.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => isCompactMode ? 64 : 78,
     overscan: 10,
   });
+
+  const counts = useMemo(() => {
+    // This could also come from the hook, but for now we calculate from the passed list
+    return {
+      all: conversations.length,
+      open: conversations.filter(c => c.status === 'open').length,
+      pending: conversations.filter(c => c.status === 'pending').length,
+      waiting: conversations.filter(c => c.status === 'waiting').length,
+    };
+  }, [conversations]);
 
   return (
     <div className="flex flex-col h-full bg-background border-r border-border overflow-hidden ">
@@ -107,7 +99,7 @@ export function ConversationList({
           <Input
             placeholder="Buscar..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setSearch?.(e.target.value)}
             className={cn(
               "pl-9 pr-4 bg-muted/40 hover:bg-muted/60 focus:bg-background border-none rounded-2xl text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-300 shadow-sm",
               isCompactMode ? "h-[30px] text-[12px]" : "h-[36px] text-sm"
@@ -116,7 +108,7 @@ export function ConversationList({
         </div>
 
         {/* Tabs */}
-        <Tabs value={filter} onValueChange={setFilter} className="w-full">
+        <Tabs value={filter} onValueChange={(v) => setFilter?.(v)} className="w-full">
           <TabsList className={cn(
             "w-full p-1 bg-muted/30 border-none rounded-xl",
             isCompactMode ? "h-8" : "h-9"
