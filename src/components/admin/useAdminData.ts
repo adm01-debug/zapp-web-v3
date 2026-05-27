@@ -33,10 +33,11 @@ export interface AuditLog {
 }
 
 export const roleConfig: Record<AppRole, { label: string; icon: string; color: string }> = {
+  dev: { label: 'Desenvolvedor', icon: 'Code', color: 'text-destructive' },
   admin: { label: 'Administrador', icon: 'Crown', color: 'text-warning' },
+  manager: { label: 'Gestor', icon: 'Briefcase', color: 'text-primary' },
   supervisor: { label: 'Supervisor', icon: 'UserCog', color: 'text-info' },
   agent: { label: 'Atendente', icon: 'User', color: 'text-muted-foreground' },
-  
 };
 
 export const accessLevelConfig: Record<string, { label: string; description: string }> = {
