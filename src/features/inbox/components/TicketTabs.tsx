@@ -40,6 +40,8 @@ interface TicketTabsProps {
   onScopeChange?: (scope: InboxScope) => void;
   selectedQueueId: string | null;
   onQueueChange: (queueId: string | null) => void;
+  contactType?: string | null;
+  onContactTypeChange?: (value: string | null) => void;
 }
 
 export function TicketTabs({
@@ -54,6 +56,8 @@ export function TicketTabs({
   onScopeChange,
   selectedQueueId,
   onQueueChange,
+  contactType = null,
+  onContactTypeChange,
 }: TicketTabsProps) {
   const { user, profile } = useAuth();
   const { isSupervisor, isManager, isAdmin, roles } = useUserRole();
@@ -256,77 +260,111 @@ export function TicketTabs({
         </div>
       )}
 
-      {/* Scope selector — visibilidade por papel */}
+      {/* Seletor: para Agentes (sem permissões de departamento/todos) exibimos
+          categorias de contato; demais papéis veem o seletor de escopo. */}
       {mainTab === 'open' && subTab === 'attending' && (
-        <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
-          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <Users className="w-3 h-3 text-primary" />
+        !canSeeDepartment && !canSeeAllDepartments && onContactTypeChange ? (
+          <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="w-3 h-3 text-primary" />
+            </div>
+            <div className="flex items-center gap-1 flex-1" role="tablist" aria-label="Categoria de contato">
+              {([
+                { id: 'cliente', label: 'Clientes' },
+                { id: 'fornecedor', label: isMobile ? 'Fornec.' : 'Fornecedores' },
+                { id: 'transportadora', label: isMobile ? 'Transp.' : 'Transportadoras' },
+                { id: 'outros', label: 'Outros' },
+              ] as const).map(opt => {
+                const isActive = (contactType || '') === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => onContactTypeChange?.(isActive ? null : opt.id)}
+                    className={cn(
+                      'flex-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex items-center gap-1 flex-1" role="tablist" aria-label="Escopo de visualização">
-            {([
-              { id: 'mine' as InboxScope, label: 'Meus', show: true },
-              { id: 'department' as InboxScope, label: isMobile ? 'Depto' : 'Departamento', show: canSeeDepartment || canSeeAllDepartments },
-              { id: 'all' as InboxScope, label: isMobile ? 'Todos' : 'Todos depts.', show: canSeeAllDepartments },
-            ] as const).filter(o => o.show).map(opt => {
-              const isActive = (showAll && opt.id === 'all') || (!showAll && scope === opt.id);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={async () => {
-                    // Verificação de segurança (Auditoria)
-                    const requiredPermission = 
-                      opt.id === 'all' ? 'inbox.view_all' : 
-                      opt.id === 'department' ? 'inbox.view_department' : 
-                      'inbox.view_mine';
+        ) : (
+          <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="w-3 h-3 text-primary" />
+            </div>
+            <div className="flex items-center gap-1 flex-1" role="tablist" aria-label="Escopo de visualização">
+              {([
+                { id: 'mine' as InboxScope, label: 'Meus', show: true },
+                { id: 'department' as InboxScope, label: isMobile ? 'Depto' : 'Departamento', show: canSeeDepartment || canSeeAllDepartments },
+                { id: 'all' as InboxScope, label: isMobile ? 'Todos' : 'Todos depts.', show: canSeeAllDepartments },
+              ] as const).filter(o => o.show).map(opt => {
+                const isActive = (showAll && opt.id === 'all') || (!showAll && scope === opt.id);
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={async () => {
+                      const requiredPermission =
+                        opt.id === 'all' ? 'inbox.view_all' :
+                        opt.id === 'department' ? 'inbox.view_department' :
+                        'inbox.view_mine';
 
-                    if (!hasPermission(requiredPermission) && opt.id !== 'mine') {
-                      console.error(`[AUDIT] Acesso não autorizado ao escopo ${opt.id} pelo usuário ${user?.id}`);
-                      await supabase.from('audit_logs').insert({
-                        user_id: user?.id,
-                        action: 'UNAUTHORIZED_INBOX_SCOPE_ACCESS',
-                        entity_type: 'inbox_scope',
-                        details: {
-                          attempted_scope: opt.id,
-                          user_roles: roles,
-                          timestamp: new Date().toISOString()
-                        }
-                      });
-                      toast.error("Você não tem permissão para visualizar este escopo.");
-                      return;
-                    }
+                      if (!hasPermission(requiredPermission) && opt.id !== 'mine') {
+                        console.error(`[AUDIT] Acesso não autorizado ao escopo ${opt.id} pelo usuário ${user?.id}`);
+                        await supabase.from('audit_logs').insert({
+                          user_id: user?.id,
+                          action: 'UNAUTHORIZED_INBOX_SCOPE_ACCESS',
+                          entity_type: 'inbox_scope',
+                          details: {
+                            attempted_scope: opt.id,
+                            user_roles: roles,
+                            timestamp: new Date().toISOString()
+                          }
+                        });
+                        toast.error("Você não tem permissão para visualizar este escopo.");
+                        return;
+                      }
 
-                    // Auditoria de acesso legítimo (opcional, mas bom para compliance)
-                    if (opt.id !== 'mine') {
-                      await supabase.from('audit_logs').insert({
-                        user_id: user?.id,
-                        action: 'INBOX_SCOPE_CHANGE',
-                        entity_type: 'inbox_scope',
-                        details: {
-                          scope: opt.id,
-                          timestamp: new Date().toISOString()
-                        }
-                      });
-                    }
+                      if (opt.id !== 'mine') {
+                        await supabase.from('audit_logs').insert({
+                          user_id: user?.id,
+                          action: 'INBOX_SCOPE_CHANGE',
+                          entity_type: 'inbox_scope',
+                          details: {
+                            scope: opt.id,
+                            timestamp: new Date().toISOString()
+                          }
+                        });
+                      }
 
-                    onScopeChange?.(opt.id);
-                    onShowAllChange(opt.id === 'all');
-                  }}
-                  className={cn(
-                    'flex-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-                  )}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
+                      onScopeChange?.(opt.id);
+                      onShowAllChange(opt.id === 'all');
+                    }}
+                    className={cn(
+                      'flex-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )
       )}
 
       {/* Fallback legado: papéis sem departamento mas com permissão ampla */}
