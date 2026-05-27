@@ -272,6 +272,8 @@ export function derivedToConversationContact(dc: DerivedContact): ConversationCo
     contact_type: 'whatsapp',
     group_category: null,
     ai_sentiment: dc.ai_sentiment || null,
+    channel_type: 'whatsapp',
+    channel_connection_id: null,
   };
 }
 

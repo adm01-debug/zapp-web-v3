@@ -78,6 +78,8 @@ export interface ConversationContact {
   contact_type: string | null;
   group_category: string | null;
   ai_sentiment: string | null;
+  channel_type: string | null;
+  channel_connection_id: string | null;
 }
 
 export interface ConversationWithMessages {
