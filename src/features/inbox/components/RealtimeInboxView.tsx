@@ -87,13 +87,17 @@ export function RealtimeInboxView() {
   }, []);
 
   const handleResize = useCallback((clientX: number) => {
-    const newWidth = clientX;
-    if (newWidth >= 280 && newWidth <= 600) {
-      setSidebarWidth(newWidth);
-      saveWidth(newWidth);
-      lastWidth.current = newWidth;
-    }
-  }, [saveWidth]);
+    const minWidth = 280;
+    const maxWidth = Math.min(600, window.innerWidth - (isMobile ? 0 : 60));
+    
+    let newWidth = clientX;
+    if (newWidth < minWidth) newWidth = minWidth;
+    if (newWidth > maxWidth) newWidth = maxWidth;
+
+    setSidebarWidth(newWidth);
+    saveWidth(newWidth);
+    lastWidth.current = newWidth;
+  }, [saveWidth, isMobile]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing.current) return;
@@ -110,6 +114,19 @@ export function RealtimeInboxView() {
     handleTouchMoveRef.current = handleTouchMove;
     stopResizingRef.current = stopResizing;
   }, [handleMouseMove, handleTouchMove, stopResizing]);
+
+  // Handle window resize to clamp sidebar width
+  useEffect(() => {
+    const onWindowResize = () => {
+      setSidebarWidth(prev => {
+        const maxWidth = Math.min(600, window.innerWidth - (isMobile ? 0 : 60));
+        if (prev > maxWidth) return maxWidth;
+        return prev;
+      });
+    };
+    window.addEventListener('resize', onWindowResize);
+    return () => window.removeEventListener('resize', onWindowResize);
+  }, [isMobile]);
 
   const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
