@@ -62,7 +62,7 @@ export function RealtimeInboxView() {
     const saved = localStorage.getItem(key);
     return saved ? parseInt(saved, 10) : 340;
   });
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  
   const isResizing = useRef(false);
   const lastWidth = useRef(340);
 
@@ -122,14 +122,9 @@ export function RealtimeInboxView() {
     document.body.style.userSelect = 'none';
   }, []);
 
-  const toggleSidebar = useCallback(() => {
-    setIsCollapsed(prev => !prev);
-  }, []);
-
   const resetWidth = useCallback(() => {
     setSidebarWidth(340);
     saveWidth(340);
-    setIsCollapsed(false);
   }, [saveWidth]);
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
@@ -263,11 +258,8 @@ export function RealtimeInboxView() {
 
       <div className="flex flex-row h-full min-h-0 w-full relative group/inbox">
         <div 
-          className={cn(
-            "relative flex h-full transition-all duration-300 ease-in-out",
-            isCollapsed && !isMobile ? "w-0 overflow-hidden" : ""
-          )}
-          style={!isMobile && !isCollapsed ? { width: `${sidebarWidth}px` } : {}}
+          className="relative flex h-full transition-all duration-300 ease-in-out"
+          style={!isMobile ? { width: `${sidebarWidth}px` } : {}}
         >
           <ConversationListSidebar 
             inbox={inbox} 
@@ -280,29 +272,16 @@ export function RealtimeInboxView() {
         
         {!isMobile && (
           <>
-            {/* Botão de Toggle (Recolher/Expandir) */}
+            {/* Botão único: resetar largura padrão (340px) */}
             <button
-              onClick={toggleSidebar}
-              className={cn(
-                "absolute top-1/2 -translate-y-1/2 z-[60] w-5 h-10 bg-background border border-border shadow-md rounded-r-md flex items-center justify-center hover:bg-muted transition-all duration-200",
-                isCollapsed ? "left-0" : ""
-              )}
-              style={!isCollapsed ? { left: `${sidebarWidth}px` } : {}}
-              title={isCollapsed ? "Expandir lista" : "Recolher lista"}
+              onClick={resetWidth}
+              className="absolute top-1/2 -translate-y-1/2 z-[60] w-5 h-10 bg-background border border-border shadow-md rounded-r-md flex items-center justify-center hover:bg-muted transition-all duration-200"
+              style={{ left: `${sidebarWidth}px` }}
+              title="Resetar largura padrão (340px)"
+              aria-label="Resetar largura padrão"
             >
-              <div className={cn("w-1 h-3 rounded-full bg-muted-foreground/40", isCollapsed ? "ml-0.5" : "mr-0.5")} />
+              <div className="w-1 h-3 rounded-full bg-muted-foreground/40" />
             </button>
-
-            {/* Reset Width Button */}
-            {!isCollapsed && sidebarWidth !== 340 && (
-              <button
-                onClick={resetWidth}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] px-3 py-1.5 bg-background/80 backdrop-blur-sm border border-border rounded-full text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-background shadow-sm transition-all opacity-0 group-hover/inbox:opacity-100"
-                title="Resetar largura padrão"
-              >
-                Resetar (340px)
-              </button>
-            )}
 
             {/* Draggable Handle */}
             <div
@@ -311,8 +290,7 @@ export function RealtimeInboxView() {
               className={cn(
                 "w-1.5 h-full cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors absolute z-50 group/handle",
                 sidebarWidth <= 280 ? "border-l-2 border-destructive/50 bg-destructive/5" : "",
-                sidebarWidth >= 600 ? "border-r-2 border-destructive/50 bg-destructive/5" : "",
-                isCollapsed ? "hidden" : ""
+                sidebarWidth >= 600 ? "border-r-2 border-destructive/50 bg-destructive/5" : ""
               )}
               style={{ left: `${sidebarWidth}px` }}
             >
