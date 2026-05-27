@@ -18,7 +18,7 @@ describe('Button Component', () => {
 
     rerender(<Button variant="outline">Outline</Button>);
     button = screen.getByRole('button', { name: /outline/i });
-    expect(button.className).toContain('border-border');
+    expect(button.className).toContain('border-input');
   });
 
   it('renders in loading state and is disabled', () => {

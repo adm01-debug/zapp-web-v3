@@ -18,12 +18,8 @@ export function TrainingMiniGames({ onXPEarned }: TrainingMiniGamesProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [highScores, setHighScores] = useState<Record<GameType, number>>(() => {
-    try {
-      const saved = localStorage.getItem('miniGameHighScores');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {} as Record<GameType, number>;
-    }
+    const saved = localStorage.getItem('miniGameHighScores');
+    return saved ? JSON.parse(saved) : {};
   });
   const { celebrate } = useCelebration();
 

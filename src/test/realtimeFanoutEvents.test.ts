@@ -64,7 +64,7 @@ function parseFileEvents(absPath: string): Set<Evt> {
   return out;
 }
 
-describe.skip('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — eventos realtime nas arestas', () => {
+describe('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — eventos realtime nas arestas', () => {
   const diagram = parseDiagramEdges();
 
   for (const [node, file] of Object.entries(NODE_TO_FILE)) {

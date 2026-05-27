@@ -192,7 +192,7 @@ function ensureMarkers(content: string): string {
 
   // CLICKS: localiza o bloco existente de "click X ..." e envolve em marcadores
   if (!next.includes(CLICKS_START)) {
-    const clickLineRe = /( {2}%% Links navegaveis[^\n]*\n)((?: {2}click [^\n]+\n)+)/;
+    const clickLineRe = /(  %% Links navegaveis[^\n]*\n)((?:  click [^\n]+\n)+)/;
     const m = next.match(clickLineRe);
     if (m) {
       next = next.replace(m[0], `${CLICKS_START}\n${CLICKS_END}\n`);

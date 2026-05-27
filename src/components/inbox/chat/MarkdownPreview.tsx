@@ -7,7 +7,7 @@ import { useMemo } from 'react';
  */
 export function formatWhatsAppText(text: string): string {
   // First: escape ALL HTML to neutralize any injected tags/scripts
-  const formatted = text
+  let formatted = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

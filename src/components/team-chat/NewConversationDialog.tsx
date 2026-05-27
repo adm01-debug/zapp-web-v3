@@ -98,7 +98,7 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
     }
 
     try {
-      const payload: any = { type: tab };
+      let payload: any = { type: tab };
       
       if (tab === 'department') {
         const dept = departments.find(d => d.id === selectedDeptId);

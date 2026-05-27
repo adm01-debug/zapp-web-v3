@@ -79,7 +79,7 @@ function findMessagesListeners(): string[] {
   return hits;
 }
 
-describe.skip('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — validador de fan-out realtime', () => {
+describe('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — validador de fan-out realtime', () => {
   it('todos os caminhos clicaveis no diagrama existem no repositorio', () => {
     const mmd = readMmd();
     const clicks = extractClickPaths(mmd);

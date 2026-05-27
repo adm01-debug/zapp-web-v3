@@ -126,7 +126,7 @@ export default function AdminChannelsPage() {
     }
   };
 
-  useEffect(() => { load();   }, [statusFilter]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [statusFilter]);
 
   const filteredChannels = useMemo(() => {
     if (!search.trim()) return channels;

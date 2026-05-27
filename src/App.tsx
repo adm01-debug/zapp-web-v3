@@ -52,14 +52,10 @@ function AppContent() {
 
   // Defer non-critical features to after first paint
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    const rafId = requestAnimationFrame(() => {
-      timeoutId = setTimeout(() => setDeferredReady(true), 800);
+    const id = requestAnimationFrame(() => {
+      setTimeout(() => setDeferredReady(true), 800);
     });
-    return () => {
-      cancelAnimationFrame(rafId);
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
-    };
+    return () => cancelAnimationFrame(id);
   }, []);
 
   // Global error handlers

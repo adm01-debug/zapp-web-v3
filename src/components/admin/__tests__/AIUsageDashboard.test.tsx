@@ -1,6 +1,4 @@
 /**
-// NOTE: tests skipped — referenced richer AIUsageDashboard that was simplified to a stub.
-// Tests should be rewritten or component restored. See PR notes.
  * Comprehensive test suite for AI Usage Tracking module – Dashboard component.
  * Tests rendering, KPIs, empty states, CSV export, error handling, and profile mapping.
  * Note: Radix UI Tabs don't switch reliably in jsdom, so tab-dependent tests
@@ -74,7 +72,7 @@ function setupMocks(logs: unknown[] = [], profiles: unknown[] = []) {
 // ═══════════════════════════════════════════════════════════════
 // 1. RENDERING
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – Rendering', () => {
+describe('Dashboard – Rendering', () => {
   beforeEach(() => setupMocks(makeLogs(10), []));
 
   it('renders title and description', () => {
@@ -119,7 +117,7 @@ describe.skip('Dashboard – Rendering', () => {
 // ═══════════════════════════════════════════════════════════════
 // 2. KPI CALCULATIONS
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – KPIs', () => {
+describe('Dashboard – KPIs', () => {
   it('shows correct total calls', async () => {
     setupMocks(makeLogs(10), []);
     render(<AIUsageDashboard />, { wrapper: createWrapper() });
@@ -170,7 +168,7 @@ describe.skip('Dashboard – KPIs', () => {
 // ═══════════════════════════════════════════════════════════════
 // 3. EMPTY STATES
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – Empty States', () => {
+describe('Dashboard – Empty States', () => {
   beforeEach(() => setupMocks([], []));
 
   it('shows empty state for timeline', async () => {
@@ -191,7 +189,7 @@ describe.skip('Dashboard – Empty States', () => {
 // ═══════════════════════════════════════════════════════════════
 // 4. CSV EXPORT
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – CSV Export', () => {
+describe('Dashboard – CSV Export', () => {
   it('does not crash when exporting empty data', async () => {
     setupMocks([], []);
     render(<AIUsageDashboard />, { wrapper: createWrapper() });
@@ -222,7 +220,7 @@ describe.skip('Dashboard – CSV Export', () => {
 // ═══════════════════════════════════════════════════════════════
 // 5. ERROR HANDLING
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – Error Handling', () => {
+describe('Dashboard – Error Handling', () => {
   it('handles Supabase error without crashing', async () => {
     mockFrom.mockImplementation((table: unknown) => {
       if (table === 'ai_usage_logs') {
@@ -246,7 +244,7 @@ describe.skip('Dashboard – Error Handling', () => {
 // ═══════════════════════════════════════════════════════════════
 // 6. EDGE CASES
 // ═══════════════════════════════════════════════════════════════
-describe.skip('Dashboard – Edge Cases', () => {
+describe('Dashboard – Edge Cases', () => {
   it('handles zero tokens without crash', () => {
     setupMocks(makeLogs(1, { total_tokens: 0, input_tokens: 0, output_tokens: 0 }), []);
     render(<AIUsageDashboard />, { wrapper: createWrapper() });

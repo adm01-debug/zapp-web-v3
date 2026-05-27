@@ -546,7 +546,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 </TooltipTrigger>
                 {(isSending || !!editingMessage || isRecordingAudio) && (
                   <TooltipContent side="top" className="text-[10px] font-medium bg-muted text-muted-foreground border-border shadow-md">
-                    {isSending ? "Aguarde o envio concluir" : editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
+                    {isSending ? "Aguarde o envio concluir" : !!editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
                   </TooltipContent>
                 )}
               </Tooltip>

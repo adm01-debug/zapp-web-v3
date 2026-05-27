@@ -25,10 +25,6 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'user-1' }, session: {}, profile: null, loading: false }),
   AuthProvider: ({ children }: any) => children,
 }));
-vi.mock('@/features/auth', () => ({
-  useAuth: () => ({ user: { id: 'user-1' }, session: {}, profile: null, loading: false }),
-  AuthProvider: ({ children }: any) => children,
-}));
 
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },

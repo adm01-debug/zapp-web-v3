@@ -18,14 +18,8 @@ export function useMessageQueue(instanceName: string = 'wpp2') {
   const { toast } = useToast();
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>(() => {
     if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem(`pending_msgs_${instanceName}`);
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    const saved = localStorage.getItem(`pending_msgs_${instanceName}`);
+    return saved ? JSON.parse(saved) : [];
   });
   const queueRef = useRef<PendingMessage[]>([]);
   const isProcessingRef = useRef(false);

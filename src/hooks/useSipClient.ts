@@ -84,14 +84,10 @@ export function useSipClient() {
         if (state === SessionState.Establishing) { setCallStatus('ringing'); callStatusRef.current = 'ringing'; }
         else if (state === SessionState.Established) {
           setCallStatus('active'); callStatusRef.current = 'active'; startTimer();
-          try {
-            const stream = new MediaStream(); const audio = getRemoteAudio();
-            const sdh = inviter.sessionDescriptionHandler as Web.SessionDescriptionHandler;
-            sdh?.peerConnection?.getReceivers().forEach(r => { if (r.track) stream.addTrack(r.track); });
-            audio.srcObject = stream;
-          } catch (err) {
-            log.warn('Failed to attach remote audio stream', err);
-          }
+          const stream = new MediaStream(); const audio = getRemoteAudio();
+          const sdh = inviter.sessionDescriptionHandler as Web.SessionDescriptionHandler;
+          sdh?.peerConnection?.getReceivers().forEach(r => { if (r.track) stream.addTrack(r.track); });
+          audio.srcObject = stream;
         } else if (state === SessionState.Terminated) {
           stopTimer();
           const prev = callStatusRef.current;

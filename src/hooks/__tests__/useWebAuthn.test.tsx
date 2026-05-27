@@ -20,16 +20,11 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-  getLogger: () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() }),
+  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }));
 
 const mockUseAuth = vi.fn();
 vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => mockUseAuth(),
-  AuthProvider: ({ children }: any) => children,
-}));
-vi.mock('@/features/auth', () => ({
   useAuth: () => mockUseAuth(),
   AuthProvider: ({ children }: any) => children,
 }));

@@ -18,8 +18,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-  getLogger: () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() }),
+  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }));
 
 import { useMessages } from '@/hooks/useMessages';
@@ -39,7 +38,7 @@ function makeQueryChain(data: any[] = [], error: any = null) {
   };
 }
 
-describe.skip('useMessages', () => {
+describe('useMessages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReturnValue(makeQueryChain());

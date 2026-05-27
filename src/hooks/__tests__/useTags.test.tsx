@@ -20,18 +20,13 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'u1' } }),
   AuthProvider: ({ children }: any) => children,
 }));
-vi.mock('@/features/auth', () => ({
-  useAuth: () => ({ user: { id: 'u1' } }),
-  AuthProvider: ({ children }: any) => children,
-}));
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
 vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-  getLogger: () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() }),
+  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
 }));
 
 import { useTags } from '@/hooks/useTags';
