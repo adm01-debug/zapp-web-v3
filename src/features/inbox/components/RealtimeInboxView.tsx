@@ -122,14 +122,9 @@ export function RealtimeInboxView() {
     document.body.style.userSelect = 'none';
   }, []);
 
-  const toggleSidebar = useCallback(() => {
-    setIsCollapsed(prev => !prev);
-  }, []);
-
   const resetWidth = useCallback(() => {
     setSidebarWidth(340);
     saveWidth(340);
-    setIsCollapsed(false);
   }, [saveWidth]);
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
