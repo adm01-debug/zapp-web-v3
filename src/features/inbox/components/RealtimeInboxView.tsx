@@ -62,7 +62,7 @@ export function RealtimeInboxView() {
     const saved = localStorage.getItem(key);
     return saved ? parseInt(saved, 10) : 340;
   });
-  const isCollapsed = false;
+  
   const isResizing = useRef(false);
   const lastWidth = useRef(340);
 
