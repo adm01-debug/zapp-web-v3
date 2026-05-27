@@ -28,7 +28,7 @@ import {
 // Replaced with native title/aria-label which are equivalent for these controls.
 import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle, LayoutList, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { RealtimeContactsIndicator } from './RealtimeContactsIndicator';
+
 import { WhatsAppConnectionStatus } from '@/features/connections';
 import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
 import { toast } from 'sonner';
