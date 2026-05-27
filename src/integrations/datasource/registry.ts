@@ -39,7 +39,9 @@ export type LogicalEntity =
   | 'whatsapp_connections'
   | 'team_conversations'
   | 'routing_rules'
-  | 'routing_queues';
+  | 'routing_queues'
+  | 'evolution_contacts'
+  | 'evolution_messages';
 
 export type DatasourceClient = 'lovable' | 'external';
 
