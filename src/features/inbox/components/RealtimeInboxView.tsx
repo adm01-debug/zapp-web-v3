@@ -263,11 +263,8 @@ export function RealtimeInboxView() {
 
       <div className="flex flex-row h-full min-h-0 w-full relative group/inbox">
         <div 
-          className={cn(
-            "relative flex h-full transition-all duration-300 ease-in-out",
-            isCollapsed && !isMobile ? "w-0 overflow-hidden" : ""
-          )}
-          style={!isMobile && !isCollapsed ? { width: `${sidebarWidth}px` } : {}}
+          className="relative flex h-full transition-all duration-300 ease-in-out"
+          style={!isMobile ? { width: `${sidebarWidth}px` } : {}}
         >
           <ConversationListSidebar 
             inbox={inbox} 
