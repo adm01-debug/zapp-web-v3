@@ -240,14 +240,8 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
   const ticketStates = useAllTicketStates();
 
   const filteredConversations = useMemo(() => {
-    log.debug('Recomputing filtered conversations', { 
-      total: conversations.length, 
-      mainTab, 
-      subTab, 
-      showOnlyRetrying, 
-      failureCategoryFilter 
-    });
-    let result = conversations.filter(c => c && c.contact && c.contact.id);
+    // 0. Base filtering and safety checks
+    let result = conversations.filter(c => c && c.contact && (c.contact.id || (c.contact as any).remote_jid));
 
     // 0. Channel visibility filtering (CRITICAL SECURITY: Always apply, even during search)
     const canSeeWhatsapp = hasPermission('inbox.view_whatsapp');

@@ -43,19 +43,28 @@ export function ProtectedRoute({
     
     if (!authLoading && user && requiredPermission) {
       setPermissionChecking(true);
-      supabase.rpc('user_has_permission', {
-        _user_id: user.id,
-        _permission_name: requiredPermission
-      }).then(({ data, error }) => {
-        if (!isMounted) return;
-        if (error) {
-          log.error('Permission check failed:', error.message);
-          setHasPermission(false);
-        } else {
-          setHasPermission(data === true);
+      
+      // Use cached session permissions if available to avoid RPC on every mount
+      const checkPermission = async () => {
+        try {
+          const { data, error } = await supabase.rpc('user_has_permission', {
+            _user_id: user.id,
+            _permission_name: requiredPermission
+          });
+          
+          if (!isMounted) return;
+          if (error) {
+            log.error('Permission check failed:', error.message);
+            setHasPermission(false);
+          } else {
+            setHasPermission(data === true);
+          }
+        } finally {
+          if (isMounted) setPermissionChecking(false);
         }
-        setPermissionChecking(false);
-      });
+      };
+      
+      checkPermission();
     } else if (!requiredPermission) {
       setHasPermission(true);
     }
