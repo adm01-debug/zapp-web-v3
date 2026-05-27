@@ -125,13 +125,6 @@ export function TicketTabs({
       count: conversations.filter(c => c.unreadCount > 0).length,
       activeColor: 'bg-warning text-foreground',
     },
-    { 
-      id: 'search' as MainTab, 
-      label: 'Busca', 
-      icon: Search, 
-      count: null,
-      activeColor: 'bg-muted-foreground text-background',
-    },
   ];
 
 
