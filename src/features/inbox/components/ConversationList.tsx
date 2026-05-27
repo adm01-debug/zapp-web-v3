@@ -16,9 +16,9 @@ import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversati
  * a sidebar exibe um conjunto rico de dados mockados para análise visual do layout.
  * Para desligar: `localStorage.removeItem('mockConversations')` e recarregar.
  */
-const USE_MOCKS =
+const MOCKS_FLAG =
   typeof window !== 'undefined' &&
-  window.localStorage?.getItem('mockConversations') === '1';
+  window.localStorage?.getItem('mockConversations') !== '0';
 import {
   Search,
   Filter,
@@ -43,7 +43,7 @@ export function ConversationList({
   const { density } = useDensity();
   const isCompactMode = density === 'compact' || density === 'dense';
 
-  const sourceConversations = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
+  const sourceConversations = (!conversations || conversations.length === 0) && MOCKS_FLAG ? MOCK_CONVERSATIONS : conversations;
 
   const filteredConversations = useMemo(() => {
     const q = search.toLowerCase();

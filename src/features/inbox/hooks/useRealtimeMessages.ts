@@ -14,6 +14,7 @@ import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
 import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { MOCK_CONVERSATIONS } from '../components/conversation-list/__mocks__/mockConversations';
 export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
@@ -21,9 +22,9 @@ const SEEDED_CONTACT_LIMIT = 500;
 const RECENT_MESSAGES_LIMIT = 1000;
 const CONTACT_FETCH_CHUNK_SIZE = 200;
 
-const USE_MOCKS =
+const MOCKS_FLAG =
   typeof window !== 'undefined' &&
-  window.localStorage?.getItem('mockConversations') === '1';
+  window.localStorage?.getItem('mockConversations') !== '0';
 
 export interface NewMessageNotification {
   id: string;
@@ -344,15 +345,10 @@ export function useRealtimeMessages() {
   void sendStateTick; // ensure dep tracked
 
   const filteredConversations = useMemo(() => {
-    let filtered = USE_MOCKS ? [] : [...conversations];
-    
-    if (USE_MOCKS) {
-       // Em modo mock, as conversas são injetadas via external client 
-       // ou poderiam ser injetadas aqui se não estivéssemos em USE_EXTERNAL_DB.
-       // Mas como o projeto usa FATOR X (external), o mock vai lá.
-       // Para segurança, se cairmos aqui, retornamos a lista original.
-       filtered = [...conversations];
-    }
+    // Fallback to mocks when there's no real data and mocks are enabled (demo mode)
+    let filtered = (conversations.length === 0 && MOCKS_FLAG)
+      ? [...(MOCK_CONVERSATIONS as unknown as ConversationWithMessages[])]
+      : [...conversations];
 
 
     // 1. Search
