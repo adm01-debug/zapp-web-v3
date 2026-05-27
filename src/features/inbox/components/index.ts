@@ -61,7 +61,7 @@ export * from './PrivateNotes';
 export * from './QueuePositionNotifier';
 export * from './QuickRepliesManager';
 export * from './RealtimeCollaboration';
-export * from './RealtimeContactsIndicator';
+
 export * from './RealtimeInboxView';
 export * from './RealtimeTranscription';
 export * from './RemindersPanel';
