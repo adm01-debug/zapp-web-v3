@@ -24,8 +24,8 @@ interface VirtualizedRealtimeListProps {
   pinnedIds?: Set<string>;
 }
 
-const ITEM_HEIGHT_NORMAL = 84; // Slightly increased to fit 3 lines comfortably
-const ITEM_HEIGHT_COMPACT = 68; // Slightly increased for compact mode too
+const ITEM_HEIGHT_NORMAL = 96; // Comfortable mode with breathing room
+const ITEM_HEIGHT_COMPACT = 82; // Compact mode with clear card separation
 const EMPTY_SET = new Set<string>();
 
 const VirtualizedItem = memo(({
