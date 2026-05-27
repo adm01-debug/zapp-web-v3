@@ -9,6 +9,7 @@ import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
 import { MainTab, SubTab } from '@/features/inbox';
 import { useFailureMetricsBatch, type FailureCategory } from '@/features/inbox';
 import { useAllTicketStates } from '@/features/inbox';
+import { usePermissions } from '@/features/auth';
 import { getLogger } from '@/lib/logger';
 import { logAudit } from '@/lib/audit';
 
