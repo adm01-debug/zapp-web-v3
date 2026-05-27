@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle, AlertTriangle, User } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle, User } from 'lucide-react';
 import { useAuth } from '@/features/auth';
 import { useUserRole, usePermissions } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
@@ -66,8 +65,8 @@ export function TicketTabs({
   onAgentChange,
   departmentAgentIds = [],
 }: TicketTabsProps) {
-  const { user, profile } = useAuth();
-  const { isSupervisor, isManager, isAdmin, roles } = useUserRole();
+  const { user } = useAuth();
+  const { isSupervisor, roles } = useUserRole();
   const { hasPermission } = usePermissions();
   const { queues } = useQueues();
   const { agents } = useAgents();
@@ -83,8 +82,6 @@ export function TicketTabs({
   // Operação ampla — legacy/fallback se permissões não estiverem populadas ainda
   const canShowAll = canSeeAllDepartments || isSupervisor;
 
-  // Conta tickets pelo overlay real (open/in_progress/resolved). Quando
-  // um contato ainda não tem registro, assumimos `open` (bootstrap).
   const counts = useMemo(() => {
     const userId = user?.id;
     let openCount = 0;
@@ -331,7 +328,7 @@ export function TicketTabs({
                       'inbox.view_mine';
 
                     if (!hasPermission(requiredPermission) && opt.id !== 'mine') {
-                      console.error(`[AUDIT] Acesso não autorizado ao escopo ${opt.id} pelo usuário ${user?.id}`);
+                      console.error(`[AUDIT] Unauthorized access attempt to scope ${opt.id} by user ${user?.id}`);
                       await supabase.from('audit_logs').insert({
                         user_id: user?.id,
                         action: 'UNAUTHORIZED_INBOX_SCOPE_ACCESS',
@@ -344,18 +341,6 @@ export function TicketTabs({
                       });
                       toast.error("Você não tem permissão para visualizar este escopo.");
                       return;
-                    }
-
-                    if (opt.id !== 'mine') {
-                      await supabase.from('audit_logs').insert({
-                        user_id: user?.id,
-                        action: 'INBOX_SCOPE_CHANGE',
-                        entity_type: 'inbox_scope',
-                        details: {
-                          scope: opt.id,
-                          timestamp: new Date().toISOString()
-                        }
-                      });
                     }
 
                     onScopeChange?.(opt.id);
