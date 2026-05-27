@@ -29,12 +29,13 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     const params = new URLSearchParams(window.location.search);
     return params.get('showAll') === 'true' || localStorage.getItem('inbox_show_all') === 'true';
   });
-  const [scope, setScope] = useState<'mine' | 'department' | 'all'>(() => {
+  const [scope, setScope] = useState<string>(() => {
     const params = new URLSearchParams(window.location.search);
     const scopeParam = params.get('scope');
-    if (scopeParam === 'mine' || scopeParam === 'department' || scopeParam === 'all') return scopeParam;
-    return (localStorage.getItem('inbox_scope') as any) || 'mine';
+    if (scopeParam) return scopeParam;
+    return localStorage.getItem('inbox_scope') || 'mine';
   });
+  const { hasPermission } = usePermissions();
   const [departmentAgentIds, setDepartmentAgentIds] = useState<string[]>([]);
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
@@ -159,6 +160,17 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     }
   }, [showAll, scope]);
 
+  // Load custom scopes
+  const { data: customScopes = [] } = useQuery({
+    queryKey: ['inbox-custom-scopes'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inbox_custom_scopes').select('*').eq('is_active', true);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
   // Load contact_tags mapping
   const { data: contactTagsMap = {} } = useQuery({
     queryKey: ['contact-tags-map'],
@@ -227,6 +239,19 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
 
     // 1. Tab and Status Filtering
     if (searchTrimmed.length === 0) {
+      // Channel visibility filtering
+      const canSeeWhatsapp = hasPermission('inbox.view_whatsapp');
+      const canSeeInstagram = hasPermission('inbox.view_instagram');
+      const canSeeChat = hasPermission('inbox.view_chat');
+
+      result = result.filter(c => {
+        const channel = c.contact?.channel_type;
+        if (channel === 'whatsapp' && !canSeeWhatsapp) return false;
+        if (channel === 'instagram' && !canSeeInstagram) return false;
+        if ((channel === 'chat' || channel === 'webchat') && !canSeeChat) return false;
+        return true;
+      });
+
       if (mainTab === 'open') {
         result = result.filter(c => {
           const s = statusOf(c.contact.id);
@@ -238,16 +263,29 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
           if (statusFilter === 'unread' && c.unreadCount === 0) return false;
 
           if (subTab === 'attending') {
-            // Backwards-compat: showAll === true equivale a scope='all'
             const effectiveScope = showAll ? 'all' : scope;
+            
+            // Native scopes
             if (effectiveScope === 'all') return true;
+            
             const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
             if (effectiveScope === 'department') {
               if (!assignee) return false;
               return departmentAgentIds.includes(assignee);
             }
-            // 'mine'
-            return assignee === profileId;
+            if (effectiveScope === 'mine') {
+              return assignee === profileId;
+            }
+
+            // Custom scopes filtering logic
+            const customScope = customScopes.find(s => s.name === effectiveScope);
+            if (customScope) {
+              // For now, if no criteria defined, we just show all in this scope
+              // Future: implement criteria matching here
+              return true;
+            }
+
+            return assignee === profileId; // Fallback
           }
           
           if (subTab === 'waiting') {
@@ -454,6 +492,7 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
     filters, setFilters,
     search, setSearch,
     filteredConversations,
+    customScopes,
     clearUrlFilters,
   };
 }
