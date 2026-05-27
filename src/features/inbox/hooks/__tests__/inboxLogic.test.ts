@@ -1,24 +1,25 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 
 // Mocking dependencies
+const mockHasPermission = vi.fn();
+
 vi.mock('@/features/auth', () => ({
   usePermissions: () => ({
-    hasPermission: vi.fn((perm) => {
-      if (perm === 'inbox.view_department') return true;
-      return false;
-    }),
+    hasPermission: mockHasPermission,
   }),
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: () => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: [], error: null }),
-      }),
-    }),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
+      })),
+    })),
   },
 }));
 
@@ -32,56 +33,78 @@ vi.mock('@/hooks/useUrlFilters', () => ({
 
 vi.mock('@/features/inbox', () => ({
   useAllTicketStates: () => ({}),
-  filterByContactType: (convs: any) => convs,
+  filterByContactType: (convs: any, type: any) => {
+    if (!type) return convs;
+    return convs.filter((c: any) => c.contact.contact_type === type);
+  },
   useFailureMetricsBatch: () => ({ data: {} }),
 }));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 describe('useInboxFilters Business Rules', () => {
   const mockConversations = [
     {
-      contact: { id: 'c1', assigned_to: 'agent-1' },
+      contact: { id: 'c1', assigned_to: 'agent-1', contact_type: 'cliente' },
       messages: [],
       unreadCount: 0,
     },
     {
-      contact: { id: 'c2', assigned_to: 'agent-2' },
+      contact: { id: 'c2', assigned_to: 'agent-2', contact_type: 'colaborador' },
       messages: [],
       unreadCount: 0,
     },
     {
-      contact: { id: 'c3', assigned_to: null },
+      contact: { id: 'c3', assigned_to: null, contact_type: 'cliente' },
       messages: [],
       unreadCount: 0,
     }
   ] as any;
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('filters by department scope for coordinators', () => {
+    mockHasPermission.mockImplementation((perm) => perm === 'inbox.view_department');
+
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
-    // Simulating scope change to department
     result.current.setScope('department');
     result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
 
     const filtered = result.current.filteredConversations;
     
-    // Should see c1 and c2 (assigned to dept agents), but not c3 (unassigned)
     expect(filtered.length).toBe(2);
     expect(filtered.map(f => f.contact.id)).toContain('c1');
     expect(filtered.map(f => f.contact.id)).toContain('c2');
   });
 
   it('filters by specific agent when selected by coordinator', () => {
+    mockHasPermission.mockImplementation((perm) => perm === 'inbox.view_department');
+
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
-    // Setup: Dept scope + Filter specific agent-2
     result.current.setScope('department');
     result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+    
+    // Simulate setting agent filter
     result.current.setFilters({
         status: [],
         tags: [],
@@ -91,19 +114,17 @@ describe('useInboxFilters Business Rules', () => {
 
     const filtered = result.current.filteredConversations;
     
-    // Should only see agent-2 conversations
     expect(filtered.length).toBe(1);
     expect(filtered[0].contact.id).toBe('c2');
   });
 
   it('shows only mine for common agents', () => {
-    // Override permission mock for common agent
-    vi.mocked(require('@/features/auth').usePermissions().hasPermission).mockReturnValue(false);
+    mockHasPermission.mockReturnValue(false);
 
     const { result } = renderHook(() => useInboxFilters({
       conversations: mockConversations,
       profileId: 'agent-1'
-    }));
+    }), { wrapper });
 
     result.current.setScope('mine');
     const filtered = result.current.filteredConversations;
@@ -112,3 +133,4 @@ describe('useInboxFilters Business Rules', () => {
     expect(filtered[0].contact.id).toBe('c1');
   });
 });
+
