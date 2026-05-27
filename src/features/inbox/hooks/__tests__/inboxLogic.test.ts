@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -24,11 +24,14 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 vi.mock('@/hooks/useUrlFilters', () => ({
-  useUrlFilters: () => ({
-    filters: { status: [], tags: [], agentId: null },
-    setFilters: vi.fn(),
-    clearFilters: vi.fn(),
-  }),
+  useUrlFilters: () => {
+      const [f, s] = React.useState({ status: [], tags: [], agentId: null });
+      return {
+        filters: f,
+        setFilters: s,
+        clearFilters: vi.fn(),
+      };
+  },
 }));
 
 vi.mock('@/features/inbox', () => ({
@@ -73,6 +76,7 @@ describe('useInboxFilters Business Rules', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   it('filters by department scope for coordinators', () => {
@@ -83,8 +87,10 @@ describe('useInboxFilters Business Rules', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
-    result.current.setScope('department');
-    result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+    act(() => {
+        result.current.setScope('department');
+        result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+    });
 
     const filtered = result.current.filteredConversations;
     
@@ -101,15 +107,16 @@ describe('useInboxFilters Business Rules', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
-    result.current.setScope('department');
-    result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
-    
-    // Simulate setting agent filter
-    result.current.setFilters({
-        status: [],
-        tags: [],
-        agentId: 'agent-2',
-        dateRange: { from: null, to: null }
+    act(() => {
+        result.current.setScope('department');
+        result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+        
+        result.current.setFilters({
+            status: [],
+            tags: [],
+            agentId: 'agent-2',
+            dateRange: { from: null, to: null }
+        } as any);
     });
 
     const filtered = result.current.filteredConversations;
@@ -126,11 +133,15 @@ describe('useInboxFilters Business Rules', () => {
       profileId: 'agent-1'
     }), { wrapper });
 
-    result.current.setScope('mine');
+    act(() => {
+        result.current.setScope('mine');
+    });
+
     const filtered = result.current.filteredConversations;
     
     expect(filtered.length).toBe(1);
     expect(filtered[0].contact.id).toBe('c1');
   });
 });
+
 
