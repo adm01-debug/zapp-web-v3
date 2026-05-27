@@ -18,7 +18,7 @@ jobs:
           base_ref="origin/${{ github.base_ref }}"
           git fetch origin "${{ github.base_ref }}" --depth=1
 
-          if git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' \
+          if git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
             | grep -E '^\+[^+].*console\.log' \
             | grep -v '// ignore-audit'; then
             echo "Erro: console.log novo detectado em código de produção. Use logger.ts."
@@ -33,9 +33,9 @@ jobs:
           base_ref="origin/${{ github.base_ref }}"
           git fetch origin "${{ github.base_ref }}" --depth=1
 
-          new_any_count=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- 'src/**/*.ts' 'src/**/*.tsx' \
-            | grep -E '^\+[^+].*:\s*any\b' \
-            | grep -v '// ignore-audit' \
+          new_any_count=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
+            | { grep -E '^\+[^+].*:\s*any\b' || true; } \
+            | { grep -v '// ignore-audit' || true; } \
             | wc -l \
             | tr -d ' ')
 
