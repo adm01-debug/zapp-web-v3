@@ -14,6 +14,7 @@ import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
 import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { MOCK_CONVERSATIONS } from '../components/conversation-list/__mocks__/mockConversations';
 export type { MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
 
 const log = getLogger('RealtimeMessages');
@@ -346,7 +347,7 @@ export function useRealtimeMessages() {
   const filteredConversations = useMemo(() => {
     // Fallback to mocks when there's no real data and mocks are enabled (demo mode)
     let filtered = (conversations.length === 0 && MOCKS_FLAG)
-      ? [...(require('@/features/inbox/components/conversation-list/__mocks__/mockConversations').MOCK_CONVERSATIONS as ConversationWithMessages[])]
+      ? [...(MOCK_CONVERSATIONS as unknown as ConversationWithMessages[])]
       : [...conversations];
 
 
