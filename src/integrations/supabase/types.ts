@@ -5136,6 +5136,7 @@ export type Database = {
           max_chats: number | null
           name: string
           nickname: string | null
+          online_status: string | null
           permissions: Json | null
           phone: string | null
           role: string | null
@@ -5161,6 +5162,7 @@ export type Database = {
           max_chats?: number | null
           name: string
           nickname?: string | null
+          online_status?: string | null
           permissions?: Json | null
           phone?: string | null
           role?: string | null
@@ -5186,6 +5188,7 @@ export type Database = {
           max_chats?: number | null
           name?: string
           nickname?: string | null
+          online_status?: string | null
           permissions?: Json | null
           phone?: string | null
           role?: string | null
