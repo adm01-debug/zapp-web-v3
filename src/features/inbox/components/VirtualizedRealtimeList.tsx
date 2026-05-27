@@ -6,9 +6,10 @@ import { useDensity } from '@/hooks/useDensity';
 import { MOCK_CONVERSATIONS } from './conversation-list/__mocks__/mockConversations';
 import { ConversationItem as SharedConversationItem } from './conversation-list/ConversationItem';
 
-const USE_MOCKS =
+// Mocks: enabled when localStorage flag is set OR when no real conversations exist (demo fallback)
+const MOCKS_FLAG =
   typeof window !== 'undefined' &&
-  window.localStorage?.getItem('mockConversations') === '1';
+  window.localStorage?.getItem('mockConversations') !== '0';
 
 interface VirtualizedRealtimeListProps {
   conversations: ConversationWithMessages[];
@@ -93,7 +94,8 @@ export function VirtualizedRealtimeList({
   const parentRef = useRef<HTMLDivElement>(null);
 
   const safeConversations = useMemo(() => {
-    const base = USE_MOCKS ? MOCK_CONVERSATIONS : conversations;
+    const hasReal = Array.isArray(conversations) && conversations.length > 0;
+    const base = !hasReal && MOCKS_FLAG ? MOCK_CONVERSATIONS : conversations;
     if (!Array.isArray(base)) return [];
     return base.filter(c => c?.contact?.id);
   }, [conversations]);
