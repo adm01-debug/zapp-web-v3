@@ -53,37 +53,71 @@ interface SearchResult {
 export function RealtimeInboxView() {
   const isMobile = useIsMobile();
   const inbox = useRealtimeInbox();
+  const { profile } = useAuth();
+  
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const saved = localStorage.getItem('zapp:sidebarWidth');
+    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}` : 'zapp:sidebarWidth';
+    const saved = localStorage.getItem(key);
     return saved ? parseInt(saved, 10) : 340;
   });
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const isResizing = useRef(false);
+  const lastWidth = useRef(340);
 
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', stopResizing);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, []);
+  const saveWidth = useCallback((width: number) => {
+    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}` : 'zapp:sidebarWidth';
+    localStorage.setItem(key, width.toString());
+  }, [profile?.id]);
 
   const stopResizing = useCallback(() => {
     isResizing.current = false;
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', stopResizing);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', stopResizing);
     document.body.style.cursor = 'default';
     document.body.style.userSelect = 'auto';
-  }, []);
+  }, [handleMouseMove]);
+
+  const handleResize = useCallback((clientX: number) => {
+    const newWidth = clientX;
+    if (newWidth >= 280 && newWidth <= 600) {
+      setSidebarWidth(newWidth);
+      saveWidth(newWidth);
+      lastWidth.current = newWidth;
+    }
+  }, [saveWidth]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing.current) return;
-    const newWidth = e.clientX;
-    if (newWidth >= 280 && newWidth <= 600) {
-      setSidebarWidth(newWidth);
-      localStorage.setItem('zapp:sidebarWidth', newWidth.toString());
-    }
+    handleResize(e.clientX);
+  }, [handleResize]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!isResizing.current) return;
+    handleResize(e.touches[0].clientX);
+  }, [handleResize]);
+
+  const startResizing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResizing);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', stopResizing);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [handleMouseMove, handleTouchMove, stopResizing]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsCollapsed(prev => !prev);
   }, []);
+
+  const resetWidth = useCallback(() => {
+    setSidebarWidth(340);
+    saveWidth(340);
+    setIsCollapsed(false);
+  }, [saveWidth]);
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
   useEvolutionAutoReconnect('wpp2');
@@ -214,23 +248,64 @@ export function RealtimeInboxView() {
       )}
 
 
-      <div className="flex flex-row h-full min-h-0 w-full relative">
-        <ConversationListSidebar 
-          inbox={inbox} 
-          inboxFilters={inboxFilters} 
-          bulkActions={bulkActions} 
-          pullToRefresh={pullToRefresh}
-          width={sidebarWidth}
-        />
+      <div className="flex flex-row h-full min-h-0 w-full relative group/inbox">
+        <div 
+          className={cn(
+            "relative flex h-full transition-all duration-300 ease-in-out",
+            isCollapsed && !isMobile ? "w-0 overflow-hidden" : ""
+          )}
+          style={!isMobile && !isCollapsed ? { width: `${sidebarWidth}px` } : {}}
+        >
+          <ConversationListSidebar 
+            inbox={inbox} 
+            inboxFilters={inboxFilters} 
+            bulkActions={bulkActions} 
+            pullToRefresh={pullToRefresh}
+            width={sidebarWidth}
+          />
+        </div>
         
         {!isMobile && (
-          <div
-            onMouseDown={startResizing}
-            className="w-1.5 h-full cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors absolute z-50 group"
-            style={{ left: `${sidebarWidth}px` }}
-          >
-            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[2px] bg-transparent group-hover:bg-primary/50" />
-          </div>
+          <>
+            {/* Botão de Toggle (Recolher/Expandir) */}
+            <button
+              onClick={toggleSidebar}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 z-[60] w-5 h-10 bg-background border border-border shadow-md rounded-r-md flex items-center justify-center hover:bg-muted transition-all duration-200",
+                isCollapsed ? "left-0" : ""
+              )}
+              style={!isCollapsed ? { left: `${sidebarWidth}px` } : {}}
+              title={isCollapsed ? "Expandir lista" : "Recolher lista"}
+            >
+              <div className={cn("w-1 h-3 rounded-full bg-muted-foreground/40", isCollapsed ? "ml-0.5" : "mr-0.5")} />
+            </button>
+
+            {/* Reset Width Button */}
+            {!isCollapsed && sidebarWidth !== 340 && (
+              <button
+                onClick={resetWidth}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] px-3 py-1.5 bg-background/80 backdrop-blur-sm border border-border rounded-full text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-background shadow-sm transition-all opacity-0 group-hover/inbox:opacity-100"
+                title="Resetar largura padrão"
+              >
+                Resetar (340px)
+              </button>
+            )}
+
+            {/* Draggable Handle */}
+            <div
+              onMouseDown={startResizing}
+              onTouchStart={startResizing}
+              className={cn(
+                "w-1.5 h-full cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors absolute z-50 group/handle",
+                sidebarWidth <= 280 ? "border-l-2 border-destructive/50 bg-destructive/5" : "",
+                sidebarWidth >= 600 ? "border-r-2 border-destructive/50 bg-destructive/5" : "",
+                isCollapsed ? "hidden" : ""
+              )}
+              style={{ left: `${sidebarWidth}px` }}
+            >
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-border group-hover/handle:bg-primary/50" />
+            </div>
+          </>
         )}
       </div>
 
