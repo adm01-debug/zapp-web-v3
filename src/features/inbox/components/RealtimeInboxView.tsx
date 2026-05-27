@@ -115,6 +115,18 @@ export function RealtimeInboxView() {
     stopResizingRef.current = stopResizing;
   }, [handleMouseMove, handleTouchMove, stopResizing]);
 
+  // Load width when profile is available
+  useEffect(() => {
+    if (profile?.id) {
+      const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
+      const key = `zapp:sidebarWidth:${profile.id}${workspacePart}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        setSidebarWidth(parseInt(saved, 10));
+      }
+    }
+  }, [profile?.id, profile?.department_id]);
+
   // Handle window resize to clamp sidebar width
   useEffect(() => {
     const onWindowResize = () => {
