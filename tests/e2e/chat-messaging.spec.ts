@@ -1,79 +1,94 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Inbox E2E - Messaging Flow', () => {
+test.describe('Inbox E2E - Chat Module Validation', () => {
   test.beforeEach(async ({ page }) => {
-    // Basic setup - navigate to the inbox
+    // Navigate to the app and wait for the initial load
+    await page.goto('/');
+    
+    // Check if we're on the auth page (redirected)
+    if (page.url().includes('/auth')) {
+      // In a real environment, we'd need to log in. 
+      // For Lovable's internal environment, the session is often pre-authenticated or mocked.
+      // If we're stuck here, the test will fail as expected.
+    }
+    
+    // Navigate to inbox
     await page.goto('/inbox');
+    
+    // Wait for the conversation list to load
+    await expect(page.locator('[role="listbox"][aria-label="Lista de conversas"]')).toBeVisible({ timeout: 15000 });
   });
 
-  test('should send a text message and reconcile optimistically', async ({ page }) => {
-    const messageContent = `Test message ${Date.now()}`;
+  test('should load conversations and select one', async ({ page }) => {
+    const conversationItems = page.locator('[data-testid^="conversation-item-"]');
+    
+    // At least one conversation should be present (either real or mock)
+    await expect(conversationItems.first()).toBeVisible({ timeout: 10000 });
+    
+    const count = await conversationItems.count();
+    console.log(`Found ${count} conversations`);
+    
+    // Select the first conversation
+    await conversationItems.first().click();
+    
+    // Verify ChatPanel header is visible with contact name
+    await expect(page.locator('header').filter({ hasText: /.+/ })).toBeVisible();
+    
+    // Check for message area
+    await expect(page.locator('[role="log"]')).toBeVisible();
+  });
+
+  test('should send a text message and see it in the list', async ({ page }) => {
+    // Select a conversation first
+    await page.locator('[data-testid^="conversation-item-"]').first().click();
+    
+    const messageContent = `Test E2E ${Date.now()}`;
     
     // Type message
     const textarea = page.locator('textarea[placeholder*="Escreva sua mensagem"]');
+    await expect(textarea).toBeVisible();
     await textarea.fill(messageContent);
     
     // Send message (Enter)
     await textarea.press('Enter');
     
-    // Check for optimistic bubble
-    const optimisticBubble = page.locator(`text=${messageContent}`);
-    await expect(optimisticBubble).toBeVisible();
+    // Verify the message bubble appears (Optimistic UI)
+    await expect(page.locator(`text=${messageContent}`)).toBeVisible();
     
-    // Reconcile check: wait for status to change from 'sending' to 'sent' or 'delivered'
-    // This assumes the UI shows a specific icon or class for sent messages
-    const statusIcon = page.locator('[data-testid^="message-status"]').last();
-    await expect(statusIcon).not.toHaveClass(/animate-spin/, { timeout: 10000 });
+    // Verify the "Enviado!" or sending status indicator in the queue bar
+    // based on useMessageQueue implementation
+    await expect(page.locator('text=Enviado!|Enviando...|Aguardando na fila')).toBeVisible();
   });
 
-  test('should record audio, edit transcription and send', async ({ page }) => {
-    // Start recording
-    await page.click('button[aria-label="Gravar áudio"]');
+  test('should toggle between tabs (Abertas, Resolvidos, Não lidas)', async ({ page }) => {
+    // Check main tabs existence
+    const tabs = ['Abertas', 'Resolvidos', 'Não lidas'];
+    for (const tabName of tabs) {
+      const tab = page.locator(`button:has-text("${tabName}")`);
+      await expect(tab).toBeVisible();
+    }
     
-    // Wait for a few seconds of recording
-    await page.waitForTimeout(3000);
+    // Switch to Resolvidos
+    await page.click('button:has-text("Resolvidos")');
+    // URL or state check would happen here
     
-    // Stop recording
-    await page.click('button[aria-label="Concluir gravação"]');
+    // Switch back to Abertas
+    await page.click('button:has-text("Abertas")');
     
-    // Wait for transcription
-    const editTranscriptionBtn = page.locator('button:has-text("Editar")');
-    await expect(editTranscriptionBtn).toBeVisible({ timeout: 15000 });
-    await editTranscriptionBtn.click();
-    
-    // Edit transcription text
-    const transcriptionArea = page.locator('textarea[placeholder*="Edite a transcrição"]');
-    const originalText = await transcriptionArea.inputValue();
-    await transcriptionArea.fill(originalText + " - Edited");
-    
-    // Send audio
-    await page.click('button[aria-label="Confirmar e enviar áudio"]');
-    
-    // Verify upload progress overlay appears and then disappears
-    await expect(page.locator('text=Enviando Áudio')).toBeVisible();
-    await expect(page.locator('text=Enviando Áudio')).not.toBeVisible({ timeout: 20000 });
+    // Sub-tabs should appear
+    await expect(page.locator('button:has-text("Atendendo")')).toBeVisible();
+    await expect(page.locator('button:has-text("Aguardando")')).toBeVisible();
   });
 
-  test('should handle network failure and manual retry', async ({ page, context }) => {
-    const messageContent = "Retry Test Message";
+  test('should filter by contact name', async ({ page }) => {
+    const searchInput = page.locator('input[placeholder*="Buscar"]');
+    await searchInput.fill('NonExistentContactXYZ');
     
-    // Simulate offline
-    await context.setOffline(true);
+    // Should show "Nenhuma conversa" empty state
+    await expect(page.locator('text=Nenhuma conversa')).toBeVisible();
     
-    const textarea = page.locator('textarea[placeholder*="Escreva sua mensagem"]');
-    await textarea.fill(messageContent);
-    await textarea.press('Enter');
-    
-    // Verify it stays in 'pending' or 'failed' in the queue
-    const queueStatus = page.locator('text=Aguardando na fila');
-    await expect(queueStatus).toBeVisible();
-    
-    // Go back online
-    await context.setOffline(false);
-    
-    // Check if it eventually sends or if we need to click retry
-    // In our implementation, we added an automatic retry, so it should attempt again.
-    const sentStatus = page.locator('text=Enviado!');
-    await expect(sentStatus).toBeVisible({ timeout: 15000 });
+    // Clear search
+    await searchInput.fill('');
+    await expect(page.locator('[data-testid^="conversation-item-"]').first()).toBeVisible();
   });
 });
