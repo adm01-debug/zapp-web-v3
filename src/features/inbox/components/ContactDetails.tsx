@@ -119,20 +119,16 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
         </Button>
       </div>
 
-      <AnimatePresence>
-        {showCompactHeader && (
-          <ContactHeaderSection contact={contact} enrichedData={enrichedData} conversation={conversation} onQuickAction={handleQuickAction} isCompact />
-        )}
-      </AnimatePresence>
-
-      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin bg-background/50">
+      <div className="shrink-0">
         <ContactHeaderSection
           contact={contact} enrichedData={enrichedData} conversation={conversation}
           onQuickAction={handleQuickAction} hasExpandedSections={accordionValue.length > 0}
           onCollapseAll={() => { setAccordionValue([]); saveAccordionState([]); }}
         />
+      </div>
 
-        <AnalysisBadges contactId={contact.id} className="px-4 pb-2" />
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin bg-background/50">
+        <AnalysisBadges contactId={contact.id} className="px-4 pb-2 pt-2" />
 
         <Accordion type="multiple" value={accordionValue} onValueChange={handleAccordionChange} className="w-full">
           <ContactAccordionSections
@@ -145,6 +141,7 @@ export function ContactDetails({ conversation, onClose }: ContactDetailsProps) {
           <KnowledgeBaseSearchPanel />
         </div>
       </div>
+
 
       <EditContactDialog
         open={editDialogOpen} onOpenChange={setEditDialogOpen}
