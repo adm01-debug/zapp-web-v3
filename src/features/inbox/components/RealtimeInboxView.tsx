@@ -60,7 +60,10 @@ export function RealtimeInboxView() {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
     const key = profile?.id ? `zapp:sidebarWidth:${profile.id}${workspacePart}` : 'zapp:sidebarWidth';
     const saved = localStorage.getItem(key);
-    return saved ? parseInt(saved, 10) : 391;
+    const initialWidth = saved ? parseInt(saved, 10) : 391;
+    // Clamp initial width
+    const maxWidth = typeof window !== 'undefined' ? Math.min(600, window.innerWidth - (isMobile ? 0 : 60)) : 600;
+    return Math.min(initialWidth, maxWidth);
   });
   
   const isResizing = useRef(false);
@@ -308,7 +311,7 @@ export function RealtimeInboxView() {
           className={cn(
             "absolute top-1/2 -translate-y-1/2 z-[60] w-6 h-12 bg-background border border-border shadow-lg rounded-r-xl flex items-center justify-center hover:bg-muted active:scale-95 transition-all duration-200",
             (isMobile && inbox.selectedContactId) && "hidden",
-            sidebarWidth === 391 && "opacity-0 pointer-events-none"
+            (sidebarWidth === 391 || (isMobile && sidebarWidth === window.innerWidth)) && "opacity-0 pointer-events-none"
           )}
           style={{ left: `${sidebarWidth}px` }}
           title="Resetar largura padrão (391px)"
