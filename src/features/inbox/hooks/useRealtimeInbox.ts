@@ -230,18 +230,23 @@ export function useRealtimeInbox() {
     if (!profile?.id) return;
 
     const updateStatus = async (status: string) => {
-      setOnlineStatus(status);
-      setIsOnline(status === 'online');
+      const isVisible = document.visibilityState === 'visible';
+      const effectiveStatus = isVisible ? status : 'offline';
+      
+      setOnlineStatus(effectiveStatus);
+      setIsOnline(effectiveStatus === 'online');
       
       const now = Date.now();
       const appWindow = window as Window & { __lastStatusUpdate?: number };
       const lastUpdate = appWindow.__lastStatusUpdate || 0;
-      if (now - lastUpdate < 30000 && status !== 'offline') return;
+      
+      // Debounce: only update DB every 60s if status didn't change to 'offline'
+      if (now - lastUpdate < 60000 && effectiveStatus !== 'offline') return;
       appWindow.__lastStatusUpdate = now;
 
       await supabase.from('profiles')
         .update({ 
-          online_status: status as 'online' | 'offline' | 'busy',
+          online_status: effectiveStatus as 'online' | 'offline' | 'busy',
           last_seen: new Date().toISOString()
         })
         .eq('id', profile.id);

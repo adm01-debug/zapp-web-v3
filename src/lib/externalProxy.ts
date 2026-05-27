@@ -169,7 +169,7 @@ function deriveTelemetryMeta(body: Record<string, unknown>): {
 // OPTIONS preflights with zero POST completions). We dedupe by a stable
 // signature of the request body for a short window and return the same
 // in-flight Promise to all callers.
-const COALESCE_WINDOW_MS = 250;
+const COALESCE_WINDOW_MS = 500; // Increased to 500ms to better handle burst mounts
 const inflight = new Map<string, { promise: Promise<ProxyResponse<unknown>>; expiresAt: number }>();
 
 function coalesceKey(body: Record<string, unknown>): string | null {
