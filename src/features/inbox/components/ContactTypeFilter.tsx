@@ -53,6 +53,8 @@ export const FILTER_OPTIONS: FilterOption[] = [
     match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'prestador_servico' },
   { value: 'transportadora', label: 'Transportadoras', icon: Truck, iconColor: 'text-info',
     match: (c) => !isGroup(c.contact.phone) && c.contact.contact_type === 'transportadora' },
+  { value: 'outros', label: 'Outros', icon: Users, iconColor: 'text-muted-foreground',
+    match: (c) => !isGroup(c.contact.phone) && !['cliente', 'fornecedor', 'transportadora'].includes(c.contact.contact_type || 'cliente') },
 ];
 
 const SEPARATOR_AFTER = new Set(['individual', 'grupo_sem_categoria']);
