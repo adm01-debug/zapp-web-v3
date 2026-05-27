@@ -2,23 +2,49 @@ name: Branch Protection Sentinel
 
 on:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   check-quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check for console.log
+        with:
+          fetch-depth: 0
+
+      - name: Check for new console.log
         run: |
-          if grep -r "console.log" src/ --include="*.ts" --include="*.tsx" | grep -v "// ignore-audit"; then
-            echo "Erro: console.log detectado em código de produção. Use logger.ts."
+          set -euo pipefail
+          base_ref="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}" --depth=1
+
+          matches=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
+            | { grep -E '^\+[^+].*console\.log' || true; } \
+            | { grep -v '// ignore-audit' || true; })
+
+          if [ -n "$matches" ]; then
+            echo "$matches"
+            echo "Erro: console.log novo detectado em código de produção. Use logger.ts."
             exit 1
           fi
-      - name: Check for any
+
+          echo "Nenhum console.log novo detectado."
+
+      - name: Check for new explicit any
         run: |
-          ANY_COUNT=$(grep -rnE ":\s*any\b" src/ --include="*.ts" --include="*.tsx" | wc -l)
-          if [ $ANY_COUNT -gt 200 ]; then
-            echo "Erro: Limite de 'any' excedido ($ANY_COUNT > 200). Reduza o débito técnico."
+          set -euo pipefail
+          base_ref="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}" --depth=1
+
+          new_any_count=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
+            | { grep -E '^\+[^+].*:\s*any\b' || true; } \
+            | { grep -v '// ignore-audit' || true; } \
+            | wc -l \
+            | tr -d ' ')
+
+          if [ "$new_any_count" -gt 0 ]; then
+            echo "Erro: explicit any novo detectado ($new_any_count). Tipar corretamente ou marcar com // ignore-audit quando inevitável."
             exit 1
           fi
+
+          echo "Nenhum explicit any novo detectado."
