@@ -14,12 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/features/auth';
-import { useUserRole } from '@/features/auth';
+import { useUserRole, usePermissions } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
-import { useAllTicketStates } from '@/features/inbox';
-import { ConversationWithMessages } from '@/features/inbox';
+import { useAllTicketStates, ConversationWithMessages } from '@/features/inbox';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export type MainTab = 'open' | 'resolved' | 'search' | 'unread';
 export type SubTab = 'attending' | 'waiting';
@@ -55,18 +56,20 @@ export function TicketTabs({
   onQueueChange,
 }: TicketTabsProps) {
   const { user, profile } = useAuth();
-  const { isSupervisor, isManager, isAdmin } = useUserRole();
+  const { isSupervisor, isManager, isAdmin, roles } = useUserRole();
+  const { hasPermission } = usePermissions();
   const { queues } = useQueues();
   const { density } = useDensity();
   const isCompact = density === 'compact' || density === 'dense';
   const ticketStates = useAllTicketStates();
   const isMobile = useIsMobile();
-  // Operação ampla — supervisor+ vê todos os tickets (admin e dev incluídos por hierarquia).
-  const canShowAll = isSupervisor;
-  // Coordenador de departamento (supervisor) vê o próprio depto.
-  // Gestor geral / admin / dev veem TODOS os departamentos.
-  const canSeeDepartment = isSupervisor && !!profile?.department_id;
-  const canSeeAllDepartments = isManager || isAdmin;
+
+  // Controle de visibilidade baseado em permissões específicas
+  const canSeeDepartment = hasPermission('inbox.view_department');
+  const canSeeAllDepartments = hasPermission('inbox.view_all');
+  
+  // Operação ampla — legacy/fallback se permissões não estiverem populadas ainda
+  const canShowAll = canSeeAllDepartments || isSupervisor;
 
   // Conta tickets pelo overlay real (open/in_progress/resolved). Quando
   // um contato ainda não tem registro, assumimos `open` (bootstrap).
@@ -254,7 +257,7 @@ export function TicketTabs({
       )}
 
       {/* Scope selector — visibilidade por papel */}
-      {(canSeeDepartment || canSeeAllDepartments) && mainTab === 'open' && subTab === 'attending' && (
+      {mainTab === 'open' && subTab === 'attending' && (
         <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <Users className="w-3 h-3 text-primary" />
@@ -272,9 +275,43 @@ export function TicketTabs({
                   type="button"
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => {
+                  onClick={async () => {
+                    // Verificação de segurança (Auditoria)
+                    const requiredPermission = 
+                      opt.id === 'all' ? 'inbox.view_all' : 
+                      opt.id === 'department' ? 'inbox.view_department' : 
+                      'inbox.view_mine';
+
+                    if (!hasPermission(requiredPermission) && opt.id !== 'mine') {
+                      console.error(`[AUDIT] Acesso não autorizado ao escopo ${opt.id} pelo usuário ${user?.id}`);
+                      await supabase.from('audit_logs').insert({
+                        user_id: user?.id,
+                        action: 'UNAUTHORIZED_INBOX_SCOPE_ACCESS',
+                        entity_type: 'inbox_scope',
+                        details: {
+                          attempted_scope: opt.id,
+                          user_roles: roles,
+                          timestamp: new Date().toISOString()
+                        }
+                      });
+                      toast.error("Você não tem permissão para visualizar este escopo.");
+                      return;
+                    }
+
+                    // Auditoria de acesso legítimo (opcional, mas bom para compliance)
+                    if (opt.id !== 'mine') {
+                      await supabase.from('audit_logs').insert({
+                        user_id: user?.id,
+                        action: 'INBOX_SCOPE_CHANGE',
+                        entity_type: 'inbox_scope',
+                        details: {
+                          scope: opt.id,
+                          timestamp: new Date().toISOString()
+                        }
+                      });
+                    }
+
                     onScopeChange?.(opt.id);
-                    // Mantém compat com showAll legado
                     onShowAllChange(opt.id === 'all');
                   }}
                   className={cn(
