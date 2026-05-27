@@ -57,9 +57,6 @@ export const Sidebar = React.memo(function Sidebar({ currentView, onViewChange, 
 
       {/* Logo + Toggle */}
       <div className={cn('flex items-center h-[64px] shrink-0 px-4', collapsed ? 'justify-center' : 'justify-between')}>
-        <button onClick={() => onViewChange('inbox')} className="w-[40px] h-[40px] rounded-2xl flex items-center justify-center bg-primary hover:bg-primary/90 transition-all duration-300 shadow-sm hover:shadow-glow-primary shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none" aria-label="ZAPP — Ir para Inbox">
-          <span className="text-primary-foreground font-bold text-lg tracking-tighter">Z</span>
-        </button>
         {!collapsed && <span className="text-sm font-bold text-foreground tracking-tight ml-2 mr-auto">ZAPP</span>}
         {!collapsed && (
           <Tooltip delayDuration={200}><TooltipTrigger asChild>
