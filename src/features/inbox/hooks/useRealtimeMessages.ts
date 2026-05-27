@@ -245,7 +245,7 @@ export function useRealtimeMessages() {
         table: dbTable('messages'),
       },
         (payload) => {
-          if (active) wrapMessagesHandler('useRealtimeMessages', handleNewMessage)(payload);
+          if (active) wrapMessagesHandler('useRealtimeMessages', handleNewMessage)(payload as RealtimePostgresChangesPayload<RealtimeMessage>);
         })
       .on('postgres_changes', { 
         event: 'UPDATE', 
@@ -253,7 +253,7 @@ export function useRealtimeMessages() {
         table: dbTable('messages'),
       },
         (payload) => {
-          if (active) wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate)(payload);
+          if (active) wrapMessagesHandler('useRealtimeMessages', handleMessageUpdate)(payload as RealtimePostgresChangesPayload<RealtimeMessage>);
         })
       .subscribe((status) => { 
         if (active) log.debug('Subscription status', { status }); 

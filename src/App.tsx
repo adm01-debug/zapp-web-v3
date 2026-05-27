@@ -1,4 +1,3 @@
-
 import { lazy, Suspense, useEffect, useState, forwardRef } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { getLogger } from "@/lib/logger";
