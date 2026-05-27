@@ -48,9 +48,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  return React.createElement(QueryClientProvider, { client: queryClient }, children);
+};
 
 describe('useInboxFilters Business Rules', () => {
   const mockConversations = [
