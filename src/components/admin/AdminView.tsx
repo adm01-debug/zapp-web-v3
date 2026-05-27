@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Shield, Users, Search, Crown, UserCog, User, History, RefreshCw,
-  UserPlus, Building, Eye, Loader2, Brain,
+  UserPlus, Building, Eye, Loader2, Brain, Code, Briefcase,
 } from 'lucide-react';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
 import { AdminCRMDashboard } from './AdminCRMDashboard';
@@ -24,9 +24,9 @@ import { useAdminData, accessLevelConfig, type UserWithRole } from './useAdminDa
 import { AdminUsersTable } from './AdminUsersTable';
 import { AdminAuditTable } from './AdminAuditTable';
 
-const roleIconMap = { admin: Crown, supervisor: UserCog, agent: User, special_agent: Eye } as const;
-const roleLabelMap = { admin: 'Administrador', supervisor: 'Supervisor', agent: 'Atendente', special_agent: 'Agente Especial' } as const;
-const roleColorMap = { admin: 'text-warning', supervisor: 'text-info', agent: 'text-muted-foreground', special_agent: 'text-accent-foreground' } as const;
+const roleIconMap = { admin: Crown, supervisor: UserCog, agent: User, dev: Code, manager: Briefcase } as const;
+const roleLabelMap = { admin: 'Administrador', supervisor: 'Supervisor', agent: 'Atendente', dev: 'Desenvolvedor', manager: 'Gestor' } as const;
+const roleColorMap = { admin: 'text-warning', supervisor: 'text-info', agent: 'text-muted-foreground', dev: 'text-destructive', manager: 'text-primary' } as const;
 
 export function AdminView() {
   const { isAdmin, isSupervisor, loading: roleLoading } = useUserRole();
