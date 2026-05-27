@@ -60,11 +60,11 @@ export function RealtimeInboxView() {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
     const key = profile?.id ? `zapp:sidebarWidth:${profile.id}${workspacePart}` : 'zapp:sidebarWidth';
     const saved = localStorage.getItem(key);
-    return saved ? parseInt(saved, 10) : 340;
+    return saved ? parseInt(saved, 10) : 391;
   });
   
   const isResizing = useRef(false);
-  const lastWidth = useRef(340);
+  const lastWidth = useRef(391);
 
   const saveWidth = useCallback((width: number) => {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
@@ -123,8 +123,8 @@ export function RealtimeInboxView() {
   }, []);
 
   const resetWidth = useCallback(() => {
-    setSidebarWidth(340);
-    saveWidth(340);
+    setSidebarWidth(391);
+    saveWidth(391);
   }, [saveWidth]);
   
   // Monitora a conexão com o provedor e reconecta automaticamente se necessário
@@ -272,12 +272,12 @@ export function RealtimeInboxView() {
         
         {!isMobile && (
           <>
-            {/* Botão único: resetar largura padrão (340px) */}
+            {/* Botão único: resetar largura padrão (391px) */}
             <button
               onClick={resetWidth}
               className="absolute top-1/2 -translate-y-1/2 z-[60] w-5 h-10 bg-background border border-border shadow-md rounded-r-md flex items-center justify-center hover:bg-muted transition-all duration-200"
               style={{ left: `${sidebarWidth}px` }}
-              title="Resetar largura padrão (340px)"
+              title="Resetar largura padrão (391px)"
               aria-label="Resetar largura padrão"
             >
               <div className="w-1 h-3 rounded-full bg-muted-foreground/40" />
