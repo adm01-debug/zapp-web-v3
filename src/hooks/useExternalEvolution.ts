@@ -357,7 +357,7 @@ async function fetchMessagesAfter(
 
 const USE_MOCKS =
   typeof window !== 'undefined' &&
-  window.localStorage?.getItem('mockConversations') === '1';
+  window.localStorage?.getItem('mockConversations') !== '0';
 
 // ─── Global Enrichment Cache to avoid redundant RPC calls ──────────
 const contactEnrichmentCache = new Map<string, { data: any; timestamp: number }>();
