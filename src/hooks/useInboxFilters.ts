@@ -174,7 +174,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     });
 
     return result;
-  }, [conversations, search, filters, mainTab, subTab, showAll, selectedQueueId, selectedContactType, profileId, contactTagsMap]);
+  }, [conversations, search, filters, mainTab, subTab, showAll, scope, selectedQueueId, selectedContactType, profileId, contactTagsMap]);
 
   return {
     mainTab, setMainTab,
