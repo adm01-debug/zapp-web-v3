@@ -275,8 +275,11 @@ export function RealtimeInboxView() {
 
       <div className="flex flex-row h-full min-h-0 w-full relative group/inbox">
         <div 
-          className="relative flex h-full transition-all duration-300 ease-in-out"
-          style={!isMobile ? { width: `${sidebarWidth}px` } : {}}
+          className={cn(
+            "relative flex h-full transition-all duration-300 ease-in-out",
+            isMobile && inbox.selectedContactId && "hidden"
+          )}
+          style={{ width: isMobile ? (sidebarWidth >= window.innerWidth - 20 ? '100%' : `${sidebarWidth}px`) : `${sidebarWidth}px` }}
         >
           <ConversationListSidebar 
             inbox={inbox} 
@@ -287,34 +290,39 @@ export function RealtimeInboxView() {
           />
         </div>
         
-        {!isMobile && (
-          <>
-            {/* Botão único: resetar largura padrão (391px) */}
-            <button
-              onClick={resetWidth}
-              className="absolute top-1/2 -translate-y-1/2 z-[60] w-5 h-10 bg-background border border-border shadow-md rounded-r-md flex items-center justify-center hover:bg-muted transition-all duration-200"
-              style={{ left: `${sidebarWidth}px` }}
-              title="Resetar largura padrão (391px)"
-              aria-label="Resetar largura padrão"
-            >
-              <div className="w-1 h-3 rounded-full bg-muted-foreground/40" />
-            </button>
+        {/* Reset Width Button - Visible when not at default */}
+        <button
+          onClick={resetWidth}
+          className={cn(
+            "absolute top-1/2 -translate-y-1/2 z-[60] w-6 h-12 bg-background border border-border shadow-lg rounded-r-xl flex items-center justify-center hover:bg-muted active:scale-95 transition-all duration-200",
+            (isMobile && inbox.selectedContactId) && "hidden",
+            sidebarWidth === 391 && "opacity-0 pointer-events-none"
+          )}
+          style={{ left: `${sidebarWidth}px` }}
+          title="Resetar largura padrão (391px)"
+          aria-label="Resetar largura padrão"
+        >
+          <div className="flex gap-0.5">
+            <div className="w-1 h-4 rounded-full bg-primary/40" />
+            <div className="w-1 h-4 rounded-full bg-primary/20" />
+          </div>
+        </button>
 
-            {/* Draggable Handle */}
-            <div
-              onMouseDown={startResizing}
-              onTouchStart={startResizing}
-              className={cn(
-                "w-1.5 h-full cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors absolute z-50 group/handle",
-                sidebarWidth <= 280 ? "border-l-2 border-destructive/50 bg-destructive/5" : "",
-                sidebarWidth >= 600 ? "border-r-2 border-destructive/50 bg-destructive/5" : ""
-              )}
-              style={{ left: `${sidebarWidth}px` }}
-            >
-              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-border group-hover/handle:bg-primary/50" />
-            </div>
-          </>
-        )}
+        {/* Draggable Handle - Enabled for touch/mobile */}
+        <div
+          onMouseDown={startResizing}
+          onTouchStart={startResizing}
+          className={cn(
+            "w-4 h-full cursor-col-resize hover:bg-primary/10 active:bg-primary/20 transition-all absolute z-50 group/handle flex items-center justify-center",
+            (isMobile && inbox.selectedContactId) && "hidden",
+            // Feedback visual ao atingir limites
+            sidebarWidth <= 280 && "after:absolute after:inset-y-0 after:left-0 after:w-1 after:bg-destructive after:animate-pulse bg-destructive/5",
+            sidebarWidth >= Math.min(600, window.innerWidth - (isMobile ? 0 : 60)) && "after:absolute after:inset-y-0 after:right-0 after:w-1 after:bg-destructive after:animate-pulse bg-destructive/5"
+          )}
+          style={{ left: `${sidebarWidth}px` }}
+        >
+          <div className="w-[1px] h-full bg-border group-hover/handle:bg-primary/50 transition-colors" />
+        </div>
       </div>
 
       <div 
