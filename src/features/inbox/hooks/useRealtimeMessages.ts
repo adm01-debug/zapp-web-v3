@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { supabase, externalSupabase } from '@/integrations/supabase/client';
+import { supabase, externalSupabase } from '@/integrations/supabase/external';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';

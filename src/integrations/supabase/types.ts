@@ -5132,6 +5132,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           job_title: string | null
+          last_seen: string | null
           max_chats: number | null
           name: string
           nickname: string | null
@@ -5156,6 +5157,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          last_seen?: string | null
           max_chats?: number | null
           name: string
           nickname?: string | null
@@ -5180,6 +5182,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           job_title?: string | null
+          last_seen?: string | null
           max_chats?: number | null
           name?: string
           nickname?: string | null
