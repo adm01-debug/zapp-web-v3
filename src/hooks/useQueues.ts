@@ -266,9 +266,12 @@ export function useQueues() {
   useEffect(() => {
     fetchQueues();
 
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes — unique channel name per hook instance
+    // to avoid "cannot add 'postgres_changes' callbacks after subscribe()" when
+    // multiple consumers (e.g. ContactDetails + sidebar) mount in parallel.
+    const channelName = `queues-changes:${Math.random().toString(36).slice(2, 10)}`;
     const queuesChannel = supabase
-      .channel('queues-changes')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'queues' }, fetchQueues)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'queue_members' }, fetchQueues)
       .subscribe();
