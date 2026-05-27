@@ -138,11 +138,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
         {!isMobile && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className={cn(
-                "font-extrabold text-foreground tracking-tight  bg-clip-text transition-all",
-                density === 'compact' ? "text-[15px]" : "text-[18px]"
-              )}>Inbox</h2>
-              <div className="h-4 w-px bg-border/40 mx-1" />
               <WhatsAppConnectionStatus />
             </div>
 
