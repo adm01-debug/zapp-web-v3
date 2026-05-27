@@ -18,7 +18,9 @@ import { useRealtimeFallbackRefetch } from '@/features/inbox';
 import { useSLAAlerts } from '@/features/sla/hooks/useSLAAlerts';
 import { useDepartmentAgents } from '@/features/auth';
 import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
-import { WifiOff, RefreshCw, Loader2 } from 'lucide-react';
+import { WifiOff, RefreshCw, Loader2, MessageSquarePlus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -162,6 +164,24 @@ export function RealtimeInboxView() {
           <NewConversationModal open={inbox.showNewConversation} onOpenChange={inbox.setShowNewConversation} onConversationStarted={(contactId) => { inbox.setSelectedContactId(contactId); inbox.refetch(); }} />
         </Suspense>
       )}
+
+      {!isMobile && (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => inbox.setShowNewConversation(true)}
+              className="fixed bottom-24 right-6 z-50 w-16 h-16 rounded-full bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-500 flex items-center justify-center border border-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label="Nova conversa"
+            >
+              <MessageSquarePlus className="w-6 h-6" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={8}>
+            Nova Conversa
+          </TooltipContent>
+        </Tooltip>
+      )}
+
 
       <ConversationListSidebar inbox={inbox} inboxFilters={inboxFilters} bulkActions={bulkActions} pullToRefresh={pullToRefresh} />
 

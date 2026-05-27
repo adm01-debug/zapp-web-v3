@@ -142,18 +142,7 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             </div>
 
             <div className="flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => inbox.setShowNewConversation(true)}
-                className="w-7 h-7 rounded-lg text-primary hover:bg-primary/10 active:scale-90 transition-all duration-150"
-                aria-label="Nova conversa"
-                title="Nova Conversa"
-              >
-                <MessageSquarePlus className="w-3.5 h-3.5" />
-              </Button>
-              
-              <div className="h-4 w-px bg-border/40 mx-1" />
+
 
               <Button
                 variant="ghost"
