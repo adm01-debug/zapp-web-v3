@@ -300,8 +300,8 @@ export function ConversationItem({
                     isSelected 
                       ? 'text-primary-foreground/90 font-medium'
                       : unreadCount > 0
-                        ? 'text-foreground font-bold'
-                        : 'text-muted-foreground font-normal'
+                        ? 'text-foreground font-light'
+                        : 'text-muted-foreground font-light'
                   )}
                 >
                   {previewText}
