@@ -265,10 +265,10 @@ export function ConversationItem({
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={cn(
-                    " text-[10px] font-bold tabular-nums uppercase tracking-tighter opacity-70",
-                    isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                    "text-[10px] font-semibold tabular-nums tracking-tight",
+                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
                   )}>
-                    {formatDistanceToNow(displayDate, { addSuffix: false, locale: ptBR })}
+                    {shortRelativeTime(displayDate)}
                   </span>
                   {unreadCount > 0 && (
                     <span className={cn(
@@ -280,6 +280,16 @@ export function ConversationItem({
                   )}
                 </div>
               </div>
+              {secondaryLabel && (
+                <span
+                  className={cn(
+                    'text-[11px] font-medium truncate block min-w-0 -mt-0.5',
+                    isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground/80'
+                  )}
+                >
+                  {secondaryLabel}
+                </span>
+              )}
               {isTyping ? (
                 <TypingIndicatorCompact isVisible={true} className={cn("text-[12px] font-bold", isSelected ? "text-primary-foreground" : "text-success")} />
               ) : (
