@@ -329,5 +329,6 @@ export function InboxScopeConfig() {
           </div>
         </CardContent>
       </Card>
+    </div>
   );
 }
