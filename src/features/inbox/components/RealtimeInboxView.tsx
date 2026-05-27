@@ -165,7 +165,22 @@ export function RealtimeInboxView() {
         </Suspense>
       )}
 
-
+      {!isMobile && (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => inbox.setShowNewConversation(true)}
+              className="fixed bottom-24 right-6 z-50 w-[54px] h-[54px] rounded-full bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 active:scale-95 transition-all duration-500 flex items-center justify-center border border-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label="Nova Conversa"
+            >
+              <MessageSquarePlus className="w-6 h-6" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={8}>
+            Nova Conversa
+          </TooltipContent>
+        </Tooltip>
+      )}
 
       <ConversationListSidebar inbox={inbox} inboxFilters={inboxFilters} bulkActions={bulkActions} pullToRefresh={pullToRefresh} />
 
