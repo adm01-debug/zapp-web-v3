@@ -19,6 +19,10 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => mockUseAuth(),
   AuthProvider: ({ children }: any) => children,
 }));
+vi.mock('@/features/auth', () => ({
+  useAuth: () => mockUseAuth(),
+  AuthProvider: ({ children }: any) => children,
+}));
 
 import { usePermissions } from '@/hooks/usePermissions';
 

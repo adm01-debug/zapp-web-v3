@@ -142,7 +142,7 @@ export function useStickerPicker(onSendSticker: (url: string) => void) {
       }
 
       const { data: urlData } = supabase.storage.from('stickers').getPublicUrl(storagePath);
-      let aiCategory = 'enviadas';
+      const aiCategory = 'enviadas';
 
       // Show upload preview immediately (GAP 16 FIX: non-blocking AI classification)
       setPendingUpload({

@@ -71,7 +71,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
 
       const nameMap = new Map((profiles || []).map(p => [p.id, p.name]));
       
-      let threadCounts: Record<string, number> = {};
+      const threadCounts: Record<string, number> = {};
       if (!activeThreadId && data.length > 0) {
         const parentIds = data.map((d: any) => d.id);
         const { data: counts } = await supabase

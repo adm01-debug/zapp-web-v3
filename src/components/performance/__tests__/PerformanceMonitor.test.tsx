@@ -41,6 +41,10 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ profile: { id: 'test-profile' }, user: { id: 'test-user' } }),
 }));
 
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({ profile: { id: 'test-profile' }, user: { id: 'test-user' } }),
+}));
+
 // Mock supabase
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

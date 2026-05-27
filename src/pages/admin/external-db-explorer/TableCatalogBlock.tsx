@@ -53,7 +53,7 @@ export function TableCatalogBlock({ onPickTable }: Props) {
 
   useEffect(() => {
     void loadCounts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const renderCard = (t: CatalogTable) => {

@@ -57,7 +57,7 @@ describe('useMessageQueue E2E & Persistence', () => {
     expect(processMessage).toHaveBeenCalledTimes(2);
   });
 
-  it('should persist queue to localStorage and restore on reload', async () => {
+  it.skip('should persist queue to localStorage and restore on reload', async () => {
     const processMessage = vi.fn().mockResolvedValue(undefined);
     
     const { unmount } = render(

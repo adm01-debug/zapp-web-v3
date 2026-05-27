@@ -86,7 +86,7 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
           (r) => r.message_id === messageId && r.profile_id === profile.id && r.emoji === emoji
         );
 
-        let newReactions = [...previousReactions];
+        const newReactions = [...previousReactions];
         if (existingIdx > -1) {
           newReactions.splice(existingIdx, 1);
         } else {

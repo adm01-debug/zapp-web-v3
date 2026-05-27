@@ -3,9 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MFABackupCodes } from '../MFABackupCodes';
 
-// Mock clipboard
-Object.assign(navigator, {
-  clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+// Mock clipboard (use defineProperty since 'clipboard' is a getter)
+Object.defineProperty(navigator, 'clipboard', {
+  value: { writeText: vi.fn().mockResolvedValue(undefined) },
+  writable: true,
+  configurable: true,
 });
 
 // Mock URL
