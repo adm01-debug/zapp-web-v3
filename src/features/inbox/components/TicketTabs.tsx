@@ -40,6 +40,8 @@ interface TicketTabsProps {
   onScopeChange?: (scope: InboxScope) => void;
   selectedQueueId: string | null;
   onQueueChange: (queueId: string | null) => void;
+  contactType?: string | null;
+  onContactTypeChange?: (value: string | null) => void;
 }
 
 export function TicketTabs({
