@@ -328,8 +328,8 @@ export function RealtimeInboxView() {
       <div 
         className={cn(
           'flex-1 flex min-w-0 min-h-0 relative z-10 bg-card/20 h-full overflow-hidden transition-all duration-300 ease-in-out', 
-          isMobile && !inbox.selectedContactId && 'hidden',
-          isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
+          isMobile && !inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'flex' : 'hidden'),
+          isMobile && inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'relative flex' : 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300')
         )}
       >
         {inbox.legacyConversation ? (
