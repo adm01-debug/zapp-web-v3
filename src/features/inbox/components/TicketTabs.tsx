@@ -257,7 +257,7 @@ export function TicketTabs({
       )}
 
       {/* Scope selector — visibilidade por papel */}
-      {(canSeeDepartment || canSeeAllDepartments) && mainTab === 'open' && subTab === 'attending' && (
+      {mainTab === 'open' && subTab === 'attending' && (
         <div className="flex items-center gap-1.5 bg-muted/20 px-2 py-1.5 rounded-lg border border-border/10">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <Users className="w-3 h-3 text-primary" />
