@@ -271,6 +271,7 @@ export function TicketTabs({
             <div className="flex items-center gap-1 flex-1" role="tablist" aria-label="Categoria de contato">
               {([
                 { id: 'cliente', label: 'Clientes' },
+                { id: 'colaborador', label: isMobile ? 'Colab.' : 'Colaboradores' },
                 { id: 'fornecedor', label: isMobile ? 'Fornec.' : 'Fornecedores' },
                 { id: 'transportadora', label: isMobile ? 'Transp.' : 'Transportadoras' },
                 { id: 'outros', label: 'Outros' },
