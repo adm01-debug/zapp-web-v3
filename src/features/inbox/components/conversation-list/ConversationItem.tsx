@@ -177,6 +177,7 @@ export function ConversationItem({
 
   const primaryLabel = buildPrimaryLabel(conversation);
   const fullPrimaryLabel = buildFullPrimaryLabel(conversation);
+  const secondaryLabel = buildSecondaryLabel(conversation);
   const hasTags = tags.length > 0;
   const previewText = lastMessage?.content?.trim() || 'Sem mensagens ainda';
   const visibleTags = tags.slice(0, 2);
