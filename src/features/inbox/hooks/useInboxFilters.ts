@@ -265,15 +265,21 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
 
           if (subTab === 'attending') {
             const effectiveScope = showAll ? 'all' : scope;
+            const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
             
-            // Native scopes
+            // 1. Prioridade para filtro de Agente específico (Coordenadores/Supervisores)
+            if (filters.agentId) {
+              return assignee === filters.agentId;
+            }
+
+            // 2. Se não houver agente específico, aplica a lógica de escopo
             if (effectiveScope === 'all') return true;
             
-            const assignee = assignedOf(c.contact.id, c.contact.assigned_to);
             if (effectiveScope === 'department') {
               if (!assignee) return false;
               return departmentAgentIds.includes(assignee);
             }
+
             if (effectiveScope === 'mine') {
               return assignee === profileId;
             }
@@ -281,8 +287,6 @@ export function useInboxFilters({ conversations, profileId, search: externalSear
             // Custom scopes filtering logic
             const customScope = customScopes.find(s => s.name === effectiveScope);
             if (customScope) {
-              // For now, if no criteria defined, we just show all in this scope
-              // Future: implement criteria matching here
               return true;
             }
 
