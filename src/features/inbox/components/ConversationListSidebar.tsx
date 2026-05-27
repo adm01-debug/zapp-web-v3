@@ -26,7 +26,7 @@ import {
 // Tooltips were removed from this header to avoid Radix Slot ref-loop bug
 // (TooltipTrigger asChild on inline span/Button caused Maximum update depth).
 // Replaced with native title/aria-label which are equivalent for these controls.
-import { MessageSquare, RefreshCw, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle, LayoutList, LayoutGrid } from 'lucide-react';
+import { MessageSquare, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle, LayoutList, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { WhatsAppConnectionStatus } from '@/features/connections';
@@ -142,17 +142,6 @@ export function ConversationListSidebar({ inbox, inboxFilters, bulkActions, pull
             </div>
 
             <div className="flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={inbox.refetch}
-                disabled={inbox.loading}
-                className="w-7 h-7 rounded-lg hover:bg-muted/60 active:scale-90 transition-all duration-150"
-                aria-label="Atualizar"
-                title="Atualizar"
-              >
-                <RefreshCw className={cn('w-3.5 h-3.5', inbox.loading && 'animate-spin')} />
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"
