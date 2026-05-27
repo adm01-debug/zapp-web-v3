@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef, lazy, Suspense } from 'react';
+import { useAuth } from '@/features/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { MiniChatPiP } from '@/components/mobile/MiniChatPiP';
@@ -56,7 +57,8 @@ export function RealtimeInboxView() {
   const { profile } = useAuth();
   
   const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}` : 'zapp:sidebarWidth';
+    const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
+    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}${workspacePart}` : 'zapp:sidebarWidth';
     const saved = localStorage.getItem(key);
     return saved ? parseInt(saved, 10) : 340;
   });
@@ -65,9 +67,10 @@ export function RealtimeInboxView() {
   const lastWidth = useRef(340);
 
   const saveWidth = useCallback((width: number) => {
-    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}` : 'zapp:sidebarWidth';
+    const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
+    const key = profile?.id ? `zapp:sidebarWidth:${profile.id}${workspacePart}` : 'zapp:sidebarWidth';
     localStorage.setItem(key, width.toString());
-  }, [profile?.id]);
+  }, [profile?.id, profile?.department_id]);
 
   const stopResizing = useCallback(() => {
     isResizing.current = false;
