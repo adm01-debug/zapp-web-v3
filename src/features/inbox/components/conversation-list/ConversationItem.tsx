@@ -196,10 +196,10 @@ export function ConversationItem({
           aria-selected={isSelected}
           role="option"
           className={cn(
-            'relative p-3.5 rounded-2xl cursor-pointer transition-all duration-300 mx-2 my-1 flex items-center gap-3 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 border border-transparent shadow-sm',
-            isSelected 
-              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 border-primary/20' 
-              : 'hover:bg-muted/40 bg-card border-border/40',
+            'relative p-3.5 rounded-2xl cursor-pointer transition-all duration-300 mx-2.5 my-2 flex items-center gap-3 group outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 border shadow-sm',
+            isSelected
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 border-primary/30'
+              : 'hover:bg-muted/50 hover:border-border/80 hover:shadow-md bg-card border-border/60',
             isMultiSelected && 'ring-2 ring-primary ring-offset-2 shadow-inner'
           )}
         >
