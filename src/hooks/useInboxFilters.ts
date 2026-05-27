@@ -7,7 +7,7 @@ import { InboxFiltersState } from '@/components/inbox/InboxFilters';
 import { ConversationWithMessages } from '@/hooks/useRealtimeMessages';
 import { filterByContactType } from '@/components/inbox/ContactTypeFilter';
 import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from 'date-fns';
-import { MainTab, SubTab } from '@/components/inbox/TicketTabs';
+import { MainTab, SubTab, InboxScope } from '@/components/inbox/TicketTabs';
 
 interface UseInboxFiltersProps {
   conversations: ConversationWithMessages[];
@@ -18,6 +18,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
   const [mainTab, setMainTab] = useState<MainTab>('open');
   const [subTab, setSubTab] = useState<SubTab>('attending');
   const [showAll, setShowAll] = useState(false);
+  const [scope, setScope] = useState<InboxScope>('mine');
   const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<string | null>(null);
 
@@ -93,8 +94,13 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     if (mainTab === 'open') {
       result = result.filter(c => c.messages.length > 0);
       if (subTab === 'attending') {
-        if (!showAll) {
+        if (scope === 'mine' && !showAll) {
           result = result.filter(c => c.contact.assigned_to === profileId);
+        } else if (scope === 'department') {
+          // No futuro, filtrar por department_id. Por ora, mostra todos atribuídos
+          result = result.filter(c => c.contact.assigned_to !== null);
+        } else if (scope === 'all' || showAll) {
+          // Mostra todos sem filtro de atribuição
         }
       } else if (subTab === 'waiting') {
         result = result.filter(c => !c.contact.assigned_to);
@@ -174,6 +180,7 @@ export function useInboxFilters({ conversations, profileId }: UseInboxFiltersPro
     mainTab, setMainTab,
     subTab, setSubTab,
     showAll, setShowAll,
+    scope, setScope,
     selectedQueueId, setSelectedQueueId,
     selectedContactType, handleContactTypeChange,
     filters, setFilters,
