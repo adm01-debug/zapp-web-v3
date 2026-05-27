@@ -18,6 +18,7 @@ import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock, MessageC
 import { useAuth } from '@/features/auth';
 import { useUserRole, usePermissions } from '@/features/auth';
 import { useQueues } from '@/hooks/useQueues';
+import { useAgents } from '@/features/admin';
 import { useAllTicketStates, ConversationWithMessages } from '@/features/inbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
