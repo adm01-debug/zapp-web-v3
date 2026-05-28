@@ -13,30 +13,55 @@ declare global {
 }
 
 class ValidationLogger {
-
   private events: ValidationEvent[] = [];
-  private maxEvents = 100;
+  private maxEvents = 200;
 
   constructor() {
-    this.setupInterceptors();
+    if (typeof window !== 'undefined') {
+      this.setupInterceptors();
+      this.loadPersistedEvents();
+    }
+  }
+
+  private loadPersistedEvents() {
+    try {
+      const stored = localStorage.getItem('zapp_validation_evidence');
+      if (stored) {
+        this.events = JSON.parse(stored).slice(0, 50);
+      }
+    } catch (e) {}
   }
 
   private setupInterceptors() {
-    // Intercept console.error
-    const originalConsoleError = console.error;
+    // Intercept console.log/error/warn
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = (...args: any[]) => {
+      this.addEvent('log', args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' '));
+      originalLog.apply(console, args);
+    };
+
     console.error = (...args: any[]) => {
-      this.addEvent('error', args.map(String).join(' '));
-      originalConsoleError.apply(console, args);
+      this.addEvent('error', args.map(a => typeof a === 'object' ? '[Error Object]' : String(a)).join(' '));
+      originalError.apply(console, args);
+    };
+
+    console.warn = (...args: any[]) => {
+      this.addEvent('log', `[WARN] ${args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' ')}`);
+      originalWarn.apply(console, args);
     };
 
     // Intercept fetch for endpoint validation
     const originalFetch = window.fetch;
     window.fetch = async (...args: [URL | RequestInfo, RequestInit?]) => {
-      const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
+      const url = typeof args[0] === 'string' ? args[0] : 
+                  (args[0] instanceof Request) ? args[0].url : String(args[0]);
+      
       try {
         const response = await originalFetch(...args);
-
-        if (!response.ok) {
+        if (!response.ok && !url.includes('supabase.co')) { // Supabase handled separately
           this.addEvent('network', `Failed to fetch: ${url} (${response.status})`);
         }
         return response;
@@ -58,9 +83,10 @@ class ValidationLogger {
     if (this.events.length > this.maxEvents) {
       this.events.pop();
     }
-    // Update evidence in local storage for persistence across reloads if possible
+    
+    // Save to localStorage
     try {
-      localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 50)));
+      localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 100)));
     } catch (e) {}
   }
 
@@ -81,12 +107,14 @@ class ValidationLogger {
         userAgent: navigator.userAgent,
         url: window.location.href,
         timestamp: new Date().toISOString(),
+        screen: `${window.innerWidth}x${window.innerHeight}`,
       }
     };
   }
 }
 
 export const validationLogger = new ValidationLogger();
+
 if (typeof window !== 'undefined') {
   window.__zappValidationLogger = validationLogger;
 }
