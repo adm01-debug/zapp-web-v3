@@ -125,8 +125,8 @@ export function useScreenProtection() {
         backdrop-filter: blur(20px);
         transition: opacity 0.2s ease;
       `;
-      overlay.innerHTML = `
-        <div style="text-align:center; color: hsl(var(--foreground)); font-family: system-ui;">
+      overlay.textContent = `
+        <div style="text-align:center; // FIX: innerHTML ? textContent (XSS prevention) color: hsl(var(--foreground)); font-family: system-ui;">
           <div style="font-size:3rem; margin-bottom:1rem;">🔒</div>
           <div style="font-size:1.25rem; font-weight:600;">Conteúdo Protegido</div>
           <div style="font-size:0.875rem; opacity:0.7; margin-top:0.5rem;">Volte à janela para continuar</div>

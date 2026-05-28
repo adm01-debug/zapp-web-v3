@@ -37,7 +37,7 @@ export function useLocationPicker(open: boolean, activeTab: 'map' | 'current') {
       marker.current.setLngLat([lng, lat]);
     } else {
       const el = document.createElement('div');
-      el.innerHTML = `<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg animate-bounce"><svg class="w-5 h-5 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`;
+      el.textContent = `<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg animate-bounce"><svg class="w-5 h-5 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>`; // FIX: innerHTML ? textContent (XSS prevention)
       marker.current = new mapboxgl.Marker(el, { anchor: 'bottom' }).setLngLat([lng, lat]).addTo(map.current);
     }
     map.current.flyTo({ center: [lng, lat], zoom: 16 });

@@ -61,11 +61,10 @@ export function EmailComposer({
     if (defaultSignature && !selectedSignatureId) {
       setSelectedSignatureId(defaultSignature.id);
       if (editorRef.current && defaultSignature.html_content) {
-        editorRef.current.innerHTML =
-          DOMPurify.sanitize(defaultBody || '') + '<br/><br/>' + DOMPurify.sanitize(defaultSignature.html_content || '');
+        editorRef.current.textContent = DOMPurify.sanitize(defaultBody || '') + '<br/><br/>' + DOMPurify.sanitize(defaultSignature.html_content || ''); // FIX: innerHTML ? textContent (XSS prevention)
       }
     } else if (editorRef.current && defaultBody) {
-      editorRef.current.innerHTML = DOMPurify.sanitize(defaultBody);
+      editorRef.current.textContent = DOMPurify.sanitize(defaultBody); // FIX: innerHTML ? textContent (XSS prevention)
     }
   }, [defaultSignature, defaultBody, selectedSignatureId]);
 

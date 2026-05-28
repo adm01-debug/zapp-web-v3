@@ -53,9 +53,9 @@ export function useSwipeNavigation({
       opacity: 0;
       transition: opacity 0.15s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     `;
-    el.innerHTML = side === 'left'
+    el.textContent = side === 'left'
       ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>'; // FIX: innerHTML ? textContent (XSS prevention)
     el.style.color = 'hsl(var(--primary))';
     document.body.appendChild(el);
     indicatorRef.current = el;

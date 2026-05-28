@@ -82,7 +82,7 @@ describe('useMessageQueue E2E & Persistence', () => {
     unmount();
     
     // Explicitly clean document.body to avoid duplicate renders in the same test
-    document.body.innerHTML = '';
+    document.body.textContent = ''; // FIX: innerHTML ? textContent (XSS prevention)
     
     localStorage.setItem('chat_message_queue', JSON.stringify([{
       id: 'queue:saved-1',
