@@ -63,6 +63,7 @@ const AdminEmailAuditPage = lazyWithRetry(() => import("@/pages/admin/AdminEmail
 const AuditEvidenceDashboard = lazyWithRetry(() => import("@/pages/admin/AuditEvidenceDashboard"));
 const AdminDevDiagnosticsPage = lazyWithRetry(() => import("@/pages/admin/AdminDevDiagnosticsPage"));
 const AdminBridgeStatusPage = lazyWithRetry(() => import("@/pages/admin/AdminBridgeStatusPage"));
+const AccessDenied = lazyWithRetry(() => import("@/pages/AccessDenied"));
 const Install = lazyWithRetry(() => import("@/pages/Install"));
 const ChatPopup = lazyWithRetry(() => import("@/pages/ChatPopup"));
 const InboxPage = lazyWithRetry(() => import("@/pages/inbox/InboxPage"));
@@ -93,6 +94,7 @@ export function AppRoutes() {
     <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         <Route path="/design-system" element={<DesignSystem />} />
+        <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
