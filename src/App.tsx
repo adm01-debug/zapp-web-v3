@@ -83,14 +83,12 @@ function AppContent() {
       <SkipLinks />
       <LiveRegion />
       <GlobalKeyboardProvider>
-        <>
-          {/* {deferredReady && <DeferredProviders />}
-          {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>} */}
-          <Toaster />
-          <Sonner />
-          <ServiceWorkerUpdateBanner />
-          <AppRoutes />
-        </>
+        {deferredReady && <DeferredProviders />}
+        {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
+        <Toaster />
+        <Sonner />
+        <ServiceWorkerUpdateBanner />
+        <AppRoutes />
       </GlobalKeyboardProvider>
     </BrowserRouter>
   );
