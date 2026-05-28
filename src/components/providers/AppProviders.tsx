@@ -6,8 +6,10 @@ import { HighContrastProvider } from "@/components/theme/HighContrastToggle";
 import { AccessibleToastProvider } from "@/components/ui/accessible-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
+import { ValidationProvider } from "@/components/providers/ValidationProvider";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { getLogger } from "@/lib/logger";
+
 
 const log = getLogger('AppProviders');
 
@@ -59,17 +61,20 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeSync />
-          <HighContrastProvider>
-            <AccessibleToastProvider>
-              <TooltipProvider delayDuration={100} skipDelayDuration={50}>
-                {children}
-              </TooltipProvider>
-            </AccessibleToastProvider>
-          </HighContrastProvider>
-        </AuthProvider>
+        <ValidationProvider>
+          <AuthProvider>
+            <ThemeSync />
+            <HighContrastProvider>
+              <AccessibleToastProvider>
+                <TooltipProvider delayDuration={100} skipDelayDuration={50}>
+                  {children}
+                </TooltipProvider>
+              </AccessibleToastProvider>
+            </HighContrastProvider>
+          </AuthProvider>
+        </ValidationProvider>
       </QueryClientProvider>
+
     </ErrorBoundary>
   );
 }

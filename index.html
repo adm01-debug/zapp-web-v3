@@ -115,7 +115,11 @@
             'caches' in window
               ? caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => undefined)
               : Promise.resolve(),
-          ]).finally(() => window.location.reload());
+          ]).finally(() => {
+            console.error('CRITICAL: Preview failed to load after 4.5s. Triggering automatic cache recovery and reload.');
+            window.location.reload();
+          });
+
         }, 4500);
       })();
     </script>
