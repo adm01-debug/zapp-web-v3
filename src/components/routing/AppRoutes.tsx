@@ -132,6 +132,7 @@ export function AppRoutes() {
         <Route path="/admin/evo-api-health" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminEvoApiHealthPage /></ProtectedRoute>} />
         <Route path="/admin/bridge-status" element={<ProtectedRoute requiredRoles={['admin', 'dev', 'supervisor']}><AdminBridgeStatusPage /></ProtectedRoute>} />
         <Route path="/admin/connections" element={<ProtectedRoute requiredRoles={['admin']}><AdminConnectionsPage /></ProtectedRoute>} />
+        <Route path="/admin/security-logs" element={<ProtectedRoute requiredRoles={['admin', 'dev']}><AdminSecurityLogsPage /></ProtectedRoute>} />
         <Route path="/admin/zappweb-demo" element={<ProtectedRoute requiredRoles={['admin', 'dev', 'manager']}><ZappWebbDemoPage /></ProtectedRoute>} />
         <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
         <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
