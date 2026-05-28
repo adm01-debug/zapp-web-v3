@@ -277,5 +277,10 @@ Deno.serve(async (req) => {
     status: 'PENDING',
     messageId: wamid,
     raw: data,
-  });
+    });
+  } catch (error: any) {
+    if (error.status) return errorResponse(error.message, error.status, req);
+    console.error("[whatsapp-cloud-api] Global Error:", error);
+    return errorResponse(error.message || 'Internal Server Error', 500, req);
+  }
 });
