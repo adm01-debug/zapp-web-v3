@@ -71,7 +71,6 @@ export function RealtimeInboxView() {
   });
   
   const isResizing = useRef(false);
-  const lastWidth = useRef(391);
 
   const saveWidth = useCallback((width: number) => {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
@@ -103,7 +102,6 @@ export function RealtimeInboxView() {
 
     setSidebarWidth(newWidth);
     saveWidth(newWidth);
-    lastWidth.current = newWidth;
   }, [saveWidth, isMobile]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
