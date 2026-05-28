@@ -58,7 +58,7 @@ function AppContent() {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // Global error handlers are managed in main.tsx or dedicated providers
+  // Global error handlers
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
       const reason = event.reason;
@@ -69,10 +69,17 @@ function AppContent() {
           return;
         }
       }
+      log.error("Unhandled promise rejection:", event.reason);
+      event.preventDefault();
+    };
+    const errorHandler = (event: ErrorEvent) => {
+      log.error("Uncaught error:", event.error);
     };
     window.addEventListener("unhandledrejection", handler);
+    window.addEventListener("error", errorHandler);
     return () => {
       window.removeEventListener("unhandledrejection", handler);
+      window.removeEventListener("error", errorHandler);
     };
   }, []);
 

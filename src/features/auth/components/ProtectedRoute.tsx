@@ -27,8 +27,8 @@ export function ProtectedRoute({
   fallback,
   routePath,
 }: ProtectedRouteProps) {
-  const { user, loading: authLoading, profile } = useAuth();
-  const { roles, loading: rolesLoading, hasRole, refetch: refetchRoles } = useUserRole();
+  const { user, loading: authLoading } = useAuth();
+  const { roles, loading: rolesLoading, hasRole } = useUserRole();
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [permissionChecking, setPermissionChecking] = useState(false);
@@ -62,13 +62,6 @@ export function ProtectedRoute({
 
     return () => { isMounted = false; };
   }, [authLoading, user, requiredPermission]);
-
-  // Re-fetch roles if we have a user but no roles (safety for refresh/hydration)
-  useEffect(() => {
-    if (user && !authLoading && !rolesLoading && roles.length === 0) {
-      refetchRoles();
-    }
-  }, [user, authLoading, rolesLoading, roles.length, refetchRoles]);
 
   if (loading || (requiredPermission && hasPermission === null)) {
     return (

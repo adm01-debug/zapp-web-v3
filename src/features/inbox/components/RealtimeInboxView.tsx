@@ -67,7 +67,6 @@ export function RealtimeInboxView() {
   });
   
   const isResizing = useRef(false);
-  const lastWidth = useRef(391);
 
   const saveWidth = useCallback((width: number) => {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
@@ -99,7 +98,6 @@ export function RealtimeInboxView() {
 
     setSidebarWidth(newWidth);
     saveWidth(newWidth);
-    lastWidth.current = newWidth;
   }, [saveWidth, isMobile]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -340,11 +338,11 @@ export function RealtimeInboxView() {
         </div>
       </div>
 
-      <div 
+      <div
         className={cn(
-          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-card/20 h-full overflow-hidden transition-all duration-300 ease-in-out', 
-          isMobile && !inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'flex' : 'hidden'),
-          isMobile && inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'relative flex' : 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300')
+          'flex-1 flex min-w-0 min-h-0 relative z-10 bg-card/20 h-full overflow-hidden transition-all duration-300 ease-in-out',
+          isMobile && !inbox.selectedContactId && 'hidden',
+          isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
         )}
       >
         {inbox.legacyConversation ? (
