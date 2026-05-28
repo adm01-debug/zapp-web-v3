@@ -47,12 +47,19 @@
         position: fixed;
         inset: 0;
         display: flex;
+        flex-direction: column;
+        gap: 14px;
         align-items: center;
         justify-content: center;
         background: hsl(var(--background));
         z-index: 9999;
         transition: opacity 0.3s ease;
+        color: hsl(0 0% 96%);
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
+      #root-loading-title { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+      #root-loading-subtitle { font-size: 12px; color: hsl(0 0% 70%); }
+      #root-loading-dots { display: flex; align-items: center; justify-content: center; }
       .loader-dot {
         width: 12px;
         height: 12px;
@@ -71,19 +78,51 @@
   </head>
   <body>
     <div id="root-loading" aria-hidden="true">
-      <div class="loader-dot"></div>
-      <div class="loader-dot"></div>
-      <div class="loader-dot"></div>
+      <div id="root-loading-title">Abrindo ZAPP Web</div>
+      <div id="root-loading-dots">
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+        <div class="loader-dot"></div>
+      </div>
+      <div id="root-loading-subtitle">Se o preview estiver preso, vamos restaurar automaticamente.</div>
     </div>
     <div id="root"></div>
+    <script>
+      (function () {
+        window.__zappHideRootLoader = function () {
+          const loader = document.getElementById('root-loading');
+          if (!loader) return;
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 300);
+        };
+
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          const loader = document.getElementById('root-loading');
+          if (!loader || (root && root.childElementCount > 0)) return;
+          const subtitle = document.getElementById('root-loading-subtitle');
+          const alreadyTried = sessionStorage.getItem('zapp-preview-recovery-attempted') === '1';
+          if (alreadyTried) {
+            if (subtitle) subtitle.textContent = 'O preview ainda não respondeu. Use o botão de atualizar do preview.';
+            return;
+          }
+          sessionStorage.setItem('zapp-preview-recovery-attempted', '1');
+          if (subtitle) subtitle.textContent = 'Restaurando o preview e limpando cache local...';
+          Promise.all([
+            'serviceWorker' in navigator
+              ? navigator.serviceWorker.getRegistrations?.().then((regs) => Promise.all(regs.map((reg) => reg.unregister()))).catch(() => undefined)
+              : Promise.resolve(),
+            'caches' in window
+              ? caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => undefined)
+              : Promise.resolve(),
+          ]).finally(() => window.location.reload());
+        }, 4500);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       window.addEventListener('load', () => {
-        const loader = document.getElementById('root-loading');
-        if (loader) {
-          loader.style.opacity = '0';
-          setTimeout(() => loader.remove(), 300);
-        }
+        setTimeout(() => window.__zappHideRootLoader?.(), 250);
       });
     </script>
   </body>
