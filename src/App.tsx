@@ -83,14 +83,12 @@ function AppContent() {
       <SkipLinks />
       <LiveRegion />
       <GlobalKeyboardProvider>
-        <div className="flex flex-col min-h-screen">
-          {deferredReady && <DeferredProviders />}
-          {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
-          <Toaster />
-          <Sonner />
-          <ServiceWorkerUpdateBanner />
-          <AppRoutes />
-        </div>
+        {deferredReady && <DeferredProviders />}
+        {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
+        <Toaster />
+        <Sonner />
+        <ServiceWorkerUpdateBanner />
+        <AppRoutes />
       </GlobalKeyboardProvider>
     </BrowserRouter>
   );
