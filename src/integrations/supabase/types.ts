@@ -2724,6 +2724,33 @@ export type Database = {
           },
         ]
       }
+      email_health_summary: {
+        Row: {
+          failure_count_60m: number | null
+          id: string
+          last_validation: string | null
+          metadata: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          failure_count_60m?: number | null
+          id?: string
+          last_validation?: string | null
+          metadata?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       email_labels: {
         Row: {
           color: string | null
@@ -2874,6 +2901,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_revalidation_jobs: {
+        Row: {
+          completed_at: string | null
+          id: string
+          requested_at: string | null
+          requested_by: string | null
+          result: Json | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          result?: Json | null
+          status?: string
+        }
+        Relationships: []
       }
       email_threads: {
         Row: {
