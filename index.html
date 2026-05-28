@@ -107,6 +107,66 @@
           if (root && root.childElementCount > 0) window.__zappHideRootLoader?.();
         }, 500);
       });
+
+      /**
+       * Self-healing boot recovery.
+       * If React never mounts (e.g. a stale service worker is serving a broken/old
+       * chunk), the user would be stuck forever on "Abrindo ZAPP Web".
+       * After a grace period we check whether #root rendered anything. If not, we
+       * unregister service workers, purge caches and reload ONCE to fetch fresh
+       * assets. A sessionStorage guard prevents an infinite reload loop.
+       */
+      (function () {
+        var BOOT_TIMEOUT_MS = 12000;
+        var RECOVERY_FLAG = 'zapp-boot-recovery';
+
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          var mounted = root && root.childElementCount > 0;
+          if (mounted) {
+            // App rendered — make sure the overlay is gone and clear any flag.
+            window.__zappHideRootLoader && window.__zappHideRootLoader();
+            try { sessionStorage.removeItem(RECOVERY_FLAG); } catch (e) {}
+            return;
+          }
+
+          // React did not mount in time.
+          if (sessionStorage.getItem(RECOVERY_FLAG)) {
+            // Already attempted a recovery reload — show a manual retry instead of looping.
+            var subtitle = document.getElementById('root-loading-subtitle');
+            if (subtitle) {
+              subtitle.innerHTML =
+                'Não foi possível carregar. <a href="javascript:location.reload()" style="color:#25d366;text-decoration:underline;">Tentar novamente</a>';
+            }
+            return;
+          }
+
+          try { sessionStorage.setItem(RECOVERY_FLAG, '1'); } catch (e) {}
+
+          var done = function () {
+            location.reload();
+          };
+
+          var tasks = [];
+          if ('serviceWorker' in navigator) {
+            tasks.push(
+              navigator.serviceWorker.getRegistrations()
+                .then(function (regs) { return Promise.all(regs.map(function (r) { return r.unregister(); })); })
+                .catch(function () {})
+            );
+          }
+          if (window.caches && caches.keys) {
+            tasks.push(
+              caches.keys()
+                .then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
+                .catch(function () {})
+            );
+          }
+
+          Promise.all(tasks).then(done, done);
+        }, BOOT_TIMEOUT_MS);
+      })();
     </script>
+
   </body>
 </html>
