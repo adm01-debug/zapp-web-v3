@@ -4,6 +4,8 @@
 // via rpc_insert_message so the Inbox UI sees them in the unified evolution_messages table.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { authorizeRoles, errorResponse, jsonResponse } from "../_shared/validation.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
