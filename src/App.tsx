@@ -11,7 +11,9 @@ import { ThemeDebugger } from "@/components/debug/ThemeDebugger";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import { ServiceWorkerUpdateBanner } from "@/components/system/ServiceWorkerUpdateBanner";
+import { BuildValidationOverlay } from "@/components/debug/BuildValidationOverlay";
 import { useThemeAudit } from "@/hooks/useThemeAudit";
+
 
 const log = getLogger('App');
 
