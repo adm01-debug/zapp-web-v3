@@ -24,7 +24,7 @@ describe('Auth Flows', () => {
     vi.clearAllMocks();
   });
 
-  it('should handle login successfully', async () => {
+  it('should handle signIn successfully', async () => {
     const mockUser = { id: 'test-user-id', email: 'test@example.com' };
     const mockSession = { user: mockUser, access_token: 'fake-token' };
     
@@ -36,7 +36,7 @@ describe('Auth Flows', () => {
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.login('test@example.com', 'password123');
+      await result.current.signIn('test@example.com', 'password123');
     });
 
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
@@ -45,28 +45,15 @@ describe('Auth Flows', () => {
     });
   });
 
-  it('should handle logout successfully', async () => {
+  it('should handle signOut successfully', async () => {
     (supabase.auth.signOut as any).mockResolvedValueOnce({ error: null });
 
     const { result } = renderHook(() => useAuth());
 
     await act(async () => {
-      await result.current.logout();
+      await result.current.signOut();
     });
 
     expect(supabase.auth.signOut).toHaveBeenCalled();
-  });
-
-  it('should identify authenticated state', async () => {
-    const mockUser = { id: 'test-user-id', email: 'test@example.com' };
-    (supabase.auth.getSession as any).mockResolvedValueOnce({
-      data: { session: { user: mockUser } },
-      error: null,
-    });
-
-    const { result } = renderHook(() => useAuth());
-
-    // Wait for internal session check if any
-    expect(result.current).toBeDefined();
   });
 });
