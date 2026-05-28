@@ -623,7 +623,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Unknown action', action }), {
       status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
+    if (error.status) return errorResponse(error.message, error.status, req);
     const log = new Logger('evolution-api', req);
     const message = error instanceof Error ? error.message : 'Unknown error';
     log.error('Unhandled error', { error: message });
