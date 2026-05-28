@@ -8,6 +8,12 @@ import { getLogger } from "./lib/logger";
 import { initSentry, SentryErrorBoundary } from "./lib/sentry";
 import { initWebVitals } from "./lib/web-vitals";
 
+declare global {
+  interface Window {
+    __zappHideRootLoader?: () => void;
+  }
+}
+
 // Init Sentry first (no-op se VITE_SENTRY_DSN não estiver configurada)
 const sentryEnabled = initSentry();
 
@@ -66,3 +72,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App />
   </SentryErrorBoundary>
 );
+
+requestAnimationFrame(() => window.__zappHideRootLoader?.());
