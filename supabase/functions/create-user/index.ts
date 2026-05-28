@@ -14,37 +14,11 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = requireEnv("SUPABASE_URL");
+    const supabaseAnonKey = requireEnv("SUPABASE_ANON_KEY");
     const serviceRoleKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
 
-    // Verify the caller is authenticated and is admin
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      log.warn("Missing auth header");
-      return errorResponse("Não autorizado", 401, req);
-    }
+    const { user: caller } = await authorizeRoles(req, supabaseUrl, supabaseAnonKey, ['admin', 'dev']);
 
-    const callerClient = createClient(supabaseUrl, requireEnv("SUPABASE_ANON_KEY"), {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user: caller } } = await callerClient.auth.getUser();
-    if (!caller) {
-      log.warn("Invalid auth token");
-      return errorResponse("Não autorizado", 401, req);
-    }
-
-    // Check if caller is admin
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: roleData } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", caller.id)
-      .single();
-
-    if (!roleData || roleData.role !== "admin") {
-      log.warn("Non-admin attempted user creation", { callerId: caller.id });
-      return errorResponse("Apenas administradores podem criar usuários", 403, req);
-    }
 
     const bodySchema = z.object({
       email: z.string().email("Email inválido").max(255),
