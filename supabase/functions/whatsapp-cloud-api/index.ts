@@ -4,6 +4,8 @@
 // via rpc_insert_message so the Inbox UI sees them in the unified evolution_messages table.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { authorizeRoles, errorResponse, jsonResponse } from "../_shared/validation.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,19 +98,21 @@ async function persistOutbound(
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  const json = (data: unknown, status = 200) =>
-    new Response(JSON.stringify(data), {
-      status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-  let body: Record<string, unknown> = {};
-  try { body = await req.json(); } catch { body = {}; }
+  try {
+    // Basic staff authorization for all actions
+    await authorizeRoles(req, supabaseUrl, supabaseAnonKey, ['agent', 'supervisor', 'manager', 'admin', 'dev']);
+
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch { body = {}; }
+
 
   const action = String(body.action ?? '');
   const instanceName = String(body.instanceName ?? body.instance ?? '');
-  if (!action) return json({ error: true, message: 'Missing action' }, 400);
-  if (!instanceName) return json({ error: true, message: 'Missing instanceName' }, 400);
+  if (!action) return jsonResponse({ error: true, message: 'Missing action' }, 400, req);
+  if (!instanceName) return jsonResponse({ error: true, message: 'Missing instanceName' }, 400, req);
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -123,11 +127,11 @@ Deno.serve(async (req) => {
 
   const creds = await loadCredentials(supabase, instanceName);
   if (!creds) {
-    return json({
+    return jsonResponse({
       error: true,
       code: 'OFFICIAL_CREDENTIALS_MISSING',
       message: 'Credenciais da WhatsApp Cloud API não configuradas para esta conexão.',
-    }, 400);
+    }, 400, req);
   }
 
   // PING / status
@@ -135,11 +139,11 @@ Deno.serve(async (req) => {
     const url = `https://graph.facebook.com/${creds.graph_api_version}/${creds.phone_number_id}?fields=display_phone_number,verified_name,quality_rating`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${creds.access_token}` } });
     const data = await res.json().catch(() => ({}));
-    return json({ ok: res.ok, status: res.status, data });
+    return jsonResponse({ ok: res.ok, status: res.status, data }, 200, req);
   }
 
   const number = String(body.number ?? body.to ?? '');
-  if (!number) return json({ error: true, message: 'Missing number' }, 400);
+  if (!number) return jsonResponse({ error: true, message: 'Missing number' }, 400, req);
   const phone = phoneFromAny(number);
   const remoteJid = jidFromNumber(number);
 
@@ -221,7 +225,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: wamid }),
       });
       const data = await res.json().catch(() => ({}));
-      return json({ ok: res.ok, status: res.status, data });
+      return jsonResponse({ ok: res.ok, status: res.status, data }, 200, req);
     }
     case 'send-template': {
       const templateName = String(body.templateName ?? body.template ?? '');
@@ -239,25 +243,25 @@ Deno.serve(async (req) => {
     }
     case 'presence': {
       // Cloud API doesn't expose presence (typing) — silently OK.
-      return json({ ok: true, skipped: true, reason: 'Cloud API does not support presence' });
+      return jsonResponse({ ok: true, skipped: true, reason: 'Cloud API does not support presence' }, 200, req);
     }
     default:
-      return json({
+      return jsonResponse({
         error: true, code: 'UNSUPPORTED_ACTION',
         message: `Action "${action}" not supported in WhatsApp Cloud API mode`,
-      }, 400);
+      }, 400, req);
   }
 
-  if (!graphBody) return json({ error: true, message: 'Empty graph body' }, 400);
+  if (!graphBody) return jsonResponse({ error: true, message: 'Empty graph body' }, 400, req);
 
   const result = await callGraph(creds, graphBody);
   if (!result.ok) {
-    return json({
+    return jsonResponse({
       error: true,
       status: result.status,
       message: 'Meta Graph API call failed',
       details: result.body,
-    }, 200); // 200 envelope so frontend reads `error` field, matches evolution-api pattern
+    }, 200, req); // 200 envelope so frontend reads `error` field, matches evolution-api pattern
   }
 
   const data = result.body as { messages?: Array<{ id: string }> };
@@ -268,10 +272,15 @@ Deno.serve(async (req) => {
   }
 
   // Mirror evolution-api success envelope
-  return json({
+  return jsonResponse({
     key: { id: wamid, remoteJid, fromMe: true },
     status: 'PENDING',
     messageId: wamid,
     raw: data,
-  });
+  }, 200, req);
+  } catch (error: any) {
+    if (error.status) return errorResponse(error.message, error.status, req);
+    console.error("[whatsapp-cloud-api] Global Error:", error);
+    return errorResponse(error.message || 'Internal Server Error', 500, req);
+  }
 });
