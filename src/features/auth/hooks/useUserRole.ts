@@ -110,7 +110,7 @@ export function useUserRole() {
     if (!user) return;
 
     const channel = supabase
-      .channel('public:user_roles')
+      .channel(`user_roles_changes_${user.id}_${Math.random().toString(36).slice(2, 8)}`)
       .on(
         'postgres_changes',
         {
