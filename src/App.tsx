@@ -91,7 +91,9 @@ function AppContent() {
         <Sonner />
         <ServiceWorkerUpdateBanner />
         <AppRoutes />
+        <BuildValidationOverlay />
       </GlobalKeyboardProvider>
+
     </BrowserRouter>
   );
 }
