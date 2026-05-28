@@ -114,6 +114,18 @@ export function ProtectedRoute({
 
   // Check required permission
   if (requiredPermission && !hasPermission) {
+    log.warn(`Unauthorized permission access attempt to ${location.pathname}. Required: ${requiredPermission}`);
+    
+    // Log already happens inside RPC 'check_user_permission' if we used it, 
+    // but here we might be checking differently. Let's ensure logging.
+    supabase.rpc('log_security_event', {
+      p_event_type: 'unauthorized_access',
+      p_resource: location.pathname,
+      p_action: 'NAVIGATE',
+      p_status: 'denied',
+      p_details: { required_permission: requiredPermission }
+    });
+
     if (fallback) return <>{fallback}</>;
     return <Navigate to="/access-denied" state={{ from: location }} replace />;
   }
