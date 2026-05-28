@@ -96,6 +96,17 @@ export function ProtectedRoute({
     // 'dev' always has access
     const hasRequiredRole = hasRole('dev' as AppRole) || effectiveRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
+      log.warn(`Unauthorized role access attempt to ${location.pathname}. Required: ${effectiveRoles.join(', ')}`);
+      
+      // Log event to Supabase
+      supabase.rpc('log_security_event', {
+        p_event_type: 'unauthorized_access',
+        p_resource: location.pathname,
+        p_action: 'NAVIGATE',
+        p_status: 'denied',
+        p_details: { required_roles: effectiveRoles, current_roles: roles }
+      });
+
       if (fallback) return <>{fallback}</>;
       return <Navigate to="/access-denied" state={{ from: location }} replace />;
     }
