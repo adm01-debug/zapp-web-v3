@@ -6,7 +6,14 @@ type ValidationEvent = {
   data?: any;
 };
 
+declare global {
+  interface Window {
+    __zappValidationLogger: ValidationLogger;
+  }
+}
+
 class ValidationLogger {
+
   private events: ValidationEvent[] = [];
   private maxEvents = 100;
 
@@ -80,3 +87,7 @@ class ValidationLogger {
 }
 
 export const validationLogger = new ValidationLogger();
+if (typeof window !== 'undefined') {
+  window.__zappValidationLogger = validationLogger;
+}
+
