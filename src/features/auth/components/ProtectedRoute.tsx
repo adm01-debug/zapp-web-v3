@@ -63,12 +63,8 @@ export function ProtectedRoute({
     return () => { isMounted = false; };
   }, [authLoading, user, requiredPermission]);
 
-  // Re-fetch roles if we have a user but no roles (safety for refresh/hydration)
-  useEffect(() => {
-    if (user && !authLoading && !rolesLoading && roles.length === 0) {
-      refetchRoles();
-    }
-  }, [user, authLoading, rolesLoading, roles.length, refetchRoles]);
+  // Removed redundant and potentially looping re-fetch logic for roles.
+  // useUserRole already handles initial fetch and real-time updates.
 
   if (loading || (requiredPermission && hasPermission === null)) {
     return (
