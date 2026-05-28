@@ -36,7 +36,7 @@ export function ProtectedRoute({
   // Dynamic override from route_permissions table.
   const overrideRoles = useRouteRoles(routePath ?? location.pathname);
 
-  const loading = authLoading || rolesLoading || permissionChecking;
+  const loading = authLoading || (rolesLoading && roles.length === 0) || permissionChecking;
 
   useEffect(() => {
     let isMounted = true;
