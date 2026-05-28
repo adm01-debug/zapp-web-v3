@@ -61,17 +61,20 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeSync />
-          <HighContrastProvider>
-            <AccessibleToastProvider>
-              <TooltipProvider delayDuration={100} skipDelayDuration={50}>
-                {children}
-              </TooltipProvider>
-            </AccessibleToastProvider>
-          </HighContrastProvider>
-        </AuthProvider>
+        <ValidationProvider>
+          <AuthProvider>
+            <ThemeSync />
+            <HighContrastProvider>
+              <AccessibleToastProvider>
+                <TooltipProvider delayDuration={100} skipDelayDuration={50}>
+                  {children}
+                </TooltipProvider>
+              </AccessibleToastProvider>
+            </HighContrastProvider>
+          </AuthProvider>
+        </ValidationProvider>
       </QueryClientProvider>
+
     </ErrorBoundary>
   );
 }
