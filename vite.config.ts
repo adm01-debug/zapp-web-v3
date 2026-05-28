@@ -73,16 +73,5 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false,
     cssCodeSplit: true,
     sourcemap: mode === 'development',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip', 'lucide-react'],
-          'chart-vendor': ['recharts'],
-          'framer-vendor': ['framer-motion'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-        }
-      }
-    }
   }
 }));
