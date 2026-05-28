@@ -6180,6 +6180,45 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_logs: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          resource: string | null
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          resource?: string | null
+          status: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          resource?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sicoob_contact_mapping: {
         Row: {
           contact_id: string
@@ -8274,6 +8313,10 @@ export type Database = {
     }
     Functions: {
       calculate_level: { Args: { xp_amount: number }; Returns: number }
+      check_user_permission: {
+        Args: { p_permission_name: string }
+        Returns: boolean
+      }
       cleanup_expired_challenges: { Args: never; Returns: undefined }
       clear_login_attempts: { Args: { p_email: string }; Returns: undefined }
       contacts_count_by_type: {
@@ -8504,6 +8547,16 @@ export type Database = {
           p_entity_id?: string
           p_entity_type?: string
           p_user_agent?: string
+        }
+        Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_event_type: string
+          p_resource: string
+          p_status: string
         }
         Returns: undefined
       }

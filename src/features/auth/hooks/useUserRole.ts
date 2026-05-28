@@ -106,6 +106,31 @@ export function useUserRole() {
     }
   }, [user, fetchRoles]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('public:user_roles')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          log.info('Role change detected, refetching...');
+          fetchRoles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchRoles]);
+
   const hasRole = useCallback(
     (role: AppRole) => {
       const required = ROLE_RANK[role] ?? 0;

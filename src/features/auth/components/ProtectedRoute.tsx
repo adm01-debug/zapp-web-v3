@@ -97,14 +97,14 @@ export function ProtectedRoute({
     const hasRequiredRole = hasRole('dev' as AppRole) || effectiveRoles.some(role => hasRole(role));
     if (!hasRequiredRole) {
       if (fallback) return <>{fallback}</>;
-      return <Navigate to="/" replace />;
+      return <Navigate to="/access-denied" state={{ from: location }} replace />;
     }
   }
 
   // Check required permission
   if (requiredPermission && !hasPermission) {
     if (fallback) return <>{fallback}</>;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/access-denied" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
