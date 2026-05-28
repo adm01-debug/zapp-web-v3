@@ -98,14 +98,16 @@ async function persistOutbound(
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  const json = (data: unknown, status = 200) =>
-    new Response(JSON.stringify(data), {
-      status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-  let body: Record<string, unknown> = {};
-  try { body = await req.json(); } catch { body = {}; }
+  try {
+    // Basic staff authorization for all actions
+    await authorizeRoles(req, supabaseUrl, supabaseAnonKey, ['agent', 'supervisor', 'manager', 'admin', 'dev']);
+
+    let body: Record<string, unknown> = {};
+    try { body = await req.json(); } catch { body = {}; }
+
 
   const action = String(body.action ?? '');
   const instanceName = String(body.instanceName ?? body.instance ?? '');
