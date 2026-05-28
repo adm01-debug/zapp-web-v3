@@ -369,7 +369,10 @@ serve(async (req) => {
       });
     }
 
-    if (action === 'delete-instance') return await proxy(`/instance/delete/${instance}`, 'DELETE', body);
+    if (action === 'delete-instance') {
+      await authorizeRoles(req, supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, ['admin', 'dev']);
+      return await proxy(`/instance/delete/${instance}`, 'DELETE', body);
+    }
     if (action === 'set-presence') return await proxy(`/instance/setPresence/${instance}`, 'POST', { presence: (body as any).presence });
 
     if (action === 'set-settings') return await proxy(`/settings/set/${instance}`, 'POST', { rejectCall: (body as any).rejectCall, msgCall: (body as any).msgCall, groupsIgnore: (body as any).groupsIgnore, alwaysOnline: (body as any).alwaysOnline, readMessages: (body as any).readMessages, readStatus: (body as any).readStatus, syncFullHistory: (body as any).syncFullHistory });
