@@ -468,6 +468,4 @@ export async function authorizeRoles(
   return { user, roles: userRoles };
 }
 
-// Helper to avoid circular deps if createClient is needed
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
