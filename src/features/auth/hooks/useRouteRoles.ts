@@ -18,15 +18,20 @@ function fetchRoles(path: string): Promise<void> {
     try {
       const { data, error } = await supabase
         .from('route_permissions')
-        .select('*')
+        .select('allowed_roles')
         .eq('path', path)
         .maybeSingle();
-      if (error || !data) {
+      
+      if (error) {
+        console.warn(`[useRouteRoles] Error fetching roles for ${path}:`, error.message);
+        cache.set(path, null);
+      } else if (!data) {
         cache.set(path, null);
       } else {
-        cache.set(path, ((data as any).allowed_roles as AppRole[]) ?? []);
+        cache.set(path, (data.allowed_roles as AppRole[]) ?? []);
       }
-    } catch {
+    } catch (err) {
+      console.error(`[useRouteRoles] Critical error fetching roles for ${path}:`, err);
       cache.set(path, null);
     } finally {
       inflight.delete(path);
