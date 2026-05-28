@@ -60,6 +60,8 @@ export function useUserRole() {
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
+      
+      console.log(`[useUserRole] Fetching roles for ${user.id}`, { data, error });
 
       if (!mountedRef.current) return;
 
