@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { AuthProvider } from '../features/auth/components/AuthProvider';
 import { supabase } from '../integrations/supabase/client';
 
 // Mock Supabase client
@@ -24,6 +25,10 @@ describe('Auth Flows', () => {
     vi.clearAllMocks();
   });
 
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <AuthProvider>{children}</AuthProvider>
+  );
+
   it('should handle signIn successfully', async () => {
     const mockUser = { id: 'test-user-id', email: 'test@example.com' };
     const mockSession = { user: mockUser, access_token: 'fake-token' };
@@ -33,7 +38,7 @@ describe('Auth Flows', () => {
       error: null,
     });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await act(async () => {
       await result.current.signIn('test@example.com', 'password123');
@@ -48,7 +53,7 @@ describe('Auth Flows', () => {
   it('should handle signOut successfully', async () => {
     (supabase.auth.signOut as any).mockResolvedValueOnce({ error: null });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await act(async () => {
       await result.current.signOut();
@@ -57,3 +62,4 @@ describe('Auth Flows', () => {
     expect(supabase.auth.signOut).toHaveBeenCalled();
   });
 });
+
