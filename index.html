@@ -84,49 +84,28 @@
         <div class="loader-dot"></div>
         <div class="loader-dot"></div>
       </div>
-      <div id="root-loading-subtitle">Se o preview estiver preso, vamos restaurar automaticamente.</div>
+      <div id="root-loading-subtitle">Carregando a plataforma...</div>
     </div>
     <div id="root"></div>
     <script>
       (function () {
+        // Hides the boot loader once React commits its first render.
         window.__zappHideRootLoader = function () {
           const loader = document.getElementById('root-loading');
           if (!loader) return;
           loader.style.opacity = '0';
           setTimeout(() => loader.remove(), 300);
         };
-
-        setTimeout(() => {
-          const root = document.getElementById('root');
-          const loader = document.getElementById('root-loading');
-          if (!loader || (root && root.childElementCount > 0)) return;
-          const subtitle = document.getElementById('root-loading-subtitle');
-          const alreadyTried = sessionStorage.getItem('zapp-preview-recovery-attempted') === '1';
-          if (alreadyTried) {
-            if (subtitle) subtitle.textContent = 'O preview ainda não respondeu. Use o botão de atualizar do preview.';
-            return;
-          }
-          sessionStorage.setItem('zapp-preview-recovery-attempted', '1');
-          if (subtitle) subtitle.textContent = 'Restaurando o preview e limpando cache local...';
-          Promise.all([
-            'serviceWorker' in navigator
-              ? navigator.serviceWorker.getRegistrations?.().then((regs) => Promise.all(regs.map((reg) => reg.unregister()))).catch(() => undefined)
-              : Promise.resolve(),
-            'caches' in window
-              ? caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).catch(() => undefined)
-              : Promise.resolve(),
-          ]).finally(() => {
-            console.error('CRITICAL: Preview failed to load after 4.5s. Triggering automatic cache recovery and reload.');
-            window.location.reload();
-          });
-
-        }, 4500);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Safety net: if React mounted but forgot to hide the loader, remove it.
       window.addEventListener('load', () => {
-        setTimeout(() => window.__zappHideRootLoader?.(), 250);
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          if (root && root.childElementCount > 0) window.__zappHideRootLoader?.();
+        }, 500);
       });
     </script>
   </body>
