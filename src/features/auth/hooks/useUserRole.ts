@@ -31,7 +31,7 @@ const ROLE_RANK: Record<AppRole, number> = {
 };
 
 export function useUserRole() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDev, setIsDev] = useState(false);

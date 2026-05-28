@@ -27,7 +27,7 @@ export function ProtectedRoute({
   fallback,
   routePath,
 }: ProtectedRouteProps) {
-  const { user, loading: authLoading, profile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { roles, loading: rolesLoading, hasRole, refetch: refetchRoles } = useUserRole();
   const location = useLocation();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
