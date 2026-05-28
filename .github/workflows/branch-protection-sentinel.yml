@@ -16,7 +16,7 @@ jobs:
         run: |
           set -euo pipefail
           base_ref="origin/${{ github.base_ref }}"
-          git fetch origin "${{ github.base_ref }}" --depth=1
+          git fetch origin "${{ github.base_ref }}"
 
           matches=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
             | { grep -E '^\+[^+].*console\.log' || true; } \
@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           base_ref="origin/${{ github.base_ref }}"
-          git fetch origin "${{ github.base_ref }}" --depth=1
+          git fetch origin "${{ github.base_ref }}"
 
           new_any_count=$(git diff --diff-filter=AM --unified=0 "$base_ref"...HEAD -- src \
             | { grep -E '^\+[^+].*:\s*any\b' || true; } \

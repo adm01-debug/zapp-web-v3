@@ -56,6 +56,10 @@ export function RealtimeInboxView() {
   const inbox = useRealtimeInbox();
   const { profile } = useAuth();
   
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
     const key = profile?.id ? `zapp:sidebarWidth:${profile.id}${workspacePart}` : 'zapp:sidebarWidth';
@@ -67,7 +71,6 @@ export function RealtimeInboxView() {
   });
   
   const isResizing = useRef(false);
-  const lastWidth = useRef(391);
 
   const saveWidth = useCallback((width: number) => {
     const workspacePart = profile?.department_id ? `:${profile.department_id}` : '';
@@ -99,7 +102,6 @@ export function RealtimeInboxView() {
 
     setSidebarWidth(newWidth);
     saveWidth(newWidth);
-    lastWidth.current = newWidth;
   }, [saveWidth, isMobile]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -130,9 +132,10 @@ export function RealtimeInboxView() {
     }
   }, [profile?.id, profile?.department_id]);
 
-  // Handle window resize to clamp sidebar width
+  // Handle window resize to clamp sidebar width and keep windowWidth state reactive
   useEffect(() => {
     const onWindowResize = () => {
+      setWindowWidth(window.innerWidth);
       setSidebarWidth(prev => {
         const maxWidth = Math.min(600, window.innerWidth - (isMobile ? 0 : 60));
         if (prev > maxWidth) return maxWidth;
@@ -294,7 +297,7 @@ export function RealtimeInboxView() {
             "relative flex h-full transition-all duration-300 ease-in-out",
             isMobile && inbox.selectedContactId && "hidden"
           )}
-          style={{ width: isMobile ? (sidebarWidth >= window.innerWidth - 20 ? '100%' : `${sidebarWidth}px`) : `${sidebarWidth}px` }}
+          style={{ width: isMobile ? (sidebarWidth >= windowWidth - 20 ? '100%' : `${sidebarWidth}px`) : `${sidebarWidth}px` }}
         >
           <ConversationListSidebar 
             inbox={inbox} 
@@ -311,7 +314,7 @@ export function RealtimeInboxView() {
           className={cn(
             "absolute top-1/2 -translate-y-1/2 z-[60] w-6 h-12 bg-background border border-border shadow-lg rounded-r-xl flex items-center justify-center hover:bg-muted active:scale-95 transition-all duration-200",
             (isMobile && inbox.selectedContactId) && "hidden",
-            (sidebarWidth === 391 || (isMobile && sidebarWidth === window.innerWidth)) && "opacity-0 pointer-events-none"
+            (sidebarWidth === 391 || (isMobile && sidebarWidth === windowWidth)) && "opacity-0 pointer-events-none"
           )}
           style={{ left: `${sidebarWidth}px` }}
           title="Resetar largura padrão (391px)"
@@ -332,7 +335,7 @@ export function RealtimeInboxView() {
             (isMobile && inbox.selectedContactId) && "hidden",
             // Feedback visual ao atingir limites
             sidebarWidth <= 280 && "after:absolute after:inset-y-0 after:left-0 after:w-1 after:bg-destructive after:animate-pulse bg-destructive/5",
-            sidebarWidth >= Math.min(600, window.innerWidth - (isMobile ? 0 : 60)) && "after:absolute after:inset-y-0 after:right-0 after:w-1 after:bg-destructive after:animate-pulse bg-destructive/5"
+            sidebarWidth >= Math.min(600, windowWidth - (isMobile ? 0 : 60)) && "after:absolute after:inset-y-0 after:right-0 after:w-1 after:bg-destructive after:animate-pulse bg-destructive/5"
           )}
           style={{ left: `${sidebarWidth}px` }}
         >
@@ -343,8 +346,8 @@ export function RealtimeInboxView() {
       <div 
         className={cn(
           'flex-1 flex min-w-0 min-h-0 relative z-10 bg-card/20 h-full overflow-hidden transition-all duration-300 ease-in-out', 
-          isMobile && !inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'flex' : 'hidden'),
-          isMobile && inbox.selectedContactId && (sidebarWidth < window.innerWidth - 60 ? 'relative flex' : 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300')
+          isMobile && !inbox.selectedContactId && 'hidden',
+          isMobile && inbox.selectedContactId && 'fixed inset-0 z-[100] animate-in slide-in-from-right duration-300'
         )}
       >
         {inbox.legacyConversation ? (

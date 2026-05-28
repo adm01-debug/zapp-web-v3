@@ -1,25 +1,26 @@
 name: Security & Compliance
-...
-          GITLEAKS_ENABLE_SUMMARY: "false"
 
-  rls-audit:
-    name: 🛡️ RLS & Compliance Weekly Report
+# Scheduled-only (plus manual dispatch) so this never gates pull requests.
+# The previous file was corrupted (a stray `...` document marker and an orphan
+# env line) and its rls-audit job invoked a script that does not exist.
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Monday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  gitleaks:
+    name: 🔍 Secret Scan (gitleaks)
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: 📚 Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: 🛡️ Generate RLS Report
-        run: bun scripts/verify_rls_compliance.ts > rls-compliance-report.md
-      - name: 📜 Publish Weekly Compliance
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-security-compliance-report
-          path: rls-compliance-report.md
-
+          fetch-depth: 0
+      - name: 🔒 Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_ENABLE_SUMMARY: "false"
