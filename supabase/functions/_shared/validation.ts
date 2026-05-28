@@ -415,3 +415,57 @@ export function requireEnv(name: string): string {
   }
   return value;
 }
+
+/**
+ * Validates that the caller has one of the required roles.
+ * Returns the caller's user object if authorized, otherwise throws an error response.
+ */
+export async function authorizeRoles(
+  req: Request,
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  requiredRoles: string[] = ['admin', 'dev']
+): Promise<{ user: any; roles: string[] }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) throw { message: "Não autorizado", status: 401 };
+
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  if (authError || !user) throw { message: "Não autorizado", status: 401 };
+
+  // Fetch user roles using service role to bypass RLS for checking
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const adminClient = createClient(supabaseUrl, serviceRoleKey);
+  
+  const { data: roleData, error: roleError } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+
+  if (roleError) throw { message: "Erro ao verificar permissões", status: 500 };
+
+  const userRoles = (roleData || []).map(r => r.role);
+  const isAuthorized = userRoles.some(role => requiredRoles.includes(role)) || userRoles.includes('dev');
+
+  if (!isAuthorized) {
+    // Log unauthorized attempt to the database via RPC
+    await adminClient.rpc('log_security_event', {
+      p_event_type: 'unauthorized_api_call',
+      p_resource: new URL(req.url).pathname,
+      p_action: req.method,
+      p_status: 'denied',
+      p_details: { user_id: user.id, required_roles: requiredRoles, current_roles: userRoles }
+    });
+    
+    throw { message: "Acesso negado: permissão insuficiente", status: 403 };
+  }
+
+  return { user, roles: userRoles };
+}
+
+// Helper to avoid circular deps if createClient is needed
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
