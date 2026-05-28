@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
 /**
  * Shared validation, security, and logging utilities for Edge Functions.
  * Provides input sanitization, rate limiting, structured logging, and standard error responses.
