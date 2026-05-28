@@ -24,10 +24,11 @@ class ValidationLogger {
 
     // Intercept fetch for endpoint validation
     const originalFetch = window.fetch;
-    window.fetch = async (...args: any[]) => {
+    window.fetch = async (...args: [URL | RequestInfo, RequestInit?]) => {
       const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
       try {
-        const response = await originalFetch.apply(window, args);
+        const response = await originalFetch(...args);
+
         if (!response.ok) {
           this.addEvent('network', `Failed to fetch: ${url} (${response.status})`);
         }
