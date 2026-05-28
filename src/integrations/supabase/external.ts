@@ -1,25 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
+import { supabase as internalSupabase } from './client';
 
 // O Supabase interno (Managed by Lovable)
-const INTERNAL_URL = import.meta.env.VITE_SUPABASE_URL;
-const INTERNAL_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Re-exportamos para compatibilidade se necessário, mas preferimos usar o do client.ts
+export const supabase = internalSupabase;
 
 // O Supabase externo (Self-hosted)
 // Estas variáveis devem ser configuradas no Lovable Secrets
 const EXTERNAL_URL = import.meta.env.VITE_EXTERNAL_SUPABASE_URL;
 const EXTERNAL_ANON_KEY = import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY;
 
-if (!INTERNAL_URL || !INTERNAL_ANON_KEY) {
-  throw new Error('Supabase Interno não configurado corretamente.');
-}
-
-export const supabase = createClient<Database>(INTERNAL_URL, INTERNAL_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
 
 // Cliente para o Supabase Externo (Self-hosted)
 // Se as variáveis externas existirem, criamos o cliente

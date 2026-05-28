@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { compression } from 'vite-plugin-compression2';
@@ -73,16 +73,5 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false,
     cssCodeSplit: true,
     sourcemap: mode === 'development',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tooltip', 'lucide-react'],
-          'chart-vendor': ['recharts'],
-          'framer-vendor': ['framer-motion'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-        }
-      }
-    }
   }
 }));
