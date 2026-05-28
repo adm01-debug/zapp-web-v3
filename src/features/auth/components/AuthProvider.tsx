@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const channel = supabase
-      .channel(`profile-updates-${user.id}`)
+      .channel(`profile-updates-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         'postgres_changes',
         {
