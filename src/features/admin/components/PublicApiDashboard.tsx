@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('PublicApiDashboard');
@@ -15,47 +16,47 @@ interface ApiLog {
   id: string;
   action: string;
   created_at: string;
-  details: Record<string, any> | null;
+  details: Record<string, unknown> | null;
   entity_type: string | null;
 }
 
 export function PublicApiDashboard() {
-  const [apiToken, setApiToken] = useState('');
   const [newToken, setNewToken] = useState('');
   const [showToken, setShowToken] = useState(false);
-  const [logs, setLogs] = useState<ApiLog[]>([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Load API token from global_settings
-      const { data: setting , error } = await supabase
-        .from('global_settings')
-        .select('value')
-        .eq('key', 'api_token')
-        .single();
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ['admin', 'public-api-dashboard'],
+    queryFn: async () => {
+      try {
+        const { data: setting } = await supabase
+          .from('global_settings')
+          .select('value')
+          .eq('key', 'api_token')
+          .single();
 
-      if (setting?.value) setApiToken(setting.value as string);
+        const { data: auditLogs } = await supabase
+          .from('audit_logs')
+          .select('id, action, created_at, details, entity_type')
+          .eq('entity_type', 'public_api')
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      // Load recent API usage logs from audit_logs
-      const { data: auditLogs , error: auditLogsErr } = await supabase
-        .from('audit_logs')
-        .select('id, action, created_at, details, entity_type')
-        .eq('entity_type', 'public_api')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        return {
+          apiToken: (setting?.value as string) || '',
+          logs: (auditLogs || []) as ApiLog[],
+        };
+      } catch (err) {
+        log.warn('Failed to load API data:', err);
+        return { apiToken: '', logs: [] as ApiLog[] };
+      }
+    },
+  });
 
-      setLogs((auditLogs || []) as ApiLog[]);
-    } catch (err) {
-      log.warn('Failed to load API data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
+  const apiToken = data?.apiToken ?? '';
+  const logs = data?.logs ?? [];
+  const loading = isFetching;
+  const loadData = () => { void refetch(); };
 
   const generateToken = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -72,9 +73,9 @@ export function PublicApiDashboard() {
         .from('global_settings')
         .upsert({ key: 'api_token', value: newToken, updated_at: new Date().toISOString() }, { onConflict: 'key' });
       if (upsertError) throw upsertError;
-      setApiToken(newToken);
       setNewToken('');
       toast.success('Token de API salvo com sucesso');
+      void refetch();
     } catch {
       toast.error('Erro ao salvar token');
     } finally {
@@ -189,22 +190,22 @@ export function PublicApiDashboard() {
             </p>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-auto">
-              {logs.map(log => (
-                <div key={log.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-                  {log.action.includes('error') || log.action.includes('fail') ? (
+              {logs.map(entry => (
+                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                  {entry.action.includes('error') || entry.action.includes('fail') ? (
                     <XCircle className="w-4 h-4 text-destructive shrink-0" />
                   ) : (
                     <CheckCircle className="w-4 h-4 text-success shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{log.action}</p>
+                    <p className="text-sm font-medium truncate">{entry.action}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(log.created_at).toLocaleString('pt-BR')}
+                      {new Date(entry.created_at).toLocaleString('pt-BR')}
                     </p>
                   </div>
-                  {log.details && (
+                  {entry.details && (
                     <Badge variant="outline" className="text-[10px] shrink-0">
-                      {JSON.stringify(log.details).substring(0, 40)}...
+                      {JSON.stringify(entry.details).substring(0, 40)}...
                     </Badge>
                   )}
                 </div>

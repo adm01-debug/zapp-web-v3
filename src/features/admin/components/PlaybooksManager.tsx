@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,8 +51,7 @@ const CATEGORIES = [
 ];
 
 export function PlaybooksManager() {
-  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState<Playbook | null>(null);
   const [viewPlaybook, setViewPlaybook] = useState<Playbook | null>(null);
@@ -62,22 +62,19 @@ export function PlaybooksManager() {
   const [category, setCategory] = useState('general');
   const [steps, setSteps] = useState<PlaybookStep[]>([]);
 
-  useEffect(() => { loadPlaybooks(); }, []);
-
-  const loadPlaybooks = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('playbooks')
-      .select('*')
-      .order('category', { ascending: true });
-    if (data) {
-      setPlaybooks(data.map(p => ({
+  const { data: playbooks = [], isLoading: loading } = useQuery<Playbook[]>({
+    queryKey: ['admin', 'playbooks'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('playbooks')
+        .select('*')
+        .order('category', { ascending: true });
+      return (data || []).map(p => ({
         ...p,
         steps: Array.isArray(p.steps) ? (p.steps as unknown as PlaybookStep[]) : [],
-      })));
-    }
-    setLoading(false);
-  };
+      }));
+    },
+  });
 
   const openCreate = () => {
     setSelectedPlaybook(null);
@@ -125,7 +122,7 @@ export function PlaybooksManager() {
     if (!error) {
       toast.success(selectedPlaybook ? 'Playbook atualizado' : 'Playbook criado');
       setDialogOpen(false);
-      loadPlaybooks();
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'playbooks'] });
     } else {
       toast.error('Erro ao salvar');
     }
@@ -134,7 +131,7 @@ export function PlaybooksManager() {
   const deletePlaybook = async (id: string) => {
     await supabase.from('playbooks').delete().eq('id', id);
     toast.success('Playbook removido');
-    loadPlaybooks();
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'playbooks'] });
   };
 
   const grouped = playbooks.reduce<Record<string, Playbook[]>>((acc, pb) => {
