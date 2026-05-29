@@ -40,17 +40,23 @@ test.describe('Conversation & Routing Flows', () => {
     await page.locator('[data-testid="conversation-item"]').first().click();
     
     // Open routing/assignment menu
-    const assignButton = page.locator('button:has-text("Encaminhar"), button:has-text("Atribuir")').first();
-    await expect(assignButton).toBeVisible();
-    await assignButton.click();
+    // First check if it's already assigned (ChatAssignedBar)
+    const transferButton = page.locator('button:has-text("Transferir")').first();
+    if (await transferButton.isVisible()) {
+      await transferButton.click();
+    } else {
+      // Use the dropdown menu in header
+      await page.locator('button[aria-label="Mais ações"]').click();
+      await page.locator('[role="menuitem"]:has-text("Transferir")').click();
+    }
     
-    // Select an agent or department
-    const agentOption = page.locator('[role="menuitem"], .agent-select-option').first();
+    // Select an agent or department in TransferDialog
+    const agentOption = page.locator('[role="menuitem"], .agent-select-option, [data-testid="agent-option"]').first();
     await expect(agentOption).toBeVisible();
     await agentOption.click();
     
     // Verify success toast/indicator
-    await expect(page.locator('text=/sucesso|atribuído|encaminhado/i').first()).toBeVisible();
+    await expect(page.locator('text=/sucesso|atribuído|encaminhado|transferido/i').first()).toBeVisible();
   });
 
   test('should show error state when message sending fails', async ({ page }) => {
