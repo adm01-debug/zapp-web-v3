@@ -30,12 +30,12 @@ export function useOnboarding() {
       try {
         const { data, error } = await supabase
           .from('user_settings')
-          .select('id')
+          .select('onboarding_completed')
           .eq('user_id', user.id)
           .maybeSingle();
 
         // If user has settings, they've been here before
-        if (data) {
+        if (data && data.onboarding_completed) {
           setHasCompletedOnboarding(true);
           try { localStorage.setItem(`${ONBOARDING_KEY}_${user.id}`, 'true'); } catch { /* storage unavailable */ }
         } else {
@@ -52,16 +52,30 @@ export function useOnboarding() {
     checkOnboarding();
   }, [user]);
 
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
     if (user) {
-      try { localStorage.setItem(`${ONBOARDING_KEY}_${user.id}`, 'true'); } catch { /* storage unavailable */ }
+      try {
+        await supabase
+          .from('user_settings')
+          .update({ onboarding_completed: true })
+          .eq('user_id', user.id);
+        
+        localStorage.setItem(`${ONBOARDING_KEY}_${user.id}`, 'true');
+      } catch { /* ignore storage error */ }
       setHasCompletedOnboarding(true);
     }
   };
 
-  const resetOnboarding = () => {
+  const resetOnboarding = async () => {
     if (user) {
-      try { localStorage.removeItem(`${ONBOARDING_KEY}_${user.id}`); } catch { /* storage unavailable */ }
+      try {
+        await supabase
+          .from('user_settings')
+          .update({ onboarding_completed: false })
+          .eq('user_id', user.id);
+          
+        localStorage.removeItem(`${ONBOARDING_KEY}_${user.id}`);
+      } catch { /* ignore storage error */ }
       setHasCompletedOnboarding(false);
     }
   };
