@@ -7,7 +7,7 @@ import DOMPurify from 'dompurify';
  */
 export function formatWhatsAppText(text: string): string {
   // First: escape ALL HTML to neutralize any injected tags/scripts
-  let formatted = text
+  const formatted = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

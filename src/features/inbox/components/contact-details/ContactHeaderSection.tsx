@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Building, Briefcase, Crown } from 'lucide-react';
-import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { EnrichedContactData } from '@/hooks/useContactEnrichedData';
 import { ImagePreview } from '@/features/inbox/components/ImagePreview';

@@ -5,7 +5,6 @@ import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   CartesianGrid, XAxis, YAxis, Tooltip, Legend, LineChart, Line,
 } from 'recharts';
-import { format } from 'date-fns';
 import { GitCompare } from 'lucide-react';
 import { motion } from 'framer-motion';
 

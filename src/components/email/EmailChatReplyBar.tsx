@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import DOMPurify from 'dompurify';
-import { Send, Paperclip, ChevronDown, ChevronUp, Signature, X, Loader2, Clock, AlertCircle } from 'lucide-react';
+import { Send, Paperclip, ChevronDown, ChevronUp, Signature, X, Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { emailSendMessage } from '@/hooks/gmail/gmailApi';

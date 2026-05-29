@@ -8,7 +8,6 @@ import { MessageBatcherIndicator } from './MessageBatcherIndicator';
 import { InboxEmptyChat } from './InboxEmptyChat';
 import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { ConversationListSidebar } from './ConversationListSidebar';
-import { InboxKpiBar } from './InboxKpiBar';
 import { useGlobalSearchShortcut } from '@/hooks/useGlobalSearchShortcut';
 import { useInboxBulkActions } from '@/features/inbox';
 import { useInboxFilters } from '@/features/inbox';

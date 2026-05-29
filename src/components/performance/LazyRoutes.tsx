@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, ComponentType } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy loaded views

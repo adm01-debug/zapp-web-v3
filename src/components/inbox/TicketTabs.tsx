@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MessageSquare, CheckCircle2, Search, Users, Headphones, Clock } from 'lucide-react';
+import { MessageSquare, CheckCircle2, Users, Headphones, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useQueues } from '@/hooks/useQueues';

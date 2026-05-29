@@ -5,7 +5,6 @@
  * Uses proper BR phone normalization to catch 9th digit variations.
  */
 import { useState, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { normalizePhone } from '@/lib/phoneUtils';
 import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';

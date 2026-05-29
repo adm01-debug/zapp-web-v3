@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { cn } from '@/lib/utils';
 import { Send, Search, Heart, Bell, Settings, Star } from 'lucide-react';
 
 interface BorderRadiusControlProps {

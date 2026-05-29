@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,6 @@ import { SLADeliveryConfigSection } from './SLADeliveryConfigSection';
 import { ExternalContact360Panel } from './ExternalContact360Panel';
 import { ContactIntelligencePanel } from './ContactIntelligencePanel';
 import { WhatsAppStatusSection } from './WhatsAppStatusSection';
-import { CustomFieldsSection } from '@/components/contacts/CustomFieldsSection';
 import { PrivateNotes } from '@/features/inbox/components/PrivateNotes';
 import { ConversationHistory } from '@/features/inbox/components/ConversationHistory';
 import { MediaGallery } from '@/features/inbox/components/MediaGallery';

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import {
   AlertTriangle, TrendingDown, TrendingUp, Users, BarChart3,
-  Activity, Eye, Mail, Bell, ChevronRight, User, Clock,
+  Activity, Mail, Bell, ChevronRight, Clock,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getSentimentColor, getSentimentBg } from './useSentimentData';
+import { getSentimentColor } from './useSentimentData';
 
 interface Alert {
   id: string;

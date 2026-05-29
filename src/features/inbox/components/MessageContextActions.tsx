@@ -3,7 +3,6 @@ import { getLogger } from '@/lib/logger';
 
 const log = getLogger('MessageContextActions');
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/types/chat';
 import { toast } from 'sonner';
 import {
@@ -19,10 +18,8 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  Archive,
   CheckCheck,
   EyeOff,
-  Ban,
 } from 'lucide-react';
 
 interface MessageContextActionsProps {

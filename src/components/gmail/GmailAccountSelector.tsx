@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Mail, Plus, Settings, Wifi, WifiOff, RefreshCw, ChevronDown, LogOut, AlertTriangle } from 'lucide-react';
+import { Plus, Settings, Wifi, WifiOff, RefreshCw, ChevronDown, LogOut, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

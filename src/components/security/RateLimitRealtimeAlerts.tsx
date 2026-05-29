@@ -83,7 +83,7 @@ export function RateLimitRealtimeAlerts() {
       audio.play().catch(() => {});
     } catch (e) {
       // Audio unsupported/unavailable — alerts still work without the sound.
-      console.debug('[RateLimitRealtimeAlerts] could not play alert sound', e);
+      console.warn('[RateLimitRealtimeAlerts] could not play alert sound', e);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 import { useAuth } from '@/features/auth';

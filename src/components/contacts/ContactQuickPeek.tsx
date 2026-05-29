@@ -4,7 +4,7 @@ import {
 } from '@/components/ui/hover-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Mail, Building, Briefcase, Calendar } from 'lucide-react';
+import { Phone, Mail, Briefcase, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

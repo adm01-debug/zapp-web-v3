@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Zap, Plus, Trash2, Play, Pause, ExternalLink, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Zap, Plus, Trash2, Play, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 
 interface N8nWorkflow {
   id: string;

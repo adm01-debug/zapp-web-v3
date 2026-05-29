@@ -6,7 +6,6 @@
  */
 import { useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
 

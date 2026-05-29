@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, CheckCircle, Loader2, Clock } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, Clock } from 'lucide-react';
 import { log } from '@/lib/logger';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';

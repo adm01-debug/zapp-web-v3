@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  Bell, Volume2, VolumeX, Play, Moon,
-  AlertTriangle, MessageSquare, AtSign, RotateCcw,
+  Bell, Play, Moon,
+  AlertTriangle, MessageSquare, AtSign,
   CheckCircle2, TrendingDown, Activity, Mic,
 } from 'lucide-react';
 import { NotificationSettings, SoundTypeOption } from '@/hooks/useNotificationSettings';

@@ -17,7 +17,7 @@ export function getDirectConfig(): DirectEvoConfig | null {
     if (cfg.evolution_api_url && cfg.evolution_api_key) return cfg;
   } catch (e) {
     // Malformed/absent localStorage config — treat as "no direct config".
-    console.debug('[evolutionDirectClient] invalid stored config', e);
+    console.warn('[evolutionDirectClient] invalid stored config', e);
   }
   return null;
 }

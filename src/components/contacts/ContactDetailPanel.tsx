@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   X, MessageSquare, Edit, Phone, Mail, Building, Briefcase,
-  Calendar, Tag, Clock, Zap,
+  Calendar, Tag, Clock,
 } from 'lucide-react';
 import { ContactActivityTimeline } from './ContactActivityTimeline';
 import { ContactNotes } from './ContactNotes';

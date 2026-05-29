@@ -58,7 +58,7 @@ export const useThemeAudit = () => {
           presetId = parsed.preset || DEFAULT_PRESET_ID;
         } catch (e) {
           // Corrupted theme preference — fall back to the default preset.
-          console.debug('[useThemeAudit] failed to parse saved theme', e);
+          console.warn('[useThemeAudit] failed to parse saved theme', e);
         }
       }
       

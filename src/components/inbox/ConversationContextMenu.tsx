@@ -22,8 +22,6 @@ import {
   Tag,
   Users,
   Clock,
-  Bell,
-  BellOff,
   Trash2,
   MessageSquare,
   AlertTriangle,

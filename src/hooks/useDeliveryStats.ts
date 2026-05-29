@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dbList } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
-import { startOfHour, format, parseISO, addHours, subHours } from 'date-fns';
+import { startOfHour, format, parseISO, subHours } from 'date-fns';
 
 export interface ParticipantStats {
   participantJid: string;

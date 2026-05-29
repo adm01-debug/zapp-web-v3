@@ -5,7 +5,7 @@ import { fromTable } from '@/lib/supabaseHelpers';
 import { toast } from 'sonner';
 import { ShieldBan, Trash2, Plus, Search, UserX, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,7 +21,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface BlacklistEntry {
   id: string;

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { buttonVariants } from "../button";
 import { cn } from "@/lib/utils";
-import { ExternalLink, ArrowRight, ChevronRight, Github } from "lucide-react";
+import { ExternalLink, ArrowRight, Github } from "lucide-react";
 
 /**
  * Links in this design system use primary color tokens and follow strict typography rules.

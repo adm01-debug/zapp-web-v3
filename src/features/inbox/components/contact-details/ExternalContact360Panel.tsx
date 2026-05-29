@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Building, Globe, Phone, User, MessageSquare, Target, Heart, Star, BarChart3, AlertCircle, Sparkles } from 'lucide-react';
-import type { Contact360Data } from '@/types/contact360';
 import {
   SectionTitle, InfoRow, RFMBadge, CompanyCard, CustomerProfile,
   ContactDetailCard, StakeholderCard, InteractionsTimeline,

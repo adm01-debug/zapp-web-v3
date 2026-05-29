@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Search, Clock, Sparkles, X, Tag, Building, User,
+  Search, Clock, Sparkles, X, Tag, Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

@@ -1,6 +1,5 @@
 import { expect, test, describe } from "bun:test";
 import { getSuggestion } from "./check-design-system";
-import { DS_CONFIG } from "./ds-config";
 
 const ALLOWED_TOKENS = [
   "destructive", "warning", "primary", "secondary", "muted", "accent", 

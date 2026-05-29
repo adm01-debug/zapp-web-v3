@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, RefreshCw, Mail, MailOpen, Paperclip, Search, ChevronRight } from 'lucide-react';
+import { Building2, RefreshCw, Mail, MailOpen, Paperclip, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

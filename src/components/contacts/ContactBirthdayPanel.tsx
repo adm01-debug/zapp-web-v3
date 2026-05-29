@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Cake, Gift, PartyPopper, Calendar } from 'lucide-react';
-import { format, differenceInDays, setYear, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
+import { format, differenceInDays, setYear, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getAvatarColor, getInitials } from '@/lib/avatar-colors';

@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState, useRef } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { cn } from '@/lib/utils';
 import { Message } from '@/types/chat';
@@ -17,9 +17,7 @@ import { SecondaryToolbar, TertiaryToolsMenu } from './ChatInputToolbars';
 import { StickerPicker } from '@/features/inbox/components/StickerPicker';
 import { CustomEmojiPicker } from '@/features/inbox/components/CustomEmojiPicker';
 import { RichTextToggle } from './RichTextToolbar';
-import { FileUploader } from '@/features/inbox/components/FileUploader';
 import { Send, Mic, Check, Plus, Loader2, X, Image as ImageIcon, FileText, FileVideo, FileAudio, Clock } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 import { InputPreviewBars } from './InputPreviewBars';
 import { useChatInputLogic, setNativeValue } from './useChatInputLogic';
 import { playNotificationSound } from '@/utils/notificationSounds';
@@ -545,7 +543,7 @@ export function ChatInputArea(props: ChatInputAreaProps) {
                 </TooltipTrigger>
                 {(isSending || !!editingMessage || isRecordingAudio) && (
                   <TooltipContent side="top" className="text-[10px] font-medium bg-muted text-muted-foreground border-border shadow-md">
-                    {isSending ? "Aguarde o envio concluir" : !!editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
+                    {isSending ? "Aguarde o envio concluir" : editingMessage ? "Finalize a edição para usar ferramentas" : "Finalize a gravação para usar ferramentas"}
                   </TooltipContent>
                 )}
               </Tooltip>

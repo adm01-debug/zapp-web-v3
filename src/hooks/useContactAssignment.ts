@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 import { dbFrom } from '@/integrations/datasource/db';

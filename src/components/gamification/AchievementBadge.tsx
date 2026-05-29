@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion';
 import { 
   Zap, Flame, Target, Star, Crown, Trophy, Rocket, 
-  MessageSquare, Medal, Users, Clock, Award, Sparkles,
-  TrendingUp, CheckCircle2
+  MessageSquare, Medal, Users, Clock, Award, Sparkles, CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ACHIEVEMENT_TYPES } from '@/features/admin';

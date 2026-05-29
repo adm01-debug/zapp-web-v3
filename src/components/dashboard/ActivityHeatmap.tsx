@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -17,9 +16,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Calendar, Activity, TrendingUp, Flame } from 'lucide-react';
-import { format, subDays, startOfWeek, eachDayOfInterval, isSameDay, getDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { dbFrom } from '@/integrations/datasource/db';
 

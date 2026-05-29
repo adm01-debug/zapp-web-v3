@@ -1,9 +1,8 @@
-import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TypingIndicatorCompact, TypingIndicatorInline } from '@/features/inbox/components/TypingIndicator';
+import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndicator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SLAIndicatorForContact } from '@/features/inbox/components/SLAIndicatorForContact';
 import { ChatHeaderToolbar } from './ChatHeaderToolbar';

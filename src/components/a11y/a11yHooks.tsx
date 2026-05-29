@@ -114,7 +114,6 @@ export function useFocusManagement() {
 }
 
 // Inline LiveRegion for Announcer (avoids circular import)
-import { cn } from '@/lib/utils';
 function LiveRegion({ message }: { message: string }) {
   return <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">{message}</div>;
 }

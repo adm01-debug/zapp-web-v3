@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { AdvancedCRMSearch } from '@/components/contacts/AdvancedCRMSearch';
 import { dbFrom } from '@/integrations/datasource/db';
 

@@ -1,6 +1,5 @@
 
 import { safeClient } from '@/integrations/supabase/safeClient';
-import { EmailHealthInfo, EmailFailure, EmailHealthFilters } from './types';
 
 export class EmailHealthRepository {
   async getRemoteSummary() {

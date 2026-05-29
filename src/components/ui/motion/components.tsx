@@ -1,4 +1,4 @@
-import { motion, HTMLMotionProps, Variants, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, HTMLMotionProps, useReducedMotion } from 'framer-motion';
 import { forwardRef, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { fadeIn, fadeInUp, scaleIn, staggerContainer, staggerItem } from './variants';

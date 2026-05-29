@@ -1,5 +1,4 @@
 import { whatsappStatusRepository, WhatsAppStatusMessage, WhatsAppPresenceInfo, ContactConnectionInfo } from '@/features/inbox/data-access/whatsappStatusRepository';
-import { log } from '@/lib/logger';
 
 const normalizeDigits = (value?: string | null) => (value ?? '').replace(/\D/g, '');
 

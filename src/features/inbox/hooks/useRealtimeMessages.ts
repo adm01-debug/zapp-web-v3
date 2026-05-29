@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase, externalSupabase } from '@/integrations/supabase/external';
-import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { getLogger } from '@/lib/logger';
 import { sendMessageToContact } from './realtime/messageSender';
@@ -10,7 +9,7 @@ import {
   getUniqueMessageContactIds, chunkArray,
 } from './realtime/realtimeUtils';
 import { useRealtimeNotifications } from './realtime/useRealtimeNotifications';
-import { useMessageUpdateBatcher, type MessageBatcherStatus } from './realtime/useMessageUpdateBatcher';
+import { useMessageUpdateBatcher } from './realtime/useMessageUpdateBatcher';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { dbFrom, dbTable } from '@/integrations/datasource/db';
 import { MOCK_CONVERSATIONS } from '../components/conversation-list/__mocks__/mockConversations';

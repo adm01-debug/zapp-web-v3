@@ -14,7 +14,6 @@ import { AIAutoTagsConfig } from '@/components/settings/AIAutoTagsConfig';
 import { AIProvidersManager } from '@/components/settings/AIProvidersManager';
 import { CSATAutoConfig } from '@/components/settings/CSATAutoConfig';
 import { ChatbotL1Config } from '@/components/settings/ChatbotL1Config';
-import { LanguageSelector } from '@/components/settings/LanguageSelector';
 import { SkillBasedRoutingSettings } from '@/components/settings/SkillBasedRoutingSettings';
 import { SoundCustomizationPanel } from '@/components/settings/SoundCustomizationPanel';
 import { ElevenLabsDialogue } from '@/components/voice/ElevenLabsDialogue';

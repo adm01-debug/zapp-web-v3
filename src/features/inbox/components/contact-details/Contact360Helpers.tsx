@@ -2,16 +2,15 @@
  * ExternalContact360Panel — Helper sub-components
  * Extracted from the main panel to reduce file size.
  */
-import { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
   Building, Globe, MapPin, Phone, Mail, TrendingUp,
-  ShoppingCart, User, Calendar, ExternalLink, Copy,
-  CircleDollarSign, Target, Heart, Briefcase, Award,
+  ShoppingCart, User, Calendar, ExternalLink,
+  CircleDollarSign, Briefcase, Award,
   Shield, Star, FileText, DollarSign, Tag, Clock,
-  Instagram, Linkedin, Facebook, MessageSquare,
+  Instagram, Linkedin, Facebook,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

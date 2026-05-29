@@ -3,19 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sticker, Upload, Star, Trash2, Search, Grid3X3, LayoutGrid, Loader2, Camera } from 'lucide-react';
+import { Sticker, Search, Grid3X3, LayoutGrid } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { StickerGrid } from './StickerGrid';
 import { StickerUploadPreview } from './StickerUploadPreview';
 import { StickerCategoryBar } from './StickerCategoryBar';
 import { PersonalStickers } from './PersonalStickers';
-import { CATEGORY_LABELS, ALL_CATEGORIES, type StickerItem, type PendingUpload } from './StickerTypes';
-import { motion, AnimatePresence } from 'framer-motion';
+import { type StickerItem, type PendingUpload } from './StickerTypes';
+import { AnimatePresence } from 'framer-motion';
 
 interface StickerManagerProps {
   onSend?: (stickerUrl: string) => void;

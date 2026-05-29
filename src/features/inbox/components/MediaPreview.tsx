@@ -1,13 +1,12 @@
 import { useState, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { log } from '@/lib/logger';
-import {
-  X, Download, Play, Pause, FileText, File, FileSpreadsheet,
-  FileImage, FileArchive, ExternalLink, Maximize, Loader2, VideoOff, RotateCw
+import { Download, Play, FileText, File, FileSpreadsheet,
+  FileImage, FileArchive, Maximize, Loader2, VideoOff, RotateCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getFileCategory, formatFileSize, getFileExtension, WHATSAPP_FILE_TYPES } from '@/utils/whatsappFileTypes';
+import { formatFileSize, getFileExtension } from '@/utils/whatsappFileTypes';
 import { VideoFullscreen } from './VideoFullscreen';
 import { useMediaRefresh } from '@/features/inbox';
 

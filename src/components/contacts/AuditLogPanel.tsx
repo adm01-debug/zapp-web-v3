@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { History, RefreshCw, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface AuditEntry {
   id:         string;

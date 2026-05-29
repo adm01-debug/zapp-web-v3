@@ -17,15 +17,11 @@ import {
   Heart,
   Clock,
   AlertTriangle,
-  MessageSquare,
   Target,
   Zap,
   Shield,
   TrendingDown,
-  User,
-  Calendar,
   ThumbsUp,
-  Ban,
 } from 'lucide-react';
 import type {
   ContactBriefing,

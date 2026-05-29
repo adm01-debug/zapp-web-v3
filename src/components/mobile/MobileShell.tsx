@@ -5,7 +5,7 @@ import { NotificationsPanel, Notification } from '@/components/mobile/Notificati
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { BottomNavigation } from '@/components/ui/mobile-components';
 import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
-import { MessageSquare, BarChart3, Users, MessagesSquare, Mail, Menu } from 'lucide-react';
+import { MessageSquare, Users, MessagesSquare, Mail, Menu } from 'lucide-react';
 
 interface MobileShellProps {
   currentView: string;

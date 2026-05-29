@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, openConversation, loginAs } from './helpers/testHelpers';
+import { loginAs } from './helpers/testHelpers';
 
 /**
  * Department E2E Tests - RBAC, Management, and Access Validation.

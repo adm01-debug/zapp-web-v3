@@ -7,8 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, FileText, Shield, RotateCcw, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { sanitizeText } from '@/lib/sanitize';
-import { dbFrom, dbList } from '@/integrations/datasource/db';
-import { RPC } from '@/integrations/datasource/rpcCatalog';
 
 interface Activity { id: string; type: string; label: string; detail?: string; timestamp: string; }
 

@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast';
 import { playNotificationSound, showBrowserNotification, requestNotificationPermission } from '@/utils/notificationSound';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
-import { dbFrom, dbTable } from '@/integrations/datasource/db';
+import { dbTable } from '@/integrations/datasource/db';
 
 interface TranscriptionNotificationOptions {
   enabled?: boolean;

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Shield, Activity, Ban, Globe, AlertTriangle, 
-  TrendingUp, TrendingDown, Clock, RefreshCw,
+  Shield, Activity, Ban, Globe, AlertTriangle, Clock, RefreshCw,
   BarChart3
 } from 'lucide-react';
 import { useRateLimitLogs } from '@/features/admin';
@@ -22,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function RateLimitDashboard() {

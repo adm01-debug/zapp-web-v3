@@ -2,7 +2,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 import { log } from '@/lib/logger';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { RefreshCw, ShieldAlert } from 'lucide-react';
 
 interface Props {
   children: ReactNode;

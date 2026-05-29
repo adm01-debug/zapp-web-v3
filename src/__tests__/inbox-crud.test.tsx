@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useMessages } from '../features/inbox/hooks/useMessages';
 import { messageService } from '../features/inbox/services/messageService';
-import { messageRepository } from '../features/inbox/data-access/messageRepository';
 
 vi.mock('../features/inbox/services/messageService', () => ({
   messageService: {

@@ -4,7 +4,6 @@ import { Reply, Forward, Copy, MoreVertical, Pin, Star, Trash2, Flag, Clock, Che
 import { Message } from '@/types/chat';
 import { TextToSpeechButton } from '@/features/inbox/components/TextToSpeechButton';
 import { useEvolutionApi } from '@/hooks/useEvolutionApi';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getLogger } from '@/lib/logger';
 import { dbFrom } from '@/integrations/datasource/db';

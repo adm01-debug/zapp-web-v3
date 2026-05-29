@@ -4,7 +4,6 @@ import {
   Shield, 
   Key, 
   Smartphone, 
-  Lock, 
   History, 
   AlertTriangle,
   CheckCircle,
@@ -13,7 +12,6 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { MFASettings } from '@/features/auth';
@@ -21,7 +19,6 @@ import { useAuth } from '@/features/auth';
 import { useMFA } from '@/features/auth';
 import { useReauthentication } from '@/features/auth';
 import { ReauthDialog } from '@/features/auth';
-import { toast } from 'sonner';
 
 interface SecuritySettingsPanelProps {
   onSwitchTab?: (tab: string) => void;

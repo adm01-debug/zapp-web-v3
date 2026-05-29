@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Shield, Users, Search, Crown, UserCog, User, History, RefreshCw,
-  UserPlus, Building, Eye, Loader2, Brain, Code, Briefcase,
+  UserPlus, Building, Loader2, Brain, Code, Briefcase,
 } from 'lucide-react';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
 import { AdminCRMDashboard } from './AdminCRMDashboard';

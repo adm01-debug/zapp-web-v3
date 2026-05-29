@@ -1,15 +1,12 @@
-import { useState } from 'react';
-import { Mail, AlertCircle, RefreshCw } from 'lucide-react';
+import { Mail, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useEmail } from '@/hooks/useEmail';
 import { EmailThreadList } from './EmailThreadList';
 import { EmailChatThread } from './EmailChatThread';
 import { EmailSearchBar } from './EmailSearchBar';
 import { EmailAccountSelector } from '../gmail/GmailAccountSelector';
-import { type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { type EmailSearchResult } from '@/hooks/useEmailSearch';
 
 interface EmailChatInboxProps {

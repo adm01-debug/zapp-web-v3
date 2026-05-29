@@ -4,7 +4,7 @@ import { useWarRoomAlerts } from '@/hooks/useWarRoomAlerts';
 import { useWarRoomData, useWarRoomMetrics } from '@/hooks/useWarRoomData';
 import type { WarRoomAgent, WarRoomQueue, WarRoomAlert } from '@/hooks/useWarRoomData';
 import {
-  AlertTriangle, Clock, Users, MessageSquare, TrendingUp,
+  AlertTriangle, Users, MessageSquare, TrendingUp,
   CheckCircle, XCircle, Activity, Bell, Volume2,
   VolumeX, Maximize2, Minimize2, RefreshCw,
 } from 'lucide-react';

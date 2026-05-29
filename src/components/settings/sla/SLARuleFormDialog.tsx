@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useSLARules, SLARuleForm, SLARule, SLARuleScope, SLARuleMetadata } from '@/features/sla';
+import { useSLARules, SLARuleForm, SLARule, SLARuleScope } from '@/features/sla';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
 import { Search, Loader2, Bell, FileText } from 'lucide-react';
 import { CONTACT_TYPES, SCOPE_LABELS } from './sla-utils';
 import { cn } from '@/lib/utils';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface SLARuleFormDialogProps {
   open: boolean;

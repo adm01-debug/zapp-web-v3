@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { StickyNote, Pin, RefreshCw, Send, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { dbList, dbRpc } from '@/integrations/datasource/db';
+import { dbRpc } from '@/integrations/datasource/db';
 import { RPC } from '@/integrations/datasource/rpcCatalog';
 import { sanitizeHtml } from '@/lib/sanitize';
 import SafeHtml from './SafeHtml';

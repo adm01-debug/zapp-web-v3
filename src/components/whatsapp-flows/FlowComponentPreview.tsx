@@ -1,5 +1,4 @@
 import { CalendarDays, ChevronDown, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface FlowComponent {
   id: string;

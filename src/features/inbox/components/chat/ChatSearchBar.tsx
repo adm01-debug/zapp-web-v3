@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Message } from '@/types/chat';
 import { motion, AnimatePresence } from 'framer-motion';

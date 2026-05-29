@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Search, Plus, Star, Trash2, Loader2, Upload, X, Play, Pause, Volume2, Tag, Check, ChevronDown } from 'lucide-react';
-import { useAudioMemes, formatDuration, type AudioMemeItem, type PendingUpload } from '@/hooks/useAudioMemes';
+import { useAudioMemes, formatDuration, type PendingUpload } from '@/hooks/useAudioMemes';
 
 interface AudioMemePickerProps {
   onSendAudioMeme: (meme: any) => void;

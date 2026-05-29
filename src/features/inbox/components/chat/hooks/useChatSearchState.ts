@@ -1,5 +1,4 @@
-import { useState, useCallback, SetStateAction } from 'react';
-import { Message } from '@/types/chat';
+import { useState, useCallback } from 'react';
 
 export function useChatSearchState() {
   const [highlightedMessageIds, setHighlightedMessageIds] = useState<Set<string>>(new Set());

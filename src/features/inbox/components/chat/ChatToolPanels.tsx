@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Radar, GraduationCap, FileText, Share2 } from 'lucide-react';
+import { Radar, GraduationCap, Share2 } from 'lucide-react';
 import { ToolPanel } from '@/features/inbox/components/ai-tools/ToolPanel';
 import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 import { Message } from '@/types/chat';

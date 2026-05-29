@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { log } from '@/lib/logger';
-import { MapPin, Search, Crosshair, Clock, Radio, Loader2, Send, LocateFixed } from 'lucide-react';
+import { MapPin, Search, Crosshair, Radio, Loader2, Send, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

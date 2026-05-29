@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import {
-  BarChart3, Users, CheckCircle2, XCircle, Clock, Loader2, Send, Download, Timer
+import { Users, CheckCircle2, XCircle, Clock, Loader2, Send, Download, Timer
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TalkXRecipientsList } from './TalkXRecipientsList';
 import { motion } from 'framer-motion';
-import type { TalkXCampaign, TalkXRecipient } from '@/hooks/useTalkX';
+import type { TalkXCampaign } from '@/hooks/useTalkX';
 
 interface Props {
   campaignId: string;

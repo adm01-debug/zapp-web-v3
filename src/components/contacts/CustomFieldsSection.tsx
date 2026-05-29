@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useContactCustomFields } from '@/hooks/useContactCustomFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X, Pencil, Check, Loader2, FileText } from 'lucide-react';
+import { Plus, X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 

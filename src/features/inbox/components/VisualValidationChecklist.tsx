@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from '@/components/ui/motion';
-import { CheckCircle2, Circle, Layout, Type, Move, Palette, Save, RefreshCw, X, AlertTriangle } from 'lucide-react';
+import { motion } from '@/components/ui/motion';
+import { CheckCircle2, Circle, Layout, Type, Move, Palette, Save, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

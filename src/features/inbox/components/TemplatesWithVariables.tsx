@@ -1,12 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
-import { log } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit2, Copy, Search, Folder, FileText, X } from 'lucide-react';
+import { Plus, Edit2, Copy, Search, Folder, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { AVAILABLE_VARIABLES, replaceVariables } from './template-utils';

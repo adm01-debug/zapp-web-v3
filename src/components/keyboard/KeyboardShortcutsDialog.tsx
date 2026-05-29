@@ -10,8 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Keyboard, MessageSquare, Navigation, Zap, 
-  MousePointerClick, Search, Home, Users, 
-  Settings, Moon, RefreshCw, PanelLeft
+  MousePointerClick, Search
 } from 'lucide-react';
 import { useCustomShortcuts, type ShortcutBinding } from '@/hooks/useCustomShortcuts';
 import { cn } from '@/lib/utils';

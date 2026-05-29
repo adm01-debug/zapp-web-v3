@@ -173,7 +173,7 @@ export function ConnectionStatusIndicator({ collapsed = false }: Props) {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const reconnectInstance = async (

@@ -3,7 +3,6 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
-  MessageSquare,
   Users,
   Megaphone,
   Bot,

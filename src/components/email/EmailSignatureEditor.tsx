@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, Link2, Image, Minus } from 'lucide-react';
+import { Bold, Italic, Underline, Link2, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

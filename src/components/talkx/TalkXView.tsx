@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { AnimatePresence } from 'framer-motion';
 import {
-  Zap, Plus, Play, Eye, Loader2, MessageSquare,
+  Zap, Plus, Play, Eye, MessageSquare,
   Send, BarChart3, CheckCircle2, Search, Filter, ShieldBan
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Activity, Plus, RefreshCw, Trash2, Zap, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useProviderPanel, ProviderRow, ProviderType } from '@/hooks/useProviderPanel';

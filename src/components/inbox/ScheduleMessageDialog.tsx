@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Calendar, Clock, Paperclip, Send } from 'lucide-react';
-import { format, addDays, addHours, setHours, setMinutes } from 'date-fns';
+import { Calendar, Clock, Paperclip } from 'lucide-react';
+import { format, addDays, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 

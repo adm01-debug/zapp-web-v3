@@ -1,4 +1,3 @@
-import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBusinessHours, BusinessHour } from '@/hooks/useBusinessHours';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

@@ -1,8 +1,7 @@
-import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, CSSProperties, useLayoutEffect } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useCallback, useMemo, memo, useEffect, useState, useId, useLayoutEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, Ban, RotateCw, Navigation2, AlertCircle, Info, Lock, ChevronDown } from 'lucide-react';
+import { Loader2, Ban, RotateCw, Navigation2, Info, Lock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('ChatMessagesArea');

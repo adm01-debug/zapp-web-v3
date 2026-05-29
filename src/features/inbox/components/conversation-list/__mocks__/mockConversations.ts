@@ -1,5 +1,4 @@
-import type { Conversation } from '@/types/chat';
-import type { ConversationWithMessages, ConversationContact, RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
+import type { ConversationWithMessages, RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
 
 // Extensão do tipo para compatibilidade com useRealtimeMessages e o componente ConversationItem legado
 export interface MockConversationWithMessages extends ConversationWithMessages {

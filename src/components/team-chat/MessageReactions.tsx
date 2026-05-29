@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { AggregatedReaction } from '@/features/inbox/hooks/team-chat/useTeamMessageReactions';
 
 export const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];

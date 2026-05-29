@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Reply, Forward, Printer, MoreHorizontal, ChevronDown, Loader2, Mail } from 'lucide-react';
+import { ArrowLeft, Reply, Printer, MoreHorizontal, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';

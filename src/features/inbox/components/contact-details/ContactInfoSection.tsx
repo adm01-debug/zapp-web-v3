@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { EnrichedContactData } from '@/hooks/useContactEnrichedData';
 import { dbFrom } from '@/integrations/datasource/db';
 

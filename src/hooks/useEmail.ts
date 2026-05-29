@@ -14,7 +14,7 @@
  * - Watch renewal check
  */
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { emailMappers } from '@/utils/emailMappers';

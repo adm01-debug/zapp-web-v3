@@ -2,7 +2,7 @@
  * Datasource Sentinel — Audit and prevent misuse of standard Supabase client
  * for evolution_* tables, ensuring they use externalSupabase.
  */
-import { ENTITY_MAP, type LogicalEntity } from './registry';
+import { ENTITY_MAP } from './registry';
 
 /**
  * Validates that an entity is being accessed through the correct client.

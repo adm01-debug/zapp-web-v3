@@ -27,7 +27,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExternalCatalog, ExternalProduct } from '@/hooks/useExternalCatalog';
 import { ExternalProductCard } from './ExternalProductCard';
-import { toast } from '@/hooks/use-toast';
 import { SendProductDialog } from './SendProductDialog';
 
 const PAGE_SIZE = 24;

@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, useRef, memo, useCallback } from 'react';
+import { useEffect, useMemo, useState, useRef, memo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { getLogger } from '@/lib/logger';
 import { List, useDynamicRowHeight } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { useAuth } from '@/features/auth';
 import { TeamConversation } from '@/hooks/useTeamChat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

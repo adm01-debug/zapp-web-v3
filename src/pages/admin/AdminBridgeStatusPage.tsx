@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,18 +13,13 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Server, 
-  Wifi, 
   WifiOff, 
   Zap,
-  Clock,
   MessageSquare,
   ShieldCheck,
   Smartphone,
   History,
-  Info,
   Bug,
-  Search,
-  ExternalLink,
   Loader2,
   XCircle,
   Play,

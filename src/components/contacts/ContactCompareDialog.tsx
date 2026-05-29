@@ -5,7 +5,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Phone, Mail, Building, Briefcase, Tag, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { Phone, Mail, Building, Briefcase, Tag, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';

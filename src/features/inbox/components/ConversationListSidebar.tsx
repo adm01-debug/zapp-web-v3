@@ -1,6 +1,6 @@
-import { lazy, Suspense, useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDensity } from '@/hooks/useDensity';
 import { MobilePullToRefreshIndicator } from '@/components/mobile/MobilePullToRefresh';
@@ -11,8 +11,6 @@ import { InboxFilters } from './InboxFilters';
 import { ContactTypeFilter, FILTER_OPTIONS } from './ContactTypeFilter';
 import { FailureCategoryFilter } from './FailureCategoryFilter';
 import { TicketTabs } from './TicketTabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -25,7 +23,7 @@ import {
 // Tooltips were removed from this header to avoid Radix Slot ref-loop bug
 // (TooltipTrigger asChild on inline span/Button caused Maximum update depth).
 // Replaced with native title/aria-label which are equivalent for these controls.
-import { MessageSquare, Search as SearchIcon, MessageSquarePlus, X, AlertTriangle, MessageCircle, LayoutList, LayoutGrid } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { WhatsAppConnectionStatus } from '@/features/connections';
@@ -33,7 +31,7 @@ import { useInboxShortcuts } from '../hooks/useInboxShortcuts';
 import { toast } from 'sonner';
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 interface ConversationListSidebarProps {
   inbox: any;
   inboxFilters: any;

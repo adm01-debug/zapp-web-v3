@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Wifi, WifiOff, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
+import { WifiOff, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
   Clock, Activity, Loader2, HeartPulse, Zap, Timer, Link as LinkIcon, Check,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';

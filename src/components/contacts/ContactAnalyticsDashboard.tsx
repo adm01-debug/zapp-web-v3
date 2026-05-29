@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   BarChart3, Users, TrendingUp, Building, Tag, 
-  Lightbulb, AlertCircle, ArrowUpRight, Clock, Zap, Sparkles
+  Lightbulb, AlertCircle, ArrowUpRight, Zap, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';
 
 interface ContactAnalyticsDashboardProps {
