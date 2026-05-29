@@ -19,8 +19,9 @@ export function StsCommercialDashboard() {
 
         if (error) throw error;
         return data || [];
-      } catch (err: any) {
-        toast.error(`Erro ao carregar dashboard: ${err.message}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast.error(`Erro ao carregar dashboard: ${msg}`);
         throw err;
       }
     },
