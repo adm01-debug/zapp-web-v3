@@ -72,4 +72,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </SentryErrorBoundary>
 );
 
-requestAnimationFrame(() => window.__zappHideRootLoader?.());
+// window.__zappHideRootLoader is now called from App.tsx useEffect for better reliability
