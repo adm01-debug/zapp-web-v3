@@ -94,25 +94,60 @@
           const loader = document.getElementById('root-loading');
           if (loader) {
             loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none'; // Ensure it doesn't block clicks
-            setTimeout(() => loader.remove(), 400);
+            loader.style.pointerEvents = 'none';
+            setTimeout(() => { if (loader.parentNode) loader.remove(); }, 400);
           }
+          // Clear recovery flag if app mounted successfully
+          sessionStorage.removeItem('zapp_recovery_attempt');
         };
 
         // Automatic fallback: if after 8 seconds the loader is still there,
         // it means either React failed to mount OR it mounted but failed to call the hider.
-        // We try to hide it regardless if anything is in #root.
         setTimeout(function() {
           const root = document.getElementById('root');
           if (root && root.childElementCount > 0) {
             window.__zappHideRootLoader();
           } else if (root) {
-            // If still empty after 12s, show a retry button
+            // If still empty after 12s, attempt auto-recovery
             setTimeout(function() {
               if (root.childElementCount === 0) {
-                const subtitle = document.getElementById('root-loading-subtitle');
-                if (subtitle) {
-                  subtitle.innerHTML = 'Houve um atraso no carregamento. <a href="javascript:location.reload()" style="color:#25d366;font-weight:bold;">Recarregar página</a>';
+                console.error('[Boot] React failed to mount after 12s. Attempting auto-recovery...');
+                
+                // Check if we already tried recovering to avoid infinite loop
+                if (!sessionStorage.getItem('zapp_recovery_attempt')) {
+                  sessionStorage.setItem('zapp_recovery_attempt', 'true');
+                  
+                  const subtitle = document.getElementById('root-loading-subtitle');
+                  if (subtitle) {
+                    subtitle.innerHTML = 'Recuperando sistema (limpando cache)...';
+                  }
+
+                  // 1. Unregister Service Workers
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      for(let registration of registrations) {
+                        registration.unregister();
+                      }
+                    });
+                  }
+                  
+                  // 2. Clear Caches
+                  if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                      for (let name of names) caches.delete(name);
+                    });
+                  }
+                  
+                  // 3. Force Reload after a short delay
+                  setTimeout(function() {
+                    window.location.reload();
+                  }, 1500);
+                } else {
+                  // If we already tried, show the manual link
+                  const subtitle = document.getElementById('root-loading-subtitle');
+                  if (subtitle) {
+                    subtitle.innerHTML = 'Falha crítica no carregamento. <a href="javascript:location.reload()" style="color:#25d366;font-weight:bold;">Tentar novamente</a>';
+                  }
                 }
               }
             }, 4000);
