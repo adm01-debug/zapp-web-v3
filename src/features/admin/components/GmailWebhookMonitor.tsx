@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('EmailWebhookMonitor');
@@ -26,37 +26,36 @@ interface ThreadStats {
 }
 
 export function EmailWebhookMonitor() {
-  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
-  const [stats, setStats] = useState<ThreadStats>({ total: 0, unread: 0 });
-  const [loading, setLoading] = useState(false);
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ['admin', 'email-webhook-monitor'],
+    queryFn: async () => {
+      // Best-effort load: mirrors legacy behavior — failures degrade to empty data
+      // (the panel renders an empty state rather than surfacing an error).
+      try {
+        const { data: emailAccounts } = await supabase.rpc('get_own_email_accounts');
+        const accounts = ((emailAccounts || []).map(a => ({ ...a, history_id: null }))) as EmailAccount[];
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: emailAccounts , error } = await supabase
-        .rpc('get_own_email_accounts');
+        const { count: totalThreads } = await supabase
+          .from('email_threads')
+          .select('*', { count: 'exact', head: true });
 
-      setAccounts((emailAccounts || []).map(a => ({ ...a, history_id: null })) as EmailAccount[]);
+        const { count: unreadThreads } = await supabase
+          .from('email_threads')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_unread', true);
 
-      // Get thread stats
-      const { count: totalThreads } = await supabase
-        .from('email_threads')
-        .select('*', { count: 'exact', head: true });
+        return { accounts, stats: { total: totalThreads || 0, unread: unreadThreads || 0 } as ThreadStats };
+      } catch (err) {
+        log.warn('Failed to load Email data:', err);
+        return { accounts: [] as EmailAccount[], stats: { total: 0, unread: 0 } as ThreadStats };
+      }
+    },
+  });
 
-      const { count: unreadThreads } = await supabase
-        .from('email_threads')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_unread', true);
-
-      setStats({ total: totalThreads || 0, unread: unreadThreads || 0 });
-    } catch (err) {
-      log.warn('Failed to load Email data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
+  const accounts = data?.accounts ?? [];
+  const stats = data?.stats ?? { total: 0, unread: 0 };
+  const loading = isFetching;
+  const loadData = () => { void refetch(); };
 
   const getStatusBadge = (status: string, isActive: boolean) => {
     if (!isActive) return <Badge variant="outline" className="text-[10px]">Inativo</Badge>;

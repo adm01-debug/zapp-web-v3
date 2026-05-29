@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,73 +17,66 @@ interface CrisisMetric {
 }
 
 export function CrisisRoom() {
-  const [metrics, setMetrics] = useState<CrisisMetric[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCrisis, setIsCrisis] = useState(false);
+  const { data: metrics = [], isFetching, refetch } = useQuery<CrisisMetric[]>({
+    queryKey: ['admin', 'crisis-room'],
+    queryFn: async () => {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
-  useEffect(() => { loadMetrics(); }, []);
+      const [unanswered, activeAgents, breachedSLA] = await Promise.all([
+        dbFrom('messages').select('id', { count: 'exact', head: true })
+          .eq('sender', 'contact').gte('created_at', oneHourAgo.toISOString()),
+        supabase.from('profiles').select('id', { count: 'exact', head: true })
+          .eq('is_active', true).in('role', ['agent', 'admin', 'supervisor']),
+        supabase.from('conversation_sla').select('id', { count: 'exact', head: true })
+          .eq('first_response_breached', true),
+      ]);
 
-  const loadMetrics = async () => {
-    setLoading(true);
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const unansweredCount = unanswered.count || 0;
+      const agentCount = activeAgents.count || 0;
+      const slaBreached = breachedSLA.count || 0;
+      const queueRatio = agentCount > 0 ? Math.round(unansweredCount / agentCount) : unansweredCount;
 
-    const [unanswered, totalToday, activeAgents, breachedSLA] = await Promise.all([
-      dbFrom('messages').select('id', { count: 'exact', head: true })
-        .eq('sender', 'contact').gte('created_at', oneHourAgo.toISOString()),
-      dbFrom('messages').select('id', { count: 'exact', head: true })
-        .gte('created_at', new Date(now.setHours(0, 0, 0, 0)).toISOString()),
-      supabase.from('profiles').select('id', { count: 'exact', head: true })
-        .eq('is_active', true).in('role', ['agent', 'admin', 'supervisor']),
-      supabase.from('conversation_sla').select('id', { count: 'exact', head: true })
-        .eq('first_response_breached', true),
-    ]);
+      return [
+        {
+          label: 'Msgs sem resposta (1h)',
+          value: unansweredCount,
+          threshold: 20,
+          unit: 'msgs',
+          severity: unansweredCount > 30 ? 'critical' : unansweredCount > 20 ? 'warning' : 'ok',
+          icon: MessageSquare,
+        },
+        {
+          label: 'Carga por agente',
+          value: queueRatio,
+          threshold: 10,
+          unit: 'conv/agente',
+          severity: queueRatio > 15 ? 'critical' : queueRatio > 10 ? 'warning' : 'ok',
+          icon: Users,
+        },
+        {
+          label: 'SLA estourados',
+          value: slaBreached,
+          threshold: 5,
+          unit: 'conversas',
+          severity: slaBreached > 10 ? 'critical' : slaBreached > 5 ? 'warning' : 'ok',
+          icon: Clock,
+        },
+        {
+          label: 'Agentes ativos',
+          value: agentCount,
+          threshold: 2,
+          unit: 'online',
+          severity: agentCount < 2 ? 'critical' : agentCount < 4 ? 'warning' : 'ok',
+          icon: Users,
+        },
+      ];
+    },
+  });
 
-    const unansweredCount = unanswered.count || 0;
-    const totalCount = totalToday.count || 0;
-    const agentCount = activeAgents.count || 0;
-    const slaBreached = breachedSLA.count || 0;
-    const queueRatio = agentCount > 0 ? Math.round(unansweredCount / agentCount) : unansweredCount;
-
-    const buildMetrics: CrisisMetric[] = [
-      {
-        label: 'Msgs sem resposta (1h)',
-        value: unansweredCount,
-        threshold: 20,
-        unit: 'msgs',
-        severity: unansweredCount > 30 ? 'critical' : unansweredCount > 20 ? 'warning' : 'ok',
-        icon: MessageSquare,
-      },
-      {
-        label: 'Carga por agente',
-        value: queueRatio,
-        threshold: 10,
-        unit: 'conv/agente',
-        severity: queueRatio > 15 ? 'critical' : queueRatio > 10 ? 'warning' : 'ok',
-        icon: Users,
-      },
-      {
-        label: 'SLA estourados',
-        value: slaBreached,
-        threshold: 5,
-        unit: 'conversas',
-        severity: slaBreached > 10 ? 'critical' : slaBreached > 5 ? 'warning' : 'ok',
-        icon: Clock,
-      },
-      {
-        label: 'Agentes ativos',
-        value: agentCount,
-        threshold: 2,
-        unit: 'online',
-        severity: agentCount < 2 ? 'critical' : agentCount < 4 ? 'warning' : 'ok',
-        icon: Users,
-      },
-    ];
-
-    setMetrics(buildMetrics);
-    setIsCrisis(buildMetrics.some(m => m.severity === 'critical'));
-    setLoading(false);
-  };
+  const loading = isFetching;
+  const isCrisis = metrics.some(m => m.severity === 'critical');
+  const loadMetrics = () => { void refetch(); };
 
   const severityConfig = {
     ok: { bg: 'bg-success/10', border: 'border-success/30', text: 'text-success', label: 'Normal' },
