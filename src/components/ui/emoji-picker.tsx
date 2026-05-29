@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Smile, Search, Clock, Heart, ThumbsUp, Laugh, X, Cat, UtensilsCrossed, Briefcase, Hash, PartyPopper, Plane, Flag, Users, Hand } from 'lucide-react';
+import { Smile, Search, Clock, Heart, X, Cat, UtensilsCrossed, Briefcase, Hash, PartyPopper, Plane, Flag, Users, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { emojiDatabase, searchEmojis, type EmojiEntry } from '@/data/emojiDatabase';
+import { emojiDatabase, searchEmojis } from '@/data/emojiDatabase';
 
 const categoryIcons: Record<string, React.ElementType> = {
   smileys: Smile,

@@ -438,23 +438,32 @@ neste ambiente; `tsc --noEmit -p tsconfig.app.json` validado **antes e depois (0
 - `useRealtimeMessages.ts` — canal Realtime **já tem** cleanup (`removeChannel` no return do effect).
 - Empty catch blocks — reduzidos de muitos para **6** (todos tratados neste PR).
 
+### 🔄 Em andamento — PR #41 (somente lint)
+- **Dívida de lint — imports não usados**: ✅ **825 imports removidos** em 438 arquivos
+  (`eslint-plugin-unused-imports`, config temporária, sem churn de lockfile). `tsc`=0,
+  build OK. Modelo de isolamento descoberto: **por-usuário (`auth.uid()=user_id`) +
+  por-papel (`has_role`/admin/supervisor)** — NÃO há coluna multi-tenant.
+
+### 🔄 Em andamento — PR separado de DB (hardening RLS + search_path)
+> Movido para branch/PR próprio (`claude/db-rls-search-path-hardening`) para permitir
+> mergear o lint sem tocar o banco. **Draft — validar em staging antes de mergear**,
+> pois migrations auto-aplicam em produção.
+- **`SECURITY DEFINER` sem `search_path`**: ✅ migração criada
+  (`supabase/migrations/20260529120000_...`) — bloco `DO` idempotente/auto-descobrível.
+- **RLS `USING (true)` (~291)**: ✅ migração criada
+  (`supabase/migrations/20260529120100_...`) — auto-direcionada via `pg_policy`,
+  dono-OU-admin/supervisor p/ tabelas com coluna de propriedade; catálogos = leitura
+  autenticada + escrita admin. Rollback manual em `supabase/manual-rollbacks/`.
+  Ver `docs/RLS_SECURITY_DEFINER_HARDENING.md` (query de preview read-only incluída).
+
 ### 📋 Documentado — NÃO aplicado (requer coordenação / fora do escopo seguro)
-- **RLS `USING (true)`/`WITH CHECK (true)` (~291)**: **não há convenção de coluna
-  multi-tenant** (`empresa_id`/`organization_id`/etc.) nas migrations — confirmado por
-  varredura. Reescrever às cegas **bloquearia todo o acesso**. Pré-requisito: definir o
-  modelo de tenant com o Jorge antes de qualquer PR de RLS.
-- **`SECURITY DEFINER` sem `search_path` (165 funções)**: requer introspecção das
-  assinaturas exatas na base viva (Supabase MCP) para gerar `ALTER FUNCTION ... SET
-  search_path`. Migração corretiva é o próximo passo seguro (não aplicada aqui por exigir
-  acesso ao DB).
 - **Token em `localStorage`** (`src/integrations/supabase/client.ts:19`): migração para
   cookies httpOnly é mudança de auth de alto impacto.
-- **Dívida de lint pré-existente**: `eslint .` reporta **2019 erros / 1192 warnings**
-  (1419 `no-unused-vars`, 238 `no-explicit-any`, 60 `ban-ts-comment` dos `@ts-nocheck`
-  remanescentes, 58 `no-console`). Independe de `@ts-nocheck`; CI de qualidade está verde.
-  Resolver incrementalmente.
+- **Dívida de lint restante**: ~1194 `no-unused-vars` (vars locais, não-imports),
+  238 `no-explicit-any`, 60 `ban-ts-comment` (dos `@ts-nocheck` remanescentes),
+  58 `no-console`. Resolver incrementalmente.
 - **60 arquivos com `@ts-nocheck` remanescente**: dívida de tipo real (TS2322/2345/2769/
-  2339). Lista em `/tmp` durante o PR; resolver por módulo.
+  2339); resolver por módulo.
 - **CVEs de dependências** (xlsx, serialize-javascript): tratar via Dependabot/substituição.
 
 ### Nota sobre CI

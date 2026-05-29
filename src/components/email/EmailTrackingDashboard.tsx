@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Eye, MousePointerClick, Mail, TrendingUp, AlertTriangle, Clock, ChevronRight, User, Globe, Smartphone, Monitor, Tablet, ExternalLink, RefreshCw } from 'lucide-react';
+import { Eye, MousePointerClick, Mail, TrendingUp, AlertTriangle, Clock, ChevronRight, Globe, Smartphone, Monitor, Tablet, ExternalLink, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useEmailTracking, type TrackedEmail, type TrackingEvent, type TrackedLink } from '@/hooks/useEmailTracking';
 
 // ── Helpers ───────────────────────────────────────────────────────────────

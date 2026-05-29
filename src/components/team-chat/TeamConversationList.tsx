@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Users, User, Building2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useMemo, forwardRef, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, forwardRef, useEffect, useRef } from 'react';
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

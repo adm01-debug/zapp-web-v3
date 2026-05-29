@@ -18,10 +18,8 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  Archive,
   CheckCheck,
   EyeOff,
-  Ban,
 } from 'lucide-react';
 
 interface MessageContextActionsProps {

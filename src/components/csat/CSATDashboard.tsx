@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Star, TrendingUp, MessageSquareHeart, BarChart3 } from 'lucide-react';
+import { Star, MessageSquareHeart, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCSAT } from '@/hooks/useCSAT';
 import { motion } from 'framer-motion';

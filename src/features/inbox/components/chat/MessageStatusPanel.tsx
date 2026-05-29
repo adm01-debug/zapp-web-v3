@@ -27,7 +27,7 @@ import { CheckCheck, Check, Clock, AlertCircle, Eye, TrendingUp, Users } from 'l
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useDeliveryStats, DeliveryTimelinePoint } from '@/hooks/useDeliveryStats';
+import { useDeliveryStats } from '@/hooks/useDeliveryStats';
 import {
   LineChart,
   Line,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Navigation, ExternalLink, Clock, Radio } from 'lucide-react';
+import { Navigation, ExternalLink, Radio } from 'lucide-react';
 import { log } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

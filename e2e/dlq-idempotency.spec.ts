@@ -24,7 +24,7 @@
  */
 import { test, expect, type Route } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
-import { MOCK_EVOLUTION_SEND_RESPONSE, TEST_PHONE } from './fixtures/test-data';
+import { TEST_PHONE } from './fixtures/test-data';
 import { cleanupTestData } from './utils/supabase';
 
 const SEND_GLOB = '**/functions/v1/evolution-api/**';

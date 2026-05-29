@@ -3,14 +3,12 @@
  * Shows summary cards and quick data previews from the external CRM database
  */
 import { memo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import {
-  Building2, Users, ShoppingCart, DollarSign, BarChart3,
-  TrendingUp, Package, Truck, Activity, ExternalLink,
+  Building2, ShoppingCart, DollarSign, BarChart3, Package, Truck, Activity, ExternalLink,
 } from 'lucide-react';
 import { useExternalSelect } from '@/hooks/useExternalDB';
 import { isExternalConfigured } from '@/integrations/supabase/externalClient';

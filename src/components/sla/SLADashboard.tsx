@@ -4,14 +4,12 @@
  * Shows violations, compliance rate, and overdue alerts.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import {
-  AlertTriangle, CheckCircle2, Clock, RefreshCw,
-  TrendingDown, TrendingUp, ShieldAlert,
+  AlertTriangle, CheckCircle2, RefreshCw, ShieldAlert,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 

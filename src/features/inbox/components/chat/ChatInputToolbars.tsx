@@ -10,7 +10,6 @@ import { VoiceChangerPicker } from '@/features/inbox/components/VoiceChangerPick
 import { CustomEmojiPicker } from '@/features/inbox/components/CustomEmojiPicker';
 import { EmojiPicker } from '@/features/inbox/components/EmojiPicker';
 import { FileUploader, FileUploaderRef } from '@/features/inbox/components/FileUploader';
-import { VoiceDictationButton } from '@/components/mobile/VoiceDictationButton';
 import { TextToAudioButton } from '@/features/inbox/components/TextToAudioButton';
 import { AISuggestions } from '@/features/inbox/components/AISuggestions';
 import { MessageTemplates } from '@/features/inbox/components/MessageTemplates';

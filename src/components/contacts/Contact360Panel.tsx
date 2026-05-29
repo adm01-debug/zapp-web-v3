@@ -27,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   User, Phone, Mail, Building2, Tag, MessageCircle,
-  History, Clock, RefreshCw,
+  History, Clock,
 } from 'lucide-react';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatPhoneForDisplay as formatPhoneBR } from '@/lib/phoneUtils';

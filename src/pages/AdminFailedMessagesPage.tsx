@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   AlertTriangle, RefreshCw, CheckCircle2,
   Clock, RotateCw, PlayCircle, Server,

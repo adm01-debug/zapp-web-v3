@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
 import { safeClient } from '@/integrations/supabase/safeClient';
 import { emailSaveDraft, emailDeleteDraft } from './gmail/gmailApi';
-import { EmailDraft } from '@/types/gmail';
 
 const supabase = _supabase as any;
 const AUTO_SAVE_DELAY_MS = 30_000;

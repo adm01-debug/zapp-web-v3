@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { usePerformanceSnapshots } from '@/hooks/usePerformanceSnapshots';
-import { formatRelativeTime } from '@/lib/formatters';
 
 interface PerformanceMetric {
   name: string;

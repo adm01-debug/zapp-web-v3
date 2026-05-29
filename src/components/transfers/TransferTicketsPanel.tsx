@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  CheckCircle2, Clock, MessageSquare, ArrowRight, 
-  AlertCircle, ShieldAlert, Timer
+  CheckCircle2, Clock, MessageSquare, ArrowRight, Timer
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

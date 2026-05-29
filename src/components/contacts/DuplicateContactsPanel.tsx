@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import {
-  AlertTriangle, GitMerge, RefreshCw, CheckCircle2, Users, Zap, AlertOctagon,
+import { GitMerge, RefreshCw, CheckCircle2, Users, Zap, AlertOctagon,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { dbRpc } from '@/integrations/datasource/db';

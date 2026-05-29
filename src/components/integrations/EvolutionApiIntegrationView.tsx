@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
   Wifi, Save, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle,
-  Loader2, ShieldCheck, Server, Key, Activity, History, Settings2,
+  Loader2, ShieldCheck, Server, Activity, History, Settings2,
   Trash2, Plus, Search, AlertCircle, Clock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

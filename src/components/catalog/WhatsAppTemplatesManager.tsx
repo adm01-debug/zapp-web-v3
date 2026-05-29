@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
   useWhatsAppTemplates, TEMPLATE_CATEGORIES, TEMPLATE_LANGUAGES,
-  STATUS_BADGES, EMPTY_TEMPLATE, type WhatsAppTemplate,
+  STATUS_BADGES,
 } from '@/hooks/useWhatsAppTemplates';
 
 const STATUS_ICONS: Record<string, React.ElementType> = {

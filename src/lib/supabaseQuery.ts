@@ -1,5 +1,4 @@
 import { PostgrestError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 
 export class SupabaseQueryError extends Error {
   constructor(

@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Shield, Clock, User, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { dbFrom } from '@/integrations/datasource/db';
 

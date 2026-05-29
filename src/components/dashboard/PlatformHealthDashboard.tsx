@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Users, MessageCircle, MessageSquare, Webhook,
-  RefreshCw, AlertTriangle, CheckCircle2, TrendingUp,
-  Clock, Bot, Bell,
+  RefreshCw, AlertTriangle, Bot, Bell,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SLADashboard } from '@/components/sla/SLADashboard';

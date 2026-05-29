@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Eye, ChevronLeft, ChevronRight, User, Building2, Phone } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, Building2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Contact {
   id: string;

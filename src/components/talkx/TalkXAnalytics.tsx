@@ -4,7 +4,6 @@ import {
   XAxis, YAxis, Tooltip as ReTooltip, CartesianGrid, Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   BarChart3, TrendingUp, Users, CheckCircle2, XCircle, Zap, Target
 } from 'lucide-react';

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { EmptyState } from '@/components/ui/empty-state';
 import { AgentsEmptyState } from '@/components/ui/contextual-empty-states';
 import { InviteAgentDialog } from '@/components/agents/InviteAgentDialog';
 import { ConfigurePermissionsDialog } from '@/components/agents/ConfigurePermissionsDialog';

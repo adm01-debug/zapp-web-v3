@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, X, Send, Pause, Play, Lock, Trash2 } from 'lucide-react';
+import { Square, X, Send, Pause, Play, Lock, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { VoiceChanger } from './VoiceChanger';

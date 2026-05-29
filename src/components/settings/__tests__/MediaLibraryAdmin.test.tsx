@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 // ═══════════════════════════════════════════════════════════
 // Mock Setup
@@ -28,7 +28,6 @@ vi.mock('sonner', () => ({
 }));
 
 import { MediaLibraryAdmin } from '../MediaLibraryAdmin';
-import { toast } from 'sonner';
 
 // ═══════════════════════════════════════════════════════════
 // Test Factories

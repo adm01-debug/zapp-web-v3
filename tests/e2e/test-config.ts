@@ -1,4 +1,3 @@
-import { test, expect } from '@playwright/test';
 
 // Centralized test configuration
 export const testConfig = {

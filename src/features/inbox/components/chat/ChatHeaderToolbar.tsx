@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Search, Radar, GraduationCap, FileText, Info, Loader2, AlertTriangle, LayoutTemplate, ClipboardCheck, BarChart3 } from 'lucide-react';
-import { VisionIcon } from '@/features/inbox/components/ai-tools/VisionIcon';
 
 export type ActiveTool = 'chatSearch' | 'objections' | 'university' | 'aiAssistant' | 'summary' | 'teamFiles' | 'templates' | 'monitoring' | null;
 

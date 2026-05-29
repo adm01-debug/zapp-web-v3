@@ -5,7 +5,6 @@ import { getLogger } from '@/lib/logger';
 const log = getLogger('ChatMessagesArea');
 import { supabase } from '@/integrations/supabase/client';
 import { ChatWatermark } from './ChatWatermark';
-import { cn } from '@/lib/utils';
 import { Message, InteractiveButton } from '@/types/chat';
 import { motion, StaggeredList, StaggeredItem } from '@/components/ui/motion';
 import { TypingIndicator } from '../TypingIndicator';

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Phone, MessageSquare, ChevronRight, List, Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ExternalLink, Phone, MessageSquare, ChevronRight, List, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { InteractiveMessage as InteractiveMessageType, InteractiveButton, InteractiveListSection } from '@/types/chat';
 import {

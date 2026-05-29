@@ -74,7 +74,7 @@ export function initSentry(): boolean {
     console.info("[sentry] ✅ initialized successfully");
     return true;
   } catch (err) {
-    // eslint-disable-next-line no-console
+     
     console.error("[sentry] init failed:", err);
     return false;
   }

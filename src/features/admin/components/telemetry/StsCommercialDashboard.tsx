@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, TrendingDown, TrendingUp, AlertTriangle, Clock, BarChart3, ArrowRight } from 'lucide-react';
+import { Loader2, TrendingUp, AlertTriangle, Clock, BarChart3, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 

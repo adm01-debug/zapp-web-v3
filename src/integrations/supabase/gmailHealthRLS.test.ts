@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Email Health RLS Logic', () => {
   it('should verify access restricted to admin/moderator roles', async () => {

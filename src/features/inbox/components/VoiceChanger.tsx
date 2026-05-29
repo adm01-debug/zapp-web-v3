@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Wand2, Loader2, Play, Square, Check, Volume2, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Wand2, Loader2, Play, Square, Check, Volume2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Alert,

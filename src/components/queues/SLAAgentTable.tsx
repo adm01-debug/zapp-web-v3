@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Timer, CheckCircle2, TrendingUp, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const getRateColor = (rate: number) => {
   if (rate >= 90) return 'text-success';

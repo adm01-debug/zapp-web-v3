@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, RotateCcw, Settings2, Grid3X3, LayoutGrid, Maximize2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';

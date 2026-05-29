@@ -11,7 +11,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import {
   Upload, FileText, CheckCircle2, XCircle, AlertTriangle, Loader2, Download,
 } from 'lucide-react';

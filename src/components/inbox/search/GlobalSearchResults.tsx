@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Search, MessageSquare, User, Mic, Zap, FileText,
+  Search, MessageSquare, User, Mic, Zap,
   Image, Video, FileDown, Sparkles, Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

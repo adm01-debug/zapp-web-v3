@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  Crown, UserCog, User, Eye, Briefcase, Building, Lock,
+  Crown, UserCog, User, Briefcase, Building, Lock,
   UserCheck, UserX, Edit, Code,
 } from 'lucide-react';
 import { ForceLogoutButton } from './ForceLogoutButton';

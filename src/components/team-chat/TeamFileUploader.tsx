@@ -5,9 +5,8 @@ const log = getLogger('TeamFileUploader');
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { Button } from '@/components/ui/button';
-import { Paperclip, Image as ImageIcon, FileText, X, Loader2 } from 'lucide-react';
+import { Paperclip, FileText, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface TeamFileUploaderProps {
   conversationId: string;

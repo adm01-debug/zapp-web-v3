@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Plus, DollarSign, Link2, Copy, Trash2, CheckCircle, Clock, XCircle,
-  CreditCard, QrCode, ExternalLink, Send
+  Plus, Link2, Copy, Trash2, CheckCircle, Clock, XCircle,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

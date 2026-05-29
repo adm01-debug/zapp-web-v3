@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  MessageSquare, Phone, Mail, Tag, UserPlus, Edit,
-  ArrowRight, Clock, ChevronDown, ChevronUp, Zap,
+  MessageSquare, Tag, UserPlus, Edit,
+  ArrowRight, Clock, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { dbFrom } from '@/integrations/datasource/db';
 
 interface TimelineEvent {
   id: string;

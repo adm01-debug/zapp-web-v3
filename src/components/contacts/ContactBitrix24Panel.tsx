@@ -12,7 +12,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Building2, ExternalLink, Users, TrendingUp, MessageSquare } from 'lucide-react';
-import { contactsDB, type ExternalContact } from '@/lib/contactsDB';
+import { type ExternalContact } from '@/lib/contactsDB';
 import { getExternalSupabase, isExternalConfigured } from '@/integrations/supabase/externalClient';
 import { Badge } from '@/components/ui/badge';
 

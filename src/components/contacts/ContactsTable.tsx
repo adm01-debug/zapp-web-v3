@@ -10,12 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   MessageSquare, Edit, Trash2, MoreVertical, Phone, Mail,
-  Briefcase, Calendar, Tag, Users, Truck, UserCheck,
+  Briefcase, Tag, Users, Truck, UserCheck,
   Wrench, Star, Handshake, MoreHorizontal,
   ArrowUp, ArrowDown, ArrowUpDown, Activity
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { getAvatarColor, getInitials } from '@/lib/avatar-colors';
 import { CONTACT_TYPE_CONFIG } from './contactTypeConfig';

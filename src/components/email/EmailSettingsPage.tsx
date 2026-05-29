@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Settings, Key, Clock, Signature, Bell, Shield, Info, Wifi, Plus, Building2, RefreshCw } from 'lucide-react';
+import { Mail, Key, Clock, Signature, Shield, Info, Wifi, Plus, Building2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

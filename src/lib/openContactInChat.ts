@@ -15,7 +15,6 @@
  *    "Inbox já montado / hash trocado".
  */
 import { supabase } from '@/integrations/supabase/client';
-import { dbFrom } from '@/integrations/datasource/db';
 
 export interface OpenContactInChatOptions {
   /** UUID interno (`contacts.id`). Quando presente, evita o lookup. */

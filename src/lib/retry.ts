@@ -1,5 +1,4 @@
 import { getLogger, generateCorrelationId } from '@/lib/logger';
-import { dbFrom } from '@/integrations/datasource/db';
 
 const log = getLogger('RetryUtil');
 

@@ -1,13 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { motion, AnimatePresence } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';
-import { Reply, Forward, Copy, Download } from 'lucide-react';
+import { Reply, Forward, Copy } from 'lucide-react';
 import { SwipeableMessage } from '@/components/mobile/SwipeableMessage';
 import { DeletedMessagePlaceholder } from '@/features/inbox/components/DeletedMessagePlaceholder';
-import { HighlightedText } from './HighlightedText';
 import { Message, InteractiveButton } from '@/types/chat';
-import { TypingIndicator } from '@/features/inbox/components/TypingIndicator';
 import { MessageReactions, QuickReactionBar } from '@/features/inbox/components/MessageReactions';
 import { MessageHoverToolbar } from './MessageHoverToolbar';
 import { MessageImage } from '@/features/inbox/components/ImagePreview';
@@ -17,20 +15,15 @@ import { InteractiveMessageDisplay, ButtonResponseBadge } from '@/features/inbox
 import { TextWithLinks } from '@/features/inbox/components/LinkPreview';
 import { QuotedMessage } from '@/features/inbox/components/ReplyQuote';
 import { LocationMessageDisplay } from '@/features/inbox/components/LocationMessage';
-import { TextToSpeechButton } from '@/features/inbox/components/TextToSpeechButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatMessageTime } from './messageUtils';
 import { MessageStatusInline } from './MessageStatusInline';
 import { MessageReadStatus } from './MessageReadStatus';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sendMessageToContact } from '@/features/inbox';
-import { Link } from 'react-router-dom';
-import { RefreshCw, ShieldAlert, History } from 'lucide-react';
+import { RefreshCw, ShieldAlert } from 'lucide-react';
 import {
   ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { MessageSendHistorySheet } from './MessageSendHistorySheet';
 import { extractMessageType } from '@/adapters/evolutionAdapter';
 import { MessageBubbleUnsupported } from './MessageBubbleUnsupported';
 import { useContactAvatar } from '@/features/inbox';

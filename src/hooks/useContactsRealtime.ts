@@ -14,7 +14,6 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { Contact } from '@/hooks/useContacts';
 
 type ContactPayload = Record<string, unknown>;
 

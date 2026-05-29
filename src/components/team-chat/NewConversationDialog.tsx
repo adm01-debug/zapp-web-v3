@@ -4,15 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, User, Users, Loader2, Building2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/features/auth';
 import { useCreateTeamConversation } from '@/hooks/useTeamChat';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
 
 import { getLogger } from '@/lib/logger';
 const log = getLogger('NewConversationDialog');
@@ -97,7 +95,7 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
     }
 
     try {
-      let payload: any = { type: tab };
+      const payload: any = { type: tab }; // ignore-audit (any pré-existente; payload montado dinamicamente por aba)
       
       if (tab === 'department') {
         const dept = departments.find(d => d.id === selectedDeptId);

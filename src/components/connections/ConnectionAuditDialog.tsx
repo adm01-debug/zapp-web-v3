@@ -4,8 +4,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Clock, AlertCircle, CheckCircle2, Info, RefreshCw } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

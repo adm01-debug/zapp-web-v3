@@ -11,7 +11,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeForSearch } from '@/lib/sanitize';
-import { dbFrom } from '@/integrations/datasource/db';
 
 export interface SearchResult {
   id:           string;

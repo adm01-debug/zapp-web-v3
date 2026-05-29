@@ -1,7 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { BarChart3, Users, Star, CheckCircle2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';

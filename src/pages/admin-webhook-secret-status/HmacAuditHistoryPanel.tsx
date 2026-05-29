@@ -16,7 +16,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, subHours, subDays } from 'date-fns';
+import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { History, RefreshCw, Radio, TrendingUp } from 'lucide-react';
 import {

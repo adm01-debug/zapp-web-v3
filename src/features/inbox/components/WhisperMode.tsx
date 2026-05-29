@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EyeOff, Send, X, MessageSquare, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -70,7 +69,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
 
       const nameMap = new Map((profiles || []).map(p => [p.id, p.name]));
       
-      let threadCounts: Record<string, number> = {};
+      const threadCounts: Record<string, number> = {};
       if (!activeThreadId && data.length > 0) {
         const parentIds = data.map((d: any) => d.id);
         const { data: counts } = await supabase

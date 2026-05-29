@@ -1,6 +1,6 @@
 import { useState, useCallback, lazy, Suspense } from 'react';
 import { useChatbotFlows, ChatbotFlow, ChatbotNode } from '@/hooks/useChatbotFlows';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -16,9 +16,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Bot, Plus, Edit2, Trash2, Play, Pause, Copy, Zap, MessageSquare,
-  GitBranch, Clock, ArrowRight, Loader2, Settings, BarChart3,
-  HelpCircle, Tag, Users, Send, ChevronRight, Activity,
+  Bot, Plus, Edit2, Trash2, Play, Copy, Zap, MessageSquare,
+  GitBranch, Clock, Loader2, BarChart3, Tag, ChevronRight, Activity,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';

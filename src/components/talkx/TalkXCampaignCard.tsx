@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Play, Pause, X, Trash2, Eye, Users, Clock,
-  CheckCircle2, XCircle, Loader2, Copy, CalendarClock, Download
+  CheckCircle2, XCircle, Loader2, Copy, CalendarClock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format, subDays, subHours } from 'date-fns';
+import { format, subHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Webhook, RefreshCw, Inbox, CheckCircle2, XCircle,

@@ -1,4 +1,3 @@
-import { useEffect, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 interface UseInboxShortcutsProps {

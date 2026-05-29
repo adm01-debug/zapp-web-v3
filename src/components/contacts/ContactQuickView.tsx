@@ -1,15 +1,14 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Sheet, SheetContent, SheetHeader, SheetTitle, 
-  SheetDescription, SheetFooter, SheetClose 
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter 
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, Mail, Building, Briefcase, Calendar, 
-  Tag, MessageSquare, Edit3, Trash2, Globe, MapPin,
+  Tag, MessageSquare, Edit3, Trash2, Globe,
   Activity, Sparkles, TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';

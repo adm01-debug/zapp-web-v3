@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Users, Clock, MessageSquare, TrendingUp, ShieldAlert, CheckCircle2, XCircle, Siren } from 'lucide-react';
+import { AlertTriangle, Users, Clock, MessageSquare, Siren } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { dbFrom } from '@/integrations/datasource/db';
 

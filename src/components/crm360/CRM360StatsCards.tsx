@@ -4,9 +4,7 @@
 import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Users, ShoppingCart, DollarSign, TrendingUp, Building2, Phone,
-  Mail, Share2, Truck, Package, BarChart3, Activity,
+import { ShoppingCart, DollarSign, Truck, Package, BarChart3, Activity,
 } from 'lucide-react';
 import { useExternalSelect } from '@/hooks/useExternalDB';
 

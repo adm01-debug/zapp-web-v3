@@ -3,7 +3,7 @@ import { EditContactDialog } from './contact-details/EditContactDialog';
 import { Conversation } from '@/types/chat';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ContactHeaderSection } from './contact-details/ContactHeaderSection';
 import { ContactAccordionSections } from './contact-details/ContactAccordionSections';
 import { useContactEnrichedData } from '@/hooks/useContactEnrichedData';

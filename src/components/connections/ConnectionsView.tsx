@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Smartphone, Plus, QrCode, Loader2, CheckCircle2, XCircle, AlertCircle, RefreshCw,
+  Smartphone, Plus, QrCode, Loader2, CheckCircle2, XCircle, AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';

@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Search, Plus, Star, Trash2, Loader2, Upload, X, Play, Pause, Volume2, Tag, Check, ChevronDown } from 'lucide-react';
-import { useAudioMemes, formatDuration, type AudioMemeItem, type PendingUpload } from '@/hooks/useAudioMemes';
+import { useAudioMemes, formatDuration, type PendingUpload } from '@/hooks/useAudioMemes';
 
 interface AudioMemePickerProps {
   onSendAudio: (audioUrl: string) => void;

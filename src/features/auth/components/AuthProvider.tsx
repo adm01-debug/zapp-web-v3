@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { authService, Profile } from '@/features/auth/services/authService';
 import { log } from '@/lib/logger';
-import { AuthContext, AuthContextType } from '@/features/auth/context/AuthContext';
+import { AuthContext } from '@/features/auth/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 

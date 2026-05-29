@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Zap, Clock, MessageSquare, Star, Flame, Rocket, Target, Award, PartyPopper, Crown, TrendingUp } from 'lucide-react';
+import { Trophy, Zap, MessageSquare, Star, Flame, Rocket, Target, PartyPopper, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 

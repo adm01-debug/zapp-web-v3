@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
-  Shield, CheckCircle2, XCircle, AlertTriangle, RefreshCw,
+  Shield, CheckCircle2, AlertTriangle, RefreshCw,
   TrendingUp, Users, UserCheck, UserX,
 } from 'lucide-react';
 import { dbRpc } from '@/integrations/datasource/db';

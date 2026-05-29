@@ -1,7 +1,6 @@
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useVelocity, useAnimationFrame, type MotionValue } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, useMotionValue, type MotionValue } from 'framer-motion';
 import { ReactNode, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { wrap } from '@/lib/utils';
 
 interface MagneticButtonProps {
   children: ReactNode;

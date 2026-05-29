@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from '@/components/ui/select';
 import { 
-  History as HistoryIcon, User, ChevronLeft, ChevronRight, Filter, RefreshCcw, Search, X
+  History as HistoryIcon, User, ChevronLeft, ChevronRight, RefreshCcw, Search, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { emailApi, type EmailRevalidationJob } from '@/services/email/emailApi';

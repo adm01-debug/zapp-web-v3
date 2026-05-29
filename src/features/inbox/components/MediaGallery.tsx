@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

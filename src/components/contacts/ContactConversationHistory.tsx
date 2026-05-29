@@ -6,7 +6,6 @@
 import React, { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, ExternalLink, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { sanitizeText } from '@/lib/sanitize';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

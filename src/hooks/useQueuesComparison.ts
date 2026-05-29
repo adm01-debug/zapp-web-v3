@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { subDays } from 'date-fns';
 import { log } from '@/lib/logger';
 import { dbFrom } from '@/integrations/datasource/db';
 

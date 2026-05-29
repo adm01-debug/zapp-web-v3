@@ -1,4 +1,3 @@
-import { dbFrom } from '@/integrations/datasource/db';
 /**
  * End-to-end request tracing helper.
  *

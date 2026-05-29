@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Mail, Star, StarOff, RefreshCw, Filter, Loader2, AlertTriangle, Inbox } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Mail, Star, RefreshCw, Filter, Loader2, AlertTriangle, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

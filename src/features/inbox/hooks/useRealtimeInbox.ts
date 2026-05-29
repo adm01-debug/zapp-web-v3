@@ -7,7 +7,6 @@ import { useExternalConversations, useExternalMessages } from '@/hooks/useExtern
 import { useAuth } from '@/features/auth';
 import { supabase, externalSupabase } from '@/integrations/supabase/external';
 import { getLogger } from '@/lib/logger';
-import { Conversation, Message } from '@/types/chat';
 import { toast } from 'sonner';
 import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbox';
 import { validatePttBlob } from '@/lib/audio/pttLimits';

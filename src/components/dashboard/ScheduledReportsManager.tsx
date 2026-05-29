@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Calendar, Clock, FileText, Mail, Plus, Trash2, Edit2, PlayCircle, PauseCircle, RefreshCw
+  Calendar, Clock, FileText, Mail, Plus, Trash2, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';

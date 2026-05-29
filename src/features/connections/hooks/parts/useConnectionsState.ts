@@ -1,6 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { log } from '@/lib/logger';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { WhatsAppConnection, QrCodeDialogState } from '../useConnectionsManager';
 

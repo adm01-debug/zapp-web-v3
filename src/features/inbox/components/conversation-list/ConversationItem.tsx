@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useCallback, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { Conversation } from '@/types/chat';
 import { useDensity } from '@/hooks/useDensity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +11,10 @@ import { TypingIndicatorCompact } from '@/features/inbox/components/TypingIndica
 import { useContactTyping } from '@/hooks/useContactTyping';
 import { useInViewport } from '@/hooks/useInViewport';
 import {
-  Clock, CheckCircle2, AlertCircle, Loader2, ExternalLink,
+  Clock, CheckCircle2, AlertCircle, Loader2,
   MessageCircle, Instagram, Mail, Phone, Pin
 } from 'lucide-react';
-import { openChatPopup } from '@/lib/popupManager';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { RetryFailureBadge } from './RetryFailureBadge';
 import { toValidDate } from '@/utils/date/normalize';
 

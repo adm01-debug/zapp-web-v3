@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { log } from '@/lib/logger';
-import { startOfDay, subDays, format, startOfHour, eachDayOfInterval, eachHourOfInterval, startOfToday, differenceInDays } from 'date-fns';
+import { startOfDay, format, startOfHour, eachDayOfInterval, eachHourOfInterval, startOfToday, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { dbFrom } from '@/integrations/datasource/db';
 

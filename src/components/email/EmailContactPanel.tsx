@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { User, Mail, Phone, Building2, Tag, Clock, MessageSquare, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Mail, Tag, MessageSquare } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

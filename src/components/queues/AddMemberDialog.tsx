@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface Profile {
   id: string;

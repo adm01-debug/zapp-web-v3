@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { externalSupabase } from '@/integrations/supabase/externalClient';
@@ -163,7 +163,7 @@ export function useConnectionsManager() {
       }
     } catch (e) {
       // sessionStorage may be unavailable (private mode/quota) — non-fatal for the QR flow.
-      console.debug('[useConnectionsManager] failed to persist QR dialog state', e);
+      console.warn('[useConnectionsManager] failed to persist QR dialog state', e);
     }
   }, [qrCodeDialog]);
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { motion } from '@/components/ui/motion';
 import { useNPSSurveys } from '@/hooks/useNPSSurveys';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

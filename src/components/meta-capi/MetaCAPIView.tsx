@@ -2,18 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import {
-  Plus, Activity, Send, CheckCircle, XCircle, BarChart3, Zap,
+import { Activity, Send, CheckCircle, XCircle, BarChart3, Zap,
   MousePointer, ShoppingCart, CreditCard, UserPlus, Eye, Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

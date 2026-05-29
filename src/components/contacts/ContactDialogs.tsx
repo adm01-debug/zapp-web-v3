@@ -1,14 +1,14 @@
 import { motion } from 'framer-motion';
-import { ContactFormV3, type ContactV3FormData } from '@/components/contacts/ContactFormV3';
+import { ContactFormV3 } from '@/components/contacts/ContactFormV3';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, Copy, Plus, Trash2, UserPlus } from 'lucide-react';
+import { CheckCircle2, Copy, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Contact } from './useContactsCRUD';
 

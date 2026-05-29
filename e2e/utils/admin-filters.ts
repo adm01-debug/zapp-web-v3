@@ -6,7 +6,6 @@
  * aos painéis e não dependem de copy/CSS específicos.
  */
 import type { Page, Locator } from '@playwright/test';
-import { expect } from '@playwright/test';
 
 // ============================================================
 // Página de Webhook Events

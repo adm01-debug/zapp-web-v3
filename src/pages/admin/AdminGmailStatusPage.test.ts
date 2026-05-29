@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Email Health API Contract', () => {
   it('should maintain the expected contract from edge function', async () => {

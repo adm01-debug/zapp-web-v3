@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 export interface Profile {
   id: string;
