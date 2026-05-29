@@ -5,8 +5,8 @@ import fc from 'fast-check';
 const validateWebhookPayload = (payload: any) => {
   if (!payload || typeof payload !== 'object') return false;
   if (!payload.id || typeof payload.id !== 'string') return false;
-  // Use a more inclusive UUID regex for the fuzzer that covers all versions
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  // Use a generic UUID regex for the fuzzer (v1-v8, any valid UUID structure)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(payload.id)) return false;
   return true;
 };
