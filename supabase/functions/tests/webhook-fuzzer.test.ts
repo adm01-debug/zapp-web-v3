@@ -5,10 +5,13 @@ import fc from 'fast-check';
 const validateWebhookPayload = (payload: any) => {
   if (!payload || typeof payload !== 'object') return false;
   if (!payload.id || typeof payload.id !== 'string') return false;
-  // Use a generic UUID regex for the fuzzer (v1-v8, any valid UUID structure)
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(payload.id)) return false;
-  return true;
+  // Use the most basic UUID format check (hex-hex-hex-hex-hex)
+  const uuidParts = payload.id.split('-');
+  if (uuidParts.length !== 5) return false;
+  if (uuidParts[0].length !== 8 || uuidParts[1].length !== 4 || uuidParts[2].length !== 4 || uuidParts[3].length !== 4 || uuidParts[4].length !== 12) return false;
+  
+  const isHex = (h: string) => /^[0-9a-f]+$/i.test(h);
+  return uuidParts.every(isHex);
 };
 
 describe('Webhook Fuzzing', () => {
@@ -26,10 +29,12 @@ describe('Webhook Fuzzing', () => {
     );
   });
 
-  it('should validate generated UUIDs', () => {
+  it('should validate all forms of generated UUIDs', () => {
     fc.assert(
       fc.property(fc.uuid(), (id) => {
-        return validateWebhookPayload({ id });
+        const isValid = validateWebhookPayload({ id });
+        if (!isValid) console.log(`Failed UUID: ${id}`);
+        return isValid;
       }),
       { numRuns: 100 }
     );
