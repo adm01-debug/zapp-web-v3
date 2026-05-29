@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,31 +8,25 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function StsCommercialDashboard() {
-  const [stats, setStats] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: stats = [], isLoading: loading } = useQuery<any[]>({
+    queryKey: ['admin', 'sts-commercial-dashboard'],
+    queryFn: async () => {
+      try {
+        // sts_troubleshooting_report is the view created in the previous turn
+        const { data, error } = await supabase
+          .from('sts_troubleshooting_report' as any)
+          .select('*');
 
-  const fetchStats = async () => {
-    setLoading(true);
-    try {
-      // sts_troubleshooting_report is the view created in the previous turn
-      const { data, error } = await supabase
-        .from('sts_troubleshooting_report' as any)
-        .select('*');
-
-      if (error) throw error;
-      setStats(data || []);
-    } catch (err: any) {
-      toast.error(`Erro ao carregar dashboard: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 60000); // Auto refresh every min
-    return () => clearInterval(interval);
-  }, []);
+        if (error) throw error;
+        return data || [];
+      } catch (err: any) {
+        toast.error(`Erro ao carregar dashboard: ${err.message}`);
+        throw err;
+      }
+    },
+    refetchInterval: 60000, // Auto refresh every min
+    retry: false,
+  });
 
   if (loading && stats.length === 0) {
     return (
