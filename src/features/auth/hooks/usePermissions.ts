@@ -1,26 +1,25 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
-interface Permission {
+export interface Permission {
   id: string;
   name: string;
   description: string | null;
   category: string;
 }
 
-interface RolePermission {
+export interface RolePermission {
   role: 'dev' | 'admin' | 'supervisor' | 'agent';
   permission_id: string;
   permission?: Permission;
 }
 
 export function usePermissions() {
-  const { user } = useAuth();
+  const { user, permissions: userPermissions, loading: authLoading, refreshPermissions } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
-  const [userPermissions, setUserPermissions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [fetchingAll, setFetchingAll] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -28,76 +27,37 @@ export function usePermissions() {
     return () => { mountedRef.current = false; };
   }, []);
 
-  const fetchPermissions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('permissions')
-      .select('*')
-      .order('category', { ascending: true });
+  const fetchAllPermissionsData = useCallback(async () => {
+    if (fetchingAll || !mountedRef.current) return;
+    setFetchingAll(true);
+    
+    try {
+      const [permsResult, rolePermsResult] = await Promise.all([
+        supabase.from('permissions').select('*').order('category', { ascending: true }),
+        supabase.from('role_permissions').select('role, permission_id, permissions(id, name, description, category)')
+      ]);
 
-    if (!error && data) {
-      setPermissions(data);
+      if (mountedRef.current) {
+        if (permsResult.data) setPermissions(permsResult.data as Permission[]);
+        if (rolePermsResult.data) {
+          const mapped = rolePermsResult.data.map(rp => ({
+            role: rp.role as 'dev' | 'admin' | 'supervisor' | 'agent',
+            permission_id: rp.permission_id,
+            permission: rp.permissions as unknown as Permission
+          }));
+          setRolePermissions(mapped);
+        }
+      }
+    } finally {
+      if (mountedRef.current) setFetchingAll(false);
     }
-    return data || [];
-  }, []);
+  }, [fetchingAll]);
 
-  const fetchRolePermissions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('role_permissions')
-      .select(`
-        role,
-        permission_id,
-        permissions (
-          id,
-          name,
-          description,
-          category
-        )
-      `);
-
-    if (!error && data) {
-      const mapped = data.map(rp => ({
-        role: rp.role as 'dev' | 'admin' | 'supervisor' | 'agent',
-        permission_id: rp.permission_id,
-        permission: rp.permissions as unknown as Permission
-      }));
-      setRolePermissions(mapped);
+  useEffect(() => {
+    if (user) {
+      fetchAllPermissionsData();
     }
-    return data || [];
-  }, []);
-
-  const fetchUserPermissions = useCallback(async () => {
-    if (!user || !mountedRef.current) return [];
-
-    // Get user's roles first
-    const { data: userRoles , error: userRolesErr } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-
-    if (!userRoles || userRoles.length === 0) {
-      setUserPermissions([]);
-      return [];
-    }
-
-    const roles = userRoles.map(r => r.role);
-
-    // Get permissions for those roles
-    const { data: perms , error: permsErr } = await supabase
-      .from('role_permissions')
-      .select('permissions(name)')
-      .in('role', roles);
-
-    if (perms) {
-      const permNames = perms
-        .map(p => (p.permissions as unknown as { name: string } | null)?.name)
-        .filter(Boolean) as string[];
-      const uniquePerms = [...new Set(permNames)];
-      setUserPermissions(uniquePerms);
-      return uniquePerms;
-    }
-
-    return [];
-  }, [user]);
+  }, [user, fetchAllPermissionsData]);
 
   /** Server-side permission check via SECURITY DEFINER RPC */
   const checkPermissionServer = useCallback(async (permissionName: string): Promise<boolean> => {
@@ -122,18 +82,18 @@ export function usePermissions() {
     return permissionNames.every(p => userPermissions.includes(p));
   }, [userPermissions]);
 
-  const addPermissionToRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
+  const addPermissionToRole = useCallback(async (role: string, permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .insert({ role, permission_id: permissionId } as any);
 
     if (!error) {
-      await fetchRolePermissions();
+      await Promise.all([refreshPermissions(), fetchAllPermissionsData()]);
     }
     return !error;
-  }, [fetchRolePermissions]);
+  }, [refreshPermissions, fetchAllPermissionsData]);
 
-  const removePermissionFromRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
+  const removePermissionFromRole = useCallback(async (role: string, permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .delete()
@@ -141,46 +101,22 @@ export function usePermissions() {
       .eq('permission_id', permissionId);
 
     if (!error) {
-      await fetchRolePermissions();
+      await Promise.all([refreshPermissions(), fetchAllPermissionsData()]);
     }
     return !error;
-  }, [fetchRolePermissions]);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const loadAll = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchPermissions(),
-          fetchRolePermissions(),
-          fetchUserPermissions()
-        ]);
-      } finally {
-        if (mountedRef.current && !isCancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    loadAll();
-    return () => { isCancelled = true; };
-  }, [user, fetchPermissions, fetchRolePermissions, fetchUserPermissions]);
+  }, [refreshPermissions, fetchAllPermissionsData]);
 
   return {
     permissions,
     rolePermissions,
     userPermissions,
-    loading,
+    loading: authLoading || fetchingAll,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
     checkPermissionServer,
     addPermissionToRole,
     removePermissionFromRole,
-    refetch: () => Promise.all([fetchPermissions(), fetchRolePermissions(), fetchUserPermissions()])
+    refetch: () => Promise.all([refreshPermissions(), fetchAllPermissionsData()])
   };
 }

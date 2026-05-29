@@ -1,9 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { getLogger } from '@/lib/logger';
+import { useMemo } from 'react';
 import { useAuth } from './useAuth';
-
-const log = getLogger('useUserRole');
 
 /**
  * Hierarquia de papéis (do mais alto ao mais baixo):
@@ -31,124 +27,34 @@ const ROLE_RANK: Record<AppRole, number> = {
 };
 
 export function useUserRole() {
-  const { user } = useAuth();
-  const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDev, setIsDev] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isManager, setIsManager] = useState(false);
-  const [isSupervisor, setIsSupervisor] = useState(false);
-  const mountedRef = useRef(true);
-  const fetchingRef = useRef(false);
+  const { roles: authRoles, loading, refreshRoles } = useAuth();
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
+  const roles = useMemo(() => {
+    return authRoles.map(r => (r === 'special_agent' ? 'agent' : r) as AppRole);
+  }, [authRoles]);
 
-  const fetchRoles = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
+  const maxRank = useMemo(() => {
+    return roles.reduce(
+      (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
+      0
+    );
+  }, [roles]);
 
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      if (!mountedRef.current) return;
-
-      if (error) {
-        log.error('Error fetching user roles:', error.message);
-        return;
-      }
-
-      if (data) {
-        const userRoles = data.map((r) => {
-          const raw = r.role as string;
-          return (raw === 'special_agent' ? 'agent' : raw) as AppRole;
-        });
-        setRoles(userRoles);
-
-        const maxRank = userRoles.reduce(
-          (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
-          0
-        );
-        
-        setIsDev(maxRank >= ROLE_RANK.dev);
-        setIsAdmin(maxRank >= ROLE_RANK.admin);
-        setIsManager(maxRank >= ROLE_RANK.manager);
-        setIsSupervisor(maxRank >= ROLE_RANK.supervisor);
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-        fetchingRef.current = false;
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      fetchRoles();
-    } else {
-      setRoles([]);
-      setIsDev(false);
-      setIsAdmin(false);
-      setIsManager(false);
-      setIsSupervisor(false);
-      setLoading(false);
-    }
-  }, [user, fetchRoles]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`user_roles_changes_${user.id}_${Math.random().toString(36).slice(2, 8)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          log.info('Role change detected, refetching...');
-          fetchRoles();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchRoles]);
-
-  const hasRole = useCallback(
-    (role: AppRole) => {
-      const required = ROLE_RANK[role] ?? 0;
-      return roles.some((r) => (ROLE_RANK[r] ?? 0) >= required);
-    },
-    [roles]
-  );
+  const hasRole = useMemo(() => (role: AppRole) => {
+    const required = ROLE_RANK[role] ?? 0;
+    return roles.some((r) => (ROLE_RANK[r] ?? 0) >= required);
+  }, [roles]);
 
   return {
     roles,
-    isDev,
-    isAdmin,
-    isManager,
-    isSupervisor,
+    isDev: maxRank >= ROLE_RANK.dev,
+    isAdmin: maxRank >= ROLE_RANK.admin,
+    isManager: maxRank >= ROLE_RANK.manager,
+    isSupervisor: maxRank >= ROLE_RANK.supervisor,
     /** @deprecated O papel `special_agent` foi descontinuado. Sempre retorna `false`. */
     isSpecialAgent: false,
     hasRole,
     loading,
-    refetch: fetchRoles,
+    refetch: refreshRoles,
   };
 }

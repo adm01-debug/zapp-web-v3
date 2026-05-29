@@ -14,12 +14,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchingRef = useRef(false);
+  const fetchingProfileRef = useRef(false);
+  const fetchingRolesRef = useRef(false);
+  const fetchingPermissionsRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
+    if (fetchingProfileRef.current) return;
+    fetchingProfileRef.current = true;
     try {
       const { data, error } = await authService.getProfile(userId);
       if (!error && data) {
@@ -28,9 +32,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       log.warn('[Auth] Failed to fetch profile for user:', userId, err);
     } finally {
-      fetchingRef.current = false;
+      fetchingProfileRef.current = false;
     }
   }, []);
+
+  const fetchRoles = useCallback(async (userId: string) => {
+    if (fetchingRolesRef.current) return;
+    fetchingRolesRef.current = true;
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (!error && data) {
+        const userRoles = data.map((r) => r.role as string);
+        setRoles(userRoles);
+      }
+    } catch (err: unknown) {
+      log.warn('[Auth] Failed to fetch roles for user:', userId, err);
+    } finally {
+      fetchingRolesRef.current = false;
+    }
+  }, []);
+
+  const fetchPermissions = useCallback(async (userId: string) => {
+    if (fetchingPermissionsRef.current) return;
+    fetchingPermissionsRef.current = true;
+    try {
+      // Get roles first (to avoid complex joins that might hit RLS issues or be slow)
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (userRoles && userRoles.length > 0) {
+        const roles = userRoles.map(r => r.role);
+        const { data: perms } = await supabase
+          .from('role_permissions')
+          .select('permissions(name)')
+          .in('role', roles);
+
+        if (perms) {
+          const permNames = perms
+            .map(p => (p.permissions as unknown as { name: string } | null)?.name)
+            .filter(Boolean) as string[];
+          setPermissions([...new Set(permNames)]);
+        }
+      } else {
+        setPermissions([]);
+      }
+    } catch (err: unknown) {
+      log.warn('[Auth] Failed to fetch permissions for user:', userId, err);
+    } finally {
+      fetchingPermissionsRef.current = false;
+    }
+  }, []);
+
+  const refreshAll = useCallback(async (userId: string) => {
+    setLoading(true);
+    await Promise.all([
+      fetchProfile(userId),
+      fetchRoles(userId),
+      fetchPermissions(userId)
+    ]);
+    setLoading(false);
+  }, [fetchProfile, fetchRoles, fetchPermissions]);
 
   useEffect(() => {
     const subscription = authService.onAuthStateChange((event, session) => {
@@ -50,11 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setTimeout(() => {
-          fetchProfile(session.user.id);
-        }, 0);
+        refreshAll(session.user.id);
       } else {
         setProfile(null);
+        setRoles([]);
+        setPermissions([]);
+        setLoading(false);
       }
     });
 
@@ -62,9 +130,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        refreshAll(session.user.id);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     }).catch((err) => {
       log.warn('[Auth] getSession failed, clearing local session', err);
       try {
@@ -76,13 +145,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, [refreshAll]);
+
   // Real-time profile updates (e.g., department changes)
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
-      .channel(`profile-updates-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+    const profileChannel = supabase
+      .channel(`profile-updates-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -98,18 +168,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
       .subscribe();
 
+    const rolesChannel = supabase
+      .channel(`role-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_roles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          log.info('[Auth] Role change detected, refetching...');
+          fetchRoles(user.id);
+          fetchPermissions(user.id);
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(rolesChannel);
     };
-  }, [user, profile?.id]);
+  }, [user, profile?.id, fetchRoles, fetchPermissions]);
 
 
   const refreshProfile = useCallback(async () => {
-    if (user) {
-      fetchingRef.current = false;
-      await fetchProfile(user.id);
-    }
+    if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
+
+  const refreshRoles = useCallback(async () => {
+    if (user) await fetchRoles(user.id);
+  }, [user, fetchRoles]);
+
+  const refreshPermissions = useCallback(async () => {
+    if (user) await fetchPermissions(user.id);
+  }, [user, fetchPermissions]);
 
   const signIn = async (email: string, password: string) => {
     return await authService.signIn(email, password);
@@ -122,12 +216,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await authService.signOut();
     setProfile(null);
+    setRoles([]);
+    setPermissions([]);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signIn, signUp, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      profile, 
+      roles, 
+      permissions, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut, 
+      refreshProfile,
+      refreshRoles,
+      refreshPermissions
+    }}>
       {children}
     </AuthContext.Provider>
   );
 }
-
