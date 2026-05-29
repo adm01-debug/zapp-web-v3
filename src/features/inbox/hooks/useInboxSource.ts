@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useRealtimeMessages } from '@/features/inbox/hooks/useRealtimeMessages';
 import { useExternalConversations, useExternalMessages } from '@/hooks/useExternalEvolution';
 import { useMessages } from '@/features/inbox/hooks/useMessages';
-import { type LoadOlderCallback, type CancelLoadOlderCallback } from '@/features/inbox/types';
+import type { LoadOlderCallback, CancelLoadOlderCallback } from '@/features/inbox';
 
 export function useInboxSource(useExternalDb: boolean, selectedContactId: string | null) {
   // Local DB source
