@@ -1,103 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallback } from 'react';
 import { useAuth } from './useAuth';
-
-interface Permission {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string;
-}
-
-interface RolePermission {
-  role: 'dev' | 'admin' | 'supervisor' | 'agent';
-  permission_id: string;
-  permission?: Permission;
-}
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePermissions() {
-  const { user } = useAuth();
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
-  const [userPermissions, setUserPermissions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  const fetchPermissions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('permissions')
-      .select('*')
-      .order('category', { ascending: true });
-
-    if (!error && data) {
-      setPermissions(data);
-    }
-    return data || [];
-  }, []);
-
-  const fetchRolePermissions = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('role_permissions')
-      .select(`
-        role,
-        permission_id,
-        permissions (
-          id,
-          name,
-          description,
-          category
-        )
-      `);
-
-    if (!error && data) {
-      const mapped = data.map(rp => ({
-        role: rp.role as 'dev' | 'admin' | 'supervisor' | 'agent',
-        permission_id: rp.permission_id,
-        permission: rp.permissions as unknown as Permission
-      }));
-      setRolePermissions(mapped);
-    }
-    return data || [];
-  }, []);
-
-  const fetchUserPermissions = useCallback(async () => {
-    if (!user || !mountedRef.current) return [];
-
-    // Get user's roles first
-    const { data: userRoles , error: userRolesErr } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
-
-    if (!userRoles || userRoles.length === 0) {
-      setUserPermissions([]);
-      return [];
-    }
-
-    const roles = userRoles.map(r => r.role);
-
-    // Get permissions for those roles
-    const { data: perms , error: permsErr } = await supabase
-      .from('role_permissions')
-      .select('permissions(name)')
-      .in('role', roles);
-
-    if (perms) {
-      const permNames = perms
-        .map(p => (p.permissions as unknown as { name: string } | null)?.name)
-        .filter(Boolean) as string[];
-      const uniquePerms = [...new Set(permNames)];
-      setUserPermissions(uniquePerms);
-      return uniquePerms;
-    }
-
-    return [];
-  }, [user]);
+  const { user, permissions: userPermissions, loading, refreshPermissions } = useAuth();
 
   /** Server-side permission check via SECURITY DEFINER RPC */
   const checkPermissionServer = useCallback(async (permissionName: string): Promise<boolean> => {
@@ -122,18 +28,20 @@ export function usePermissions() {
     return permissionNames.every(p => userPermissions.includes(p));
   }, [userPermissions]);
 
-  const addPermissionToRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
+  // Note: addPermissionToRole and removePermissionFromRole still need direct Supabase calls
+  // but they are rarely used in the main flow.
+  const addPermissionToRole = useCallback(async (role: string, permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .insert({ role, permission_id: permissionId } as any);
 
     if (!error) {
-      await fetchRolePermissions();
+      await refreshPermissions();
     }
     return !error;
-  }, [fetchRolePermissions]);
+  }, [refreshPermissions]);
 
-  const removePermissionFromRole = useCallback(async (role: 'dev' | 'admin' | 'supervisor' | 'agent', permissionId: string) => {
+  const removePermissionFromRole = useCallback(async (role: string, permissionId: string) => {
     const { error } = await supabase
       .from('role_permissions')
       .delete()
@@ -141,38 +49,12 @@ export function usePermissions() {
       .eq('permission_id', permissionId);
 
     if (!error) {
-      await fetchRolePermissions();
+      await refreshPermissions();
     }
     return !error;
-  }, [fetchRolePermissions]);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const loadAll = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      try {
-        await Promise.all([
-          fetchPermissions(),
-          fetchRolePermissions(),
-          fetchUserPermissions()
-        ]);
-      } finally {
-        if (mountedRef.current && !isCancelled) {
-          setLoading(false);
-        }
-      }
-    };
-    loadAll();
-    return () => { isCancelled = true; };
-  }, [user, fetchPermissions, fetchRolePermissions, fetchUserPermissions]);
+  }, [refreshPermissions]);
 
   return {
-    permissions,
-    rolePermissions,
     userPermissions,
     loading,
     hasPermission,
@@ -181,6 +63,6 @@ export function usePermissions() {
     checkPermissionServer,
     addPermissionToRole,
     removePermissionFromRole,
-    refetch: () => Promise.all([fetchPermissions(), fetchRolePermissions(), fetchUserPermissions()])
+    refetch: refreshPermissions
   };
 }
