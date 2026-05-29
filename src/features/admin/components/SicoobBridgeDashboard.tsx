@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('SicoobBridgeDashboard');
@@ -28,42 +28,42 @@ interface SicoobMessage {
 }
 
 export function SicoobBridgeDashboard() {
-  const [mappings, setMappings] = useState<SicoobMapping[]>([]);
-  const [recentMessages, setRecentMessages] = useState<SicoobMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Load Sicoob contact mappings
-      const { data: mappingData , error } = await supabase
-        .from('sicoob_contact_mapping')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      setMappings((mappingData || []) as SicoobMapping[]);
-
-      // Load recent messages from Sicoob contacts
-      const contactIds = (mappingData || []).map((m: SicoobMapping) => m.contact_id);
-      if (contactIds.length > 0) {
-        const { data: msgData , error: msgDataErr } = await supabase
-          .from('messages')
-          .select('id, content, sender, created_at, contact_id, status')
-          .in('contact_id', contactIds.slice(0, 20))
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ['admin', 'sicoob-bridge-dashboard'],
+    queryFn: async () => {
+      try {
+        const { data: mappingData } = await supabase
+          .from('sicoob_contact_mapping')
+          .select('*')
           .order('created_at', { ascending: false })
-          .limit(30);
+          .limit(50);
 
-        setRecentMessages((msgData || []) as SicoobMessage[]);
+        const mappings = (mappingData || []) as SicoobMapping[];
+        const contactIds = mappings.map((m) => m.contact_id);
+
+        let recentMessages: SicoobMessage[] = [];
+        if (contactIds.length > 0) {
+          const { data: msgData } = await supabase
+            .from('messages')
+            .select('id, content, sender, created_at, contact_id, status')
+            .in('contact_id', contactIds.slice(0, 20))
+            .order('created_at', { ascending: false })
+            .limit(30);
+          recentMessages = (msgData || []) as SicoobMessage[];
+        }
+
+        return { mappings, recentMessages };
+      } catch (err) {
+        log.warn('Failed to load Sicoob data:', err);
+        return { mappings: [] as SicoobMapping[], recentMessages: [] as SicoobMessage[] };
       }
-    } catch (err) {
-      log.warn('Failed to load Sicoob data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+  });
 
-  useEffect(() => { loadData(); }, [loadData]);
+  const mappings = data?.mappings ?? [];
+  const recentMessages = data?.recentMessages ?? [];
+  const loading = isFetching;
+  const loadData = () => { void refetch(); };
 
   const inbound = recentMessages.filter(m => m.sender === 'contact').length;
   const outbound = recentMessages.filter(m => m.sender === 'agent').length;

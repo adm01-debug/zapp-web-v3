@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,42 +38,40 @@ const statusConfig: Record<QrAttempt['status'], { label: string; icon: typeof Ch
 
 /** Admin panel: latest QR Code attempts per WhatsApp instance with re-trigger action. */
 export function QrAttemptsPanel() {
-  const [attempts, setAttempts] = useState<QrAttempt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<'all' | QrAttempt['status']>('all');
   const [instanceFilter, setInstanceFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    let q = supabase
-      .from('qr_attempts')
-      .select('id, connection_id, instance_id, connection_name, status, error_message, connected_at, expired_at, created_at, requested_by')
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if (statusFilter !== 'all') q = q.eq('status', statusFilter);
-    if (instanceFilter !== 'all') q = q.eq('instance_id', instanceFilter);
-    const { data, error } = await q;
-    if (error) {
-      toast.error('Falha ao carregar histórico de QR.');
-    } else if (data) {
-      setAttempts(data as QrAttempt[]);
-    }
-    setLoading(false);
-  }, [statusFilter, instanceFilter]);
+  const { data: attempts = [], isFetching: loading, refetch } = useQuery<QrAttempt[]>({
+    queryKey: ['admin', 'qr-attempts', statusFilter, instanceFilter],
+    queryFn: async () => {
+      let q = supabase
+        .from('qr_attempts')
+        .select('id, connection_id, instance_id, connection_name, status, error_message, connected_at, expired_at, created_at, requested_by')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (statusFilter !== 'all') q = q.eq('status', statusFilter);
+      if (instanceFilter !== 'all') q = q.eq('instance_id', instanceFilter);
+      const { data, error } = await q;
+      if (error) {
+        toast.error('Falha ao carregar histórico de QR.');
+        throw error;
+      }
+      return (data || []) as QrAttempt[];
+    },
+  });
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Realtime: refresh on any new attempt or status change.
+  // Realtime: invalidate on any attempt change.
   useEffect(() => {
     const channel = supabase
       .channel('qr-attempts-admin')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'qr_attempts' }, () => {
-        fetchData();
+        void queryClient.invalidateQueries({ queryKey: ['admin', 'qr-attempts'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [fetchData]);
+  }, [queryClient]);
 
   const instances = useMemo(() => {
     const set = new Set<string>();
@@ -175,7 +174,7 @@ export function QrAttemptsPanel() {
                   <SelectItem value="error">Erro</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={loading}>
                 {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               </Button>
             </div>

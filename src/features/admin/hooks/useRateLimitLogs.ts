@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface RateLimitLog {
@@ -22,35 +23,51 @@ interface RateLimitStats {
   topIPs: { ip: string; count: number; blocked: boolean }[];
 }
 
+const QUERY_KEY = ['admin', 'rate-limit-logs'] as const;
+
 export function useRateLimitLogs() {
-  const [logs, setLogs] = useState<RateLimitLog[]>([]);
-  const [stats, setStats] = useState<RateLimitStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchLogs = useCallback(async (limit = 100) => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('rate_limit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+  const { data: logs = [], isFetching: loading, refetch } = useQuery<RateLimitLog[]>({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('rate_limit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (!error && data) return data as RateLimitLog[];
+      return [];
+    },
+  });
 
-    if (!error && data) {
-      setLogs(data);
-      calculateStats(data);
-    }
-    setLoading(false);
-    return data || [];
-  }, []);
+  // Realtime: prepend new inserts directly into the cache without a full re-fetch.
+  useEffect(() => {
+    const channel = supabase
+      .channel('rate-limit-logs')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'rate_limit_logs' },
+        (payload) => {
+          const newLog = payload.new as RateLimitLog;
+          queryClient.setQueryData<RateLimitLog[]>(QUERY_KEY, (prev) =>
+            [newLog, ...(prev ?? [])].slice(0, 100)
+          );
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
-  const calculateStats = (data: RateLimitLog[]) => {
-    const totalRequests = data.reduce((sum, log) => sum + log.request_count, 0);
-    const blockedRequests = data.filter(log => log.blocked).length;
-    const uniqueIPs = new Set(data.map(log => log.ip_address)).size;
+  const stats = useMemo<RateLimitStats | null>(() => {
+    if (logs.length === 0) return null;
 
-    // Top endpoints
+    const totalRequests = logs.reduce((sum, log) => sum + log.request_count, 0);
+    const blockedRequests = logs.filter(log => log.blocked).length;
+    const uniqueIPs = new Set(logs.map(log => log.ip_address)).size;
+
     const endpointCounts: Record<string, number> = {};
-    data.forEach(log => {
+    logs.forEach(log => {
       endpointCounts[log.endpoint] = (endpointCounts[log.endpoint] || 0) + log.request_count;
     });
     const topEndpoints = Object.entries(endpointCounts)
@@ -58,9 +75,8 @@ export function useRateLimitLogs() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // Top IPs
     const ipData: Record<string, { count: number; blocked: boolean }> = {};
-    data.forEach(log => {
+    logs.forEach(log => {
       if (!ipData[log.ip_address]) {
         ipData[log.ip_address] = { count: 0, blocked: false };
       }
@@ -72,43 +88,13 @@ export function useRateLimitLogs() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    setStats({
-      totalRequests,
-      blockedRequests,
-      uniqueIPs,
-      topEndpoints,
-      topIPs
-    });
-  };
-
-  const subscribeToLogs = useCallback(() => {
-    const channel = supabase
-      .channel('rate-limit-logs')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'rate_limit_logs' },
-        (payload) => {
-          const newLog = payload.new as RateLimitLog;
-          setLogs(prev => [newLog, ...prev].slice(0, 100));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  useEffect(() => {
-    fetchLogs();
-    const unsubscribe = subscribeToLogs();
-    return unsubscribe;
-  }, [fetchLogs, subscribeToLogs]);
+    return { totalRequests, blockedRequests, uniqueIPs, topEndpoints, topIPs };
+  }, [logs]);
 
   return {
     logs,
     stats,
     loading,
-    refetch: fetchLogs
+    refetch,
   };
 }

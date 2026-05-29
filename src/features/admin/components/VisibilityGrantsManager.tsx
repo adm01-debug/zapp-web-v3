@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,53 +24,55 @@ interface Grant {
   target_profile?: Profile;
 }
 
+interface QueryData {
+  allAgents: Profile[];
+  specialAgents: Profile[];
+  grants: Grant[];
+}
+
 export function VisibilityGrantsManager() {
-  const [grants, setGrants] = useState<Grant[]>([]);
-  const [specialAgents, setSpecialAgents] = useState<Profile[]>([]);
-  const [allAgents, setAllAgents] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [selectedSpecialAgent, setSelectedSpecialAgent] = useState('');
   const [selectedTargetAgent, setSelectedTargetAgent] = useState('');
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const { data, isLoading: loading } = useQuery<QueryData>({
+    queryKey: ['admin', 'visibility-grants'],
+    queryFn: async () => {
+      // O papel `special_agent` foi descontinuado em favor do papel `agent`.
+      // Esta tela permanece apenas para visualizar grants legados (lista vazia por padrão).
+      const specialAgentUserIds: string[] = [];
 
-    // O papel `special_agent` foi descontinuado em favor do papel `agent`.
-    // Esta tela permanece apenas para visualizar grants legados (lista vazia por padrão).
-    const specialAgentUserIds: string[] = [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, user_id, name, email')
+        .order('name');
 
-    // Fetch all profiles
-    const { data: profiles , error } = await supabase
-      .from('profiles')
-      .select('id, user_id, name, email')
-      .order('name');
+      const profilesList = (profiles || []) as Profile[];
 
-    if (profiles) {
-      setAllAgents(profiles);
-      setSpecialAgents(profiles.filter(p => specialAgentUserIds.includes(p.user_id)));
-    }
+      const { data: grantsData } = await supabase
+        .from('agent_visibility_grants')
+        .select('id, agent_id, can_see_agent_id');
 
-    // Fetch existing grants
-    const { data: grantsData , error: grantsDataErr } = await supabase
-      .from('agent_visibility_grants')
-      .select('id, agent_id, can_see_agent_id');
+      const grants = grantsData
+        ? grantsData.map(g => ({
+            ...g,
+            agent_profile: profilesList.find(p => p.id === g.agent_id),
+            target_profile: profilesList.find(p => p.id === g.can_see_agent_id),
+          }))
+        : [];
 
-    if (grantsData && profiles) {
-      const mapped = grantsData.map(g => ({
-        ...g,
-        agent_profile: profiles.find(p => p.id === g.agent_id),
-        target_profile: profiles.find(p => p.id === g.can_see_agent_id),
-      }));
-      setGrants(mapped);
-    }
+      return {
+        allAgents: profilesList,
+        specialAgents: profilesList.filter(p => specialAgentUserIds.includes(p.user_id)),
+        grants,
+      };
+    },
+  });
 
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const allAgents = data?.allAgents ?? [];
+  const specialAgents = data?.specialAgents ?? [];
+  const grants = data?.grants ?? [];
 
   const handleAddGrant = async () => {
     if (!selectedSpecialAgent || !selectedTargetAgent) return;
@@ -84,7 +87,7 @@ export function VisibilityGrantsManager() {
     const { data: { user } } = await supabase.auth.getUser();
     let grantedBy: string | undefined;
     if (user) {
-      const { data: profile , error: profileErr } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
@@ -109,7 +112,7 @@ export function VisibilityGrantsManager() {
     } else {
       toast.success('Permissão de visibilidade adicionada');
       setSelectedTargetAgent('');
-      fetchData();
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'visibility-grants'] });
     }
     setSaving(false);
   };
@@ -124,7 +127,7 @@ export function VisibilityGrantsManager() {
       toast.error('Erro ao remover permissão');
     } else {
       toast.success('Permissão removida');
-      fetchData();
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'visibility-grants'] });
     }
   };
 

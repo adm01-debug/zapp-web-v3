@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Eye, Lock, Loader2, Info, Instagram, Globe, MessageSquare, Plus, Trash2, Settings2, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,27 +34,19 @@ const ROLES = [
 
 export function InboxScopeConfig() {
   const { permissions, rolePermissions, addPermissionToRole, removePermissionFromRole, loading } = usePermissions();
+  const queryClient = useQueryClient();
   const [updating, setUpdating] = useState<string | null>(null);
-  const [customScopes, setCustomScopes] = useState<any[]>([]);
-  const [loadingScopes, setLoadingScopes] = useState(true);
   const [newScope, setNewScope] = useState({ label: '', description: '', name: '' });
   const [isAddingScope, setIsAddingScope] = useState(false);
 
-  useEffect(() => {
-    fetchCustomScopes();
-  }, []);
-
-  const fetchCustomScopes = async () => {
-    try {
+  const { data: customScopes = [], isLoading: loadingScopes } = useQuery({
+    queryKey: ['admin', 'inbox-custom-scopes'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('inbox_custom_scopes').select('*').order('created_at', { ascending: true });
       if (error) throw error;
-      setCustomScopes(data || []);
-    } catch (err) {
-      console.error('Error fetching custom scopes:', err);
-    } finally {
-      setLoadingScopes(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
   const handleAddScope = async () => {
     if (!newScope.label || !newScope.name) {
@@ -71,12 +64,11 @@ export function InboxScopeConfig() {
       }]);
 
       if (error) throw error;
-      
+
       toast.success('Escopo personalizado criado!');
       setNewScope({ label: '', description: '', name: '' });
-      fetchCustomScopes();
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'inbox-custom-scopes'] });
     } catch (err) {
-      console.error(err);
       toast.error('Erro ao criar escopo');
     } finally {
       setIsAddingScope(false);
@@ -88,9 +80,8 @@ export function InboxScopeConfig() {
       const { error } = await supabase.from('inbox_custom_scopes').delete().eq('id', id);
       if (error) throw error;
       toast.success('Escopo removido');
-      fetchCustomScopes();
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'inbox-custom-scopes'] });
     } catch (err) {
-      console.error(err);
       toast.error('Erro ao remover escopo');
     }
   };
