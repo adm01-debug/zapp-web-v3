@@ -95,7 +95,7 @@ export function NewConversationDialog({ open, onOpenChange, onCreated }: Props) 
     }
 
     try {
-      const payload: any = { type: tab };
+      const payload: any = { type: tab }; // ignore-audit (any pré-existente; payload montado dinamicamente por aba)
       
       if (tab === 'department') {
         const dept = departments.find(d => d.id === selectedDeptId);
