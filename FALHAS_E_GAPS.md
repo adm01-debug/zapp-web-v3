@@ -438,19 +438,23 @@ neste ambiente; `tsc --noEmit -p tsconfig.app.json` validado **antes e depois (0
 - `useRealtimeMessages.ts` — canal Realtime **já tem** cleanup (`removeChannel` no return do effect).
 - Empty catch blocks — reduzidos de muitos para **6** (todos tratados neste PR).
 
-### 🔄 Em andamento — PR #41 (frentes pós-#40)
+### 🔄 Em andamento — PR #41 (somente lint)
 - **Dívida de lint — imports não usados**: ✅ **825 imports removidos** em 438 arquivos
   (`eslint-plugin-unused-imports`, config temporária, sem churn de lockfile). `tsc`=0,
   build OK. Modelo de isolamento descoberto: **por-usuário (`auth.uid()=user_id`) +
   por-papel (`has_role`/admin/supervisor)** — NÃO há coluna multi-tenant.
+
+### 🔄 Em andamento — PR separado de DB (hardening RLS + search_path)
+> Movido para branch/PR próprio (`claude/db-rls-search-path-hardening`) para permitir
+> mergear o lint sem tocar o banco. **Draft — validar em staging antes de mergear**,
+> pois migrations auto-aplicam em produção.
 - **`SECURITY DEFINER` sem `search_path`**: ✅ migração criada
   (`supabase/migrations/20260529120000_...`) — bloco `DO` idempotente/auto-descobrível.
-  **Draft, validar em staging** (migrations auto-aplicam em prod).
 - **RLS `USING (true)` (~291)**: ✅ migração criada
   (`supabase/migrations/20260529120100_...`) — auto-direcionada via `pg_policy`,
   dono-OU-admin/supervisor p/ tabelas com coluna de propriedade; catálogos = leitura
   autenticada + escrita admin. Rollback manual em `supabase/manual-rollbacks/`.
-  **Draft, validar em staging** (ver `docs/RLS_SECURITY_DEFINER_HARDENING.md`).
+  Ver `docs/RLS_SECURITY_DEFINER_HARDENING.md` (query de preview read-only incluída).
 
 ### 📋 Documentado — NÃO aplicado (requer coordenação / fora do escopo seguro)
 - **Token em `localStorage`** (`src/integrations/supabase/client.ts:19`): migração para
