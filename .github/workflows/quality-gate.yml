@@ -29,6 +29,10 @@ jobs:
       - name: Unit & Integration Tests
         run: npm run test
 
+      - name: Fuzzing Tests
+        run: npm run test:fuzz -- --runs 20 --baseUrl http://localhost:54321/functions/v1
+        continue-on-error: true
+
       - name: Install Playwright Browsers
         run: bunx playwright install --with-deps
 
