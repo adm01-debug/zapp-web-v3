@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "../button";
 import { Mail, ArrowRight, Loader2, Plus, Trash2, Check, Github, Send } from "lucide-react";

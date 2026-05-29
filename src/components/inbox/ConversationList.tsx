@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Conversation } from '@/types/chat';

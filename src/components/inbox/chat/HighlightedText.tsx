@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { memo } from 'react';
 
 interface HighlightedTextProps {

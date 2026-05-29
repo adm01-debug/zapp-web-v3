@@ -169,4 +169,3 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
 
   return { status, isReconnecting };
 }
-

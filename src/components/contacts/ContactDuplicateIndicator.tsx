@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactDuplicateIndicator.tsx — Detect similar contacts in EXTERNAL CRM database
  *

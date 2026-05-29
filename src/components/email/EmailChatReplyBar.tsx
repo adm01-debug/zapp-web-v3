@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useRef, useCallback, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { Send, Paperclip, ChevronDown, ChevronUp, Signature, X, Loader2, Clock, AlertCircle } from 'lucide-react';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useOutlookEmail.ts — Hook para integração com Outlook via Microsoft Graph API
  *

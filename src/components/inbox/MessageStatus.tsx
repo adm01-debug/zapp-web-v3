@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';

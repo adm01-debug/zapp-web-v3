@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AutoExportManager - BLOQUEADO por política de segurança.
  */

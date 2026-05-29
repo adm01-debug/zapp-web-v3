@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { Product } from '@/components/catalog/ProductCard';
 import { CartItem } from '@/components/catalog/ShoppingCart';

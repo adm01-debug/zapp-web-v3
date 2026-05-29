@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Evolution API v2 — Type definitions
  * Extracted from useEvolutionApi.ts for maintainability.

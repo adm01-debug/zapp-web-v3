@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { SLAHistoryDashboard, SLADeliveryHistoryDashboard } from '@/features/sla';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Ban, Eye, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from '@/components/ui/motion';

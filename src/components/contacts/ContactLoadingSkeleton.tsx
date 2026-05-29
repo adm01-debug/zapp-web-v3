@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactLoadingSkeleton.tsx
  * Professional shimmer loading states for contacts module.

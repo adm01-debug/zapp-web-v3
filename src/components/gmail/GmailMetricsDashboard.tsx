@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Mail, Clock, CheckCircle, AlertTriangle, TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

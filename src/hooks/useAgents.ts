@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useAgents.ts
  * AI Agents hook using the agents table (real schema + agent_status enum).

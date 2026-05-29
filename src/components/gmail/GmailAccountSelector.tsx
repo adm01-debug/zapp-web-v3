@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Mail, Plus, Settings, Wifi, WifiOff, RefreshCw, ChevronDown, LogOut, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

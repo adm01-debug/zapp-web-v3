@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Orchestration hook that integrates ALL sticker subsystems:
  * - Validation (stickerValidator)

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Skeleton, SkeletonCard, SkeletonText } from '@/components/ui/skeleton';
 
 export function ViewLoadingFallback() {

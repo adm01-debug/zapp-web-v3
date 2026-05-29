@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MessageStatusTimestamps — chip compacto que exibe HH:mm para
  * sent / delivered / read ao lado do ícone de status da mensagem.

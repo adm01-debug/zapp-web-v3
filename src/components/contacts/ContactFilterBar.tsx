@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactFilterBar.tsx
  * Advanced filter bar for the contacts list.

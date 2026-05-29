@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ExportButton - BLOQUEADO por política de segurança.
  */

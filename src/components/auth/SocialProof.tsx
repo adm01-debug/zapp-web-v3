@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion } from 'framer-motion';
 import { Users, MessageSquare, Zap, Shield } from 'lucide-react';
 

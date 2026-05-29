@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, MessageSquare, UserPlus, AlertTriangle, CheckCircle, Clock } from 'lucide-react';

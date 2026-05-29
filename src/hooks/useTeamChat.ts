@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Re-export all team chat hooks and types from modular files
 export type { TeamConversation, TeamMember, TeamMessage } from '@/features/inbox/hooks/team-chat/teamChatTypes';
 export { useTeamConversations } from '@/features/inbox/hooks/team-chat/useTeamConversations';

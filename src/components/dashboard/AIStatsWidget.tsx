@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from '@/components/ui/motion';
 import { Brain, TrendingUp, TrendingDown, Minus, Sparkles, AlertTriangle, Mic, Calendar, Bell } from 'lucide-react';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { Star, Archive, UserPlus, RefreshCw, Reply, ReplyAll, Forward, ChevronDown, ChevronUp, Paperclip, Clock, AlertTriangle } from 'lucide-react';

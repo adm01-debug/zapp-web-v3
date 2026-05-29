@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Image, Video, Music, File } from 'lucide-react';

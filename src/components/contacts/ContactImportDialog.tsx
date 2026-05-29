@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactImportDialog.tsx — v3.0
  * CSV import using contacts-import Edge Function.

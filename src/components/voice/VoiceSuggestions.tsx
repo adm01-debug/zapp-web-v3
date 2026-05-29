@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 const SUGGESTION_COMMANDS = [

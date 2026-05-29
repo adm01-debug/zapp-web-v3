@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { forwardRef } from 'react';
 import { useRealtimeSentimentAlerts } from '@/hooks/useRealtimeSentimentAlerts';
 

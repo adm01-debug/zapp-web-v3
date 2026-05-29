@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ConversationDeliverySummary — linha agregada com contadores de status
  * para o conjunto de mensagens da conversa atual, separando direção.

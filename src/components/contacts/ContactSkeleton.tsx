@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactSkeleton.tsx
  * Loading skeleton placeholders for the contacts list.

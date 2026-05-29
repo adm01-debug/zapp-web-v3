@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactPhoneManager.tsx
  * UI component for managing multiple phone numbers per contact.

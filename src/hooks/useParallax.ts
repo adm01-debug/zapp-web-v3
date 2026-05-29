@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface ParallaxOptions {

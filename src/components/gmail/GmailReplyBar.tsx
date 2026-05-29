@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { Send, Paperclip, ChevronDown, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';

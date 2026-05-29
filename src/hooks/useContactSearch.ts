@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useContactSearch.ts — v2.0
  * Full-text search hook for contacts using search_contacts() RPC.

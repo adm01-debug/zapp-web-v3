@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useCallback, useEffect, useState } from 'react';
 import { safeGetJSON, safeSetJSON } from '@/lib/safeStorage';
 

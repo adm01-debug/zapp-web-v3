@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ActivityTimeline.tsx
  * Visual activity timeline for the contact 360° view.

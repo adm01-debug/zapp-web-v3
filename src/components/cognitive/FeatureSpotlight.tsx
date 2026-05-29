@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Info, Lightbulb, X } from 'lucide-react';

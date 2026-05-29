@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useLGPDWebhookSync.ts
  * Webhook-based LGPD consent sync between WhatsApp opt-out and CRM.

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Mail, Settings, Key, Clock, Signature, Bell, Shield, Info, Wifi, Plus, Building2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

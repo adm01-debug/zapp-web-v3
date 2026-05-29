@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * AdminCRMDashboard — Aggregated CRM metrics for admin area
  * Shows summary cards and quick data previews from the external CRM database

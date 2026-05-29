@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback, useMemo } from 'react';
 import { ChatbotFlow, ChatbotNode, ChatbotEdge } from '@/hooks/useChatbotFlows';
 import { Card, CardContent } from '@/components/ui/card';

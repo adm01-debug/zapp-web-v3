@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import type { VoiceAgentPhase } from '@/features/inbox';

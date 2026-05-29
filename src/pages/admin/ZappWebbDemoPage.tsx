@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Zap Webb — Demo Inbox (3 painéis)
  *

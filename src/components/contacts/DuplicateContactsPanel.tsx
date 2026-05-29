@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DuplicateContactsPanel.tsx — v3.0
  * Duplicate detection + individual merge + bulk auto-merge.

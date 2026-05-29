@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useContactStats.ts — Estatísticas de contatos para dashboard CRM
  *

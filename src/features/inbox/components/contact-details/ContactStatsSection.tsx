@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { MessageSquare, Clock, Star, BarChart3, Users, TrendingUp, TrendingDown } from 'lucide-react';
 import { useContactStats } from '@/hooks/useContactStats';
 import { Skeleton } from '@/components/ui/skeleton';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { ConnectionHealthPanel } from '@/components/diagnostics/ConnectionHealthPanel';

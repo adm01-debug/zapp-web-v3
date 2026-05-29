@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as React from 'react';
 import { createContext, useContext, useState, useCallback, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

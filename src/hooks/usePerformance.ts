@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Performance hooks — barrel re-export
 export { useDebounce, useThrottle, useAnimationFrame, useStableCallback, useIdleCallback } from './performance/useTimingHooks';
 export { useIntersection, useLazyLoad, useEventListener } from './performance/useObservers';

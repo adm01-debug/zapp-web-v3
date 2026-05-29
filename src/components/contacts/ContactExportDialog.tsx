@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactExportDialog.tsx — v2.0
  * Export contacts from evolution_contacts to CSV.

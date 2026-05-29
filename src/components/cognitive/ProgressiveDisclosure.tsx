@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight } from 'lucide-react';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { AlertTriangle, Loader2, MessageCircle } from 'lucide-react';
 import type { VoiceAgentPhase } from '@/features/inbox';

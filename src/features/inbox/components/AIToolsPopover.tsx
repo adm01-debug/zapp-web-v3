@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { lazy, Suspense, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Radar, GraduationCap, Loader2 } from 'lucide-react';

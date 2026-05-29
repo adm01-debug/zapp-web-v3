@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef, useCallback } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Reply, Forward } from 'lucide-react';

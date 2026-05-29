@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, RefObject } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';

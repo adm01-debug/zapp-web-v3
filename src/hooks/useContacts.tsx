@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useContacts.ts — v3.2 FINAL
  * Main contacts hook using evolution_contacts table (real schema).

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Reply, Forward, Printer, MoreHorizontal, ChevronDown, Loader2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';

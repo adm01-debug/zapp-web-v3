@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, RefreshCw, Trash2, Radio } from "lucide-react";

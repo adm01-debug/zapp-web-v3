@@ -1,4 +1,3 @@
-// @ts-nocheck
 interface BridgeInfoRowProps {
   label: string;
   value: string;

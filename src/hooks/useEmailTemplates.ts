@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useEmailTemplates.ts — Gerencia templates de email (respostas rápidas)
  *

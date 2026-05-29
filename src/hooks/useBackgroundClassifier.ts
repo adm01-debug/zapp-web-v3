@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook for non-blocking AI sticker classification.
  *

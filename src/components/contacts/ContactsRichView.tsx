@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactsRichView.tsx — ZAPP WEB
  *

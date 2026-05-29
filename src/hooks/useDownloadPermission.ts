@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useAuth } from '@/features/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';

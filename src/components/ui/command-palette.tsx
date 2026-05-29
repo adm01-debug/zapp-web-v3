@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command, ArrowRight, Clock, Star, X, Loader2, Zap } from 'lucide-react';

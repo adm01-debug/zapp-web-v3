@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ConflictResolutionDialog.tsx
  * Shown when update_contact_versioned() returns a CONFLICT error.

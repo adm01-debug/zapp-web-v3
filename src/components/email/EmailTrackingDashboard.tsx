@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Eye, MousePointerClick, Mail, TrendingUp, AlertTriangle, Clock, ChevronRight, User, Globe, Smartphone, Monitor, Tablet, ExternalLink, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

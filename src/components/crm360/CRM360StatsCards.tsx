@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CRM360StatsCards — Summary metric cards for the CRM 360° Explorer
  */

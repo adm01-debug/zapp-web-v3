@@ -29,7 +29,10 @@ class ValidationLogger {
       if (stored) {
         this.events = JSON.parse(stored).slice(0, 50);
       }
-    } catch (e) {}
+    } catch (e) {
+      // Corrupted/unavailable storage — start with an empty buffer rather than crash.
+      console.debug('[validationLogger] failed to load persisted events', e);
+    }
   }
 
   private setupInterceptors() {
@@ -87,7 +90,10 @@ class ValidationLogger {
     // Save to localStorage
     try {
       localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 100)));
-    } catch (e) {}
+    } catch (e) {
+      // Quota exceeded / storage disabled — non-fatal for logging.
+      console.debug('[validationLogger] failed to persist events', e);
+    }
   }
 
   public getEvents() {

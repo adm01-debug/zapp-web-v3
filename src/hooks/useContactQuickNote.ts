@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useContactQuickNote.ts — Quick note CRUD for contacts on EXTERNAL CRM database
  *

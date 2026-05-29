@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { log } from '@/lib/logger';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

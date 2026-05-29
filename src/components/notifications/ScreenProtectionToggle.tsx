@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Lock, LockOpen, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';

@@ -161,7 +161,10 @@ export function useConnectionsManager() {
       } else {
         sessionStorage.setItem(QR_STORAGE_KEY, JSON.stringify(qrCodeDialog));
       }
-    } catch {}
+    } catch (e) {
+      // sessionStorage may be unavailable (private mode/quota) — non-fatal for the QR flow.
+      console.debug('[useConnectionsManager] failed to persist QR dialog state', e);
+    }
   }, [qrCodeDialog]);
 
   useEffect(() => {

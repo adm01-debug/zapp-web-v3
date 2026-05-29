@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { useWhatsAppStatus, type WhatsAppStatusMessage } from '@/features/inbox';
 import { Badge } from '@/components/ui/badge';

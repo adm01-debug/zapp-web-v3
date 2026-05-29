@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Wifi, WifiOff, AlertTriangle } from 'lucide-react';
