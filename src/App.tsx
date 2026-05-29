@@ -60,6 +60,24 @@ function AppContent() {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Hide the initial boot loader once the App is mounted
+  useEffect(() => {
+    // Small delay to ensure first paint is done
+    const timer = setTimeout(() => {
+      if (window.__zappHideRootLoader) {
+        window.__zappHideRootLoader();
+      } else {
+        // Fallback if the global function isn't available
+        const loader = document.getElementById('root-loading');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 400);
+        }
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Global error handlers are managed in main.tsx or dedicated providers
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent) => {
