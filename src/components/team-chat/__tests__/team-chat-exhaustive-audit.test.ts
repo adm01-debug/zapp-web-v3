@@ -17,11 +17,6 @@ const hookSrc = readSrc('hooks/team-chat/useTeamMessages.ts');
 const mutationHookSrc = readSrc('hooks/team-chat/useTeamChatMutations.ts');
 const panelHookSrc = readSrc('components/team-chat/useTeamChatPanel.ts');
 
-// External chat reference files
-const inboxToolbarSrc = readSrc('components/inbox/chat/ChatToolbar.tsx');
-const inboxInputSrc = readSrc('components/inbox/ConversationInput.tsx');
-const inboxHeaderSrc = readSrc('components/inbox/ConversationHeader.tsx');
-
 describe('Team Chat — Exhaustive Audit', () => {
 
   // ═══════════════════════════════════════════

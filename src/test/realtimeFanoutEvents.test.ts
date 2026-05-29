@@ -31,7 +31,7 @@ const NODE_TO_FILE: Record<string, string> = {
   UTN: 'src/hooks/useTranscriptionNotifications.ts',
   URD: 'src/hooks/useRealtimeDashboard.ts',
   UEM: 'src/components/monitoring/hooks/useEvolutionMonitoring.ts',
-  AMP: 'src/components/inbox/AudioMessagePlayer.tsx',
+  AMP: 'src/features/inbox/components/AudioMessagePlayer.tsx',
 };
 
 
@@ -46,8 +46,10 @@ function parseDiagramEdges(): Record<string, Set<Evt>> {
   return edges;
 }
 
-// Captura todos os blocos `.on('postgres_changes', { ... table: 'messages' ... })`
+// Captura todos os blocos `.on('postgres_changes', { ... table: <messages> ... })`
 // dentro de um arquivo e extrai o `event:` de cada um.
+// A tabela pode ser referenciada como literal (`table: 'messages'`) ou via o
+// helper do datasource (`table: dbTable('messages')`), ambos aceitos aqui.
 function parseFileEvents(absPath: string): Set<Evt> {
   const src = readFileSync(absPath, 'utf8');
   const blockRe = /\.on\(\s*['"]postgres_changes['"]\s*,\s*\{([\s\S]*?)\}\s*,/g;
@@ -55,7 +57,7 @@ function parseFileEvents(absPath: string): Set<Evt> {
   let m: RegExpExecArray | null;
   while ((m = blockRe.exec(src)) !== null) {
     const body = m[1];
-    if (!/table:\s*['"]messages['"]/.test(body)) continue;
+    if (!/table:\s*(?:['"]messages['"]|dbTable\(\s*['"]messages['"]\s*\))/.test(body)) continue;
     const ev = body.match(/event:\s*['"]([A-Z*]+)['"]/);
     if (!ev) continue;
     if (ev[1] === '*') ALL_EVENTS.forEach((e) => out.add(e));
