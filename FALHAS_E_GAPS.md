@@ -419,3 +419,48 @@ Múltiplas ocorrências em links de mensagens, emails e conteúdo externo (poten
 - Migrations sem rollback documentado
 
 ---
+
+## 19. Status das correções — 2026-05-29 (PR claude/lovable-commits-review-fixes-KgHqB)
+
+Revisão exaustiva + correção dos erros concretos do Lovable. Dependências instaladas
+neste ambiente; `tsc --noEmit -p tsconfig.app.json` validado **antes e depois (0 erros)**.
+
+### ✅ Corrigido neste PR
+| Item | Arquivo(s) | Observação |
+|------|-----------|------------|
+| Host Supabase errado em preconnect/dns-prefetch | `index.html` | `uqysyzndkfiwfztbqvsl` → projeto real `allrjhkpuscmgbsnmjlv` (de `VITE_SUPABASE_URL`) |
+| XSS por duplicação divergente (sem DOMPurify) | `src/components/inbox/chat/MarkdownPreview.tsx` | alinhado à cópia sanitizada de `features/` + removido `@ts-nocheck` |
+| JWT anon hardcoded como fallback | `src/integrations/zappweb/supabaseClient.ts`, `src/pages/admin/Connections.tsx` | agora só lê de env; `console.warn` se ausente |
+| 6 catch vazios engolindo erros | `validationLogger.ts`, `useThemeAudit.ts`, `useConnectionsManager.ts`, `evolutionDirectClient.ts`, `RateLimitRealtimeAlerts.tsx` | `console.debug` explicativo |
+| Type-check desligado em ~70% do código | `src/**` | `@ts-nocheck` removido de **1349 de 1409** arquivos type-safe; restam **60** com dívida real |
+
+### ⚠️ Achados revisados que JÁ ESTAVAM corrigidos (doc anterior desatualizada)
+- `useRealtimeMessages.ts` — canal Realtime **já tem** cleanup (`removeChannel` no return do effect).
+- Empty catch blocks — reduzidos de muitos para **6** (todos tratados neste PR).
+
+### 📋 Documentado — NÃO aplicado (requer coordenação / fora do escopo seguro)
+- **RLS `USING (true)`/`WITH CHECK (true)` (~291)**: **não há convenção de coluna
+  multi-tenant** (`empresa_id`/`organization_id`/etc.) nas migrations — confirmado por
+  varredura. Reescrever às cegas **bloquearia todo o acesso**. Pré-requisito: definir o
+  modelo de tenant com o Jorge antes de qualquer PR de RLS.
+- **`SECURITY DEFINER` sem `search_path` (165 funções)**: requer introspecção das
+  assinaturas exatas na base viva (Supabase MCP) para gerar `ALTER FUNCTION ... SET
+  search_path`. Migração corretiva é o próximo passo seguro (não aplicada aqui por exigir
+  acesso ao DB).
+- **Token em `localStorage`** (`src/integrations/supabase/client.ts:19`): migração para
+  cookies httpOnly é mudança de auth de alto impacto.
+- **Dívida de lint pré-existente**: `eslint .` reporta **2019 erros / 1192 warnings**
+  (1419 `no-unused-vars`, 238 `no-explicit-any`, 60 `ban-ts-comment` dos `@ts-nocheck`
+  remanescentes, 58 `no-console`). Independe de `@ts-nocheck`; CI de qualidade está verde.
+  Resolver incrementalmente.
+- **60 arquivos com `@ts-nocheck` remanescente**: dívida de tipo real (TS2322/2345/2769/
+  2339). Lista em `/tmp` durante o PR; resolver por módulo.
+- **CVEs de dependências** (xlsx, serialize-javascript): tratar via Dependabot/substituição.
+
+### Nota sobre CI
+- `Analyze (javascript-typescript)` (CodeQL real), `Build`, `Quality diagnostics`,
+  `Security audit`, `check-quality`, `Verify Lockfile`, `Unit tests` → **verdes**.
+- O check **`CodeQL`** (gate de resultados de code-scanning) falha por **30 alertas
+  pré-existentes (todos de 2026-05-28)** — nenhum nos arquivos deste PR. Não é regressão.
+
+---
