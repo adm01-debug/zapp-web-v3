@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Shield, Ban, Clock, X } from 'lucide-react';
@@ -80,8 +79,12 @@ export function RateLimitRealtimeAlerts() {
     try {
       const audio = new Audio('/notification.mp3');
       audio.volume = 0.5;
+      // Autoplay may be blocked before user interaction — ignore that specific rejection.
       audio.play().catch(() => {});
-    } catch (e) {}
+    } catch (e) {
+      // Audio unsupported/unavailable — alerts still work without the sound.
+      console.debug('[RateLimitRealtimeAlerts] could not play alert sound', e);
+    }
   };
 
   const handleDismiss = async (alertId: string) => {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 
 export type DensityMode = 'comfortable' | 'compact' | 'dense';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Admin: Histórico imutável de erros de dispatch.
  * Lê de `dispatch_error_logs` (append-only) via RPC com filtros — útil para

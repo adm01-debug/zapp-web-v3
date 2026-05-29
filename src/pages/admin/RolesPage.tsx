@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { AnimatePresence, motion } from 'framer-motion';
 import { Shield, Users, UserPlus, Trash2, Search, Loader2, Crown, Eye, Headphones, Code } from 'lucide-react';
 import { useUserRole } from '@/features/auth';

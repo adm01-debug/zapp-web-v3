@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hook para Filtros Salvos
  * 

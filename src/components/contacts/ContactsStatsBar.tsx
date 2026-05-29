@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactsStatsBar.tsx
  * Header stats bar for the contacts view.

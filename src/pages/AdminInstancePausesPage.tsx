@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

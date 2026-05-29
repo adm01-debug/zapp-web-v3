@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';

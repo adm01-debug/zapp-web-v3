@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

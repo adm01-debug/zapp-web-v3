@@ -1,4 +1,3 @@
-// @ts-nocheck
 interface StatProps {
   label: string;
   value: number | string;

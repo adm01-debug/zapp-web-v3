@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { cn } from '@/lib/utils';
 import { Clock, AlertTriangle, CheckCircle, Timer } from 'lucide-react';
 import { motion } from 'framer-motion';

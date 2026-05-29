@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useRef, ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';

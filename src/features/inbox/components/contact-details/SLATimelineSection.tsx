@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, formatDistanceStrict } from 'date-fns';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Reply, Forward, Copy, MoreVertical, Pin, Star, Trash2, Flag, Clock, CheckCheck, EyeOff, Pencil } from 'lucide-react';

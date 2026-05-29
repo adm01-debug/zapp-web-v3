@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion } from 'framer-motion';
 import { Smartphone, Monitor, Globe, Clock, Trash2, Shield, ShieldCheck, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';

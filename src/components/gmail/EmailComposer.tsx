@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useRef, useCallback, useEffect } from 'react';
 import DOMPurify from 'dompurify';
 import { X, Minus, Maximize2, Minimize2, Send, Paperclip, Bold, Italic, Underline, Link2, Loader2, Clock } from 'lucide-react';

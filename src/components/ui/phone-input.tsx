@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';

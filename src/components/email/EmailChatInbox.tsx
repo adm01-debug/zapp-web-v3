@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Mail, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

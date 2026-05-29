@@ -1,4 +1,3 @@
-// @ts-nocheck
 interface BridgeStatCardProps {
   label: string;
   value: string;

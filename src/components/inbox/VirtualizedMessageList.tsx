@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useVirtualizer } from '@tanstack/react-virtual';

@@ -15,7 +15,10 @@ export function getDirectConfig(): DirectEvoConfig | null {
     if (!raw) return null;
     const cfg = JSON.parse(raw) as DirectEvoConfig;
     if (cfg.evolution_api_url && cfg.evolution_api_key) return cfg;
-  } catch {}
+  } catch (e) {
+    // Malformed/absent localStorage config — treat as "no direct config".
+    console.debug('[evolutionDirectClient] invalid stored config', e);
+  }
   return null;
 }
 

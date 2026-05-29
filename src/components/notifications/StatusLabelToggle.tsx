@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Toggle "Mostrar texto de status" — alterna a preferência
  * `inbox-status-label-visible` (ver `useInboxStatusPref`).

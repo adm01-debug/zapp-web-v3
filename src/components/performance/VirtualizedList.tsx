@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useVirtualizer, VirtualItem } from '@tanstack/react-virtual';
 import { motion, AnimatePresence } from 'framer-motion';

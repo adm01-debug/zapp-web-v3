@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { HardDrive, Play, RefreshCw, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

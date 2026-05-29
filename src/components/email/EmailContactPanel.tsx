@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { User, Mail, Phone, Building2, Tag, Clock, MessageSquare, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';

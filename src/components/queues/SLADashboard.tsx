@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { SLAConfigurationManager } from '@/components/settings/SLAConfigurationManager';
 import { SLARulesManager } from '@/components/settings/SLARulesManager';

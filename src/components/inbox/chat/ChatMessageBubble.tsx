@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef, lazy, Suspense } from 'react';
 import { cn } from '@/lib/utils';
 import { Message, MessageReaction, InteractiveButton } from '@/types/chat';

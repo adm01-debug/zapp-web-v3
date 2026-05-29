@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Tag, Brain, RefreshCw, Loader2, CheckCircle, Filter, BarChart3 } from 'lucide-react';

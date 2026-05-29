@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, useReducedMotion } from 'framer-motion';
 
 export function AuroraBorealis() {

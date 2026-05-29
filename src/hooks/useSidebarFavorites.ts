@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback, useEffect } from 'react';
 
 const STORAGE_KEY = 'sidebar-favorites';

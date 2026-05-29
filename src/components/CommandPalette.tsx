@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Clock } from 'lucide-react';
 import {

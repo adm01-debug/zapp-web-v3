@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent } from '@/components/ui/card';
 import { Wifi, MessageSquare, Zap, ArrowUpDown, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { useMessageQueue } from '../useMessageQueue';
 import { useState, useEffect } from 'react';

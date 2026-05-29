@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactQuickNotePanel.tsx
  * Inline quick note component for the chat sidebar.

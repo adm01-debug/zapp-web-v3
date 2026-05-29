@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/features/auth";

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,7 +35,8 @@ const getInitialConfig = () => {
     default:
       return {
         url: import.meta.env.VITE_EXTERNAL_SUPABASE_URL || 'https://supabase.atomicabr.com.br',
-        key: import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk',
+        // Anon key must come from the environment — no hardcoded JWT fallback (secret hygiene).
+        key: import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY || '',
       };
   }
 };

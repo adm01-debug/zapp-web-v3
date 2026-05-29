@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * DuplicateWarningBanner.tsx
  * Inline warning shown in ContactForm when a potential duplicate is detected.

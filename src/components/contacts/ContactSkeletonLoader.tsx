@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactSkeletonLoader.tsx
  * Loading skeleton components for contacts module.

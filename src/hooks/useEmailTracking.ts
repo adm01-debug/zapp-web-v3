@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useEmailTracking.ts — Hook completo para rastreio de emails
  *

@@ -19,10 +19,18 @@ const ZAPP_URL =
   import.meta.env.VITE_EXTERNAL_SUPABASE_URL ||
   'https://supabase.atomicabr.com.br';
 
+// Anon key must be supplied via environment — never hardcode a JWT in the bundle.
 const ZAPP_ANON =
   import.meta.env.VITE_ZAPPWEB_SUPABASE_ANON_KEY ||
   import.meta.env.VITE_EXTERNAL_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.rvamc0XHuSCYB1glBwOCCxgfd9yxWVYLnhFzg5-7TRk';
+  '';
+
+if (!ZAPP_ANON) {
+  console.warn(
+    '[zappSupabase] VITE_ZAPPWEB_SUPABASE_ANON_KEY (ou VITE_EXTERNAL_SUPABASE_ANON_KEY) ausente — ' +
+      'o client Zap Webb não conseguirá ler/subscrever sem a anon key configurada.',
+  );
+}
 
 export const ZAPPWEB_INSTANCE = (import.meta.env.VITE_ZAPPWEB_INSTANCE ||
   'wpp2') as string;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MessageReadStatus — indicador clicável de status para mensagens
  * recebidas (inbound). Abre o `MessageStatusPanel` com timeline

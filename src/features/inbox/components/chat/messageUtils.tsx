@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Check, CheckCheck, Clock, AlertCircle, RefreshCw, ShieldAlert, Headphones } from 'lucide-react';

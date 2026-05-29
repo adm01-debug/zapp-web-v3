@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactSLAIndicator.tsx
  * SLA status badge for the contact panel in chat sidebar.

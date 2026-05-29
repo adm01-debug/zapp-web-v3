@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { Mail, Building2, Layers } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

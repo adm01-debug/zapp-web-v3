@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion, AnimatePresence } from 'framer-motion';
 import { Headphones, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

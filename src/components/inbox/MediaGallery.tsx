@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useMemo } from 'react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 import { useQuery } from '@tanstack/react-query';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useMemo } from 'react';
 import { supabase as _sb } from '@/integrations/supabase/client';
 const supabase: any = _sb;

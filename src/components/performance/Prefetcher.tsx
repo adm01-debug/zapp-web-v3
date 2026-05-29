@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 

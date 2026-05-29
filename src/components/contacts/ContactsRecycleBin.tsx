@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactsRecycleBin.tsx
  * Shows soft-deleted contacts and allows managers to restore them within 30 days.

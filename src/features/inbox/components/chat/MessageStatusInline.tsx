@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Inline message status indicator used inside message bubbles.
  *

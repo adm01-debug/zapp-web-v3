@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Contextual Empty States — re-exports from modularized directory.
  * @see src/components/ui/empty-states/

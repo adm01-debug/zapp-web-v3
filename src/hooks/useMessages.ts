@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useMessages.ts
  * Messages hook using evolution_messages table (real schema).

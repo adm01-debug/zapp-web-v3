@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * EditContactDialog.tsx — v3.0
  * Full contact editing with:

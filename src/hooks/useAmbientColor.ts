@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo } from 'react';
 
 type Sentiment = 'positive' | 'neutral' | 'negative' | string | null | undefined;

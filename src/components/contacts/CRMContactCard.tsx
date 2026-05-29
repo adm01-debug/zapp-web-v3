@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';

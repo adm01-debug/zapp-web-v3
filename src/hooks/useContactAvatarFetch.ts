@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useContactAvatarFetch.ts — Auto-fetch WhatsApp profile picture and save to EXTERNAL CRM
  *

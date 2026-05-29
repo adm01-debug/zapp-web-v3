@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { cn } from '@/lib/utils';
 import { VisionIcon } from '../ai-tools/VisionIcon';
 import { Conversation } from '@/types/chat';

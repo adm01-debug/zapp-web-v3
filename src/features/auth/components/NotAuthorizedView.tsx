@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Lock } from 'lucide-react';
 import { GenericEmptyState } from '@/components/ui/GenericEmptyState';
 

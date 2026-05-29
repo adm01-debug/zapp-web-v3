@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Activity } from 'lucide-react';
 import { BridgeStatus } from '../types';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback } from 'react';
 import { log } from '@/lib/logger';
 import { DEFAULT_SHORTCUTS } from '@/hooks/shortcuts/defaultShortcuts';

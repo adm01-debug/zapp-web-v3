@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Users, Check, X, Loader2, Search } from 'lucide-react';

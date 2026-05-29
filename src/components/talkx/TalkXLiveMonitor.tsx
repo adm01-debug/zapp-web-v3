@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   BarChart3, Users, CheckCircle2, XCircle, Clock, Loader2, Send, Download, Timer

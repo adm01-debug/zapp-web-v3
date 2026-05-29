@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Star, Plus, X, MessageSquare, Folder, TrendingUp } from 'lucide-react';

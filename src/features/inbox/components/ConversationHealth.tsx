@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Zap, Clock, ShieldCheck, AlertCircle } from 'lucide-react';

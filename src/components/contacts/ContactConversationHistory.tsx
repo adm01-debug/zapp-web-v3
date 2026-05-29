@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactConversationHistory.tsx
  * Past conversations list for a contact, with clickable links.

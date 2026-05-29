@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBusinessHours, BusinessHour } from '@/hooks/useBusinessHours';

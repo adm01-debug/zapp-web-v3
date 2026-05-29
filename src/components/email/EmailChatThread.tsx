@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef, useEffect } from 'react';
 import { ArrowLeft, User, Mail, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
@@ -57,7 +56,10 @@ export const useThemeAudit = () => {
         try {
           const parsed = JSON.parse(saved);
           presetId = parsed.preset || DEFAULT_PRESET_ID;
-        } catch (e) {}
+        } catch (e) {
+          // Corrupted theme preference — fall back to the default preset.
+          console.debug('[useThemeAudit] failed to parse saved theme', e);
+        }
       }
       
       const preset = PRESETS.find(p => p.id === presetId);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { fromTable } from '@/lib/supabaseHelpers';
 import { useCallback, useEffect, useRef } from 'react';

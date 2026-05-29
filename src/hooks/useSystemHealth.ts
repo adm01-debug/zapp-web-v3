@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useSystemHealth.ts — Monitoramento de saúde do sistema ZAPP WEB
  *

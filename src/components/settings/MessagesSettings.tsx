@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from '@/components/ui/motion';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ContactNotesPanel.tsx
  * Threaded notes for a contact using evolution_contact_notes table.

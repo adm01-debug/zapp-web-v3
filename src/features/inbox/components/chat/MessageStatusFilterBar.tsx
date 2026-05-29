@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MessageStatusFilterBar — chips toggláveis para filtrar a lista
  * de mensagens da conversa por status (sent / delivered / read).

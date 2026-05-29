@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Mail, Star, StarOff, RefreshCw, Filter, Loader2, AlertTriangle, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';

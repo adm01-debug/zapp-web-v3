@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Prévia visual do cronograma de tentativas + abort por instância.
  * Lê `RetryConfig` (global e por instância via `loadRetryConfig`) e renderiza

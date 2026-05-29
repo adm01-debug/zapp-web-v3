@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { LayoutGrid, List, Table2, Settings2, MapPin, BarChart3, GitGraph } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

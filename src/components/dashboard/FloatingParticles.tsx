@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { motion } from 'framer-motion';
 import { useMemo, forwardRef } from 'react';
 import { useReducedMotion } from 'framer-motion';

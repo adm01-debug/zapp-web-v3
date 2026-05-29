@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect, useCallback, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Confetti, useCelebration } from './Confetti';

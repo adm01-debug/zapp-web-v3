@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * BulkActionsBar.tsx — v3.0
  * Bulk operations with 5s undo, export, and select-all.

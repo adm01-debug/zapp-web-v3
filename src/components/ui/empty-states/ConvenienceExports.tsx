@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { ContextualEmptyState } from './ContextualEmptyState';
 
 export function InboxEmptyState(props: { onConnectWhatsApp?: () => void; onImportContacts?: () => void; onLearnMore?: () => void }) {

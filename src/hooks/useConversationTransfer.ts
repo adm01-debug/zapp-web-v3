@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * useConversationTransfer.ts
  * Seamless conversation handoff between agents with full context.

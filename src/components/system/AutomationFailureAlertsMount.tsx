@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Componente headless: monta no shell o alerta global de falhas de automação.
  * Não renderiza nada — apenas dispara toasts via `useAutomationFailureAlerts`

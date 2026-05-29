@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SafeHtml.tsx — v2.0
  * XSS-safe HTML renderer using DOMPurify.

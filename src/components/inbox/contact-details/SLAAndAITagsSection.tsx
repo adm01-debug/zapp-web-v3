@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, CheckCircle, Sparkles, Zap } from 'lucide-react';
 import { SLAInfo, AIConversationTag } from '@/hooks/useContactEnrichedData';

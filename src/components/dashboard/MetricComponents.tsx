@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * MetricComponents — re-exports from modularized metrics directory.
  * @see src/components/dashboard/metrics/

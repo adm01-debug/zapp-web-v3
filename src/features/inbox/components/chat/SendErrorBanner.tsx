@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { AlertTriangle, RefreshCw, X, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';

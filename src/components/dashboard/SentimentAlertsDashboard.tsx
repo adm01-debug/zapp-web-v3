@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingDown, Activity, RefreshCw, Calendar, User, ShieldAlert, BarChart3, Users } from 'lucide-react';

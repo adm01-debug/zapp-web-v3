@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Barrel re-export — all sidebar components are now modularized in ./sidebar/
 export {
   Sidebar,

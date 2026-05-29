@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Contact360MobileDrawer.tsx
  * Mobile-responsive drawer wrapper for Contact360Panel.

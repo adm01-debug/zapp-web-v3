@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Image, FileVideo, FileAudio, File, Play, Check } from 'lucide-react';
