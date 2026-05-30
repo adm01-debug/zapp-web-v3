@@ -115,8 +115,14 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}) {
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro ao gerar áudio');
+        let errorMessage = 'Erro ao gerar áudio';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          log.warn('[useTextToSpeech] falha ao ler erro da resposta:', e);
+        }
+        throw new Error(errorMessage);
       }
 
       const audioBlob = await response.blob();

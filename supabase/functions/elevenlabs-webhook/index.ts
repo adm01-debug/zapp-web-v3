@@ -7,6 +7,16 @@ Deno.serve(async (req) => {
 
   const log = new Logger("elevenlabs-webhook");
 
+  // Validate secret token if configured
+  const url = new URL(req.url);
+  const token = url.searchParams.get('token');
+  const expectedToken = Deno.env.get('ELEVENLABS_WEBHOOK_SECRET');
+  
+  if (expectedToken && token !== expectedToken) {
+    log.warn("Unauthorized webhook call (invalid token)");
+    return errorResponse('Unauthorized', 401, req);
+  }
+
   try {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== 'object') {

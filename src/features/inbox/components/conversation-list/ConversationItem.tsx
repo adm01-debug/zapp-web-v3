@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useRef, useState, useEffect, useCallback, ReactNode, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { useDensity } from '@/hooks/useDensity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -134,7 +134,7 @@ function shortRelativeTime(date: Date): string {
   return `${mo}mês`;
 }
 
-export function ConversationItem({ 
+export const ConversationItem = memo(function ConversationItem({ 
   conversation, 
   isSelected, 
   onSelect, 
@@ -507,4 +507,4 @@ export function ConversationItem({
       </QuickPeek>
     </TooltipProvider>
   );
-}
+});
