@@ -48,6 +48,7 @@ if (import.meta.env.DEV) {
   });
 }
 
+console.log('[Main] Rendering root...');
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <SentryErrorBoundary
     fallback={({ error, resetError }) => (
