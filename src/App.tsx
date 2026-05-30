@@ -64,19 +64,17 @@ function AppContent() {
   useEffect(() => {
     // Small delay to ensure first paint is done
     const timer = setTimeout(() => {
-      console.log('[App] Attempting to hide loader...');
       if (typeof window !== 'undefined' && window.__zappHideRootLoader) {
         window.__zappHideRootLoader();
       } else {
         // Fallback if the global function isn't available
         const loader = document.getElementById('root-loading');
         if (loader) {
-          console.log('[App] Fallback hiding loader');
           loader.style.opacity = '0';
-          setTimeout(() => loader.remove(), 500);
+          setTimeout(() => loader.remove(), 400);
         }
       }
-    }, 200);
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 
