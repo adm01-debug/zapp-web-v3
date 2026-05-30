@@ -103,7 +103,12 @@ async function evoFetch<T>(
     (err as any).status = res.status;
     throw err;
   }
-  return (await res.json().catch(() => ({}))) as T;
+  try {
+    return (await res.json()) as T;
+  } catch (err) {
+    log.error('[evolutionClient] Falha ao processar JSON de resposta:', err);
+    return {} as T;
+  }
 }
 
 // ─── Mensageria ──────────────────────────────────────────────────────────
