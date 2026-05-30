@@ -91,8 +91,9 @@
       (function () {
         var root = document.getElementById('root');
         var hidden = false;
+        var bootObserver = null;
 
-        // Expose manual recovery for the "Tentar novamente" link
+        // Expose manual recovery
         window.__zappManualRetry = function () {
           try { sessionStorage.removeItem('zapp_recovery_attempt'); } catch (e) {}
           window.location.reload();
@@ -101,28 +102,40 @@
         window.__zappHideRootLoader = function () {
           if (hidden) return;
           hidden = true;
+          console.log('[Boot] Hiding loader...');
           var loader = document.getElementById('root-loading');
           if (loader) {
             loader.style.opacity = '0';
             loader.style.pointerEvents = 'none';
-            setTimeout(function () { if (loader.parentNode) loader.remove(); }, 400);
+            setTimeout(function () { if (loader.parentNode) loader.remove(); }, 500);
           }
           try { sessionStorage.removeItem('zapp_recovery_attempt'); } catch (e) {}
-          if (observer) { try { observer.disconnect(); } catch (e) {} }
+          if (bootObserver) { try { bootObserver.disconnect(); } catch (e) {} }
         };
 
-        // Hide loader the moment React renders ANYTHING into #root
-        var observer = null;
-        if (root && 'MutationObserver' in window) {
-          observer = new MutationObserver(function () {
+        // MutationObserver to hide loader ASAP
+        if (root && window.MutationObserver) {
+          bootObserver = new MutationObserver(function () {
             if (root.childElementCount > 0) {
               window.__zappHideRootLoader();
             }
           });
-          observer.observe(root, { childList: true });
+          bootObserver.observe(root, { childList: true, subtree: true });
         }
 
-        // Safety net 1 (15s): if React mounted but forgot to call hider
+        // Periodic check in case MutationObserver fails
+        var checkInterval = setInterval(function() {
+          if (hidden) {
+            clearInterval(checkInterval);
+            return;
+          }
+          if (root && root.childElementCount > 0) {
+            window.__zappHideRootLoader();
+            clearInterval(checkInterval);
+          }
+        }, 500);
+
+        // Safety nets
         setTimeout(function () {
           if (hidden) return;
           if (root && root.childElementCount > 0) {
@@ -130,13 +143,12 @@
             return;
           }
 
-          // Safety net 2 (additional 8s): React really failed to mount
           setTimeout(function () {
             if (hidden || (root && root.childElementCount > 0)) {
               window.__zappHideRootLoader();
               return;
             }
-            console.error('[Boot] React failed to mount after 23s.');
+            console.error('[Boot] React failed to mount after 25s.');
 
             var hasRecovered = false;
             try { hasRecovered = sessionStorage.getItem('zapp_recovery_attempt') === 'true'; } catch (e) {}
@@ -163,7 +175,7 @@
                 subtitle2.innerHTML = 'Falha crítica no carregamento. <a href="javascript:window.__zappManualRetry()" style="color:#25d366;font-weight:bold;">Tentar novamente</a>';
               }
             }
-          }, 8000);
+          }, 10000);
         }, 15000);
       })();
     </script>
