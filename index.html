@@ -77,6 +77,7 @@
     </style>
   </head>
   <body>
+    <div id="root"></div>
     <div id="root-loading" aria-hidden="true">
       <div id="root-loading-title">Abrindo ZAPP Web</div>
       <div id="root-loading-dots">
@@ -86,100 +87,43 @@
       </div>
       <div id="root-loading-subtitle">Carregando a plataforma...</div>
     </div>
-    <div id="root"></div>
+
+    <style>
+      /* Hide loader automatically when root has content */
+      #root:not(:empty) + #root-loading {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+    </style>
+
     <script>
-      (function () {
+      (function() {
         var root = document.getElementById('root');
-        var hidden = false;
-        var bootObserver = null;
-
-        // Expose manual recovery
-        window.__zappManualRetry = function () {
-          try { sessionStorage.removeItem('zapp_recovery_attempt'); } catch (e) {}
-          window.location.reload();
-        };
-
-        window.__zappHideRootLoader = function () {
-          if (hidden) return;
-          hidden = true;
-          console.log('[Boot] Hiding loader...');
-          var loader = document.getElementById('root-loading');
+        var loader = document.getElementById('root-loading');
+        
+        window.__zappHideRootLoader = function() {
           if (loader) {
             loader.style.opacity = '0';
             loader.style.pointerEvents = 'none';
-            setTimeout(function () { if (loader.parentNode) loader.remove(); }, 500);
+            setTimeout(function() { if (loader.parentNode) loader.remove(); }, 500);
           }
-          try { sessionStorage.removeItem('zapp_recovery_attempt'); } catch (e) {}
-          if (bootObserver) { try { bootObserver.disconnect(); } catch (e) {} }
         };
 
-        // MutationObserver to hide loader ASAP
-        if (root && window.MutationObserver) {
-          bootObserver = new MutationObserver(function () {
-            if (root.childElementCount > 0) {
-              window.__zappHideRootLoader();
-            }
-          });
-          bootObserver.observe(root, { childList: true, subtree: true });
-        }
-
-        // Periodic check in case MutationObserver fails
-        var checkInterval = setInterval(function() {
-          if (hidden) {
-            clearInterval(checkInterval);
-            return;
-          }
+        // Aggressive polling
+        var hider = setInterval(function() {
           if (root && root.childElementCount > 0) {
             window.__zappHideRootLoader();
-            clearInterval(checkInterval);
+            clearInterval(hider);
           }
-        }, 500);
+        }, 200);
 
-        // Safety nets
-        setTimeout(function () {
-          if (hidden) return;
-          if (root && root.childElementCount > 0) {
-            window.__zappHideRootLoader();
-            return;
-          }
-
-          setTimeout(function () {
-            if (hidden || (root && root.childElementCount > 0)) {
-              window.__zappHideRootLoader();
-              return;
-            }
-            console.error('[Boot] React failed to mount after 25s.');
-
-            var hasRecovered = false;
-            try { hasRecovered = sessionStorage.getItem('zapp_recovery_attempt') === 'true'; } catch (e) {}
-
-            if (!hasRecovered) {
-              try { sessionStorage.setItem('zapp_recovery_attempt', 'true'); } catch (e) {}
-              var subtitle = document.getElementById('root-loading-subtitle');
-              if (subtitle) subtitle.innerHTML = 'Recuperando sistema (limpando cache)...';
-
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function (regs) {
-                  regs.forEach(function (r) { r.unregister(); });
-                }).catch(function () {});
-              }
-              if ('caches' in window) {
-                caches.keys().then(function (names) {
-                  names.forEach(function (n) { caches.delete(n); });
-                }).catch(function () {});
-              }
-              setTimeout(function () { window.location.reload(); }, 1500);
-            } else {
-              var subtitle2 = document.getElementById('root-loading-subtitle');
-              if (subtitle2) {
-                subtitle2.innerHTML = 'Falha crítica no carregamento. <a href="javascript:window.__zappManualRetry()" style="color:#25d366;font-weight:bold;">Tentar novamente</a>';
-              }
-            }
-          }, 10000);
-        }, 15000);
+        // Fallback
+        setTimeout(function() {
+          if (root && root.childElementCount > 0) window.__zappHideRootLoader();
+        }, 5000);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
-
   </body>
 </html>
