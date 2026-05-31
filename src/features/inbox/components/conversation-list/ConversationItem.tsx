@@ -98,6 +98,41 @@ interface ConversationItemProps {
   isPinned?: boolean;
 }
 
+function buildPrimaryLabel(conversation: any): string {
+  const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
+  const safeName = (name === 'Você' ? '' : name) || 'Contato';
+  
+  const parts = safeName.split(' ').filter(p => p.length > 0);
+  if (parts.length > 1) {
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  }
+  return safeName;
+}
+
+function buildFullPrimaryLabel(conversation: any): string {
+  return buildPrimaryLabel(conversation);
+}
+
+function buildSecondaryLabel(conversation: any): string | null {
+  const jobTitle = conversation.contact?.job_title?.trim() || conversation.contact?.jobTitle?.trim() || conversation.contact?.role?.trim();
+  return jobTitle || 'Cargo não informado';
+}
+
+function shortRelativeTime(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  const w = Math.floor(d / 7);
+  if (w < 4) return `${w}sem`;
+  const mo = Math.floor(d / 30);
+  return `${mo}mês`;
+}
+
 
 export const ConversationItem = memo(function ConversationItem({ 
   conversation, 
