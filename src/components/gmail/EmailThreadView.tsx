@@ -3,9 +3,15 @@ import { ArrowLeft, Reply, Printer, MoreHorizontal, Loader2, Mail } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { supabase as _supabase } from '@/integrations/supabase/client';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = _supabase as any;
 import { type EmailMessage, type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { EmailChatBubble } from '../email/EmailChatBubble';
@@ -32,27 +38,38 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
 
   // Carrega mensagens da thread selecionada
   useEffect(() => {
-    if (!thread) { setMessages([]); return; }
+    if (!thread) {
+      setMessages([]);
+      return;
+    }
 
     setIsLoading(true);
-    (supabase as any)
+    supabase
       .from('email_messages')
       .select('*, email_attachments(*)')
       .eq('thread_id_ref', thread.id)
       .order('internal_date', { ascending: true })
-      .then(({ data, error }: any) => {
+      .then(({ data, error }: { data: EmailMessage[] | null; error: unknown }) => {
         setIsLoading(false);
         if (error || !data) return;
         setMessages(data as EmailMessage[]);
 
         // Auto-marcar como lido
-        const unreadIds = (data as EmailMessage[]).filter((m) => !m.is_read).map((m) => m.message_id);
+        const unreadIds = (data as EmailMessage[])
+          .filter((m) => !m.is_read)
+          .map((m) => m.message_id);
         if (unreadIds.length > 0) {
-          emailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(() => {});
-          (supabase as any).from('email_messages').update({ is_read: true }).in('message_id', unreadIds).then(() => {});
-          (supabase as any).from('email_threads').update({ unread_count: 0 }).eq('id', thread.id).then(() => {});
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          emailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(
+            (e: unknown) => {
+              console.warn('[EmailThreadView] auto-mark-read failed:', e);
+            }
+          );
+          supabase.from('email_messages').update({ is_read: true }).in('message_id', unreadIds);
+          supabase.from('email_threads').update({ unread_count: 0 }).eq('id', thread.id);
         }
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread?.id, accountId]);
 
   // Realtime: novas mensagens
@@ -60,23 +77,30 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
     if (!thread) return;
     const channel = supabase
       .channel(`thread_${thread.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'email_messages',
-        filter: `thread_id_ref=eq.${thread.id}`,
-      }, payload => {
-        const newMsg = payload.new as EmailMessage;
-        setMessages(prev => {
-          if (prev.some(m => m.id === newMsg.id)) return prev;
-          return [...prev, newMsg];
-        });
-        // Auto-scroll
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'email_messages',
+          filter: `thread_id_ref=eq.${thread.id}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as EmailMessage;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          // Auto-scroll
+          setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread?.id]);
 
   // Auto-scroll quando mensagens carregam
@@ -88,11 +112,16 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
 
   if (!thread) {
     return (
-      <div className={cn('flex flex-col items-center justify-center h-full text-muted-foreground gap-4', className)}>
+      <div
+        className={cn(
+          'flex h-full flex-col items-center justify-center gap-4 text-muted-foreground',
+          className
+        )}
+      >
         <Mail className="h-16 w-16 opacity-10" />
         <div className="text-center">
           <p className="font-semibold">Nenhuma thread selecionada</p>
-          <p className="text-sm mt-1">Selecione um email na lista para visualizar</p>
+          <p className="mt-1 text-sm">Selecione um email na lista para visualizar</p>
         </div>
       </div>
     );
@@ -102,27 +131,34 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
   const slaStatus = getStatus(thread.thread_id);
 
   const externalEmails = messages
-    .filter(m => !m.is_sent)
-    .map(m => m.from_email ?? '')
+    .filter((m) => !m.is_sent)
+    .map((m) => m.from_email ?? '')
     .filter(Boolean);
-  const replyTo = [...new Set([...(externalEmails.slice(0, 1)), ...(thread.participant_emails ?? [])])];
+  const replyTo = [
+    ...new Set([...externalEmails.slice(0, 1), ...(thread.participant_emails ?? [])]),
+  ];
 
   return (
-    <div className={cn('flex flex-col h-full overflow-hidden', className)}>
+    <div className={cn('flex h-full flex-col overflow-hidden', className)}>
       {/* Header */}
-      <div className="flex-none px-4 py-3 border-b bg-card">
+      <div className="flex-none border-b bg-card px-4 py-3">
         <div className="flex items-start gap-3">
           {onBack && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" onClick={onBack}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mt-0.5 h-8 w-8 shrink-0"
+              onClick={onBack}
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
 
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold leading-tight truncate">
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-semibold leading-tight">
               {thread.subject || '(sem assunto)'}
             </h2>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className="text-[11px] text-muted-foreground">
                 {messages.length} {messages.length === 1 ? 'mensagem' : 'mensagens'}
               </span>
@@ -130,14 +166,16 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
                 <>
                   <span className="text-muted-foreground/40">·</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {format(new Date(thread.last_message_at), "dd 'de' MMM, HH:mm", { locale: ptBR })}
+                    {format(new Date(thread.last_message_at), "dd 'de' MMM, HH:mm", {
+                      locale: ptBR,
+                    })}
                   </span>
                 </>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             {slaRecord && (
               <EmailSLABadge
                 status={slaStatus}
@@ -155,10 +193,12 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem onClick={() => setReplyMode(true)}>
-                  <Reply className="h-4 w-4 mr-2" />Responder
+                  <Reply className="mr-2 h-4 w-4" />
+                  Responder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => window.print()}>
-                  <Printer className="h-4 w-4 mr-2" />Imprimir
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimir
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -166,12 +206,15 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
         </div>
 
         {/* Labels */}
-        {thread.label_ids.filter(l => !['INBOX','UNREAD','STARRED','SENT'].includes(l)).length > 0 && (
-          <div className="flex gap-1 mt-2 flex-wrap pl-11">
+        {thread.label_ids.filter((l) => !['INBOX', 'UNREAD', 'STARRED', 'SENT'].includes(l))
+          .length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1 pl-11">
             {thread.label_ids
-              .filter(l => !['INBOX','UNREAD','STARRED','SENT'].includes(l))
-              .map(l => (
-                <Badge key={l} variant="secondary" className="text-[10px] h-4 px-1.5">{l}</Badge>
+              .filter((l) => !['INBOX', 'UNREAD', 'STARRED', 'SENT'].includes(l))
+              .map((l) => (
+                <Badge key={l} variant="secondary" className="h-4 px-1.5 text-[10px]">
+                  {l}
+                </Badge>
               ))}
           </div>
         )}
@@ -189,11 +232,11 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
       {/* Messages */}
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="flex items-center justify-center h-48">
+          <div className="flex h-48 items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 gap-2 text-muted-foreground">
+          <div className="flex h-48 flex-col items-center justify-center gap-2 text-muted-foreground">
             <Mail className="h-8 w-8 opacity-30" />
             <p className="text-sm">Nenhuma mensagem nesta thread</p>
           </div>
@@ -232,7 +275,7 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 w-full h-9"
+            className="h-9 w-full gap-2"
             onClick={() => setReplyMode(true)}
           >
             <Reply className="h-4 w-4" />

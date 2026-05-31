@@ -1,27 +1,38 @@
-import { lazy, Suspense, useEffect, useState, forwardRef } from "react";
-import { BrowserRouter } from "react-router-dom";
-import { getLogger } from "@/lib/logger";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { GlobalKeyboardProvider } from "@/components/keyboard/GlobalKeyboardProvider";
-import { SkipLinks } from "@/components/ui/skip-link";
-import { LiveRegion } from "@/components/ui/visually-hidden";
-import { ThemeInitializer } from "@/components/ThemeInitializer";
-import { ThemeDebugger } from "@/components/debug/ThemeDebugger";
-import { AppProviders } from "@/components/providers/AppProviders";
-import { AppRoutes } from "@/components/routing/AppRoutes";
-import { ServiceWorkerUpdateBanner } from "@/components/system/ServiceWorkerUpdateBanner";
-import { BuildValidationOverlay } from "@/components/debug/BuildValidationOverlay";
-import { useThemeAudit } from "@/hooks/useThemeAudit";
+import { lazy, Suspense, useEffect, useState, forwardRef } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { getLogger } from '@/lib/logger';
+import { Toaster } from '@/components/ui/toaster';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { GlobalKeyboardProvider } from '@/components/keyboard/GlobalKeyboardProvider';
+import { SkipLinks } from '@/components/ui/skip-link';
+import { LiveRegion } from '@/components/ui/visually-hidden';
+import { ThemeInitializer } from '@/components/ThemeInitializer';
+import { ThemeDebugger } from '@/components/debug/ThemeDebugger';
+import { AppProviders } from '@/components/providers/AppProviders';
+import { AppRoutes } from '@/components/routing/AppRoutes';
+import { ServiceWorkerUpdateBanner } from '@/components/system/ServiceWorkerUpdateBanner';
+import { BuildValidationOverlay } from '@/components/debug/BuildValidationOverlay';
+import { useThemeAudit } from '@/hooks/useThemeAudit';
 
-
-const log = getLogger('App');
+const _log = getLogger('App');
 
 // Deferred non-critical providers loaded after first paint
-const RealtimeSentimentAlertProvider = lazy(() => import("@/components/notifications/RealtimeSentimentAlertProvider").then(m => ({ default: m.RealtimeSentimentAlertProvider })));
-const IncomingCallAlert = lazy(() => import("@/components/calls/IncomingCallAlert").then(m => ({ default: m.IncomingCallAlert })));
-const EasterEggsProvider = lazy(() => import("@/components/effects/EasterEggs").then(m => ({ default: m.EasterEggsProvider })));
-const InAppNotificationProvider = lazy(() => import("@/components/mobile/InAppNotificationProvider").then(m => ({ default: m.InAppNotificationProvider })));
+const RealtimeSentimentAlertProvider = lazy(() =>
+  import('@/components/notifications/RealtimeSentimentAlertProvider').then((m) => ({
+    default: m.RealtimeSentimentAlertProvider,
+  }))
+);
+const IncomingCallAlert = lazy(() =>
+  import('@/components/calls/IncomingCallAlert').then((m) => ({ default: m.IncomingCallAlert }))
+);
+const EasterEggsProvider = lazy(() =>
+  import('@/components/effects/EasterEggs').then((m) => ({ default: m.EasterEggsProvider }))
+);
+const InAppNotificationProvider = lazy(() =>
+  import('@/components/mobile/InAppNotificationProvider').then((m) => ({
+    default: m.InAppNotificationProvider,
+  }))
+);
 
 function DeferredProviders({ children }: { children?: React.ReactNode }) {
   return (
@@ -37,13 +48,16 @@ function DeferredProviders({ children }: { children?: React.ReactNode }) {
 
 /** Deferred hooks component — lazy-loaded so hooks don't run until after first paint */
 const DeferredHooks = lazy(() =>
-  import('@/hooks/useServiceWorker').then(swMod =>
-    import('@/features/auth').then(spMod => ({
-      default: forwardRef(function DeferredHooksInner(_props: Record<string, never>, _ref: React.ForwardedRef<unknown>) {
+  import('@/hooks/useServiceWorker').then((swMod) =>
+    import('@/features/auth').then((spMod) => ({
+      default: forwardRef(function DeferredHooksInner(
+        _props: Record<string, never>,
+        _ref: React.ForwardedRef<unknown>
+      ) {
         swMod.useServiceWorker();
         spMod.useScreenProtection();
         return null;
-      })
+      }),
     }))
   )
 );
@@ -90,28 +104,31 @@ function AppContent() {
         }
       }
     };
-    window.addEventListener("unhandledrejection", handler);
+    window.addEventListener('unhandledrejection', handler);
     return () => {
-      window.removeEventListener("unhandledrejection", handler);
+      window.removeEventListener('unhandledrejection', handler);
     };
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ThemeInitializer />
       <ThemeDebugger />
       <SkipLinks />
       <LiveRegion />
       <GlobalKeyboardProvider>
         {deferredReady && <DeferredProviders />}
-        {deferredReady && <Suspense fallback={null}><DeferredHooks /></Suspense>}
+        {deferredReady && (
+          <Suspense fallback={null}>
+            <DeferredHooks />
+          </Suspense>
+        )}
         <Toaster />
         <Sonner />
         <ServiceWorkerUpdateBanner />
         <AppRoutes />
         <BuildValidationOverlay />
       </GlobalKeyboardProvider>
-
     </BrowserRouter>
   );
 }

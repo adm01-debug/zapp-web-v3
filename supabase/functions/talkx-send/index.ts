@@ -68,8 +68,23 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const evolutionUrl = (Deno.env.get("EVOLUTION_API_URL") || "").replace(/\/+$/, "");
     const evolutionKey = Deno.env.get("EVOLUTION_API_KEY")!;
+
+    // Reject unauthenticated callers — bulk messaging requires a valid session
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers });
+    }
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const { data: { user }, error: authErr } = await callerClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers });
+    }
 
     const supabase = createClient(supabaseUrl, serviceKey);
     const { campaignId, action } = await req.json();

@@ -34,8 +34,36 @@ Deno.serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const bucket = (formData.get("bucket") as string) || "whatsapp-media";
-    const customPath = formData.get("path") as string;
+
+    const ALLOWED_BUCKETS = new Set([
+      "whatsapp-media",
+      "audio-messages",
+      "audio-memes",
+      "avatars",
+      "custom-emojis",
+      "stickers",
+      "team-chat-files",
+    ]);
+    const rawBucket = (formData.get("bucket") as string) || "whatsapp-media";
+    if (!ALLOWED_BUCKETS.has(rawBucket)) {
+      return securityErrorResponse(
+        { code: "INVALID_BUCKET", message: "Bucket de armazenamento inválido." },
+        400,
+        req,
+      );
+    }
+    const bucket = rawBucket;
+
+    const rawPath = formData.get("path") as string | null;
+    // Sanitize path by splitting into segments and rejecting any traversal components.
+    // Regex-based replacement is insufficient (overlapping matches can reconstruct "../").
+    const customPath = rawPath
+      ? rawPath
+          .replace(/\0/g, "")
+          .split(/[/\\]/)
+          .filter((seg) => seg !== ".." && seg !== "." && seg !== "")
+          .join("/") || null
+      : null;
 
     if (!file) {
       return securityErrorResponse(
@@ -121,8 +149,9 @@ Deno.serve(async (req) => {
 
     const fileExt = file.name.split(".").pop();
     const fileName =
-      customPath ||
-      `secure/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      (customPath && customPath.length > 0)
+        ? customPath
+        : `secure/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
     log.info("Persistindo no storage", { path: fileName });
 

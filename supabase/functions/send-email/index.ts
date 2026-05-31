@@ -19,7 +19,18 @@ serve(async (req) => {
   const json = (data: unknown, status = 200) =>
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+  // Require valid JWT — prevents unauthenticated email sending
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const { data: { user }, error: authErr } = await createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } }, auth: { persistSession: false },
+    }).auth.getUser();
+    if (authErr || !user) return json({ error: 'Unauthorized' }, 401);
+
     const body = await req.json().catch(() => ({}));
 
     // Verifica se há accountId para usar gmail-send
