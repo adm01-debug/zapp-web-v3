@@ -256,6 +256,14 @@ export const ConversationItem = memo(function ConversationItem({
                         )}
                       >
                         {primaryLabel}
+                        {companyName && (
+                          <span className={cn(
+                            "ml-1.5 text-[12px] font-normal tracking-normal opacity-70",
+                            isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                          )}>
+                            • {companyName}
+                          </span>
+                        )}
                       </span>
                     )}
                   </TruncatedTooltip>
