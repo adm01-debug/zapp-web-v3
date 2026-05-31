@@ -290,7 +290,7 @@ export const ConversationItem = memo(function ConversationItem({
               {secondaryLabel && (
                 <span
                   className={cn(
-                    'text-[11px] font-medium truncate block min-w-0 -mt-0.5',
+                    'text-[11px] font-medium truncate block min-w-0',
                     isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground/80'
                   )}
                 >
