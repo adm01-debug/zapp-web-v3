@@ -43,17 +43,26 @@ class ValidationLogger {
     const originalWarn = console.warn;
 
     console.log = (...args: any[]) => {
-      this.addEvent('log', args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' '));
+      const msg = args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' ');
+      if (!msg.includes('[validationLogger]')) {
+        this.addEvent('log', msg);
+      }
       originalLog.apply(console, args);
     };
 
     console.error = (...args: any[]) => {
-      this.addEvent('error', args.map(a => typeof a === 'object' ? '[Error Object]' : String(a)).join(' '));
+      const msg = args.map(a => typeof a === 'object' ? '[Error Object]' : String(a)).join(' ');
+      if (!msg.includes('[validationLogger]')) {
+        this.addEvent('error', msg);
+      }
       originalError.apply(console, args);
     };
 
     console.warn = (...args: any[]) => {
-      this.addEvent('log', `[WARN] ${args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' ')}`);
+      const msg = args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' ');
+      if (!msg.includes('[validationLogger]')) {
+        this.addEvent('log', `[WARN] ${msg}`);
+      }
       originalWarn.apply(console, args);
     };
 
