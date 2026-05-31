@@ -15,6 +15,7 @@
 ### 📐 Arquitetura e Design
 | Documento | Descrição |
 |-----------|-----------|
+| [ARCHITECTURE_AND_FLOW.md](./ARCHITECTURE_AND_FLOW.md) | **Guia de Arquitetura e Fluxo de Dados** ✨ |
 | [TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md) | Documentação técnica completa (90KB) |
 | [COMPLETE_SYSTEM_FEATURES.md](./COMPLETE_SYSTEM_FEATURES.md) | Funcionalidades do sistema (45KB) |
 | [FUNCTIONALITIES_INVENTORY.md](./FUNCTIONALITIES_INVENTORY.md) | Inventário de funcionalidades |
