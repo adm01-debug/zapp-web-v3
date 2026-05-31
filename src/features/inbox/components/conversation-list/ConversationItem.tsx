@@ -275,6 +275,7 @@ export const ConversationItem = memo(function ConversationItem({
                   )}>
                     {shortRelativeTime(displayDate)}
                   </span>
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                   {unreadCount > 0 && (
                     <span className={cn(
                       "min-w-[18px] h-4.5 px-1 rounded-full flex items-center justify-center text-[10px] font-black tabular-nums shadow-md animate-bounce-in",
@@ -283,7 +284,6 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
               </div>
 
@@ -463,6 +463,7 @@ export const ConversationItem = memo(function ConversationItem({
                   )}>
                     {shortRelativeTime(displayDate)}
                   </span>
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                   {unreadCount > 0 && (
                     <span className={cn(
                       "min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[11px] font-black tabular-nums shadow-lg animate-bounce-in",
@@ -471,7 +472,6 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
 
               </div>
