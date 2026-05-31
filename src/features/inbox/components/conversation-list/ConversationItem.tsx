@@ -244,7 +244,7 @@ export const ConversationItem = memo(function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          ' font-black text-[15px] leading-tight truncate block min-w-0 tracking-tight transition-colors duration-200',
+                          'leading-tight truncate block min-w-0 tracking-tight transition-colors duration-200 font-thin text-sm font-serif',
                           isSelected ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
