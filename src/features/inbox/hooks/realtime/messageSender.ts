@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { Database } from '@/integrations/supabase/types';
 import { supabase } from '@/integrations/supabase/client';
 import { getLogger } from '@/lib/logger';
 import { extractEvolutionMessageId } from '@/lib/evolutionMessageId';
@@ -163,12 +163,12 @@ export async function sendMessageToContact(
   try {
     // Audit: Início da tentativa
     if (opts.conversationId) {
-      await (supabase.from('conversation_audit_logs' as any).insert({
+      await supabase.from('conversation_audit_logs' as any).insert({
         conversation_id: opts.conversationId,
         event_type: 'send_attempt',
         status: 'starting',
         metadata: { messageType, hasMedia: !!(mediaUrl || mediaPayload) }
-      } as any) as any);
+      });
     }
 
     const { data: contact } = await dbFrom('contacts')
@@ -306,12 +306,12 @@ export async function sendMessageToContact(
     emitSendStatus(finalSid, { status: 'sent' }, { contactId, source: 'messageSender' });
 
     if (opts.conversationId) {
-      await (supabase.from('conversation_audit_logs' as any).insert({
+      await supabase.from('conversation_audit_logs' as any).insert({
         conversation_id: opts.conversationId,
         event_type: 'delivered',
         status: 'success',
         metadata: { externalId }
-      } as any) as any);
+      });
     }
   } catch (evolutionError) {
     log.error('Error sending via Evolution API:', evolutionError);
