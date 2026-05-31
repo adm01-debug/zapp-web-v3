@@ -12,6 +12,7 @@ import { AppProviders } from "@/components/providers/AppProviders";
 import { AppRoutes } from "@/components/routing/AppRoutes";
 import { ServiceWorkerUpdateBanner } from "@/components/system/ServiceWorkerUpdateBanner";
 import { BuildValidationOverlay } from "@/components/debug/BuildValidationOverlay";
+import { HardResetButton } from "@/components/debug/HardResetButton";
 import { useThemeAudit } from "@/hooks/useThemeAudit";
 
 
@@ -122,6 +123,7 @@ function AppContent() {
         <ServiceWorkerUpdateBanner />
         <AppRoutes />
         <BuildValidationOverlay />
+        <HardResetButton />
       </GlobalKeyboardProvider>
 
     </BrowserRouter>
