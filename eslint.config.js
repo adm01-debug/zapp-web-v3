@@ -125,5 +125,14 @@ export default tseslint.config(
       ],
     },
   },
+  // SCRIPTS — utility scripts legitimately use console for CLI output
+  {
+    files: ["scripts/**/*.{ts,js}"],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
+      "no-useless-escape": "warn",
+    },
+  },
   ...storybook.configs["flat/recommended"]
 );
