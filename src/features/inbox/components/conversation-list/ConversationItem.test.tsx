@@ -76,4 +76,26 @@ describe('ConversationItem', () => {
     expect(primaryLabel.className).toContain('text-[15px]');
     expect(primaryLabel.className).toContain('tracking-wide');
   });
+
+  it('renders company name after contact name if available', () => {
+    const conversationWithCompany = {
+      ...mockConversation,
+      contact: {
+        ...mockConversation.contact,
+        company: 'Acme Corp'
+      }
+    };
+
+    render(
+      <TooltipProvider>
+        <ConversationItem 
+          conversation={conversationWithCompany} 
+          isSelected={false} 
+          onSelect={() => {}} 
+        />
+      </TooltipProvider>
+    );
+
+    expect(screen.getByText('Acme Corp')).toBeDefined();
+  });
 });
