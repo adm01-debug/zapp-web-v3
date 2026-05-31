@@ -92,7 +92,7 @@ export const AppShell = forwardRef<HTMLDivElement, AppShellProps>(function AppSh
   const currentAgent = useMemo(() => ({
     name: profile?.name || userEmail || 'Usuário',
     avatar: profile?.avatar_url || undefined,
-    status: 'online',
+    status: 'online' as const,
   }), [profile?.name, profile?.avatar_url, userEmail]);
 
   return (
