@@ -156,6 +156,8 @@ export const ConversationItem = memo(function ConversationItem({
   const tags = contact?.tags ?? [];
   const avatarUrl = contact?.avatar || contact?.avatar_url;
   
+  const companyName = contact?.company_name || contact?.company || contact?.organization;
+  
   const displayDate =
     toValidDate(conversation.updatedAt, null as any) ||
     toValidDate(lastMessage?.created_at, null as any) ||
@@ -254,6 +256,14 @@ export const ConversationItem = memo(function ConversationItem({
                         )}
                       >
                         {primaryLabel}
+                        {companyName && (
+                          <span className={cn(
+                            "ml-1.5 text-[12px] font-normal tracking-normal opacity-70",
+                            isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                          )}>
+                            • {companyName}
+                          </span>
+                        )}
                       </span>
                     )}
                   </TruncatedTooltip>
@@ -433,6 +443,14 @@ export const ConversationItem = memo(function ConversationItem({
                         )}
                       >
                         {primaryLabel}
+                        {companyName && (
+                          <span className={cn(
+                            "ml-1.5 text-[12px] font-normal tracking-normal opacity-70",
+                            isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                          )}>
+                            • {companyName}
+                          </span>
+                        )}
                       </span>
                     )}
                   </TruncatedTooltip>
