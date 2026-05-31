@@ -98,8 +98,10 @@
                 .then(function () {
                   if (typeof caches !== 'undefined') {
                     return caches.keys().then(function (keys) {
-                      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-                    }).then(function () { return hadAny || (keys && keys.length); });
+                      var hadCaches = keys.length > 0;
+                      return Promise.all(keys.map(function (k) { return caches.delete(k); }))
+                        .then(function () { return hadAny || hadCaches; });
+                    });
                   }
                   return hadAny;
                 })
