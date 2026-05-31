@@ -28,43 +28,40 @@ export type ActivityType =
   | 'consent_revoked';
 
 export interface ActivityItem {
-  id:          string;
-  type:        ActivityType;
-  label:       string;
+  id: string;
+  type: ActivityType;
+  label: string;
   description: string | null;
-  actor:       string | null;  // agent name or 'Sistema'
-  channel:     string | null;
-  timestamp:   string;
-  metadata?:   Record<string, unknown>;
+  actor: string | null; // agent name or 'Sistema'
+  channel: string | null;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
 }
 
 interface UseContactActivityFeedOptions {
-  contactId:   string;
-  limit?:      number;
-  realtime?:   boolean;
+  contactId: string;
+  limit?: number;
+  realtime?: boolean;
 }
 
 // ── Activity label builders ────────────────────────────────────────────────
 
-function buildActivityLabel(
-  type: ActivityType,
-  meta?: Record<string, unknown>
-): string {
+function buildActivityLabel(type: ActivityType, meta?: Record<string, unknown>): string {
   const labels: Record<ActivityType, string> = {
     conversation_started: '💬 Nova conversa iniciada',
-    conversation_closed:  '✅ Conversa encerrada',
-    message_sent:         '📤 Mensagem enviada',
-    message_received:     '📥 Mensagem recebida',
-    contact_created:      '👤 Contato criado',
-    contact_updated:      '✏️ Contato atualizado',
-    contact_merged:       '🔀 Contato mesclado',
-    csat_submitted:       '⭐ Avaliação CSAT enviada',
-    tag_added:            `🏷️ Tag adicionada${meta?.tag ? ': ' + sanitizeText(meta.tag as string) : ''}`,
-    tag_removed:          `🏷️ Tag removida${meta?.tag ? ': ' + sanitizeText(meta.tag as string) : ''}`,
-    note_added:           '📝 Nota adicionada',
-    phone_added:          `📱 Telefone adicionado${meta?.phone ? ': ' + formatPhoneForDisplay(meta.phone as string) : ''}`,
-    consent_granted:      '✅ Consentimento LGPD concedido',
-    consent_revoked:      '🚫 Consentimento LGPD revogado',
+    conversation_closed: '✅ Conversa encerrada',
+    message_sent: '📤 Mensagem enviada',
+    message_received: '📥 Mensagem recebida',
+    contact_created: '👤 Contato criado',
+    contact_updated: '✏️ Contato atualizado',
+    contact_merged: '🔀 Contato mesclado',
+    csat_submitted: '⭐ Avaliação CSAT enviada',
+    tag_added: `🏷️ Tag adicionada${meta?.tag ? ': ' + sanitizeText(meta.tag as string) : ''}`,
+    tag_removed: `🏷️ Tag removida${meta?.tag ? ': ' + sanitizeText(meta.tag as string) : ''}`,
+    note_added: '📝 Nota adicionada',
+    phone_added: `📱 Telefone adicionado${meta?.phone ? ': ' + formatPhoneForDisplay(meta.phone as string) : ''}`,
+    consent_granted: '✅ Consentimento LGPD concedido',
+    consent_revoked: '🚫 Consentimento LGPD revogado',
   };
   return labels[type] ?? type;
 }
@@ -77,7 +74,7 @@ export function useContactActivityFeed({
   realtime = true,
 }: UseContactActivityFeedOptions) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [loading,    setLoading]    = useState(false);
+  const [loading, setLoading] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const fetchActivities = useCallback(async () => {
@@ -86,35 +83,41 @@ export function useContactActivityFeed({
       const items: ActivityItem[] = [];
 
       // 1. Audit log (contact changes)
-      const { data: auditData , error } = await (supabase
-        .from('contact_audit_log' as any) as any)
+      const { data: auditData, error: _error } = await (
+        supabase.from('contact_audit_log' as any) as any
+      )
         .select('id,action,changed_at,changed_by,new_values,profiles:changed_by(full_name)')
         .eq('contact_id', contactId)
         .order('changed_at', { ascending: false })
         .limit(limit);
 
       for (const entry of auditData ?? []) {
-        const changerName = (entry.profiles as Record<string, unknown> | null)?.full_name as string | null;
+        const changerName = (entry.profiles as Record<string, unknown> | null)?.full_name as
+          | string
+          | null;
         let type: ActivityType = 'contact_updated';
 
         if (entry.action === 'INSERT') type = 'contact_created';
-        if ((entry.new_values as Record<string, unknown>)?.lgpd_opt_out_at) type = 'consent_revoked';
-        if ((entry.new_values as Record<string, unknown>)?.lgpd_consent_at) type = 'consent_granted';
+        if ((entry.new_values as Record<string, unknown>)?.lgpd_opt_out_at)
+          type = 'consent_revoked';
+        if ((entry.new_values as Record<string, unknown>)?.lgpd_consent_at)
+          type = 'consent_granted';
 
         items.push({
-          id:          String(entry.id),
+          id: String(entry.id),
           type,
-          label:       buildActivityLabel(type),
+          label: buildActivityLabel(type),
           description: null,
-          actor:       changerName ? sanitizeText(changerName) : 'Sistema',
-          channel:     null,
-          timestamp:   String(entry.changed_at),
+          actor: changerName ? sanitizeText(changerName) : 'Sistema',
+          channel: null,
+          timestamp: String(entry.changed_at),
         });
       }
 
       // 2. Conversations
-      const { data: convData , error: convDataErr } = await (supabase
-        .from('conversations' as any) as any)
+      const { data: convData, error: _convDataErr } = await (
+        supabase.from('conversations' as any) as any
+      )
         .select('id,status,channel,created_at,closed_at')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: false })
@@ -122,24 +125,24 @@ export function useContactActivityFeed({
 
       for (const conv of convData ?? []) {
         items.push({
-          id:          `conv_start_${conv.id}`,
-          type:        'conversation_started',
-          label:       buildActivityLabel('conversation_started'),
+          id: `conv_start_${conv.id}`,
+          type: 'conversation_started',
+          label: buildActivityLabel('conversation_started'),
           description: null,
-          actor:       null,
-          channel:     conv.channel ? sanitizeText(conv.channel) : null,
-          timestamp:   String(conv.created_at),
+          actor: null,
+          channel: conv.channel ? sanitizeText(conv.channel) : null,
+          timestamp: String(conv.created_at),
         });
 
         if (conv.closed_at) {
           items.push({
-            id:          `conv_close_${conv.id}`,
-            type:        'conversation_closed',
-            label:       buildActivityLabel('conversation_closed'),
+            id: `conv_close_${conv.id}`,
+            type: 'conversation_closed',
+            label: buildActivityLabel('conversation_closed'),
             description: null,
-            actor:       null,
-            channel:     conv.channel ? sanitizeText(conv.channel) : null,
-            timestamp:   String(conv.closed_at),
+            actor: null,
+            channel: conv.channel ? sanitizeText(conv.channel) : null,
+            timestamp: String(conv.closed_at),
           });
         }
       }
@@ -156,7 +159,9 @@ export function useContactActivityFeed({
   }, [contactId, limit]);
 
   // Initial load
-  useEffect(() => { fetchActivities(); }, [fetchActivities]);
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
 
   // Realtime subscription on audit_log
   useEffect(() => {
@@ -167,12 +172,14 @@ export function useContactActivityFeed({
       .on(
         'postgres_changes',
         {
-          event:  'INSERT',
+          event: 'INSERT',
           schema: 'public',
-          table:  'contact_audit_log',
+          table: 'contact_audit_log',
           filter: `contact_id=eq.${contactId}`,
         },
-        () => { fetchActivities(); }
+        () => {
+          fetchActivities();
+        }
       )
       .subscribe();
 

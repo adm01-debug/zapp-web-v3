@@ -42,12 +42,17 @@ function StatCard({
     <Card className="overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <div className="space-y-1 min-w-0">
-            <p className="text-xs text-muted-foreground font-medium">{title}</p>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">{title}</p>
             <p className={cn('text-2xl font-bold tabular-nums', color)}>{value}</p>
             {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
           </div>
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center shrink-0', `bg-${color.split('-')[1]}-500/10`)}>
+          <div
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+              `bg-${color.split('-')[1]}-500/10`
+            )}
+          >
             <Icon className={cn('h-5 w-5', color)} />
           </div>
         </div>
@@ -82,15 +87,17 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
 
   const load = async () => {
     setIsLoading(true);
-    const { data: rows , error } = await (supabase
-      .from('v_email_sla_dashboard' as any) as any)
-      .select('*');
+    const { data: rows, error: _error } = await (
+      supabase.from('v_email_sla_dashboard' as any) as any
+    ).select('*');
     setData((rows ?? []) as SLADashboardData[]);
     setLastRefresh(new Date());
     setIsLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   // Auto-refresh a cada 2 min
   useEffect(() => {
@@ -110,9 +117,11 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
     { total: 0, unread: 0, ok: 0, warning: 0, breached: 0, pending: 0 }
   );
 
-  const avgFrt = data.length > 0
-    ? data.reduce((a, r) => a + (r.avg_frt_minutes ?? 0), 0) / data.filter(r => r.avg_frt_minutes != null).length
-    : null;
+  const avgFrt =
+    data.length > 0
+      ? data.reduce((a, r) => a + (r.avg_frt_minutes ?? 0), 0) /
+        data.filter((r) => r.avg_frt_minutes != null).length
+      : null;
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -120,7 +129,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          <h3 className="font-semibold text-sm">Métricas SLA — Email</h3>
+          <h3 className="text-sm font-semibold">Métricas SLA — Email</h3>
           {data.length > 0 && (
             <Badge variant="secondary" className="text-[10px]">
               {data.length} {data.length === 1 ? 'conta' : 'contas'}
@@ -131,7 +140,13 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
           <span className="text-[10px] text-muted-foreground">
             Atualizado {lastRefresh.toLocaleTimeString()}
           </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={load} disabled={isLoading}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={load}
+            disabled={isLoading}
+          >
             <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
           </Button>
         </div>
@@ -188,37 +203,51 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
       {/* Por conta */}
       {data.length > 1 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Por conta</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Por conta
+          </p>
           <div className="space-y-2">
-            {data.map(row => {
+            {data.map((row) => {
               const slaTotal = row.sla_ok + row.sla_warning + row.sla_breached;
-              const okPct    = slaTotal > 0 ? Math.round((row.sla_ok / slaTotal) * 100) : 100;
+              const okPct = slaTotal > 0 ? Math.round((row.sla_ok / slaTotal) * 100) : 100;
 
               return (
-                <div key={row.account_id} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{row.account_email}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                <div
+                  key={row.account_id}
+                  className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{row.account_email}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {row.total_threads} threads · {row.unread_threads} não lidos
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     {row.sla_breached > 0 && (
-                      <Badge variant="destructive" className="text-[10px] h-4 px-1.5 gap-1">
+                      <Badge variant="destructive" className="h-4 gap-1 px-1.5 text-[10px]">
                         <AlertTriangle className="h-2.5 w-2.5" />
                         {row.sla_breached}
                       </Badge>
                     )}
                     {row.sla_warning > 0 && (
-                      <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-warning/50 text-warning-foreground">
+                      <Badge
+                        variant="outline"
+                        className="h-4 border-warning/50 px-1.5 text-[10px] text-warning-foreground"
+                      >
                         {row.sla_warning}
                       </Badge>
                     )}
-                    <span className={cn('text-xs font-semibold tabular-nums',
-                      okPct >= 95 ? 'text-primary' :
-                      okPct >= 80 ? 'text-warning-foreground' : 'text-destructive'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-xs font-semibold tabular-nums',
+                        okPct >= 95
+                          ? 'text-primary'
+                          : okPct >= 80
+                            ? 'text-warning-foreground'
+                            : 'text-destructive'
+                      )}
+                    >
                       {okPct}% ok
                     </span>
                     <span className="text-[11px] text-muted-foreground">
@@ -234,7 +263,7 @@ export function EmailSLADashboard({ className }: EmailSLADashboardProps) {
 
       {/* Empty state */}
       {data.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+        <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
           <BarChart3 className="h-8 w-8 opacity-20" />
           <p className="text-sm">Sem dados de SLA</p>
           <p className="text-xs">Conecte uma conta Email para ver as métricas</p>

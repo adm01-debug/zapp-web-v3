@@ -1,14 +1,23 @@
 import { supabase } from '@/integrations/supabase/client';
-import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import { messageRepository } from '../data-access/messageRepository';
 import type { Message } from '@/types/chat';
-import type { RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from '../hooks/useRealtimeMessages';
 
 import { getLogger } from '@/lib/logger';
 
 const log = getLogger('messageService');
 
 export const messageService = {
-  mapMessage(m: Partial<RealtimeMessage> & { conversationId?: string; isWhisper?: boolean; sender_id?: string; timestamp?: string | Date; type?: string; mediaUrl?: string }): Message {
+  mapMessage(
+    m: Partial<RealtimeMessage> & {
+      conversationId?: string;
+      isWhisper?: boolean;
+      sender_id?: string;
+      timestamp?: string | Date;
+      type?: string;
+      mediaUrl?: string;
+    }
+  ): Message {
     const createdAt = m.created_at || m.timestamp;
     return {
       ...m,
@@ -33,7 +42,11 @@ export const messageService = {
       let hasMore = true;
 
       while (hasMore) {
-        const { data: page, error } = await messageRepository.fetchMessagesByContact(contactId, from, PAGE_SIZE);
+        const { data: page, error } = await messageRepository.fetchMessagesByContact(
+          contactId,
+          from,
+          PAGE_SIZE
+        );
         if (error) throw new Error(`Falha ao carregar mensagens: ${error.message}`);
         if (page && page.length > 0) {
           allData = allData.concat(page);
@@ -53,18 +66,24 @@ export const messageService = {
       if (whisperErr) {
         log.error('Error fetching whispers:', whisperErr);
       } else if (whispers) {
-        const mappedWhispers = whispers.map((w: any) => this.mapMessage({
-          ...w,
-          sender_id: w.sender_id,
-          isWhisper: true,
-        }));
+        const mappedWhispers = whispers.map((w: any) =>
+          this.mapMessage({
+            ...w,
+            sender_id: w.sender_id,
+            isWhisper: true,
+          })
+        );
         allData = allData.concat(mappedWhispers);
       }
 
       // Sort all messages by timestamp
       allData.sort((a, b) => {
-        const timeA = new Date(a.created_at || (a as any).timestamp || (a as any).created_at).getTime();
-        const timeB = new Date(b.created_at || (b as any).timestamp || (b as any).created_at).getTime();
+        const timeA = new Date(
+          a.created_at || (a as any).timestamp || (a as any).created_at
+        ).getTime();
+        const timeB = new Date(
+          b.created_at || (b as any).timestamp || (b as any).created_at
+        ).getTime();
         return timeA - timeB;
       });
 

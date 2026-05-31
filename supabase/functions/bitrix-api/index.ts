@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
-import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders, validateBitrixOrigin } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, Logger, getCorsHeaders, validateBitrixOrigin , requireUser} from "../_shared/validation.ts";
 
 const BitrixBodySchema = z.object({
   action: z.enum([
@@ -17,6 +17,16 @@ const BitrixBodySchema = z.object({
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
+
+
+  try {
+    await requireUser(req, Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '');
+  } catch {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
 
   const log = new Logger("bitrix-api");
 

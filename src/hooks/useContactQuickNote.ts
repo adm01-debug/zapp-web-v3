@@ -27,37 +27,44 @@ export function useContactQuickNote(contactId: string | undefined, userId: strin
     }
   }, [contactId]);
 
-  const addNote = useCallback(async (content: string, noteType = 'quick') => {
-    if (!contactId || !userId || !content.trim()) return null;
-    setIsSaving(true);
-    try {
-      const note = await contactsDB.notes.create({
-        contact_id: contactId,
-        user_id: userId,
-        content: content.trim(),
-        note_type: noteType,
-      });
-      setNotes(prev => [note, ...prev]);
-      toast.success('Nota salva');
-      return note;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar nota';
-      toast.error(msg);
-      return null;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [contactId, userId]);
+  const addNote = useCallback(
+    async (content: string, noteType = 'quick') => {
+      if (!contactId || !userId || !content.trim()) return null;
+      setIsSaving(true);
+      try {
+        const note = await contactsDB.notes.create({
+          contact_id: contactId,
+          user_id: userId,
+          content: content.trim(),
+          note_type: noteType,
+        });
+        setNotes((prev) => [note, ...prev]);
+        toast.success('Nota salva');
+        return note;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro ao salvar nota';
+        toast.error(msg);
+        return null;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [contactId, userId]
+  );
 
   const updateNote = useCallback(async (noteId: string, content: string) => {
     if (!content.trim()) return;
     try {
       await contactsDB.notes.update(noteId, content.trim());
-      setNotes(prev =>
-        prev.map(n => n.id === noteId ? { ...n, content: content.trim(), updated_at: new Date().toISOString() } : n)
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === noteId
+            ? { ...n, content: content.trim(), updated_at: new Date().toISOString() }
+            : n
+        )
       );
       toast.success('Nota atualizada');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erro ao atualizar nota');
     }
   }, []);
@@ -65,9 +72,9 @@ export function useContactQuickNote(contactId: string | undefined, userId: strin
   const deleteNote = useCallback(async (noteId: string) => {
     try {
       await contactsDB.notes.delete(noteId);
-      setNotes(prev => prev.filter(n => n.id !== noteId));
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
       toast.success('Nota removida');
-    } catch (err) {
+    } catch (_err) {
       toast.error('Erro ao remover nota');
     }
   }, []);

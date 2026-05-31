@@ -1,7 +1,7 @@
 /**
  * useAgentPresence.ts
  * Real-time agent online/busy/away status tracking.
- * 
+ *
  * Features:
  * - Tracks current agent status (online, busy, away, offline)
  * - Shows which agents are available for transfers
@@ -53,26 +53,30 @@ export function useAgentPresence({
   }, [autoAwayMs, myStatus]);
 
   // Update my status in the database
-  const updateStatus = useCallback(async (status: AgentPresenceStatus) => {
-    if (!user) return;
-    setMyStatus(status);
-    await (supabase as any)
-      .from('agent_presence')
-      .upsert({
-        agent_id: user.id,
-        workspace_id: workspaceId,
-        status,
-        agent_name: user.user_metadata?.full_name ?? user.email ?? 'Agent',
-        avatar_url: user.user_metadata?.avatar_url ?? null,
-        last_activity_at: new Date().toISOString(),
-      }, {
-        onConflict: 'agent_id,workspace_id',
-      });
-  }, [user, workspaceId]);
+  const updateStatus = useCallback(
+    async (status: AgentPresenceStatus) => {
+      if (!user) return;
+      setMyStatus(status);
+      await (supabase as any).from('agent_presence').upsert(
+        {
+          agent_id: user.id,
+          workspace_id: workspaceId,
+          status,
+          agent_name: user.user_metadata?.full_name ?? user.email ?? 'Agent',
+          avatar_url: user.user_metadata?.avatar_url ?? null,
+          last_activity_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'agent_id,workspace_id',
+        }
+      );
+    },
+    [user, workspaceId]
+  );
 
   // Load all agents' presence
   const loadPresence = useCallback(async () => {
-    const { data, error } = await (supabase as any)
+    const { data, _error } = await (supabase as any)
       .from('agent_presence')
       .select('*')
       .eq('workspace_id', workspaceId)
@@ -104,7 +108,9 @@ export function useAgentPresence({
           table: 'agent_presence',
           filter: `workspace_id=eq.${workspaceId}`,
         },
-        () => { loadPresence(); }
+        () => {
+          loadPresence();
+        }
       )
       .subscribe();
 
@@ -120,9 +126,7 @@ export function useAgentPresence({
   }, [enabled, user, workspaceId]);
 
   // Available agents for transfer (online/busy, not away)
-  const availableAgents = agents.filter(
-    (a) => a.status === 'online' && a.agent_id !== user?.id
-  );
+  const availableAgents = agents.filter((a) => a.status === 'online' && a.agent_id !== user?.id);
 
   const busyAgents = agents.filter((a) => a.status === 'busy');
   const awayAgents = agents.filter((a) => a.status === 'away');

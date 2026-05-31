@@ -1,8 +1,9 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { log as logger } from '@/lib/logger';
 
 /**
  * Rotina de Verificação Automatizada: Fluxo de Conexão
- * 
+ *
  * Este script valida:
  * 1. A conectividade com o endpoint do Supabase Self-Hosted.
  * 2. A persistência de dados na tabela system_connections.
@@ -11,17 +12,19 @@ import { supabase } from "@/integrations/supabase/client";
 export async function runConnectionDiagnostics() {
   const diagnostics: any = {
     timestamp: new Date().toISOString(),
-    steps: []
+    steps: [],
   };
 
   const log = (step: string, status: 'pass' | 'fail', details: any) => {
     diagnostics.steps.push({ step, status, details });
-    console.log(`[Diagnostics] ${status.toUpperCase()}: ${step}`, details);
+    logger.info(`[Diagnostics] ${status.toUpperCase()}: ${step}`, details);
   };
 
   try {
     // Passo 1: Verificar Autenticação Local
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       log('Auth Check', 'fail', 'Usuário não autenticado no Lovable Cloud.');
       return diagnostics;
@@ -37,10 +40,14 @@ export async function runConnectionDiagnostics() {
       .maybeSingle();
 
     if (fetchError || !currentConfigs) {
-      log('Fetch Current Config', 'fail', 'Configuração "FATOR X" não encontrada em system_connections.');
+      log(
+        'Fetch Current Config',
+        'fail',
+        'Configuração "FATOR X" não encontrada em system_connections.'
+      );
       return diagnostics;
     }
-    
+
     const configData = currentConfigs as any;
     const externalUrl = configData.config?.url;
     const externalKey = configData.config?.anon_key;
@@ -53,13 +60,19 @@ export async function runConnectionDiagnostics() {
 
     // Passo 3: Testar Conectividade Externa (Self-Hosted)
     try {
-      const res = await fetch(`${externalUrl.replace(/\/$/, '')}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`, {
-        headers: { apikey: externalKey, Authorization: `Bearer ${externalKey}` },
-      });
+      const res = await fetch(
+        `${externalUrl.replace(/\/$/, '')}/rest/v1/?apikey=${encodeURIComponent(externalKey)}`,
+        {
+          headers: { apikey: externalKey, Authorization: `Bearer ${externalKey}` },
+        }
+      );
       if (res.status < 500) {
         log('External Connectivity', 'pass', { status: res.status });
       } else {
-        log('External Connectivity', 'fail', { status: res.status, msg: 'Endpoint retornou erro 500+' });
+        log('External Connectivity', 'fail', {
+          status: res.status,
+          msg: 'Endpoint retornou erro 500+',
+        });
       }
     } catch (e: any) {
       log('External Connectivity', 'fail', { error: e.message });
@@ -67,15 +80,22 @@ export async function runConnectionDiagnostics() {
 
     // Passo 4: Testar Escrita/Leitura no system_connections (Verificar RLS)
     const testName = `DIAG_TEST_${Math.floor(Math.random() * 1000)}`;
-    const { data: saveResult, error: saveError, status: saveStatus } = await supabase
+    const {
+      data: saveResult,
+      error: saveError,
+      status: saveStatus,
+    } = await supabase
       .from('system_connections' as any)
-      .upsert({
-        name: testName,
-        provider: 'diagnostic_test',
-        config: { url: 'test', anon_key: 'test' },
-        is_active: false,
-        created_by: session.user.id
-      }, { onConflict: 'name' })
+      .upsert(
+        {
+          name: testName,
+          provider: 'diagnostic_test',
+          config: { url: 'test', anon_key: 'test' },
+          is_active: false,
+          created_by: session.user.id,
+        },
+        { onConflict: 'name' }
+      )
       .select();
 
     if (saveError) {
@@ -94,16 +114,20 @@ export async function runConnectionDiagnostics() {
       const verifyData = verify as any;
 
       if (verifyError || !verifyData) {
-        log('Data Read-back (RLS)', 'fail', { error: verifyError?.message || 'Registro inserido não foi encontrado no SELECT' });
+        log('Data Read-back (RLS)', 'fail', {
+          error: verifyError?.message || 'Registro inserido não foi encontrado no SELECT',
+        });
       } else {
         log('Data Read-back (RLS)', 'pass', { verified_id: verifyData.id });
-        
+
         // Limpeza
-        await supabase.from('system_connections' as any).delete().eq('name', testName);
+        await supabase
+          .from('system_connections' as any)
+          .delete()
+          .eq('name', testName);
         log('Cleanup', 'pass', 'Registro de teste removido.');
       }
     }
-
   } catch (e: any) {
     log('Global Error', 'fail', { message: e.message });
   }

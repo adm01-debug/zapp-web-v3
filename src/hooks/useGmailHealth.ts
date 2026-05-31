@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { emailHealthService } from '@/services/email/emailHealthService';
 import type { EmailHealthInfo } from '@/services/email/types';
@@ -29,7 +28,7 @@ export function useEmailHealth() {
         description: 'A revalidação do schema foi forçada com sucesso.',
       });
       await loadHealth();
-    } catch (err) {
+    } catch (_err) {
       toast({
         title: 'Erro na revalidação',
         description: 'Não foi possível forçar a revalidação.',
@@ -48,6 +47,6 @@ export function useEmailHealth() {
     health,
     isLoading,
     refresh: loadHealth,
-    forceRevalidation
+    forceRevalidation,
   };
 }

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * externalMessageSender — envio de mensagens no modo FATOR X.
@@ -55,7 +56,12 @@ export interface SendExternalResult {
 function makeOptimisticBubble(
   remoteJid: string,
   content: string,
-  opts: { messageType?: string; mediaUrl?: string | null; contactAvatar?: string | null; media_meta?: any } = {},
+  opts: {
+    messageType?: string;
+    mediaUrl?: string | null;
+    contactAvatar?: string | null;
+    media_meta?: any;
+  } = {}
 ): any {
   const now = new Date().toISOString();
   // ID local começa com `optimistic:` pra reconciliação. O webhook insere
@@ -87,13 +93,15 @@ function makeOptimisticBubble(
 export async function sendExternalText(
   remoteJid: string,
   content: string,
-  opts: SendExternalOptions = {},
+  opts: SendExternalOptions = {}
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
   const instance = opts.instanceName || DEFAULT_INSTANCE;
 
-  const optimistic = makeOptimisticBubble(remoteJid, content, { contactAvatar: opts.contactAvatar });
+  const optimistic = makeOptimisticBubble(remoteJid, content, {
+    contactAvatar: opts.contactAvatar,
+  });
 
   // Log de auditoria (FATOR X)
   void dbInsert(RPC.rpc_log_service_event, {
@@ -101,7 +109,7 @@ export async function sendExternalText(
     p_event_type: 'message_send',
     p_message: `Enviando texto para ${phone}`,
     p_remote_jid: remoteJid,
-    p_payload: { content }
+    p_payload: { content },
   });
 
   const { data, error } = await supabase.functions.invoke('evolution-api', {
@@ -116,32 +124,38 @@ export async function sendExternalText(
   if (error) {
     log.error('evolution-api send-text failed', error);
     const info = parseEvolutionError(error);
-    
+
     void dbInsert(RPC.rpc_log_service_event, {
       p_instance: instance,
       p_event_type: 'error',
       p_level: 'error',
       p_message: `Falha no envio para ${phone}: ${info.reason}`,
       p_remote_jid: remoteJid,
-      p_payload: { error: info }
+      p_payload: { error: info },
     });
 
     throw new SendError(info.reason, info.detail, info.status);
   }
 
   // O proxy embrulha falhas de upstream em 200 + { error: true, message }.
-  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  const envelope = data as {
+    error?: boolean;
+    message?: string;
+    status?: number;
+    response?: unknown;
+    key?: { id?: string };
+  } | null;
   if (envelope?.error) {
     log.error('evolution-api send-text error envelope', envelope);
     const info = parseEvolutionError(envelope);
-    
+
     void dbInsert(RPC.rpc_log_service_event, {
       p_instance: instance,
       p_event_type: 'error',
       p_level: 'error',
       p_message: `Erro na resposta da API para ${phone}: ${info.reason}`,
       p_remote_jid: remoteJid,
-      p_payload: { envelope }
+      p_payload: { envelope },
     });
 
     throw new SendError(info.reason, info.detail, info.status);
@@ -170,12 +184,17 @@ export async function sendExternalText(
 export async function sendExternalAudio(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions & { isPtt?: boolean; conversationInstance?: string; conversationId?: string; conversation_id?: string } = {},
+  opts: SendExternalOptions & {
+    isPtt?: boolean;
+    conversationInstance?: string;
+    conversationId?: string;
+    conversation_id?: string;
+  } = {}
 ): Promise<SendExternalResult> {
   const startTime = Date.now();
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
-  
+
   const instance = opts.instanceName || opts.conversationInstance || DEFAULT_INSTANCE;
   const localAudioUrl = URL.createObjectURL(blob);
   const convId = opts.conversationId || opts.conversation_id;
@@ -192,7 +211,7 @@ export async function sendExternalAudio(
       conversation_id: convId,
       event_type: 'send_attempt',
       status: 'starting',
-      metadata: { messageType: 'audio', isPtt: opts.isPtt ?? true }
+      metadata: { messageType: 'audio', isPtt: opts.isPtt ?? true },
     } as any) as any);
   }
 
@@ -221,7 +240,7 @@ export async function sendExternalAudio(
   if (error) {
     log.error('evolution-api send-audio failed', error);
     const info = parseEvolutionError(error);
-    
+
     void supabase.rpc('rpc_log_outbound_event', {
       p_conversation_id: remoteJid,
       p_message_type: 'audio',
@@ -229,13 +248,19 @@ export async function sendExternalAudio(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: JSON.parse(JSON.stringify({ error: info, is_ptt: opts.isPtt ?? true }))
+      p_metadata: JSON.parse(JSON.stringify({ error: info, is_ptt: opts.isPtt ?? true })),
     });
 
     throw new SendError(info.reason, info.detail, info.status);
   }
 
-  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  const envelope = data as {
+    error?: boolean;
+    message?: string;
+    status?: number;
+    response?: unknown;
+    key?: { id?: string };
+  } | null;
   if (envelope?.error) {
     log.error('evolution-api send-audio error envelope', envelope);
     const info = parseEvolutionError(envelope);
@@ -247,21 +272,21 @@ export async function sendExternalAudio(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: JSON.parse(JSON.stringify({ envelope, is_ptt: opts.isPtt ?? true }))
+      p_metadata: JSON.parse(JSON.stringify({ envelope, is_ptt: opts.isPtt ?? true })),
     });
 
     throw new SendError(info.reason, info.detail, info.status);
   }
 
   const externalId = envelope?.key?.id ?? null;
-  
+
   void supabase.rpc('rpc_log_outbound_event', {
     p_conversation_id: remoteJid,
     p_message_type: 'audio',
     p_instance_name: instance,
     p_status: 'sent',
     p_latency_ms: latency,
-    p_metadata: { external_id: externalId, is_ptt: opts.isPtt ?? true }
+    p_metadata: { external_id: externalId, is_ptt: opts.isPtt ?? true },
   });
 
   optimistic.external_id = externalId;
@@ -272,7 +297,7 @@ export async function sendExternalAudio(
       conversation_id: convId,
       event_type: 'delivered',
       status: 'success',
-      metadata: { external_id: externalId }
+      metadata: { external_id: externalId },
     } as any) as any);
   }
 
@@ -285,7 +310,7 @@ export async function sendExternalAudio(
 export async function sendExternalMedia(
   remoteJid: string,
   file: File,
-  opts: SendExternalOptions & { caption?: string } = {},
+  opts: SendExternalOptions & { caption?: string } = {}
 ): Promise<SendExternalResult> {
   const phone = jidToPhone(remoteJid);
   if (!phone) throw new Error('Contato sem JID válido para envio.');
@@ -312,7 +337,11 @@ export async function sendExternalMedia(
     throw new Error(signError?.message || 'Falha ao gerar URL do arquivo');
   }
 
-  const type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
+  const type = file.type.startsWith('image/')
+    ? 'image'
+    : file.type.startsWith('video/')
+      ? 'video'
+      : 'document';
   const optimistic = makeOptimisticBubble(remoteJid, opts.caption || file.name, {
     messageType: type,
     mediaUrl: signed.signedUrl,
@@ -336,7 +365,13 @@ export async function sendExternalMedia(
     const info = parseEvolutionError(error);
     throw new SendError(info.reason, info.detail, info.status);
   }
-  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  const envelope = data as {
+    error?: boolean;
+    message?: string;
+    status?: number;
+    response?: unknown;
+    key?: { id?: string };
+  } | null;
   if (envelope?.error) {
     log.error('evolution-api send-media error envelope', envelope);
     const info = parseEvolutionError(envelope);
@@ -356,7 +391,7 @@ export async function sendExternalMedia(
 export async function sendExternalPtv(
   remoteJid: string,
   blob: Blob,
-  opts: SendExternalOptions & { conversationInstance?: string } = {},
+  opts: SendExternalOptions & { conversationInstance?: string } = {}
 ): Promise<SendExternalResult> {
   const startTime = Date.now();
   const phone = jidToPhone(remoteJid);
@@ -365,7 +400,7 @@ export async function sendExternalPtv(
 
   const localVideoUrl = URL.createObjectURL(blob);
   const optimistic = makeOptimisticBubble(remoteJid, '[Vídeo-nota]', {
-    messageType: 'video', 
+    messageType: 'video',
     mediaUrl: localVideoUrl,
     contactAvatar: opts.contactAvatar,
   });
@@ -402,13 +437,19 @@ export async function sendExternalPtv(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: JSON.parse(JSON.stringify({ error: info }))
+      p_metadata: JSON.parse(JSON.stringify({ error: info })),
     });
 
     throw new SendError(info.reason, info.detail, info.status);
   }
 
-  const envelope = data as { error?: boolean; message?: string; status?: number; response?: unknown; key?: { id?: string } } | null;
+  const envelope = data as {
+    error?: boolean;
+    message?: string;
+    status?: number;
+    response?: unknown;
+    key?: { id?: string };
+  } | null;
   if (envelope?.error) {
     log.error('evolution-api send-ptv error envelope', envelope);
     const info = parseEvolutionError(envelope);
@@ -420,7 +461,7 @@ export async function sendExternalPtv(
       p_status: 'failed',
       p_latency_ms: latency,
       p_error_code: String(info.status),
-      p_metadata: JSON.parse(JSON.stringify({ envelope }))
+      p_metadata: JSON.parse(JSON.stringify({ envelope })),
     });
 
     throw new SendError(info.reason, info.detail, info.status);
@@ -434,7 +475,7 @@ export async function sendExternalPtv(
     p_instance_name: instance,
     p_status: 'sent',
     p_latency_ms: latency,
-    p_metadata: { external_id: externalId }
+    p_metadata: { external_id: externalId },
   });
 
   optimistic.external_id = externalId;

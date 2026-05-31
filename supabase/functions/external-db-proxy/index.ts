@@ -7,6 +7,7 @@ import {
 } from './lib/utils.ts'
 import { handleRpc, handleQuery } from './lib/handlers.ts'
 import { QueryLogContext } from './lib/types.ts'
+import { requireUser } from '../_shared/validation.ts'
 
 const CORRELATION_HEADER = 'x-correlation-id'
 const REQUEST_ID_HEADER = 'x-request-id'
@@ -25,6 +26,15 @@ async function handler(req: Request): Promise<Response> {
       JSON.stringify({ ok: true, fn: 'external-db-proxy', ts: Date.now() }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
+  }
+
+  try {
+    await requireUser(req, Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '')
+  } catch {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   const startedAt = Date.now()

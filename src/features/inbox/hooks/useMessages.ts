@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { log } from '@/lib/logger';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
-import { messageService } from '@/features/inbox/services/messageService';
-import { messageRepository } from '@/features/inbox/data-access/messageRepository';
+import { messageService } from '../services/messageService';
+import { messageRepository } from '../data-access/messageRepository';
 import type { Message } from '@/types/chat';
-import type { RealtimeMessage } from '@/features/inbox/hooks/useRealtimeMessages';
+import type { RealtimeMessage } from './useRealtimeMessages';
 
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -23,13 +23,18 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   // Track mount state to prevent setState after unmount
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   // Fetch messages for contact
   const fetchMessages = useCallback(async () => {
     if (!contactId || !mountedRef.current) {
-      if (mountedRef.current) { setMessages([]); setLoading(false); }
+      if (mountedRef.current) {
+        setMessages([]);
+        setLoading(false);
+      }
       setLoading(false);
       return;
     }
@@ -39,11 +44,12 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
       setError(null);
 
       const mappedMessages = await messageService.getAllMessagesForContact(contactId);
-      
+
       if (mountedRef.current) setMessages(mappedMessages as Message[]);
     } catch (err) {
       log.error('Error fetching messages:', err);
-      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Failed to fetch messages');
+      if (mountedRef.current)
+        setError(err instanceof Error ? err.message : 'Failed to fetch messages');
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -53,7 +59,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   const handleNewMessage = useCallback(
     (payload: RealtimePostgresChangesPayload<RealtimeMessage>) => {
       const newMessage = messageService.mapMessage(payload.new as RealtimeMessage);
-      
+
       if (newMessage.conversationId === contactId) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMessage.id)) {
@@ -71,9 +77,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
       const updatedMessage = messageService.mapMessage(payload.new as RealtimeMessage);
 
       if (updatedMessage.conversationId === contactId) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
-        );
+        setMessages((prev) => prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m)));
       }
     },
     [contactId]
@@ -102,9 +106,21 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
   useEffect(() => {
     if (!enabled || !contactId) return;
 
-    logMessagesSubscribe('useMessages', { event: 'INSERT', table: 'messages', filter: `contact_id=eq.${contactId}` });
-    logMessagesSubscribe('useMessages', { event: 'UPDATE', table: 'messages', filter: `contact_id=eq.${contactId}` });
-    logMessagesSubscribe('useMessages', { event: 'DELETE', table: 'messages', filter: `contact_id=eq.${contactId}` });
+    logMessagesSubscribe('useMessages', {
+      event: 'INSERT',
+      table: 'messages',
+      filter: `contact_id=eq.${contactId}`,
+    });
+    logMessagesSubscribe('useMessages', {
+      event: 'UPDATE',
+      table: 'messages',
+      filter: `contact_id=eq.${contactId}`,
+    });
+    logMessagesSubscribe('useMessages', {
+      event: 'DELETE',
+      table: 'messages',
+      filter: `contact_id=eq.${contactId}`,
+    });
 
     const channel = messageRepository.subscribeToMessages(contactId, {
       onInsert: wrapMessagesHandler('useMessages', handleNewMessage),
@@ -129,9 +145,7 @@ export function useMessages({ contactId, enabled = true }: UseMessagesOptions) {
 
   // Update a message optimistically
   const updateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, ...updates } : m))
-    );
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, ...updates } : m)));
   }, []);
 
   // Remove a message optimistically

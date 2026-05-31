@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   handleCors, errorResponse, jsonResponse,
   sanitizeString, isValidUUID, checkRateLimit, getClientIP, requireEnv, Logger,
-} from "../_shared/validation.ts";
+, requireUser} from "../_shared/validation.ts";
 import { AiAutoTagSchema, parseBody } from "../_shared/schemas.ts";
 import { callAiWithTracking, extractUserIdFromRequest } from "../_shared/ai-usage.ts";
 
@@ -11,6 +11,12 @@ Deno.serve(async (req) => {
   if (cors) return cors;
 
   const log = new Logger("ai-auto-tag");
+  try {
+    await requireUser(req, Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '');
+  } catch {
+    return errorResponse('Unauthorized', 401, req);
+  }
+
   const userId = extractUserIdFromRequest(req);
 
   try {

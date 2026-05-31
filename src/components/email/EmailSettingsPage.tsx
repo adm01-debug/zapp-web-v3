@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { Mail, Key, Clock, Signature, Shield, Info, Wifi, Plus, Building2, RefreshCw } from 'lucide-react';
+import {
+  Mail,
+  Key,
+  Clock,
+  Signature,
+  Shield,
+  Info,
+  Wifi,
+  Plus,
+  Building2,
+  RefreshCw,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +19,13 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmailAccountSelector } from '@/components/gmail';
 import { EmailSignatureEditor } from '@/components/email/EmailSignatureEditor';
@@ -31,7 +48,7 @@ export function EmailSettingsPage() {
   const {
     accounts: outlookAccounts,
     activeAccountId: outlookActiveId,
-    setActiveAccountId: setOutlookActiveId,
+    setActiveAccountId: _setOutlookActiveId,
     startOAuth: startOutlookOAuth,
     syncInbox: syncOutlook,
     isSyncing: isOutlookSyncing,
@@ -47,20 +64,21 @@ export function EmailSettingsPage() {
   const totalAccounts = emailAccounts.length + outlookAccounts.length;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Mail className="h-6 w-6 text-primary" />
             Configurações de Email
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="mt-1 text-sm text-muted-foreground">
             Gerencie contas Email, Outlook, assinaturas, SLA e notificações do Email Chat.
           </p>
         </div>
         {totalAccounts > 0 && (
           <Badge variant="secondary" className="text-sm">
-            {totalAccounts} conta{totalAccounts > 1 ? 's' : ''} conectada{totalAccounts > 1 ? 's' : ''}
+            {totalAccounts} conta{totalAccounts > 1 ? 's' : ''} conectada
+            {totalAccounts > 1 ? 's' : ''}
           </Badge>
         )}
       </div>
@@ -68,19 +86,24 @@ export function EmailSettingsPage() {
       <Tabs defaultValue="accounts">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="accounts" className="gap-1.5 text-xs">
-            <Key className="h-3.5 w-3.5" />Email
+            <Key className="h-3.5 w-3.5" />
+            Email
           </TabsTrigger>
           <TabsTrigger value="outlook" className="gap-1.5 text-xs">
-            <Building2 className="h-3.5 w-3.5" />Outlook
+            <Building2 className="h-3.5 w-3.5" />
+            Outlook
           </TabsTrigger>
           <TabsTrigger value="signatures" className="gap-1.5 text-xs">
-            <Signature className="h-3.5 w-3.5" />Assinaturas
+            <Signature className="h-3.5 w-3.5" />
+            Assinaturas
           </TabsTrigger>
           <TabsTrigger value="sla" className="gap-1.5 text-xs">
-            <Clock className="h-3.5 w-3.5" />SLA
+            <Clock className="h-3.5 w-3.5" />
+            SLA
           </TabsTrigger>
           <TabsTrigger value="imap" className="gap-1.5 text-xs">
-            <Wifi className="h-3.5 w-3.5" />IMAP/SMTP
+            <Wifi className="h-3.5 w-3.5" />
+            IMAP/SMTP
           </TabsTrigger>
         </TabsList>
 
@@ -99,7 +122,7 @@ export function EmailSettingsPage() {
                   <Mail className="h-12 w-12 text-muted-foreground/30" />
                   <div className="text-center">
                     <p className="font-medium">Nenhuma conta Email conectada</p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Conecte sua conta Email para usar o Email Chat
                     </p>
                   </div>
@@ -112,7 +135,11 @@ export function EmailSettingsPage() {
                 <EmailAccountSelector
                   accounts={emailAccounts}
                   activeAccountId={emailActiveId}
-                  tokenStatus={Object.fromEntries(tokenStatus.map(s => [s.account_id, s.token_status])) as any}
+                  tokenStatus={
+                    Object.fromEntries(
+                      tokenStatus.map((s) => [s.account_id, s.token_status])
+                    ) as any
+                  }
                   isSyncing={isEmailSyncing}
                   onSelectAccount={setEmailActiveId}
                   onAddAccount={startEmailOAuth}
@@ -145,7 +172,7 @@ export function EmailSettingsPage() {
                   <Building2 className="h-12 w-12 text-muted-foreground/30" />
                   <div className="text-center">
                     <p className="font-medium">Nenhuma conta Outlook conectada</p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Conecte sua conta Microsoft para acessar emails do Outlook
                     </p>
                   </div>
@@ -156,13 +183,16 @@ export function EmailSettingsPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {outlookAccounts.map(acc => (
-                    <div key={acc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  {outlookAccounts.map((acc) => (
+                    <div
+                      key={acc.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
                       <div className="flex items-center gap-3">
                         <Building2 className="h-5 w-5 text-primary" />
                         <div>
-                          <p className="font-medium text-sm">{acc.email}</p>
-                          <Badge variant="secondary" className="text-xs mt-0.5">
+                          <p className="text-sm font-medium">{acc.email}</p>
+                          <Badge variant="secondary" className="mt-0.5 text-xs">
                             Microsoft Graph API
                           </Badge>
                         </div>
@@ -176,7 +206,9 @@ export function EmailSettingsPage() {
                             disabled={isOutlookSyncing}
                             className="gap-1.5"
                           >
-                            <RefreshCw className={`h-3.5 w-3.5 ${isOutlookSyncing ? 'animate-spin' : ''}`} />
+                            <RefreshCw
+                              className={`h-3.5 w-3.5 ${isOutlookSyncing ? 'animate-spin' : ''}`}
+                            />
                             Sincronizar
                           </Button>
                         )}
@@ -202,11 +234,17 @@ export function EmailSettingsPage() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              Requer <strong>MICROSOFT_CLIENT_ID</strong> e <strong>MICROSOFT_CLIENT_SECRET</strong> configurados
-              nas variáveis de ambiente do Supabase. Crie o app em{' '}
-              <a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer" className="underline">
+              Requer <strong>MICROSOFT_CLIENT_ID</strong> e <strong>MICROSOFT_CLIENT_SECRET</strong>{' '}
+              configurados nas variáveis de ambiente do Supabase. Crie o app em{' '}
+              <a
+                href="https://portal.azure.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
                 portal.azure.com
-              </a>.
+              </a>
+              .
             </AlertDescription>
           </Alert>
         </TabsContent>
@@ -242,7 +280,7 @@ export function EmailSettingsPage() {
                   <Input
                     type="number"
                     value={slaThreshold}
-                    onChange={e => setSlaThreshold(e.target.value)}
+                    onChange={(e) => setSlaThreshold(e.target.value)}
                     min={15}
                     max={10080}
                     className="h-9"
@@ -256,13 +294,13 @@ export function EmailSettingsPage() {
                   <Input
                     type="number"
                     value={slaWarningPct}
-                    onChange={e => setSlaWarningPct(e.target.value)}
+                    onChange={(e) => setSlaWarningPct(e.target.value)}
                     min={50}
                     max={99}
                     className="h-9"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Alerta aos {Math.round(Number(slaThreshold) * Number(slaWarningPct) / 100)}min
+                    Alerta aos {Math.round((Number(slaThreshold) * Number(slaWarningPct)) / 100)}min
                   </p>
                 </div>
               </div>
@@ -275,14 +313,18 @@ export function EmailSettingsPage() {
                 <Switch checked={businessHoursOnly} onCheckedChange={setBusinessHoursOnly} />
               </div>
               {businessHoursOnly && (
-                <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-muted">
+                <div className="grid grid-cols-2 gap-4 border-l-2 border-muted pl-4">
                   <div className="space-y-1.5">
                     <Label className="text-sm">Início (h)</Label>
                     <Select value={businessStart} onValueChange={setBusinessStart}>
-                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => i + 6).map(h => (
-                          <SelectItem key={h} value={String(h)}>{h}:00</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 6).map((h) => (
+                          <SelectItem key={h} value={String(h)}>
+                            {h}:00
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -290,10 +332,14 @@ export function EmailSettingsPage() {
                   <div className="space-y-1.5">
                     <Label className="text-sm">Fim (h)</Label>
                     <Select value={businessEnd} onValueChange={setBusinessEnd}>
-                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => i + 12).map(h => (
-                          <SelectItem key={h} value={String(h)}>{h}:00</SelectItem>
+                        {Array.from({ length: 12 }, (_, i) => i + 12).map((h) => (
+                          <SelectItem key={h} value={String(h)}>
+                            {h}:00
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -311,8 +357,9 @@ export function EmailSettingsPage() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              Para <strong>Email</strong>, use a aba Email (OAuth2). Para <strong>Outlook</strong>, use a aba Outlook (Microsoft Graph API).
-              IMAP/SMTP é para Yahoo Mail e servidores customizados.
+              Para <strong>Email</strong>, use a aba Email (OAuth2). Para <strong>Outlook</strong>,
+              use a aba Outlook (Microsoft Graph API). IMAP/SMTP é para Yahoo Mail e servidores
+              customizados.
             </AlertDescription>
           </Alert>
           <Card>
@@ -322,25 +369,61 @@ export function EmailSettingsPage() {
             <CardContent className="space-y-3">
               {[
                 { name: 'Email', method: 'OAuth2 (Google)', status: 'Suportado', color: 'green' },
-                { name: 'Outlook / Office 365', method: 'OAuth2 (Microsoft Graph API)', status: 'Suportado', color: 'green' },
-                { name: 'Yahoo Mail', method: 'IMAP + App Password', status: 'Worker externo necessário', color: 'yellow' },
-                { name: 'Servidor SMTP/IMAP', method: 'IMAP + credenciais', status: 'Worker externo necessário', color: 'yellow' },
-              ].map(p => (
-                <div key={p.name} className="flex items-center justify-between p-3 border rounded-lg">
+                {
+                  name: 'Outlook / Office 365',
+                  method: 'OAuth2 (Microsoft Graph API)',
+                  status: 'Suportado',
+                  color: 'green',
+                },
+                {
+                  name: 'Yahoo Mail',
+                  method: 'IMAP + App Password',
+                  status: 'Worker externo necessário',
+                  color: 'yellow',
+                },
+                {
+                  name: 'Servidor SMTP/IMAP',
+                  method: 'IMAP + credenciais',
+                  status: 'Worker externo necessário',
+                  color: 'yellow',
+                },
+              ].map((p) => (
+                <div
+                  key={p.name}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
                   <div>
-                    <p className="font-medium text-sm">{p.name}</p>
+                    <p className="text-sm font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.method}</p>
                   </div>
-                  <Badge variant={p.color === 'green' ? 'default' : 'secondary'} className="text-xs">
+                  <Badge
+                    variant={p.color === 'green' ? 'default' : 'secondary'}
+                    className="text-xs"
+                  >
                     {p.status}
                   </Badge>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground pt-2">
+              <p className="pt-2 text-xs text-muted-foreground">
                 Para Yahoo e IMAP customizado, integre um worker externo como{' '}
-                <a href="https://emailengine.app" target="_blank" rel="noopener noreferrer" className="underline">EmailEngine</a>
-                {' '}ou{' '}
-                <a href="https://nylas.com" target="_blank" rel="noopener noreferrer" className="underline">Nylas</a>.
+                <a
+                  href="https://emailengine.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  EmailEngine
+                </a>{' '}
+                ou{' '}
+                <a
+                  href="https://nylas.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Nylas
+                </a>
+                .
               </p>
             </CardContent>
           </Card>

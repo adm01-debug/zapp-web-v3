@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { VoiceDictationButton } from '@/components/mobile/VoiceDictationButton';
@@ -18,8 +19,8 @@ vi.mock('@/hooks/useSpeechToText', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...rest }: any) => <div>{children}</div>,
-    span: ({ children, ...rest }: any) => <span>{children}</span>,
+    div: ({ children, ..._rest }: any) => <div>{children}</div>,
+    span: ({ children, ..._rest }: any) => <span>{children}</span>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));

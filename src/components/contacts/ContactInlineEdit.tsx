@@ -56,14 +56,18 @@ export function ContactInlineEdit({
     }
   }, [isEditing]);
 
-  const validate = useCallback((val: string): string | null => {
-    if (customValidate) return customValidate(val);
-    if (required && !val.trim()) return `${label} \u00e9 obrigat\u00f3rio`;
-    if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return 'Email inv\u00e1lido';
-    if (type === 'tel' && val && !/^\+?[\d\s()-]{8,}$/.test(val)) return 'Telefone inv\u00e1lido';
-    if (type === 'url' && val && !/^https?:\/\/.+/.test(val)) return 'URL inv\u00e1lida';
-    return null;
-  }, [required, label, type, customValidate]);
+  const validate = useCallback(
+    (val: string): string | null => {
+      if (customValidate) return customValidate(val);
+      if (required && !val.trim()) return `${label} \u00e9 obrigat\u00f3rio`;
+      if (type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))
+        return 'Email inv\u00e1lido';
+      if (type === 'tel' && val && !/^\+?[\d\s()-]{8,}$/.test(val)) return 'Telefone inv\u00e1lido';
+      if (type === 'url' && val && !/^https?:\/\/.+/.test(val)) return 'URL inv\u00e1lida';
+      return null;
+    },
+    [required, label, type, customValidate]
+  );
 
   const save = useCallback(async () => {
     if (readonly) return;
@@ -90,7 +94,7 @@ export function ContactInlineEdit({
       toast.success(`${label} atualizado`);
       onSaved?.(trimmed);
       setIsEditing(false);
-    } catch (e) {
+    } catch (_e) {
       toast.error(`Erro ao salvar ${label.toLowerCase()}`);
       setEditValue(value ?? '');
     } finally {
@@ -103,10 +107,13 @@ export function ContactInlineEdit({
     setIsEditing(false);
   }, [value]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') save();
-    else if (e.key === 'Escape') cancel();
-  }, [save, cancel]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') save();
+      else if (e.key === 'Escape') cancel();
+    },
+    [save, cancel]
+  );
 
   if (isEditing) {
     return (
@@ -120,13 +127,16 @@ export function ContactInlineEdit({
           onBlur={() => setTimeout(cancel, 150)}
           disabled={isSaving}
           placeholder={placeholder ?? label}
-          className={cn("flex-1 min-w-0 px-2 py-1 text-sm border rounded bg-background focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50", className)}
+          className={cn(
+            'min-w-0 flex-1 rounded border bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50',
+            className
+          )}
           aria-label={`Editar ${label}`}
         />
         <button
           onClick={save}
           disabled={isSaving}
-          className="p-1 text-primary hover:bg-primary/10 rounded"
+          className="rounded p-1 text-primary hover:bg-primary/10"
           aria-label="Salvar"
         >
           <Check className="h-3.5 w-3.5" />
@@ -134,7 +144,7 @@ export function ContactInlineEdit({
         <button
           onClick={cancel}
           disabled={isSaving}
-          className="p-1 text-destructive-foreground hover:bg-destructive rounded"
+          className="rounded p-1 text-destructive-foreground hover:bg-destructive"
           aria-label="Cancelar"
         >
           <X className="h-3.5 w-3.5" />
@@ -146,14 +156,19 @@ export function ContactInlineEdit({
   return (
     <button
       onClick={() => !readonly && setIsEditing(true)}
-      className={cn("group flex items-center gap-1 text-sm text-left w-full hover:bg-muted/50 rounded px-1 py-0.5 transition-colors", className)}
+      className={cn(
+        'group flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-sm transition-colors hover:bg-muted/50',
+        className
+      )}
       aria-label={`Editar ${label}: ${value || 'vazio'}`}
       disabled={readonly}
     >
-      <span className={value ? 'text-foreground' : 'text-muted-foreground italic'}>
+      <span className={value ? 'text-foreground' : 'italic text-muted-foreground'}>
         {value || placeholder || `Adicionar ${label.toLowerCase()}`}
       </span>
-      {!readonly && <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
+      {!readonly && (
+        <Pencil className="h-3 w-3 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      )}
     </button>
   );
 }

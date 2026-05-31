@@ -5,15 +5,28 @@ import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  MessageSquare, Tag, UserPlus, Edit,
-  ArrowRight, Clock, ChevronDown, ChevronUp,
+  MessageSquare,
+  Tag,
+  UserPlus,
+  Edit,
+  ArrowRight,
+  Clock,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TimelineEvent {
   id: string;
-  type: 'message_sent' | 'message_received' | 'created' | 'updated' | 'tag_added' | 'assigned' | 'note';
+  type:
+    | 'message_sent'
+    | 'message_received'
+    | 'created'
+    | 'updated'
+    | 'tag_added'
+    | 'assigned'
+    | 'note';
   title: string;
   description?: string;
   timestamp: string;
@@ -36,7 +49,11 @@ const EVENT_CONFIG: Record<string, { icon: React.ElementType; color: string; bg:
   note: { icon: Edit, color: 'text-muted-foreground', bg: 'bg-muted/30' },
 };
 
-export function ContactActivityTimeline({ contactId, contactCreatedAt, className }: ContactActivityTimelineProps) {
+export function ContactActivityTimeline({
+  contactId,
+  contactCreatedAt,
+  className,
+}: ContactActivityTimelineProps) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -56,7 +73,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       });
 
       // Fetch messages
-      const { data: messages , error } = await supabase
+      const { data: messages, error: _error } = await supabase
         .from('messages')
         .select('id, content, sender, created_at')
         .eq('contact_id', contactId)
@@ -64,19 +81,20 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
         .limit(20);
 
       if (messages) {
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
           timeline.push({
             id: msg.id,
             type: msg.sender === 'agent' ? 'message_sent' : 'message_received',
             title: msg.sender === 'agent' ? 'Mensagem enviada' : 'Mensagem recebida',
-            description: (msg.content || '').substring(0, 80) + ((msg.content?.length || 0) > 80 ? '...' : ''),
+            description:
+              (msg.content || '').substring(0, 80) + ((msg.content?.length || 0) > 80 ? '...' : ''),
             timestamp: msg.created_at,
           });
         });
       }
 
       // Fetch notes
-      const { data: notes , error: notesErr } = await supabase
+      const { data: notes, error: _notesErr } = await supabase
         .from('contact_notes')
         .select('id, content, created_at')
         .eq('contact_id', contactId)
@@ -84,7 +102,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
         .limit(10);
 
       if (notes) {
-        notes.forEach(note => {
+        notes.forEach((note) => {
           timeline.push({
             id: note.id,
             type: 'note',
@@ -96,7 +114,7 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
       }
 
       // Fetch assignment events
-      const { data: assignments , error: assignmentsErr } = await supabase
+      const { data: assignments, error: _assignmentsErr } = await supabase
         .from('conversation_events')
         .select('id, event_type, created_at, metadata')
         .eq('contact_id', contactId)
@@ -104,12 +122,16 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
         .limit(10);
 
       if (assignments) {
-        assignments.forEach(evt => {
+        assignments.forEach((evt) => {
           timeline.push({
             id: evt.id,
             type: 'assigned',
-            title: evt.event_type === 'assign' ? 'Atribuído a agente' :
-                   evt.event_type === 'transfer' ? 'Transferido' : 'Evento',
+            title:
+              evt.event_type === 'assign'
+                ? 'Atribuído a agente'
+                : evt.event_type === 'transfer'
+                  ? 'Transferido'
+                  : 'Evento',
             timestamp: evt.created_at,
           });
         });
@@ -128,17 +150,17 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
 
   if (loading) {
     return (
-      <div className={cn("space-y-3", className)}>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Clock className="w-3 h-3" />
+      <div className={cn('space-y-3', className)}>
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Clock className="h-3 w-3" />
           Linha do Tempo
         </h3>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex gap-3 animate-pulse">
-            <div className="w-8 h-8 rounded-lg bg-muted" />
+          <div key={i} className="flex animate-pulse gap-3">
+            <div className="h-8 w-8 rounded-lg bg-muted" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-24 bg-muted rounded" />
-              <div className="h-2.5 w-32 bg-muted/60 rounded" />
+              <div className="h-3 w-24 rounded bg-muted" />
+              <div className="h-2.5 w-32 rounded bg-muted/60" />
             </div>
           </div>
         ))}
@@ -147,18 +169,20 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Clock className="w-3 h-3" />
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Clock className="h-3 w-3" />
           Linha do Tempo
         </h3>
-        <Badge variant="secondary" className="text-[10px]">{events.length} eventos</Badge>
+        <Badge variant="secondary" className="text-[10px]">
+          {events.length} eventos
+        </Badge>
       </div>
 
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-[15px] top-4 bottom-4 w-px bg-border/50" />
+        <div className="absolute bottom-4 left-[15px] top-4 w-px bg-border/50" />
 
         <AnimatePresence>
           {displayedEvents.map((event, index) => {
@@ -170,23 +194,30 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.04 }}
-                className="flex gap-3 relative py-1.5"
+                className="relative flex gap-3 py-1.5"
               >
-                <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 z-10",
-                  config.bg
-                )}>
-                  <Icon className={cn("w-3.5 h-3.5", config.color)} />
+                <div
+                  className={cn(
+                    'z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                    config.bg
+                  )}
+                >
+                  <Icon className={cn('h-3.5 w-3.5', config.color)} />
                 </div>
-                <div className="flex-1 min-w-0 pt-0.5">
+                <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-medium text-foreground truncate">{event.title}</p>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true, locale: ptBR })}
+                    <p className="truncate text-xs font-medium text-foreground">{event.title}</p>
+                    <span className="whitespace-nowrap text-[10px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(event.timestamp), {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}
                     </span>
                   </div>
                   {event.description && (
-                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">{event.description}</p>
+                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {event.description}
+                    </p>
                   )}
                 </div>
               </motion.div>
@@ -197,11 +228,12 @@ export function ContactActivityTimeline({ contactId, contactCreatedAt, className
 
       {events.length > 5 && (
         <Button
-          variant="ghost" size="sm"
-          className="w-full text-xs h-7 text-muted-foreground gap-1"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-full gap-1 text-xs text-muted-foreground"
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           {expanded ? 'Mostrar menos' : `Ver mais ${events.length - 5} eventos`}
         </Button>
       )}

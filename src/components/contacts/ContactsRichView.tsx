@@ -14,9 +14,24 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  UserPlus, Upload, Trash2, GitMerge, Keyboard, 
-  Search, Grid, List, Table, Map, BarChart3, Info, X, Zap, Users, Tag as TagIcon, Download
+import {
+  UserPlus,
+  Upload,
+  Trash2,
+  GitMerge,
+  Keyboard,
+  Search,
+  Grid,
+  List,
+  Table,
+  Map,
+  BarChart3,
+  Info,
+  X,
+  Zap,
+  Users,
+  Tag as TagIcon,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -57,24 +72,52 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   const { crud } = state;
 
   const {
-    contacts, totalCount, loading,
-    contactCountByType, uniqueCompanies, uniqueJobTitles, uniqueTags,
-    searchInput, handleSearchChange, clearSearch,
-    activeTab, setActiveTab,
-    filterCompany, setFilterCompany,
-    filterJobTitle, setFilterJobTitle,
-    filterTag, setFilterTag,
-    filterDateRange, setFilterDateRange,
-    sortBy, setSortBy,
-    activeFiltersCount, clearFilters,
-    showFilters, setShowFilters,
-    selectedIds, openContactChat,
-    isAddDialogOpen, setIsAddDialogOpen, newContact,
-    handleNewContactChange, handleAddContact, handleCancelForm, isSubmitting,
-    isEditDialogOpen, setIsEditDialogOpen, editingContact,
-    handleEditContactChange, handleEditContact, openEditDialog,
-    showSuccess, setShowSuccess,
-    deleteTarget, setDeleteTarget, handleDeleteContact,
+    contacts,
+    totalCount,
+    loading,
+    contactCountByType,
+    uniqueCompanies,
+    uniqueJobTitles,
+    uniqueTags,
+    searchInput,
+    handleSearchChange,
+    clearSearch,
+    activeTab,
+    setActiveTab,
+    filterCompany,
+    setFilterCompany,
+    filterJobTitle,
+    setFilterJobTitle,
+    filterTag,
+    setFilterTag,
+    filterDateRange,
+    setFilterDateRange,
+    sortBy,
+    setSortBy,
+    activeFiltersCount,
+    clearFilters,
+    showFilters,
+    setShowFilters,
+    selectedIds,
+    openContactChat,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    newContact: _newContact,
+    handleNewContactChange: _handleNewContactChange,
+    handleAddContact: _handleAddContact,
+    handleCancelForm: _handleCancelForm,
+    isSubmitting: _isSubmitting,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    editingContact,
+    handleEditContactChange: _handleEditContactChange,
+    handleEditContact: _handleEditContact,
+    openEditDialog,
+    showSuccess,
+    setShowSuccess,
+    deleteTarget,
+    setDeleteTarget,
+    handleDeleteContact,
   } = crud;
 
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -100,11 +143,11 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
       }
 
       const key = e.key.toLowerCase();
-      
+
       // Modal-agnostic shortcuts
       if (e.key === '?') {
         e.preventDefault();
-        setShowShortcutHelp(prev => !prev);
+        setShowShortcutHelp((prev) => !prev);
         return;
       }
 
@@ -118,45 +161,48 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
         case 'n':
           e.preventDefault();
           setIsAddDialogOpen(true);
-          toast.info("Atalho: Novo Registro", { duration: 1000 });
+          toast.info('Atalho: Novo Registro', { duration: 1000 });
           break;
-        case 'f':
+        case 'f': {
           e.preventDefault();
-          const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement;
+          const searchInput = document.querySelector(
+            'input[placeholder*="Buscar"]'
+          ) as HTMLInputElement;
           if (searchInput) {
             searchInput.focus();
-            toast.info("Atalho: Focar Busca", { duration: 1000 });
+            toast.info('Atalho: Focar Busca', { duration: 1000 });
           }
           break;
+        }
         case 'g':
           e.preventDefault();
           state.setViewMode('grid');
-          toast.info("Visualização: Grid", { duration: 1000 });
+          toast.info('Visualização: Grid', { duration: 1000 });
           break;
         case 'l':
           e.preventDefault();
           state.setViewMode('list');
-          toast.info("Visualização: Lista", { duration: 1000 });
+          toast.info('Visualização: Lista', { duration: 1000 });
           break;
         case 't':
           e.preventDefault();
           state.setViewMode('table');
-          toast.info("Visualização: Tabela", { duration: 1000 });
+          toast.info('Visualização: Tabela', { duration: 1000 });
           break;
         case 'm':
           e.preventDefault();
           state.setViewMode('map');
-          toast.info("Visualização: Mapa", { duration: 1000 });
+          toast.info('Visualização: Mapa', { duration: 1000 });
           break;
         case 'a':
           e.preventDefault();
           state.setViewMode('analytics');
-          toast.info("Visualização: Analytics", { duration: 1000 });
+          toast.info('Visualização: Analytics', { duration: 1000 });
           break;
         case 'p':
           e.preventDefault();
           state.setViewMode('kanban');
-          toast.info("Visualização: Pipeline (Kanban)", { duration: 1000 });
+          toast.info('Visualização: Pipeline (Kanban)', { duration: 1000 });
           break;
       }
     };
@@ -168,27 +214,28 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   // Stub de CRM batch
   const getCRMData = (_phone: string) => null;
 
-  const contactsForContent: Contact[] = useMemo(
-    () => (contacts as Contact[]) ?? [],
-    [contacts],
+  const contactsForContent: Contact[] = useMemo(() => (contacts as Contact[]) ?? [], [contacts]);
+
+  const handleContactClick = useCallback(
+    (contactId: string) => {
+      const contact = contactsForContent.find((c) => c.id === contactId);
+      if (contact) {
+        setQuickViewContact(contact);
+      }
+    },
+    [contactsForContent]
   );
 
-  const handleContactClick = useCallback((contactId: string) => {
-    const contact = contactsForContent.find(c => c.id === contactId);
-    if (contact) {
-      setQuickViewContact(contact);
-    }
-  }, [contactsForContent]);
-
   const contactsForBirthday = useMemo(
-    () => contactsForContent.map((c) => ({
-      id: c.id,
-      name: c.name,
-      avatar_url: c.avatar_url,
-      // birthday não vem nesse hook — painel mostra empty state graciosamente
-      birthday: null as string | null,
-    })),
-    [contactsForContent],
+    () =>
+      contactsForContent.map((c) => ({
+        id: c.id,
+        name: c.name,
+        avatar_url: c.avatar_url,
+        // birthday não vem nesse hook — painel mostra empty state graciosamente
+        birthday: null as string | null,
+      })),
+    [contactsForContent]
   );
 
   const tabs = useMemo(() => {
@@ -200,13 +247,15 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
   }, []);
 
   return (
-    <div className={cn(
-      "flex flex-col h-full overflow-y-auto bg-background transition-all duration-300",
-      highContrast && "high-contrast-mode"
-    )}>
-      <div className="px-4 py-4 lg:px-6 space-y-4 max-w-[1600px] w-full mx-auto">
+    <div
+      className={cn(
+        'flex h-full flex-col overflow-y-auto bg-background transition-all duration-300',
+        highContrast && 'high-contrast-mode'
+      )}
+    >
+      <div className="mx-auto w-full max-w-[1600px] space-y-4 px-4 py-4 lg:px-6">
         {/* ── KPIs + Aniversários ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
           <ContactStatsCards
             totalCount={totalCount}
             contactCountByType={contactCountByType}
@@ -215,66 +264,69 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
               created_at: c.created_at,
             }))}
           />
-          <ContactBirthdayPanel
-            contacts={contactsForBirthday}
-            onContactClick={openContactChat}
-          />
+          <ContactBirthdayPanel contacts={contactsForBirthday} onContactClick={openContactChat} />
         </div>
 
         {/* ── Header + ação rápida ────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent sm:text-4xl">
+            <h1 className="bg-gradient-to-br from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
               Hub de Contatos
             </h1>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5 font-medium text-foreground/80">
-                <Users className="w-4 h-4 text-primary/60" />
+                <Users className="h-4 w-4 text-primary/60" />
                 {totalCount.toLocaleString('pt-BR')} registros
               </span>
-              <span className="w-1 h-1 rounded-full bg-border" />
-              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase">Hana Smart View</span>
+              <span className="h-1 w-1 rounded-full bg-border" />
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary">
+                Hana Smart View
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant={highContrast ? "default" : "outline"}
+              variant={highContrast ? 'default' : 'outline'}
               size="sm"
               onClick={() => setHighContrast(!highContrast)}
               className={cn(
-                "hidden md:flex gap-2 transition-all",
-                !highContrast ? "border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5" : "bg-foreground text-background hover:bg-foreground/90"
+                'hidden gap-2 transition-all md:flex',
+                !highContrast
+                  ? 'border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5'
+                  : 'bg-foreground text-background hover:bg-foreground/90'
               )}
               title="Alto Contraste"
             >
-              <Zap className={cn("w-4 h-4", highContrast ? "text-warning" : "text-muted-foreground")} />
+              <Zap
+                className={cn('h-4 w-4', highContrast ? 'text-warning' : 'text-muted-foreground')}
+              />
               <span className="sr-only">Contraste</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowShortcutHelp(true)}
-              className="hidden md:flex gap-2 border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
+              className="hidden gap-2 border-muted-foreground/20 transition-all hover:border-primary/40 hover:bg-primary/5 md:flex"
               title="Atalhos de Teclado (?)"
             >
-              <Keyboard className="w-4 h-4 text-muted-foreground" />
+              <Keyboard className="h-4 w-4 text-muted-foreground" />
               <span className="sr-only">Atalhos</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsImportOpen(true)}
-              className="gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all"
+              className="gap-2 border-primary/20 transition-all hover:border-primary/40 hover:bg-primary/5"
             >
-              <Upload className="w-4 h-4 text-primary" />
-              <span className="hidden sm:inline font-medium">Importar CSV</span>
+              <Upload className="h-4 w-4 text-primary" />
+              <span className="hidden font-medium sm:inline">Importar CSV</span>
             </Button>
             <Button
               size="sm"
               onClick={() => setIsAddDialogOpen(true)}
-              className="gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all font-medium"
+              className="gap-2 font-medium shadow-lg shadow-primary/20 transition-all hover:shadow-primary/30"
             >
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="h-4 w-4" />
               Novo Registro
             </Button>
           </div>
@@ -285,7 +337,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           <TabsList className="h-auto flex-wrap justify-start gap-1 bg-muted/40 p-1">
             <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-background">
               Todos
-              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
                 {(contactCountByType.all ?? totalCount).toLocaleString('pt-BR')}
               </Badge>
             </TabsTrigger>
@@ -305,20 +357,26 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
                       {cfg?.label || key}
                     </span>
                     {count > 0 && (
-                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                      <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
                         {count.toLocaleString('pt-BR')}
                       </Badge>
                     )}
                   </TabsTrigger>
                 );
               })}
-            <div className="w-px h-6 bg-border mx-1 my-auto hidden sm:block" />
-            <TabsTrigger value="duplicates" className="gap-2 data-[state=active]:bg-background text-warning-foreground hover:text-warning-foreground transition-colors">
-              <GitMerge className="w-3.5 h-3.5" />
+            <div className="mx-1 my-auto hidden h-6 w-px bg-border sm:block" />
+            <TabsTrigger
+              value="duplicates"
+              className="gap-2 text-warning-foreground transition-colors hover:text-warning-foreground data-[state=active]:bg-background"
+            >
+              <GitMerge className="h-3.5 w-3.5" />
               Duplicados
             </TabsTrigger>
-            <TabsTrigger value="trash" className="gap-2 data-[state=active]:bg-background text-destructive hover:text-destructive/80 transition-colors">
-              <Trash2 className="w-3.5 h-3.5" />
+            <TabsTrigger
+              value="trash"
+              className="gap-2 text-destructive transition-colors hover:text-destructive/80 data-[state=active]:bg-background"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
               Lixeira
             </TabsTrigger>
           </TabsList>
@@ -399,73 +457,73 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
                   initial={{ y: 100, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 100, opacity: 0 }}
-                  className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-background/10 backdrop-blur-xl"
+                  className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-background/10 bg-foreground px-4 py-3 text-background shadow-2xl backdrop-blur-xl"
                 >
                   <div className="flex items-center gap-2 border-r border-background/20 pr-4">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                       {selectedIds.length}
                     </div>
-                    <span className="text-sm font-semibold whitespace-nowrap">Selecionados</span>
+                    <span className="whitespace-nowrap text-sm font-semibold">Selecionados</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 gap-2 px-3 text-background hover:bg-background/10"
                       onClick={() => state.setIsBulkTagOpen(true)}
                     >
-                      <TagIcon className="w-4 h-4" />
+                      <TagIcon className="h-4 w-4" />
                       <span className="hidden sm:inline">Etiquetar</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 gap-2 px-3 text-background hover:bg-background/10"
                       onClick={() => state.setIsMergeOpen(true)}
                     >
-                      <GitMerge className="w-4 h-4" />
+                      <GitMerge className="h-4 w-4" />
                       <span className="hidden sm:inline">Mesclar</span>
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-background hover:bg-background/10 h-9 px-3 gap-2"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 gap-2 px-3 text-background hover:bg-background/10"
                       onClick={() => state.handleExportCSV()}
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="h-4 w-4" />
                       <span className="hidden sm:inline">Exportar</span>
                     </Button>
-                    <div className="w-px h-6 bg-background/20 mx-1" />
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-destructive-foreground hover:bg-destructive/20 h-9 px-3 gap-2"
+                    <div className="mx-1 h-6 w-px bg-background/20" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 gap-2 px-3 text-destructive-foreground hover:bg-destructive/20"
                       onClick={() => {
                         const count = selectedIds.length;
                         toast.error(`Excluir ${count} contatos?`, {
                           action: {
-                            label: "Confirmar",
+                            label: 'Confirmar',
                             onClick: () => {
-                              selectedIds.forEach(id => handleDeleteContact(id));
+                              selectedIds.forEach((id) => handleDeleteContact(id));
                               crud.setSelectedIds([]);
-                            }
-                          }
+                            },
+                          },
                         });
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                       <span className="hidden sm:inline">Excluir</span>
                     </Button>
                   </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-background hover:bg-background/10 rounded-full"
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-background hover:bg-background/10"
                     onClick={() => crud.setSelectedIds([])}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </motion.div>
               )}
@@ -487,9 +545,9 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           setQuickViewContact(null);
           setDeleteTarget(c as never);
         }}
-        onOpenChat={(phone, name) => {
+        onOpenChat={(_phone, _name) => {
           setQuickViewContact(null);
-          openContactChat(quickViewContact?.id || "");
+          openContactChat(quickViewContact?.id || '');
         }}
       />
 
@@ -501,79 +559,118 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 p-4 backdrop-blur-md"
             onClick={() => setShowShortcutHelp(false)}
           >
             <motion.div
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
-              className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative"
-              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Keyboard className="w-5 h-5 text-primary" />
+              <div className="mb-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Keyboard className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">Atalhos de Teclado</h2>
                   <p className="text-sm text-muted-foreground">Aumente sua produtividade</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="ml-auto" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto"
                   onClick={() => setShowShortcutHelp(false)}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ações</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Ações
+                    </p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><UserPlus className="w-3.5 h-3.5" /> Novo Registro</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">N</kbd>
+                      <span className="flex items-center gap-2">
+                        <UserPlus className="h-3.5 w-3.5" /> Novo Registro
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        N
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><Search className="w-3.5 h-3.5" /> Buscar</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">F</kbd>
+                      <span className="flex items-center gap-2">
+                        <Search className="h-3.5 w-3.5" /> Buscar
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        F
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><Info className="w-3.5 h-3.5" /> Ajuda</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">?</kbd>
+                      <span className="flex items-center gap-2">
+                        <Info className="h-3.5 w-3.5" /> Ajuda
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        ?
+                      </kbd>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Visualizações</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Visualizações
+                    </p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><Grid className="w-3.5 h-3.5" /> Grid</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">G</kbd>
+                      <span className="flex items-center gap-2">
+                        <Grid className="h-3.5 w-3.5" /> Grid
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        G
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><List className="w-3.5 h-3.5" /> Lista</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">L</kbd>
+                      <span className="flex items-center gap-2">
+                        <List className="h-3.5 w-3.5" /> Lista
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        L
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><Table className="w-3.5 h-3.5" /> Tabela</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">T</kbd>
+                      <span className="flex items-center gap-2">
+                        <Table className="h-3.5 w-3.5" /> Tabela
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        T
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><Map className="w-3.5 h-3.5" /> Mapa</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">M</kbd>
+                      <span className="flex items-center gap-2">
+                        <Map className="h-3.5 w-3.5" /> Mapa
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        M
+                      </kbd>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2"><BarChart3 className="w-3.5 h-3.5" /> Analytics</span>
-                      <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] ">A</kbd>
+                      <span className="flex items-center gap-2">
+                        <BarChart3 className="h-3.5 w-3.5" /> Analytics
+                      </span>
+                      <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px]">
+                        A
+                      </kbd>
                     </div>
                   </div>
                 </div>
-                
-                <div className="pt-4 border-t border-border/50 text-center">
-                  <p className="text-xs text-muted-foreground italic">Pressione <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] ">Esc</kbd> para fechar</p>
+
+                <div className="border-t border-border/50 pt-4 text-center">
+                  <p className="text-xs italic text-muted-foreground">
+                    Pressione <kbd className="rounded bg-muted px-1 py-0.5 text-[9px]">Esc</kbd>{' '}
+                    para fechar
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -614,7 +711,7 @@ export const ContactsRichView: React.FC<ContactsRichViewProps> = () => {
           setQuickViewContact(null);
           setDeleteTarget(c as never);
         }}
-        onOpenChat={(phone, name) => {
+        onOpenChat={(phone, _name) => {
           setQuickViewContact(null);
           openContactChat(phone);
         }}

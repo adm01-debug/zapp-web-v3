@@ -12,6 +12,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { log } from '@/lib/logger';
 import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -51,9 +52,9 @@ export function useContactsRealtime({
       .on(
         'postgres_changes',
         {
-          event:  '*',
+          event: '*',
           schema: 'public',
-          table:  'evolution_contacts',
+          table: 'evolution_contacts',
           filter: `instance_name=eq.${instanceName}`,
         },
         (payload) => {
@@ -64,7 +65,6 @@ export function useContactsRealtime({
           if (eventType === 'INSERT') {
             // New contact or restored contact
             onInsert?.(newRow as ContactPayload);
-
           } else if (eventType === 'UPDATE') {
             const newContact = newRow as ContactPayload;
             const oldContact = oldRow as ContactPayload;
@@ -83,7 +83,6 @@ export function useContactsRealtime({
 
             // Normal update
             onUpdate?.(newContact);
-
           } else if (eventType === 'DELETE') {
             // Hard delete (rare with soft-delete enabled)
             const deletedId = (oldRow as ContactPayload).id;
@@ -93,7 +92,7 @@ export function useContactsRealtime({
       )
       .subscribe((status) => {
         if (import.meta.env.DEV) {
-          console.debug(`[useContactsRealtime] Channel "${channelName}" status: ${status}`);
+          log.debug(`[useContactsRealtime] Channel "${channelName}" status: ${status}`);
         }
       });
 

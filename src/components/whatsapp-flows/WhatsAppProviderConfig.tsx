@@ -5,14 +5,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { 
-  Smartphone, 
-  Globe, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
+import {
+  Smartphone,
+  Globe,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
   RefreshCcw,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -38,13 +38,13 @@ export default function WhatsAppProviderConfig() {
         .from('whatsapp_connections_safe')
         .select('*')
         .limit(1);
-      
+
       if (configs && configs.length > 0) {
         const config = configs[0];
         setProvider(config.provider_type || 'evolution');
         setBaseUrl(config.base_url || '');
       }
-    } catch (err) {
+    } catch (_err) {
       console.warn('Configuração inicial não encontrada.');
     } finally {
       setIsLoading(false);
@@ -58,9 +58,9 @@ export default function WhatsAppProviderConfig() {
       if (provider === 'evolution') {
         // Simulação de chamada de health check da Evolution API
         const response = await fetch(`${baseUrl}/instance/fetchInstances`, {
-          headers: { 'apikey': apiKey }
+          headers: { apikey: apiKey },
         });
-        
+
         if (response.ok) {
           setStatus({ ok: true, message: 'Evolution API conectada com sucesso!' });
           toast.success('Conexão validada!');
@@ -84,7 +84,7 @@ export default function WhatsAppProviderConfig() {
       const { error } = await (supabase as any).rpc('rpc_upsert_whatsapp_provider', {
         p_provider_type: provider,
         p_base_url: baseUrl,
-        p_api_key: apiKey // O RPC deve tratar o armazenamento seguro (vault/env)
+        p_api_key: apiKey, // O RPC deve tratar o armazenamento seguro (vault/env)
       } as any);
 
       if (error) throw error;
@@ -95,11 +95,15 @@ export default function WhatsAppProviderConfig() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-12"><Loader2 className="animate-spin" /></div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4">
+    <div className="mx-auto max-w-4xl space-y-6 p-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold">Configuração de WhatsApp</h1>
         <p className="text-muted-foreground">Escolha como o sistema se conectará ao WhatsApp.</p>
@@ -110,7 +114,7 @@ export default function WhatsAppProviderConfig() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5" />
+                <Smartphone className="h-5 w-5" />
                 Sem API Oficial
               </CardTitle>
               <RadioGroup value={provider} onValueChange={(v) => setProvider(v as ProviderType)}>
@@ -122,10 +126,16 @@ export default function WhatsAppProviderConfig() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Sem custos de setup</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Ativação instantânea</li>
-              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-warning" /> Maior risco de banimento</li>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Sem custos de setup
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Ativação instantânea
+              </li>
+              <li className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-warning" /> Maior risco de banimento
+              </li>
             </ul>
           </CardContent>
         </Card>
@@ -134,7 +144,7 @@ export default function WhatsAppProviderConfig() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
+                <Globe className="h-5 w-5" />
                 Evolution API
               </CardTitle>
               <RadioGroup value={provider} onValueChange={(v) => setProvider(v as ProviderType)}>
@@ -146,17 +156,23 @@ export default function WhatsAppProviderConfig() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm space-y-2 text-muted-foreground">
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> Alta performance</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> API REST robusta</li>
-              <li className="flex items-center gap-2"><AlertCircle className="w-4 h-4 text-primary" /> Requer servidor próprio</li>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Alta performance
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> API REST robusta
+              </li>
+              <li className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-primary" /> Requer servidor próprio
+              </li>
             </ul>
           </CardContent>
         </Card>
       </div>
 
       {provider === 'evolution' && (
-        <Card className="animate-in slide-in-from-top-4 duration-300">
+        <Card className="duration-300 animate-in slide-in-from-top-4">
           <CardHeader>
             <CardTitle className="text-lg">Credenciais Evolution</CardTitle>
             <CardDescription>Informe os dados do seu servidor Evolution API.</CardDescription>
@@ -164,39 +180,52 @@ export default function WhatsAppProviderConfig() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="url">URL do Servidor</Label>
-              <Input 
-                id="url" 
-                placeholder="https://api.meuserver.com" 
+              <Input
+                id="url"
+                placeholder="https://api.meuserver.com"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="key">Global API Key</Label>
-              <Input 
-                id="key" 
-                type="password" 
-                placeholder="Suas credenciais seguras" 
+              <Input
+                id="key"
+                type="password"
+                placeholder="Suas credenciais seguras"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
             </div>
 
             {status && (
-              <Alert variant={status.ok ? 'default' : 'destructive'} className={status.ok ? 'bg-primary/10 border-primary/20 text-primary-foreground' : ''}>
-                {status.ok ? <ShieldCheck className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+              <Alert
+                variant={status.ok ? 'default' : 'destructive'}
+                className={
+                  status.ok ? 'border-primary/20 bg-primary/10 text-primary-foreground' : ''
+                }
+              >
+                {status.ok ? (
+                  <ShieldCheck className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
                 <AlertTitle>{status.ok ? 'Sucesso' : 'Falha'}</AlertTitle>
                 <AlertDescription>{status.message}</AlertDescription>
               </Alert>
             )}
 
             <div className="flex gap-3 pt-2">
-              <Button 
-                variant="outline" 
-                onClick={validateCredentials} 
+              <Button
+                variant="outline"
+                onClick={validateCredentials}
                 disabled={isVerifying || !baseUrl || !apiKey}
               >
-                {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+                {isVerifying ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                )}
                 Validar Conexão
               </Button>
               <Button onClick={handleSave} disabled={!status?.ok}>

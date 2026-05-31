@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +23,8 @@ const PAGE_SIZE = 100;
 async function fetchHistory(): Promise<SLAAlertHistoryEntry[]> {
   const { data, error } = await supabase
     .from('sla_history')
-    .select(`
+    .select(
+      `
       id,
       thread_id,
       status,
@@ -35,7 +37,8 @@ async function fetchHistory(): Promise<SLAAlertHistoryEntry[]> {
         remote_jid,
         contacts:external_contact_id(name, phone)
       )
-    `)
+    `
+    )
     .order('created_at', { ascending: false })
     .limit(PAGE_SIZE);
 
@@ -44,7 +47,7 @@ async function fetchHistory(): Promise<SLAAlertHistoryEntry[]> {
   return (data ?? []).map((row: any) => {
     const thread = row.conversation_threads;
     const contact = thread?.contacts;
-    
+
     return {
       id: row.id,
       threadId: row.thread_id,

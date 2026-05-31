@@ -21,15 +21,23 @@ export async function runFullHealthCheck(): Promise<HealthStatus[]> {
     if (error) throw error;
     results.push({ service: 'Database', status: 'ok', message: 'Conexão estável', latency });
   } catch (e) {
-    results.push({ service: 'Database', status: 'error', message: `Falha na conexão: ${e.message}` });
+    results.push({
+      service: 'Database',
+      status: 'error',
+      message: `Falha na conexão: ${e.message}`,
+    });
   }
 
   // 2. Feature Flags Load
   try {
     await loadFeatureFlags();
     results.push({ service: 'FeatureFlags', status: 'ok', message: 'Sincronização ativa' });
-  } catch (e) {
-    results.push({ service: 'FeatureFlags', status: 'warning', message: 'Usando defaults (cache falhou)' });
+  } catch (_e) {
+    results.push({
+      service: 'FeatureFlags',
+      status: 'warning',
+      message: 'Usando defaults (cache falhou)',
+    });
   }
 
   // 3. Message Retry Queue Status
@@ -38,15 +46,15 @@ export async function runFullHealthCheck(): Promise<HealthStatus[]> {
       .from('message_retry_queue')
       .select('status, count')
       .eq('status', 'pending');
-    
+
     if (error) throw error;
     const pendingCount = data?.length || 0;
-    results.push({ 
-      service: 'MessageQueue', 
-      status: pendingCount > 50 ? 'warning' : 'ok', 
-      message: `${pendingCount} mensagens aguardando re-tentativa` 
+    results.push({
+      service: 'MessageQueue',
+      status: pendingCount > 50 ? 'warning' : 'ok',
+      message: `${pendingCount} mensagens aguardando re-tentativa`,
     });
-  } catch (e) {
+  } catch (_e) {
     results.push({ service: 'MessageQueue', status: 'error', message: 'Fila inacessível' });
   }
 

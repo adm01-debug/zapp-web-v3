@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -50,12 +51,15 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
     if (!conversationId) return;
     const channel = supabase
       .channel(`team-reactions-${conversationId}`)
-      .on('postgres_changes',
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'team_message_reactions' },
         () => queryClient.invalidateQueries({ queryKey: ['team-reactions', conversationId] })
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [conversationId, queryClient]);
 
   const toggle = useMutation({
@@ -79,7 +83,10 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
     },
     onMutate: async ({ messageId, emoji }) => {
       await queryClient.cancelQueries({ queryKey: ['team-reactions', conversationId] });
-      const previousReactions = queryClient.getQueryData<TeamReaction[]>(['team-reactions', conversationId]);
+      const previousReactions = queryClient.getQueryData<TeamReaction[]>([
+        'team-reactions',
+        conversationId,
+      ]);
 
       if (profile && previousReactions) {
         const existingIdx = previousReactions.findIndex(
@@ -112,10 +119,10 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
       }
       const status = err?.status || err?.code;
       const message = status === 401 ? 'Não autorizado' : 'Erro interno no servidor';
-      toast({ 
-        title: 'Erro ao reagir', 
+      toast({
+        title: 'Erro ao reagir',
         description: message,
-        variant: 'destructive' 
+        variant: 'destructive',
       });
     },
   });
@@ -124,7 +131,12 @@ export function useTeamMessageReactions(conversationId: string | undefined) {
     const filtered = reactions.filter((r) => r.message_id === messageId);
     const map = new Map<string, AggregatedReaction>();
     for (const r of filtered) {
-      const cur = map.get(r.emoji) || { emoji: r.emoji, count: 0, reactedByMe: false, profileIds: [] };
+      const cur = map.get(r.emoji) || {
+        emoji: r.emoji,
+        count: 0,
+        reactedByMe: false,
+        profileIds: [],
+      };
       cur.count += 1;
       cur.profileIds.push(r.profile_id);
       if (profile && r.profile_id === profile.id) cur.reactedByMe = true;

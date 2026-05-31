@@ -19,7 +19,7 @@ export interface BitrixApiResponse {
   [key: string]: unknown;
 }
 
-interface BitrixEntity {
+interface _BitrixEntity {
   ID?: string;
   TITLE?: string;
   NAME?: string;
@@ -45,7 +45,7 @@ export const useBitrixApi = () => {
 
     try {
       const { data: response, error: invokeError } = await supabase.functions.invoke('bitrix-api', {
-        body: { action, entityType, entityId, data, filters }
+        body: { action, entityType, entityId, data, filters },
       });
 
       if (invokeError) {

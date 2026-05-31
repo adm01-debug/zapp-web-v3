@@ -1,6 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
-import { Star, Archive, UserPlus, RefreshCw, Reply, ReplyAll, Forward, ChevronDown, ChevronUp, Paperclip, Clock, AlertTriangle } from 'lucide-react';
+import {
+  Star,
+  Archive,
+  UserPlus,
+  RefreshCw,
+  Reply,
+  ReplyAll,
+  Forward,
+  ChevronDown,
+  ChevronUp,
+  Paperclip,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -11,35 +24,38 @@ const supabase = _supabase as any;
 import type { EmailThread } from '@/hooks/useEmail';
 
 interface EmailMessage {
-  id:           string;
-  thread_id:    string;
+  id: string;
+  thread_id: string;
   email_msg_id: string;
-  from_email:   string | null;
-  from_name:    string | null;
-  to_emails:    string[] | null;
-  cc_emails:    string[] | null;
-  subject:      string | null;
-  snippet:      string | null;
-  body_html:    string | null;
-  body_text:    string | null;
-  is_read:      boolean;
-  date:         string | null;
+  from_email: string | null;
+  from_name: string | null;
+  to_emails: string[] | null;
+  cc_emails: string[] | null;
+  subject: string | null;
+  snippet: string | null;
+  body_html: string | null;
+  body_text: string | null;
+  is_read: boolean;
+  date: string | null;
   has_attachments: boolean;
 }
 
 interface EmailThreadViewProps {
-  thread:        EmailThread;
-  onReply?:      (thread: EmailThread) => void;
-  onStar?:       (threadId: string, starred: boolean) => void;
-  onArchive?:    (threadId: string) => void;
-  onAssign?:     (threadId: string, agentId: string | null) => void;
+  thread: EmailThread;
+  onReply?: (thread: EmailThread) => void;
+  onStar?: (threadId: string, starred: boolean) => void;
+  onArchive?: (threadId: string) => void;
+  onAssign?: (threadId: string, agentId: string | null) => void;
 }
 
 function formatFullDate(iso: string | null): string {
   if (!iso) return '';
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -48,36 +64,40 @@ function MessageBubble({
   expanded,
   onToggle,
 }: {
-  msg:      EmailMessage;
+  msg: EmailMessage;
   expanded: boolean;
   onToggle: () => void;
 }) {
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-lg border">
       {/* Header da mensagem */}
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30"
         onClick={onToggle}
         aria-expanded={expanded}
       >
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
             {(msg.from_name ?? msg.from_email ?? '?')[0].toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-sm truncate">
+            <span className="truncate text-sm font-medium">
               {msg.from_name ?? msg.from_email ?? 'Desconhecido'}
             </span>
-            <div className="flex items-center gap-2 shrink-0 ml-2">
+            <div className="ml-2 flex shrink-0 items-center gap-2">
               {msg.has_attachments && <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />}
               <span className="text-xs text-muted-foreground">{formatFullDate(msg.date)}</span>
-              {expanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+              {expanded ? (
+                <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
             </div>
           </div>
           {!expanded && (
-            <p className="text-xs text-muted-foreground truncate mt-0.5">{msg.snippet}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{msg.snippet}</p>
           )}
         </div>
       </button>
@@ -86,20 +106,20 @@ function MessageBubble({
       {expanded && (
         <div className="px-4 pb-4">
           {/* Para / CC */}
-          <div className="text-xs text-muted-foreground mb-3 space-y-0.5">
+          <div className="mb-3 space-y-0.5 text-xs text-muted-foreground">
             <div>Para: {(msg.to_emails ?? []).join(', ')}</div>
-            {msg.cc_emails && msg.cc_emails.length > 0 && (
-              <div>CC: {msg.cc_emails.join(', ')}</div>
-            )}
+            {msg.cc_emails && msg.cc_emails.length > 0 && <div>CC: {msg.cc_emails.join(', ')}</div>}
           </div>
           {/* Corpo HTML */}
           {msg.body_html ? (
             <div
-              className="prose prose-sm max-w-none dark:prose-invert text-sm overflow-auto"
+              className="prose prose-sm dark:prose-invert max-w-none overflow-auto text-sm"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body_html) }}
             />
           ) : (
-            <p className="text-sm whitespace-pre-wrap text-foreground">{msg.body_text ?? msg.snippet}</p>
+            <p className="whitespace-pre-wrap text-sm text-foreground">
+              {msg.body_text ?? msg.snippet}
+            </p>
           )}
         </div>
       )}
@@ -114,14 +134,14 @@ export function EmailThreadView({
   onArchive,
   onAssign,
 }: EmailThreadViewProps) {
-  const [messages, setMessages]       = useState<EmailMessage[]>([]);
-  const [isLoading, setIsLoading]     = useState(true);
+  const [messages, setMessages] = useState<EmailMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedMsgs, setExpandedMsgs] = useState<Set<string>>(new Set());
 
   const loadMessages = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('email_messages')
         .select('*')
         .eq('thread_id', thread.id)
@@ -138,32 +158,42 @@ export function EmailThreadView({
     }
   }, [thread.id]);
 
-  useEffect(() => { loadMessages(); }, [loadMessages]);
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
 
   const toggleMsg = (msgId: string) => {
-    setExpandedMsgs(prev => {
+    setExpandedMsgs((prev) => {
       const next = new Set(prev);
-      if (next.has(msgId)) next.delete(msgId); else next.add(msgId);
+      if (next.has(msgId)) next.delete(msgId);
+      else next.add(msgId);
       return next;
     });
   };
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex flex-col h-full">
+      <div className="flex h-full flex-col">
         {/* Header da thread */}
-        <div className="flex items-start justify-between px-6 py-4 border-b shrink-0">
-          <div className="flex-1 min-w-0 pr-4">
-            <h1 className="font-semibold text-base truncate">{thread.subject ?? '(sem assunto)'}</h1>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+        <div className="flex shrink-0 items-start justify-between border-b px-6 py-4">
+          <div className="min-w-0 flex-1 pr-4">
+            <h1 className="truncate text-base font-semibold">
+              {thread.subject ?? '(sem assunto)'}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
               {thread.sla_status === 'breached' && (
-                <Badge variant="destructive" className="text-xs gap-1">
-                  <AlertTriangle className="h-3 w-3" />SLA Violado
+                <Badge variant="destructive" className="gap-1 text-xs">
+                  <AlertTriangle className="h-3 w-3" />
+                  SLA Violado
                 </Badge>
               )}
               {thread.sla_status === 'warning' && (
-                <Badge variant="secondary" className="text-xs gap-1 text-warning-foreground bg-warning">
-                  <Clock className="h-3 w-3" />Prazo Próximo
+                <Badge
+                  variant="secondary"
+                  className="gap-1 bg-warning text-xs text-warning-foreground"
+                >
+                  <Clock className="h-3 w-3" />
+                  Prazo Próximo
                 </Badge>
               )}
               <Badge variant="secondary" className="text-xs">
@@ -173,7 +203,7 @@ export function EmailThreadView({
           </div>
 
           {/* Ações */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex shrink-0 items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -182,10 +212,14 @@ export function EmailThreadView({
                   className="h-8 w-8"
                   onClick={() => onStar?.(thread.id, !thread.is_starred)}
                 >
-                  <Star className={`h-4 w-4 ${thread.is_starred ? 'text-warning fill-yellow-500' : 'text-muted-foreground'}`} />
+                  <Star
+                    className={`h-4 w-4 ${thread.is_starred ? 'fill-yellow-500 text-warning' : 'text-muted-foreground'}`}
+                  />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{thread.is_starred ? 'Remover favorito' : 'Favoritar'}</TooltipContent>
+              <TooltipContent>
+                {thread.is_starred ? 'Remover favorito' : 'Favoritar'}
+              </TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -218,13 +252,10 @@ export function EmailThreadView({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={loadMessages}
-                >
-                  <RefreshCw className={`h-4 w-4 text-muted-foreground ${isLoading ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={loadMessages}>
+                  <RefreshCw
+                    className={`h-4 w-4 text-muted-foreground ${isLoading ? 'animate-spin' : ''}`}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Atualizar</TooltipContent>
@@ -235,16 +266,16 @@ export function EmailThreadView({
         {/* Mensagens */}
         <ScrollArea className="flex-1 px-6 py-4">
           {isLoading ? (
-            <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
               Carregando mensagens...
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
+            <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
               Nenhuma mensagem nesta thread
             </div>
           ) : (
             <div className="space-y-3">
-              {messages.map(msg => (
+              {messages.map((msg) => (
                 <MessageBubble
                   key={msg.id}
                   msg={msg}
@@ -257,12 +288,8 @@ export function EmailThreadView({
         </ScrollArea>
 
         {/* Barra de resposta */}
-        <div className="px-6 py-3 border-t shrink-0 flex items-center gap-2">
-          <Button
-            onClick={() => onReply?.(thread)}
-            className="gap-2"
-            size="sm"
-          >
+        <div className="flex shrink-0 items-center gap-2 border-t px-6 py-3">
+          <Button onClick={() => onReply?.(thread)} className="gap-2" size="sm">
             <Reply className="h-3.5 w-3.5" />
             Responder
           </Button>

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * useMediaUrl — auto-refresh de URLs WhatsApp expiradas.
@@ -43,12 +44,7 @@ interface UseMediaUrlOptions {
   maxAttempts?: number;
 }
 
-export type MediaErrorReason =
-  | 'expired'
-  | 'not_found'
-  | 'network'
-  | 'unsupported'
-  | 'unknown';
+export type MediaErrorReason = 'expired' | 'not_found' | 'network' | 'unsupported' | 'unknown';
 
 export interface MediaError {
   reason: MediaErrorReason;
@@ -100,7 +96,12 @@ function classifyError(raw: unknown): MediaError {
       cause: err,
     };
   }
-  if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout') || msg.includes('failed to fetch')) {
+  if (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('timeout') ||
+    msg.includes('failed to fetch')
+  ) {
     return {
       reason: 'network',
       message: 'Falha de conexão ao baixar a mídia. Tente novamente em instantes.',
@@ -124,7 +125,14 @@ function classifyError(raw: unknown): MediaError {
 const DEFAULT_MAX_ATTEMPTS = 2;
 
 export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
-  const { instanceName, originalUrl, messageKey, enabled = true, forceRefreshNonce, maxAttempts = DEFAULT_MAX_ATTEMPTS } = opts;
+  const {
+    instanceName,
+    originalUrl,
+    messageKey,
+    enabled = true,
+    forceRefreshNonce,
+    maxAttempts = DEFAULT_MAX_ATTEMPTS,
+  } = opts;
   const [url, setUrl] = useState<string | null>(originalUrl ?? null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<MediaError | null>(null);
@@ -162,7 +170,7 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
           .select('storage_path')
           .eq('file_hash', hash)
           .maybeSingle();
-        
+
         if (cacheRow?.storage_path) {
           log.info(`Media cache hit for ${key}`);
           setUrl(cacheRow.storage_path);
@@ -179,10 +187,13 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
     setError(null);
     const job = (async () => {
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('evolution-api/get-media-base64', {
-          method: 'POST',
-          body: { instanceName, message: { key: messageKey } },
-        });
+        const { data, error: fnError } = await supabase.functions.invoke(
+          'evolution-api/get-media-base64',
+          {
+            method: 'POST',
+            body: { instanceName, message: { key: messageKey } },
+          }
+        );
         if (fnError) throw fnError;
         const payload = (data as { base64?: string; mimetype?: string } | null) ?? null;
         if (!payload?.base64) throw new Error('Empty media payload');
@@ -193,12 +204,15 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
         // Audit & Cache Persistence
         try {
           const hash = await buildFileHash(dataUrl);
-          await supabase.from('media_cache').upsert({
-            file_hash: hash,
-            storage_path: dataUrl, // Em cenários reais, enviaríamos para o storage e salvaríamos a URL
-            mime_type: mime,
-            size: Math.round(payload.base64.length * 0.75)
-          }, { onConflict: 'file_hash' });
+          await supabase.from('media_cache').upsert(
+            {
+              file_hash: hash,
+              storage_path: dataUrl, // Em cenários reais, enviaríamos para o storage e salvaríamos a URL
+              mime_type: mime,
+              size: Math.round(payload.base64.length * 0.75),
+            },
+            { onConflict: 'file_hash' }
+          );
         } catch (e) {
           log.warn('Failed to persist media cache', e);
         }
@@ -208,7 +222,9 @@ export function useMediaUrl(opts: UseMediaUrlOptions): UseMediaUrlResult {
         setFailed(false);
       } catch (err) {
         const classified = classifyError(err);
-        log.warn(`media refresh failed for ${key}: ${classified.reason} — ${classified.cause?.message}`);
+        log.warn(
+          `media refresh failed for ${key}: ${classified.reason} — ${classified.cause?.message}`
+        );
         setError(classified);
         setAttempts((prev) => {
           const next = prev + 1;

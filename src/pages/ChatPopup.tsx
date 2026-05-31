@@ -10,25 +10,12 @@ type ContactRow = Database['public']['Tables']['contacts']['Row'];
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { dbFrom } from '@/integrations/datasource/db';
-import {
-  Minus,
-  Maximize2,
-  Minimize2,
-  X,
-  MessageSquare,
-} from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from '@/components/ui/tooltip';
+import { Minus, Maximize2, Minimize2, X, MessageSquare } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
-const ChatPanel = lazy(() =>
-  import('@/features/inbox').then((m) => ({ default: m.ChatPanel }))
-);
+const ChatPanel = lazy(() => import('@/features/inbox').then((m) => ({ default: m.ChatPanel })));
 
-interface RawMessage {
+interface _RawMessage {
   id: string;
   content: string;
   message_type?: string;
@@ -43,7 +30,7 @@ interface RawMessage {
 }
 
 // This mapper is now mostly redundant as useMessages already maps to UI Message type.
-function mapToLegacyMessages(msgs: Message[]): Message[] {
+function _mapToLegacyMessages(msgs: Message[]): Message[] {
   return msgs;
 }
 
@@ -52,7 +39,7 @@ export default function ChatPopup() {
   const [contact, setContact] = useState<ContactRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMaximized, setIsMaximized] = useState(false);
-  const { messages, loading: messagesLoading } = useMessages({
+  const { messages, loading: _messagesLoading } = useMessages({
     contactId: contactId || '',
     enabled: !!contactId,
   });
@@ -60,7 +47,7 @@ export default function ChatPopup() {
   useEffect(() => {
     if (!contactId) return;
     (async () => {
-      const { data, error } = await supabase
+      const { data, _error } = await supabase
         .from('contacts')
         .select('*')
         .eq('id', contactId)
@@ -122,9 +109,7 @@ export default function ChatPopup() {
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from('whatsapp-media')
-          .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('whatsapp-media').getPublicUrl(fileName);
 
         await dbFrom('messages').insert({
           contact_id: contactId,
@@ -156,15 +141,15 @@ export default function ChatPopup() {
   // ── Loading State ──
   if (loading) {
     return (
-      <div className="h-screen bg-background flex items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-pulse" />
+            <div className="absolute inset-0 animate-pulse rounded-full border-2 border-primary/20" />
           </div>
           <div className="space-y-2 text-center">
-            <Skeleton className="h-4 w-28 mx-auto" />
-            <Skeleton className="h-3 w-20 mx-auto" />
+            <Skeleton className="mx-auto h-4 w-28" />
+            <Skeleton className="mx-auto h-3 w-20" />
           </div>
         </div>
       </div>
@@ -174,13 +159,11 @@ export default function ChatPopup() {
   // ── Not Found ──
   if (!contact || !conversation) {
     return (
-      <div className="h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-          <MessageSquare className="w-6 h-6 text-muted-foreground" />
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <MessageSquare className="h-6 w-6 text-muted-foreground" />
         </div>
-        <p className="text-sm text-muted-foreground font-medium">
-          Contato não encontrado
-        </p>
+        <p className="text-sm font-medium text-muted-foreground">Contato não encontrado</p>
         <Button variant="outline" size="sm" onClick={handleClose}>
           Fechar janela
         </Button>
@@ -190,19 +173,19 @@ export default function ChatPopup() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex h-screen flex-col overflow-hidden bg-background">
         {/* ── Thin Window Controls Bar ── */}
-        <div className="flex items-center justify-end px-2 h-8 bg-card/60 border-b border-border/50 shrink-0 select-none">
+        <div className="flex h-8 shrink-0 select-none items-center justify-end border-b border-border/50 bg-card/60 px-2">
           <div className="flex items-center gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6 text-muted-foreground hover:text-foreground rounded"
+                  className="h-6 w-6 rounded text-muted-foreground hover:text-foreground"
                   onClick={() => window.resizeTo(440, 48)}
                 >
-                  <Minus className="w-3 h-3" />
+                  <Minus className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -215,13 +198,13 @@ export default function ChatPopup() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6 text-muted-foreground hover:text-foreground rounded"
+                  className="h-6 w-6 rounded text-muted-foreground hover:text-foreground"
                   onClick={handleToggleMaximize}
                 >
                   {isMaximized ? (
-                    <Minimize2 className="w-3 h-3" />
+                    <Minimize2 className="h-3 w-3" />
                   ) : (
-                    <Maximize2 className="w-3 h-3" />
+                    <Maximize2 className="h-3 w-3" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -235,10 +218,10 @@ export default function ChatPopup() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6 text-muted-foreground hover:text-destructive rounded"
+                  className="h-6 w-6 rounded text-muted-foreground hover:text-destructive"
                   onClick={handleClose}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -249,15 +232,13 @@ export default function ChatPopup() {
         </div>
 
         {/* ── Full Chat Content (with full header & all features) ── */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <Suspense
             fallback={
-              <div className="flex items-center justify-center h-full">
+              <div className="flex h-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  <span className="text-xs text-muted-foreground">
-                    Carregando conversa...
-                  </span>
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                  <span className="text-xs text-muted-foreground">Carregando conversa...</span>
                 </div>
               </div>
             }

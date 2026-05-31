@@ -1,4 +1,3 @@
-
 type ValidationEvent = {
   timestamp: string;
   type: 'log' | 'error' | 'network' | 'render';
@@ -37,34 +36,50 @@ class ValidationLogger {
 
   private setupInterceptors() {
     // Intercept console.log/error/warn
+    // eslint-disable-next-line no-console
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
 
+    // eslint-disable-next-line no-console
     console.log = (...args: any[]) => {
-      this.addEvent('log', args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' '));
+      this.addEvent(
+        'log',
+        args.map((a) => (typeof a === 'object' ? '[Object]' : String(a))).join(' ')
+      );
       originalLog.apply(console, args);
     };
 
     console.error = (...args: any[]) => {
-      this.addEvent('error', args.map(a => typeof a === 'object' ? '[Error Object]' : String(a)).join(' '));
+      this.addEvent(
+        'error',
+        args.map((a) => (typeof a === 'object' ? '[Error Object]' : String(a))).join(' ')
+      );
       originalError.apply(console, args);
     };
 
     console.warn = (...args: any[]) => {
-      this.addEvent('log', `[WARN] ${args.map(a => typeof a === 'object' ? '[Object]' : String(a)).join(' ')}`);
+      this.addEvent(
+        'log',
+        `[WARN] ${args.map((a) => (typeof a === 'object' ? '[Object]' : String(a))).join(' ')}`
+      );
       originalWarn.apply(console, args);
     };
 
     // Intercept fetch for endpoint validation
     const originalFetch = window.fetch;
     window.fetch = async (...args: [URL | RequestInfo, RequestInit?]) => {
-      const url = typeof args[0] === 'string' ? args[0] : 
-                  (args[0] instanceof Request) ? args[0].url : String(args[0]);
-      
+      const url =
+        typeof args[0] === 'string'
+          ? args[0]
+          : args[0] instanceof Request
+            ? args[0].url
+            : String(args[0]);
+
       try {
         const response = await originalFetch(...args);
-        if (!response.ok && !url.includes('supabase.co')) { // Supabase handled separately
+        if (!response.ok && !url.includes('supabase.co')) {
+          // Supabase handled separately
           this.addEvent('network', `Failed to fetch: ${url} (${response.status})`);
         }
         return response;
@@ -80,13 +95,13 @@ class ValidationLogger {
       timestamp: new Date().toISOString(),
       type,
       message,
-      data
+      data,
     };
     this.events.unshift(event);
     if (this.events.length > this.maxEvents) {
       this.events.pop();
     }
-    
+
     // Save to localStorage
     try {
       localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 100)));
@@ -104,9 +119,9 @@ class ValidationLogger {
     return {
       summary: {
         totalEvents: this.events.length,
-        errors: this.events.filter(e => e.type === 'error').length,
-        networkFailures: this.events.filter(e => e.type === 'network').length,
-        renderChecks: this.events.filter(e => e.type === 'render').length,
+        errors: this.events.filter((e) => e.type === 'error').length,
+        networkFailures: this.events.filter((e) => e.type === 'network').length,
+        renderChecks: this.events.filter((e) => e.type === 'render').length,
       },
       events: this.events,
       browserInfo: {
@@ -114,7 +129,7 @@ class ValidationLogger {
         url: window.location.href,
         timestamp: new Date().toISOString(),
         screen: `${window.innerWidth}x${window.innerHeight}`,
-      }
+      },
     };
   }
 }
@@ -124,4 +139,3 @@ export const validationLogger = new ValidationLogger();
 if (typeof window !== 'undefined') {
   window.__zappValidationLogger = validationLogger;
 }
-

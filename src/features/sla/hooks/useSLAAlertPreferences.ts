@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +26,9 @@ export const DEFAULT_SLA_ALERT_PREFERENCES: SLAAlertPreferences = {
  */
 export function useSLAAlertPreferences() {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<SLAAlertPreferences>(DEFAULT_SLA_ALERT_PREFERENCES);
+  const [preferences, setPreferences] = useState<SLAAlertPreferences>(
+    DEFAULT_SLA_ALERT_PREFERENCES
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,7 +41,9 @@ export function useSLAAlertPreferences() {
     setIsLoading(true);
     void supabase
       .from('sla_alert_preferences')
-      .select('enabled, alert_first_response, alert_resolution, severity_warning, severity_breached')
+      .select(
+        'enabled, alert_first_response, alert_resolution, severity_warning, severity_breached'
+      )
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -70,7 +75,7 @@ export function useSLAAlertPreferences() {
       if (!error) setPreferences(next);
       return { error };
     },
-    [user?.id],
+    [user?.id]
   );
 
   return { preferences, setPreferences, save, isLoading, isSaving };

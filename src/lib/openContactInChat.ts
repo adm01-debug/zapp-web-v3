@@ -54,7 +54,7 @@ async function resolveContactId(opts: OpenContactInChatOptions): Promise<string 
   if (opts.contactId) return opts.contactId;
   const phone = opts.phone ?? jidToPhone(opts.remoteJid);
   if (!phone) return null;
-  const { data, error } = await supabase
+  const { data, _error } = await supabase
     .from('contacts')
     .select('id')
     .eq('phone', phone)
@@ -124,7 +124,7 @@ export async function openContactInChat(opts: OpenContactInChatOptions): Promise
     window.dispatchEvent(
       new CustomEvent('open-contact-chat', {
         detail: { contactId: handshakeId, messageId: target.messageId },
-      }),
+      })
     );
     if (attempts < 15) setTimeout(tryDispatch, 200);
   };

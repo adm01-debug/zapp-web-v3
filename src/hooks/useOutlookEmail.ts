@@ -41,7 +41,7 @@ export function useOutlookEmail() {
   const [accounts, setAccounts] = useState<OutlookAccount[]>([]);
   const [messages, setMessages] = useState<OutlookMessage[]>([]);
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, _setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nextLink, setNextLink] = useState<string | null>(null);
@@ -76,12 +76,18 @@ export function useOutlookEmail() {
       });
 
       if (fnErr || !data?.authUrl) {
-        setError('Erro ao obter URL de autorização Microsoft. Verifique MICROSOFT_CLIENT_ID nas env vars.');
+        setError(
+          'Erro ao obter URL de autorização Microsoft. Verifique MICROSOFT_CLIENT_ID nas env vars.'
+        );
         return;
       }
 
       // Abre popup OAuth
-      const popup = window.open(data.authUrl, 'outlook_oauth', 'width=500,height=600,scrollbars=yes');
+      const popup = window.open(
+        data.authUrl,
+        'outlook_oauth',
+        'width=500,height=600,scrollbars=yes'
+      );
       if (!popup) {
         setError('Popup bloqueado. Por favor, permita popups para este site.');
         return;
@@ -95,12 +101,17 @@ export function useOutlookEmail() {
         const { code } = event.data;
         if (!code) return;
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: exchangeData, error: exchangeErr } = await supabase.functions.invoke('outlook-oauth', {
-          body: { action: 'exchangeCode', code, userId: user.id },
-        });
+        const { data: exchangeData, error: exchangeErr } = await supabase.functions.invoke(
+          'outlook-oauth',
+          {
+            body: { action: 'exchangeCode', code, userId: user.id },
+          }
+        );
 
         if (exchangeErr || !exchangeData?.success) {
           setError('Falha ao autenticar com Microsoft. Tente novamente.');
@@ -111,85 +122,99 @@ export function useOutlookEmail() {
       };
 
       window.addEventListener('message', handler);
-
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }, [loadAccounts]);
 
   // Sincronizar inbox do Outlook
-  const syncInbox = useCallback(async (accountId?: string, link?: string) => {
-    const id = accountId ?? activeAccountId;
-    if (!id) return;
+  const syncInbox = useCallback(
+    async (accountId?: string, link?: string) => {
+      const id = accountId ?? activeAccountId;
+      if (!id) return;
 
-    setIsSyncing(true);
-    setError(null);
+      setIsSyncing(true);
+      setError(null);
 
-    try {
-      const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
-        body: { action: 'syncInbox', accountId: id, pageSize: 50, nextLink: link },
-      });
+      try {
+        const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
+          body: { action: 'syncInbox', accountId: id, pageSize: 50, nextLink: link },
+        });
 
-      if (fnErr || !data) throw new Error('Falha ao sincronizar inbox Outlook');
+        if (fnErr || !data) throw new Error('Falha ao sincronizar inbox Outlook');
 
-      setMessages(prev => link ? [...prev, ...data.messages] : data.messages);
-      setNextLink(data.nextLink ?? null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [activeAccountId]);
+        setMessages((prev) => (link ? [...prev, ...data.messages] : data.messages));
+        setNextLink(data.nextLink ?? null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    [activeAccountId]
+  );
 
   // Enviar email
-  const sendEmail = useCallback(async (params: {
-    to: string | string[];
-    cc?: string | string[];
-    subject: string;
-    bodyHtml: string;
-  }) => {
-    if (!activeAccountId) return { success: false, error: 'Nenhuma conta Outlook ativa' };
+  const sendEmail = useCallback(
+    async (params: {
+      to: string | string[];
+      cc?: string | string[];
+      subject: string;
+      bodyHtml: string;
+    }) => {
+      if (!activeAccountId) return { success: false, error: 'Nenhuma conta Outlook ativa' };
 
-    const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
-      body: {
-        action: 'sendMessage',
-        accountId: activeAccountId,
-        ...params,
-      },
-    });
+      const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
+        body: {
+          action: 'sendMessage',
+          accountId: activeAccountId,
+          ...params,
+        },
+      });
 
-    if (fnErr || !data?.success) {
-      return { success: false, error: 'Falha ao enviar email' };
-    }
+      if (fnErr || !data?.success) {
+        return { success: false, error: 'Falha ao enviar email' };
+      }
 
-    return { success: true };
-  }, [activeAccountId]);
+      return { success: true };
+    },
+    [activeAccountId]
+  );
 
   // Marcar como lida
-  const markAsRead = useCallback(async (messageId: string, isRead = true) => {
-    if (!activeAccountId) return;
-    await supabase.functions.invoke('outlook-oauth', {
-      body: { action: 'markAsRead', accountId: activeAccountId, messageId, isRead },
-    });
-    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, isRead } : m));
-  }, [activeAccountId]);
+  const markAsRead = useCallback(
+    async (messageId: string, isRead = true) => {
+      if (!activeAccountId) return;
+      await supabase.functions.invoke('outlook-oauth', {
+        body: { action: 'markAsRead', accountId: activeAccountId, messageId, isRead },
+      });
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isRead } : m)));
+    },
+    [activeAccountId]
+  );
 
   // Busca corpo completo de uma mensagem
-  const getMessageBody = useCallback(async (messageId: string) => {
-    if (!activeAccountId) return null;
-    const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
-      body: { action: 'getMessageBody', accountId: activeAccountId, messageId },
-    });
-    if (fnErr || !data?.message) return null;
-    return data.message;
-  }, [activeAccountId]);
+  const getMessageBody = useCallback(
+    async (messageId: string) => {
+      if (!activeAccountId) return null;
+      const { data, error: fnErr } = await supabase.functions.invoke('outlook-oauth', {
+        body: { action: 'getMessageBody', accountId: activeAccountId, messageId },
+      });
+      if (fnErr || !data?.message) return null;
+      return data.message;
+    },
+    [activeAccountId]
+  );
 
   // Desconectar conta
-  const disconnect = useCallback(async (accountId: string) => {
-    await supabase.from('imap_smtp_accounts').update({ is_active: false }).eq('id', accountId);
-    setAccounts(prev => prev.filter(a => a.id !== accountId));
-    if (activeAccountId === accountId) setActiveAccountId(null);
-  }, [activeAccountId]);
+  const disconnect = useCallback(
+    async (accountId: string) => {
+      await supabase.from('imap_smtp_accounts').update({ is_active: false }).eq('id', accountId);
+      setAccounts((prev) => prev.filter((a) => a.id !== accountId));
+      if (activeAccountId === accountId) setActiveAccountId(null);
+    },
+    [activeAccountId]
+  );
 
   // Auto-sync quando muda conta ativa
   useEffect(() => {
@@ -198,7 +223,7 @@ export function useOutlookEmail() {
     }
   }, [activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const unreadCount = messages.filter(m => !m.isRead).length;
+  const unreadCount = messages.filter((m) => !m.isRead).length;
 
   return {
     accounts,
@@ -216,6 +241,6 @@ export function useOutlookEmail() {
     markAsRead,
     getMessageBody,
     disconnect,
-    loadMore: () => nextLink ? syncInbox(undefined, nextLink) : undefined,
+    loadMore: () => (nextLink ? syncInbox(undefined, nextLink) : undefined),
   };
 }

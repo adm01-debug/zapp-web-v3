@@ -13,7 +13,7 @@ interface ProxyResponse<T> {
   schema_unavailable?: boolean;
 }
 
-interface ProxyErrorResponse {
+interface _ProxyErrorResponse {
   error: string;
   cid?: string;
   rid?: string;
@@ -27,20 +27,20 @@ class ExternalDbProxyClient {
 
   private async getAuthHeader(): Promise<string> {
     const now = Date.now();
-    
+
     // Cache session token for 30s to avoid redundant getSession() calls in parallel requests
     if (this.cachedSession && this.cachedSession.expires > now) {
       return `Bearer ${this.cachedSession.token}`;
     }
 
     try {
-      const { data, error } = await supabase.auth.getSession();
+      const { data, _error } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      
+
       if (token) {
-        this.cachedSession = { 
-          token, 
-          expires: now + 30000 
+        this.cachedSession = {
+          token,
+          expires: now + 30000,
         };
         return `Bearer ${token}`;
       }
@@ -50,7 +50,10 @@ class ExternalDbProxyClient {
     }
   }
 
-  async call<T>(body: Record<string, unknown>, retryCount = 0): Promise<{ data: T | null; schema_unavailable: boolean }> {
+  async call<T>(
+    body: Record<string, unknown>,
+    retryCount = 0
+  ): Promise<{ data: T | null; schema_unavailable: boolean }> {
     if (!PROXY_URL) throw new Error('VITE_SUPABASE_URL missing');
 
     const cid = generateCorrelationId();
@@ -82,18 +85,20 @@ class ExternalDbProxyClient {
 
       if (!response.ok) {
         const errorMsg = result?.error ?? `HTTP ${response.status}`;
-        
+
         // PGRST106 (Invalid schema) or PGRST002 (Schema cache error)
-        const isTransientSchemaError = 
-          errorMsg.includes('PGRST106') || 
+        const isTransientSchemaError =
+          errorMsg.includes('PGRST106') ||
           errorMsg.includes('Invalid schema') ||
           errorMsg.includes('PGRST002') ||
           errorMsg.includes('schema cache');
-        
+
         if (isTransientSchemaError && retryCount < 5) {
           const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
-          console.warn(`[ExternalDbProxy] Transient error (${errorMsg}). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/5)`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          console.warn(
+            `[ExternalDbProxy] Transient error (${errorMsg}). Retrying in ${Math.round(delay)}ms... (Attempt ${retryCount + 1}/5)`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
           return this.call<T>(body, retryCount + 1);
         }
 
@@ -107,15 +112,15 @@ class ExternalDbProxyClient {
       };
     } catch (error: any) {
       const errorMsg = error?.message ?? String(error);
-      const isTransient = 
-        errorMsg.includes('PGRST106') || 
+      const isTransient =
+        errorMsg.includes('PGRST106') ||
         errorMsg.includes('Invalid schema') ||
         errorMsg.includes('PGRST002') ||
         errorMsg.includes('schema cache');
 
       if (isTransient && retryCount < 5) {
         const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return this.call<T>(body, retryCount + 1);
       }
       throw error;

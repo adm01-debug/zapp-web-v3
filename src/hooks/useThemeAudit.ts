@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '@/hooks/useTheme';
+import { log } from '@/lib/logger';
 import { STORAGE_KEY, DEFAULT_PRESET_ID, PRESETS } from '@/components/settings/theme/presets';
 
 export interface AuditResult {
@@ -20,7 +21,7 @@ export const useThemeAudit = () => {
     oledPass: true,
     fontPass: true,
     colorPass: true,
-    violations: []
+    violations: [],
   });
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export const useThemeAudit = () => {
         elements.forEach((el) => {
           const style = window.getComputedStyle(el);
           const bg = style.backgroundColor;
-          
+
           // Detect common non-OLED dark grays that should be pure black (0,0,0) or vary close
           if (bg === 'rgb(31, 41, 55)' || bg === 'rgb(17, 24, 39)' || bg === 'rgb(9, 9, 11)') {
             oledPass = false;
@@ -49,7 +50,7 @@ export const useThemeAudit = () => {
       // 2. Font Safeguard Audit
       const root = document.documentElement;
       const computedFont = getComputedStyle(root).getPropertyValue('--font-sans').trim();
-      
+
       const saved = localStorage.getItem(STORAGE_KEY);
       let presetId = DEFAULT_PRESET_ID;
       if (saved) {
@@ -61,13 +62,15 @@ export const useThemeAudit = () => {
           console.warn('[useThemeAudit] failed to parse saved theme', e);
         }
       }
-      
-      const preset = PRESETS.find(p => p.id === presetId);
+
+      const preset = PRESETS.find((p) => p.id === presetId);
       const shouldHaveInlineFont = !!preset?.font;
 
       if (!computedFont.includes('Inter') && !shouldHaveInlineFont) {
         fontPass = false;
-        violations.push(`[Font] Tipografia desalinhada: --font-sans="${computedFont}" (Esperado: Inter)`);
+        violations.push(
+          `[Font] Tipografia desalinhada: --font-sans="${computedFont}" (Esperado: Inter)`
+        );
       }
 
       // 3. Primary Color Alignment
@@ -80,9 +83,7 @@ export const useThemeAudit = () => {
       setResult({ oledPass, fontPass, colorPass, violations });
 
       if (violations.length > 0) {
-        console.group('🔍 Relatório de Auditoria Visual');
-        violations.forEach(v => console.warn(v));
-        console.groupEnd();
+        log.warn('Relatório de Auditoria Visual', violations);
       }
     };
 

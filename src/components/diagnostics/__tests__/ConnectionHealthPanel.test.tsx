@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
@@ -18,7 +19,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     channel: mockChannel.mockReturnValue({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() }),
     removeChannel: mockRemoveChannel,
     auth: {
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
     },
   },
@@ -50,7 +53,9 @@ describe('ConnectionHealthPanel', () => {
 
   it('shows empty log message', async () => {
     render(<ConnectionHealthPanel />);
-    await waitFor(() => expect(screen.getByText(/Nenhum health check registrado/)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/Nenhum health check registrado/)).toBeInTheDocument()
+    );
   });
 
   it('calls edge function on button click', async () => {
@@ -58,7 +63,10 @@ describe('ConnectionHealthPanel', () => {
     render(<ConnectionHealthPanel />);
     await waitFor(() => expect(screen.getByText('Executar Health Check')).toBeInTheDocument());
     fireEvent.click(screen.getByText('Executar Health Check'));
-    await waitFor(() => { expect(mockInvoke).toHaveBeenCalledWith('connection-health-check'); expect(toast.success).toHaveBeenCalled(); });
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('connection-health-check');
+      expect(toast.success).toHaveBeenCalled();
+    });
   });
 
   it('shows error on failed health check', async () => {
@@ -69,6 +77,13 @@ describe('ConnectionHealthPanel', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Erro ao executar health check'));
   });
 
-  it('subscribes to realtime channel', () => { render(<ConnectionHealthPanel />); expect(mockChannel).toHaveBeenCalledWith('health-updates'); });
-  it('unsubscribes on unmount', () => { const { unmount } = render(<ConnectionHealthPanel />); unmount(); expect(mockRemoveChannel).toHaveBeenCalled(); });
+  it('subscribes to realtime channel', () => {
+    render(<ConnectionHealthPanel />);
+    expect(mockChannel).toHaveBeenCalledWith('health-updates');
+  });
+  it('unsubscribes on unmount', () => {
+    const { unmount } = render(<ConnectionHealthPanel />);
+    unmount();
+    expect(mockRemoveChannel).toHaveBeenCalled();
+  });
 });

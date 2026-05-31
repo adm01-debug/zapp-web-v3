@@ -10,7 +10,12 @@
  * to the underlying request, so the body field is the reliable channel).
  */
 import { supabase } from '@/integrations/supabase/client';
-import { recordQueryEvent, recordRetryOutcome, classifySeverity, type QueryOperation } from '@/lib/clientTelemetry';
+import {
+  recordQueryEvent,
+  recordRetryOutcome,
+  classifySeverity,
+  type QueryOperation,
+} from '@/lib/clientTelemetry';
 import { generateCorrelationId, CORRELATION_HEADER } from '@/lib/correlationId';
 import { getLogger } from '@/lib/logger';
 
@@ -24,26 +29,40 @@ const proxyLog = getLogger('externalProxy');
 // that proxied transport. We keep the SDK-style return shape so the rest of
 // executeProxyCall (retry, breaker, telemetry) is untouched.
 const SUPABASE_URL = (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL ?? '';
-const SUPABASE_ANON = (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+const SUPABASE_ANON =
+  (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
 const FUNCTIONS_BASE = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : '';
 
 // Test-only override hook — when set, replaces the real fetch invoker so
 // existing unit tests that mocked `supabase.functions.invoke` keep working.
-let __invokeOverride: ((fnName: string, opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> }) => Promise<{ data: unknown; error: { name?: string; message?: string; code?: string; status?: number } | null }>) | null = null;
+let __invokeOverride:
+  | ((
+      fnName: string,
+      opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> }
+    ) => Promise<{
+      data: unknown;
+      error: { name?: string; message?: string; code?: string; status?: number } | null;
+    }>)
+  | null = null;
 
 async function invokeViaFetch<T>(
   fnName: string,
-  opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> },
-): Promise<{ data: T | null; error: { name?: string; message?: string; code?: string; status?: number } | null }> {
+  opts: { body: unknown; signal?: AbortSignal; headers?: Record<string, string> }
+): Promise<{
+  data: T | null;
+  error: { name?: string; message?: string; code?: string; status?: number } | null;
+}> {
   if (!FUNCTIONS_BASE) {
     return { data: null, error: { name: 'ConfigError', message: 'VITE_SUPABASE_URL missing' } };
   }
   let authHeader = `Bearer ${SUPABASE_ANON}`;
   try {
-    const { data, error } = await supabase.auth.getSession();
+    const { data, _error } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (token) authHeader = `Bearer ${token}`;
-  } catch { /* fall back to anon */ }
+  } catch {
+    /* fall back to anon */
+  }
 
   try {
     const res = await fetch(`${FUNCTIONS_BASE}/${fnName}`, {
@@ -59,7 +78,11 @@ async function invokeViaFetch<T>(
     });
     const text = await res.text();
     let parsed: unknown = null;
-    try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+    try {
+      parsed = text ? JSON.parse(text) : null;
+    } catch {
+      parsed = text;
+    }
     if (!res.ok) {
       const msg =
         parsed && typeof parsed === 'object' && 'error' in (parsed as Record<string, unknown>)
@@ -146,9 +169,7 @@ function deriveTelemetryMeta(body: Record<string, unknown>): {
   else if (action === 'delete') operation = 'delete';
 
   const target =
-    (body.rpc as string | undefined) ??
-    (body.table as string | undefined) ??
-    'unknown';
+    (body.rpc as string | undefined) ?? (body.table as string | undefined) ?? 'unknown';
 
   const limit = typeof body.limit === 'number' ? body.limit : null;
   const offset = typeof body.offset === 'number' ? body.offset : null;
@@ -180,8 +201,12 @@ function coalesceKey(body: Record<string, unknown>): string | null {
   try {
     // Stable key: action + table/rpc + filters/match/params + limit + offset.
     // We intentionally drop __cid and signal — they don't change the result.
-    const { __cid, signal, ...stable } = body as Record<string, unknown> & { __cid?: string; signal?: unknown };
-    void __cid; void signal;
+    const { __cid, signal, ...stable } = body as Record<string, unknown> & {
+      __cid?: string;
+      signal?: unknown;
+    };
+    void __cid;
+    void signal;
     return JSON.stringify(stable);
   } catch {
     return null;
@@ -213,7 +238,11 @@ function recordBreakerFailure(target: string): void {
   cur.fails += 1;
   if (cur.fails >= BREAKER_THRESHOLD && cur.openedAt === 0) {
     cur.openedAt = Date.now();
-    proxyLog.warn('proxy circuit opened', { target, fails: cur.fails, cooldownMs: BREAKER_COOLDOWN_MS });
+    proxyLog.warn('proxy circuit opened', {
+      target,
+      fails: cur.fails,
+      cooldownMs: BREAKER_COOLDOWN_MS,
+    });
   }
   breaker.set(target, cur);
 }
@@ -231,7 +260,9 @@ function __resetBreakerAndCoalesce(): void {
   inflight.clear();
 }
 
-export async function queryExternalProxy<T = unknown>(params: ProxyParams): Promise<ProxyResponse<T>> {
+export async function queryExternalProxy<T = unknown>(
+  params: ProxyParams
+): Promise<ProxyResponse<T>> {
   // Extract signal so it isn't sent in the JSON body.
   const { signal, ...rawBody } = params as ProxyParams & { signal?: AbortSignal };
   const body = normalizeProxyBody(rawBody as Record<string, unknown>);
@@ -259,7 +290,9 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
       startedAt,
       correlationId: 'circuit',
     });
-    throw new Error(`Proxy circuit open for ${meta.target} (retry in ${breakerState.remainingMs}ms)`);
+    throw new Error(
+      `Proxy circuit open for ${meta.target} (retry in ${breakerState.remainingMs}ms)`
+    );
   }
 
   // ── Request coalescing ──
@@ -301,7 +334,7 @@ export async function queryExternalProxy<T = unknown>(params: ProxyParams): Prom
 async function executeProxyCall<T>(
   body: Record<string, unknown>,
   signal: AbortSignal | undefined,
-  meta: ReturnType<typeof deriveTelemetryMeta>,
+  meta: ReturnType<typeof deriveTelemetryMeta>
 ): Promise<ProxyResponse<T>> {
   const correlationId = generateCorrelationId();
   // Echo the trace id in the body so the edge function can log it even when
@@ -321,7 +354,9 @@ async function executeProxyCall<T>(
   // "non-2xx status code". These are not real failures — a quick retry usually
   // succeeds. We retry up to 2 times with small exponential backoff, but never
   // for AbortError (caller-initiated cancellation).
-  const normalizeInvokeError = (err: unknown): { name?: string; message?: string; code?: string; status?: number } => {
+  const normalizeInvokeError = (
+    err: unknown
+  ): { name?: string; message?: string; code?: string; status?: number } => {
     if (!err || typeof err !== 'object') {
       return { message: typeof err === 'string' ? err : String(err) };
     }
@@ -380,7 +415,10 @@ async function executeProxyCall<T>(
       };
       try {
         const result = __invokeOverride
-          ? (await __invokeOverride('external-db-proxy', perAttemptOptions)) as { data: ProxyResponse<T> | null; error: { name?: string; message?: string; code?: string; status?: number } | null }
+          ? ((await __invokeOverride('external-db-proxy', perAttemptOptions)) as {
+              data: ProxyResponse<T> | null;
+              error: { name?: string; message?: string; code?: string; status?: number } | null;
+            })
           : await invokeViaFetch<ProxyResponse<T>>('external-db-proxy', perAttemptOptions);
         data = result.data as ProxyResponse<T> | null;
         error = result.error ? normalizeInvokeError(result.error) : null;
@@ -389,7 +427,12 @@ async function executeProxyCall<T>(
         // The SDK can't surface that as `result.error`, so we promote it
         // here so the retry + breaker logic kicks in instead of letting
         // callers consume a malformed payload.
-        if (!error && data && typeof data === 'object' && (data as { fallback?: boolean }).fallback === true) {
+        if (
+          !error &&
+          data &&
+          typeof data === 'object' &&
+          (data as { fallback?: boolean }).fallback === true
+        ) {
           const d = data as { code?: string; message?: string; detail?: string };
           error = {
             name: 'FunctionsFetchError',
@@ -410,10 +453,12 @@ async function executeProxyCall<T>(
       // the edge runtime. Surface as `errorName: FunctionsFetchError` with
       // status === undefined. We treat these as transient (worth retrying)
       // AND count them toward the circuit breaker.
-      const isGhostPost = !ok
-        && (error?.name === 'FunctionsFetchError' || /Failed to send a request/i.test(error?.message ?? ''))
-        && error?.status === undefined;
-      const transient = error ? (isTransientRuntimeError(error) || isGhostPost) : false;
+      const isGhostPost =
+        !ok &&
+        (error?.name === 'FunctionsFetchError' ||
+          /Failed to send a request/i.test(error?.message ?? '')) &&
+        error?.status === undefined;
+      const transient = error ? isTransientRuntimeError(error) || isGhostPost : false;
       if (transient) transientCount += 1;
       if (isGhostPost) recordBreakerFailure(meta.target);
       if (ok) recordBreakerSuccess(meta.target);
@@ -426,7 +471,9 @@ async function executeProxyCall<T>(
       //   attempt 2 → 400..600ms
       //   attempt 3 → 800..1200ms
       const backoffBase = 200 * Math.pow(2, attempt - 1);
-      const backoffMs = willRetry ? backoffBase + Math.floor(Math.random() * (backoffBase * 0.5)) : 0;
+      const backoffMs = willRetry
+        ? backoffBase + Math.floor(Math.random() * (backoffBase * 0.5))
+        : 0;
 
       const attemptMeta = {
         cid: correlationId,
@@ -514,7 +561,11 @@ async function executeProxyCall<T>(
         abortErr.name = 'AbortError';
         throw abortErr;
       }
-      throw new Error(message ? `[cid=${correlationId}] ${message}` : `[cid=${correlationId}] External DB proxy error`);
+      throw new Error(
+        message
+          ? `[cid=${correlationId}] ${message}`
+          : `[cid=${correlationId}] External DB proxy error`
+      );
     }
 
     if (data?.error) {
@@ -574,6 +625,10 @@ async function executeProxyCall<T>(
 export const __testing = {
   resetBreakerAndCoalesce: __resetBreakerAndCoalesce,
   isBreakerOpen: (target: string) => isBreakerOpen(target),
-  setInvokeOverride: (fn: typeof __invokeOverride) => { __invokeOverride = fn; },
-  clearInvokeOverride: () => { __invokeOverride = null; },
+  setInvokeOverride: (fn: typeof __invokeOverride) => {
+    __invokeOverride = fn;
+  },
+  clearInvokeOverride: () => {
+    __invokeOverride = null;
+  },
 };

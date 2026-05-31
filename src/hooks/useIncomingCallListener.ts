@@ -7,7 +7,7 @@ import type { IncomingCall } from '@/types/incomingCall';
 export type { IncomingCall } from '@/types/incomingCall';
 
 export function useIncomingCallListener() {
-  const { user, profile } = useAuth();
+  const { _user, profile } = useAuth();
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
 
   const dismissCall = useCallback(() => {
@@ -29,7 +29,7 @@ export function useIncomingCallListener() {
         },
         async (payload) => {
           const call = payload.new as Record<string, unknown>;
-          
+
           if (call.direction !== 'inbound' || call.status === 'ended') return;
 
           // Fetch contact info
@@ -37,12 +37,12 @@ export function useIncomingCallListener() {
           let contactPhone = '';
 
           if (call.contact_id) {
-            const { data: contact , error } = await supabase
+            const { data: contact, _error } = await supabase
               .from('contacts')
               .select('name, phone')
               .eq('id', call.contact_id as string)
               .single();
-            
+
             if (contact) {
               contactName = contact.name || contact.phone;
               contactPhone = contact.phone;

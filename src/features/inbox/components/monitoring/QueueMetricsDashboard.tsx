@@ -1,10 +1,21 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
-import { QueueMetrics } from '@/features/inbox/hooks/useMessageQueue';
+import { QueueMetrics } from '../../hooks/useMessageQueue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Send, AlertCircle, RefreshCcw, Sparkles, Loader2 } from 'lucide-react';
@@ -13,7 +24,7 @@ interface QueueMetricsDashboardProps {
   metrics: QueueMetrics;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const _COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ metrics }) => {
   const [stsMetrics, setStsMetrics] = useState<any[]>([]);
@@ -22,9 +33,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
   useEffect(() => {
     const fetchSTS = async () => {
       try {
-        const { data, error } = await supabase
-          .from('sts_performance_metrics' as any)
-          .select('*');
+        const { data, error } = await supabase.from('sts_performance_metrics' as any).select('*');
         if (!error && data) setStsMetrics(data);
       } catch (err) {
         console.error('Failed to fetch STS metrics:', err);
@@ -39,9 +48,10 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
       name: type.charAt(0).toUpperCase() + type.slice(1),
       sent: data.sent,
       failed: data.failed,
-      latency: data.latency.length > 0 
-        ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length) 
-        : 0
+      latency:
+        data.latency.length > 0
+          ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length)
+          : 0,
     }));
   }, [metrics]);
 
@@ -51,9 +61,10 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         name: id.split('@')[0], // Shorten JID
         sent: data.sent,
         failed: data.failed,
-        latency: data.latency.length > 0 
-          ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length) 
-          : 0
+        latency:
+          data.latency.length > 0
+            ? Math.round(data.latency.reduce((a, b) => a + b, 0) / data.latency.length)
+            : 0,
       }))
       .slice(0, 5); // Only top 5
   }, [metrics]);
@@ -62,12 +73,12 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
     return [
       { name: 'Sucesso', value: metrics.totalSent },
       { name: 'Falha', value: metrics.totalFailed },
-    ].filter(d => d.value > 0);
+    ].filter((d) => d.value > 0);
   }, [metrics]);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4 bg-background overflow-y-auto max-h-[80vh]">
-      <Card className="bg-primary/5 border-primary/20">
+    <div className="grid max-h-[80vh] gap-4 overflow-y-auto bg-background p-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Enviado</CardTitle>
           <Send className="h-4 w-4 text-primary" />
@@ -77,8 +88,8 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
           <p className="text-xs text-muted-foreground">Mensagens confirmadas</p>
         </CardContent>
       </Card>
-      
-      <Card className="bg-destructive/5 border-destructive/20">
+
+      <Card className="border-destructive/20 bg-destructive/5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Falhas</CardTitle>
           <AlertCircle className="h-4 w-4 text-destructive" />
@@ -89,7 +100,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         </CardContent>
       </Card>
 
-      <Card className="bg-warning/5 border-warning/20">
+      <Card className="border-warning/20 bg-warning/5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Retentativas</CardTitle>
           <RefreshCcw className="h-4 w-4 text-warning" />
@@ -100,7 +111,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         </CardContent>
       </Card>
 
-      <Card className="bg-primary/5 border-primary/20">
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Latência Média</CardTitle>
           <Clock className="h-4 w-4 text-primary" />
@@ -124,7 +135,12 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <RechartsTooltip />
               <Legend wrapperStyle={{ fontSize: '10px' }} />
               <Bar dataKey="sent" name="Sucesso" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="failed" name="Falha" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="failed"
+                name="Falha"
+                fill="hsl(var(--destructive))"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -141,7 +157,14 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis dataKey="name" fontSize={10} />
               <YAxis fontSize={10} />
               <RechartsTooltip />
-              <Line type="monotone" dataKey="latency" name="Latência" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+              <Line
+                type="monotone"
+                dataKey="latency"
+                name="Latência"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
@@ -151,7 +174,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
         <CardHeader>
           <CardTitle className="text-sm font-bold">Taxa de Sucesso</CardTitle>
         </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center">
+        <CardContent className="flex h-[200px] items-center justify-center">
           {pieData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -165,7 +188,12 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name === 'Sucesso' ? 'hsl(var(--success))' : 'hsl(var(--destructive))'} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.name === 'Sucesso' ? 'hsl(var(--success))' : 'hsl(var(--destructive))'
+                      }
+                    />
                   ))}
                 </Pie>
                 <RechartsTooltip />
@@ -173,7 +201,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <span className="text-muted-foreground text-xs italic">Aguardando dados...</span>
+            <span className="text-xs italic text-muted-foreground">Aguardando dados...</span>
           )}
         </CardContent>
       </Card>
@@ -189,7 +217,12 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
               <XAxis type="number" fontSize={10} />
               <YAxis dataKey="name" type="category" fontSize={10} width={60} />
               <RechartsTooltip />
-              <Bar dataKey="latency" name="Latência" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
+              <Bar
+                dataKey="latency"
+                name="Latência"
+                fill="hsl(var(--accent))"
+                radius={[0, 4, 4, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -198,28 +231,41 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
       {/* STS Commercial Troubleshooting Section */}
       <Card className="col-span-full border-primary/30 shadow-md">
         <CardHeader className="bg-primary/5">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-sm font-bold">
+            <Sparkles className="h-4 w-4 text-primary" />
             Performance do Voice Changer (STS) - Time Comercial
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           {loadingSts ? (
-            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
           ) : stsMetrics.length > 0 ? (
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-3">
                 {stsMetrics.slice(0, 3).map((m) => (
-                  <div key={m.voice_preset} className="p-3 rounded-lg border bg-muted/30">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-black uppercase tracking-tighter">{m.voice_preset}</span>
-                      <Badge variant={m.error_rate > 0.2 ? 'destructive' : 'outline'} className="text-[9px]">
+                  <div key={m.voice_preset} className="rounded-lg border bg-muted/30 p-3">
+                    <div className="mb-2 flex items-start justify-between">
+                      <span className="text-xs font-black uppercase tracking-tighter">
+                        {m.voice_preset}
+                      </span>
+                      <Badge
+                        variant={m.error_rate > 0.2 ? 'destructive' : 'outline'}
+                        className="text-[9px]"
+                      >
                         Err: {(m.error_rate * 100).toFixed(0)}%
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div><span className="opacity-60">Avg:</span> <strong>{m.avg_latency_ms}ms</strong></div>
-                      <div><span className="opacity-60">p99:</span> <strong>{m.p99_latency?.toFixed(0)}ms</strong></div>
+                      <div>
+                        <span className="opacity-60">Avg:</span>{' '}
+                        <strong>{m.avg_latency_ms}ms</strong>
+                      </div>
+                      <div>
+                        <span className="opacity-60">p99:</span>{' '}
+                        <strong>{m.p99_latency?.toFixed(0)}ms</strong>
+                      </div>
                       <div className="col-span-2 mt-1 truncate italic text-muted-foreground">
                         Last Err: {m.latest_error || 'Nenhum'}
                       </div>
@@ -227,7 +273,7 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                   </div>
                 ))}
               </div>
-              
+
               <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stsMetrics}>
@@ -235,14 +281,24 @@ export const QueueMetricsDashboard: React.FC<QueueMetricsDashboardProps> = ({ me
                     <XAxis dataKey="voice_preset" fontSize={10} />
                     <YAxis fontSize={10} />
                     <RechartsTooltip />
-                    <Bar dataKey="total_requests" name="Total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="failed_requests" name="Falhas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="total_requests"
+                      name="Total"
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="failed_requests"
+                      name="Falhas"
+                      fill="hsl(var(--destructive))"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           ) : (
-            <div className="text-center py-10 text-muted-foreground text-xs italic">
+            <div className="py-10 text-center text-xs italic text-muted-foreground">
               Sem dados de conversão nas últimas 24h.
             </div>
           )}

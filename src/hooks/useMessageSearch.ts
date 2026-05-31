@@ -1,7 +1,7 @@
 /**
  * useMessageSearch.ts
  * Search within conversation messages with highlighting.
- * 
+ *
  * Features:
  * - Full-text search within a conversation's messages
  * - Returns matching messages with highlighted terms
@@ -10,7 +10,7 @@
  */
 import { useState, useCallback, useEffect } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
-const supabase = _supabase as any;
+const _supabase = _supabase as any;
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { dbFrom } from '@/integrations/datasource/db';
 
@@ -30,42 +30,48 @@ export function useMessageSearch(conversationId: string, workspaceId: string) {
   const [activeIndex, setActiveIndex] = useState(0);
   const debouncedQuery = useDebouncedValue(query, 300);
 
-  const search = useCallback(async (searchTerm: string) => {
-    if (!searchTerm.trim() || searchTerm.length < 2) {
-      setResults([]);
-      setActiveIndex(0);
-      return;
-    }
+  const search = useCallback(
+    async (searchTerm: string) => {
+      if (!searchTerm.trim() || searchTerm.length < 2) {
+        setResults([]);
+        setActiveIndex(0);
+        return;
+      }
 
-    setIsSearching(true);
-    try {
-      const { data, error } = await dbFrom('messages')
-        .select('id, content, sender_name, sender_type, created_at')
-        .eq('conversation_id', conversationId)
-        .eq('workspace_id', workspaceId)
-        .ilike('content', `%${searchTerm}%`)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      setIsSearching(true);
+      try {
+        const { data, error } = await dbFrom('messages')
+          .select('id, content, sender_name, sender_type, created_at')
+          .eq('conversation_id', conversationId)
+          .eq('workspace_id', workspaceId)
+          .ilike('content', `%${searchTerm}%`)
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const mapped: SearchResult[] = (Array.isArray(data) ? data : []).map((msg, i) => ({
-        ...msg,
-        match_index: i,
-      }));
+        const mapped: SearchResult[] = (Array.isArray(data) ? data : []).map((msg, i) => ({
+          ...msg,
+          match_index: i,
+        }));
 
-      setResults(mapped);
-      setActiveIndex(0);
-    } catch (err) {
-      console.error('[MessageSearch] Error:', err);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [conversationId, workspaceId]);
+        setResults(mapped);
+        setActiveIndex(0);
+      } catch (err) {
+        console.error('[MessageSearch] Error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [conversationId, workspaceId]
+  );
 
   useEffect(() => {
     if (debouncedQuery) search(debouncedQuery);
-    else { setResults([]); setActiveIndex(0); }
+    else {
+      setResults([]);
+      setActiveIndex(0);
+    }
   }, [debouncedQuery, search]);
 
   const goToNext = useCallback(() => {

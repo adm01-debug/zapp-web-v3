@@ -1,7 +1,12 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +28,11 @@ interface ContactBulkTagDialogProps {
 }
 
 export function ContactBulkTagDialog({
-  open, onOpenChange, contactIds, allTags, onComplete,
+  open,
+  onOpenChange,
+  contactIds,
+  allTags,
+  onComplete,
 }: ContactBulkTagDialogProps) {
   const [mode, setMode] = useState<'add' | 'remove'>('add');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
@@ -34,20 +43,24 @@ export function ContactBulkTagDialog({
   const filteredTags = useMemo(() => {
     const all = [...new Set([...allTags, ...(newTag.trim() ? [newTag.trim()] : [])])];
     if (!search) return all;
-    return all.filter(t => t.toLowerCase().includes(search.toLowerCase()));
+    return all.filter((t) => t.toLowerCase().includes(search.toLowerCase()));
   }, [allTags, newTag, search]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => {
+    setSelectedTags((prev) => {
       const next = new Set(prev);
-      next.has(tag) ? next.delete(tag) : next.add(tag);
+      if (next.has(tag)) {
+        next.delete(tag);
+      } else {
+        next.add(tag);
+      }
       return next;
     });
   };
 
   const addNewTag = () => {
     if (!newTag.trim()) return;
-    setSelectedTags(prev => new Set(prev).add(newTag.trim()));
+    setSelectedTags((prev) => new Set(prev).add(newTag.trim()));
     setNewTag('');
   };
 
@@ -55,7 +68,7 @@ export function ContactBulkTagDialog({
     if (selectedTags.size === 0) return;
     setSaving(true);
     try {
-      const { data: contacts , error } = await supabase
+      const { data: contacts, error: _error } = await supabase
         .from('contacts')
         .select('id, tags')
         .in('id', contactIds);
@@ -65,9 +78,9 @@ export function ContactBulkTagDialog({
       for (const contact of contacts) {
         const current = new Set(contact.tags || []);
         if (mode === 'add') {
-          selectedTags.forEach(t => current.add(t));
+          selectedTags.forEach((t) => current.add(t));
         } else {
-          selectedTags.forEach(t => current.delete(t));
+          selectedTags.forEach((t) => current.delete(t));
         }
         await dbFrom('contacts')
           .update({ tags: [...current] })
@@ -94,7 +107,7 @@ export function ContactBulkTagDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-primary" />
+            <Tag className="h-5 w-5 text-primary" />
             Tags em Lote
           </DialogTitle>
           <DialogDescription>
@@ -110,7 +123,7 @@ export function ContactBulkTagDialog({
             onClick={() => setMode('add')}
             className="flex-1 gap-1.5"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="h-3.5 w-3.5" />
             Adicionar
           </Button>
           <Button
@@ -119,19 +132,19 @@ export function ContactBulkTagDialog({
             onClick={() => setMode('remove')}
             className="flex-1 gap-1.5"
           >
-            <Minus className="w-3.5 h-3.5" />
+            <Minus className="h-3.5 w-3.5" />
             Remover
           </Button>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar tags..."
-            className="pl-9 h-8 text-xs"
+            className="h-8 pl-9 text-xs"
           />
         </div>
 
@@ -139,23 +152,27 @@ export function ContactBulkTagDialog({
         <ScrollArea className="h-48">
           <div className="space-y-1">
             <AnimatePresence>
-              {filteredTags.map(tag => (
+              {filteredTags.map((tag) => (
                 <motion.label
                   key={tag}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className={cn(
-                    'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-                    selectedTags.has(tag) ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50'
+                    'flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors',
+                    selectedTags.has(tag)
+                      ? 'border border-primary/20 bg-primary/10'
+                      : 'hover:bg-muted/50'
                   )}
                 >
                   <Checkbox
                     checked={selectedTags.has(tag)}
                     onCheckedChange={() => toggleTag(tag)}
-                    className="w-3.5 h-3.5"
+                    className="h-3.5 w-3.5"
                   />
-                  <Badge variant="secondary" className="text-xs">{tag}</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
                 </motion.label>
               ))}
             </AnimatePresence>
@@ -167,13 +184,13 @@ export function ContactBulkTagDialog({
           <div className="flex gap-2">
             <Input
               value={newTag}
-              onChange={e => setNewTag(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addNewTag()}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addNewTag()}
               placeholder="Nova tag..."
-              className="h-8 text-xs flex-1"
+              className="h-8 flex-1 text-xs"
             />
             <Button variant="outline" size="sm" onClick={addNewTag} disabled={!newTag.trim()}>
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
@@ -181,11 +198,11 @@ export function ContactBulkTagDialog({
         {/* Selected Summary */}
         {selectedTags.size > 0 && (
           <div className="flex flex-wrap gap-1">
-            {[...selectedTags].map(t => (
+            {[...selectedTags].map((t) => (
               <Badge
                 key={t}
                 variant={mode === 'add' ? 'default' : 'destructive'}
-                className="text-[10px] h-5 cursor-pointer"
+                className="h-5 cursor-pointer text-[10px]"
                 onClick={() => toggleTag(t)}
               >
                 {t} ×
@@ -195,13 +212,21 @@ export function ContactBulkTagDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button
             onClick={handleApply}
             disabled={saving || selectedTags.size === 0}
             className="gap-1.5"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === 'add' ? <Plus className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : mode === 'add' ? (
+              <Plus className="h-4 w-4" />
+            ) : (
+              <Minus className="h-4 w-4" />
+            )}
             {mode === 'add' ? 'Adicionar' : 'Remover'} {selectedTags.size} Tag(s)
           </Button>
         </DialogFooter>

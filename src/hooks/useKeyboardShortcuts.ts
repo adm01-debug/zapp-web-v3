@@ -16,18 +16,34 @@ interface UseKeyboardShortcutsProps {
 }
 
 export function useKeyboardShortcuts({ shortcuts, enabled = true }: UseKeyboardShortcutsProps) {
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!enabled) return;
-    
-    // Don't trigger shortcuts when typing in inputs
-    const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-      // Allow specific shortcuts even in inputs (like Ctrl+Enter)
-      const allowedInInputs = shortcuts.filter(s => 
-        s.ctrlKey && (s.key === 'Enter' || s.key === 'k')
-      );
-      
-      for (const shortcut of allowedInInputs) {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!enabled) return;
+
+      // Don't trigger shortcuts when typing in inputs
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        // Allow specific shortcuts even in inputs (like Ctrl+Enter)
+        const allowedInInputs = shortcuts.filter(
+          (s) => s.ctrlKey && (s.key === 'Enter' || s.key === 'k')
+        );
+
+        for (const shortcut of allowedInInputs) {
+          if (
+            event.key.toLowerCase() === shortcut.key.toLowerCase() &&
+            event.ctrlKey === (shortcut.ctrlKey || false) &&
+            event.shiftKey === (shortcut.shiftKey || false) &&
+            event.altKey === (shortcut.altKey || false)
+          ) {
+            event.preventDefault();
+            shortcut.action();
+            return;
+          }
+        }
+        return;
+      }
+
+      for (const shortcut of shortcuts) {
         if (
           event.key.toLowerCase() === shortcut.key.toLowerCase() &&
           event.ctrlKey === (shortcut.ctrlKey || false) &&
@@ -39,22 +55,9 @@ export function useKeyboardShortcuts({ shortcuts, enabled = true }: UseKeyboardS
           return;
         }
       }
-      return;
-    }
-
-    for (const shortcut of shortcuts) {
-      if (
-        event.key.toLowerCase() === shortcut.key.toLowerCase() &&
-        event.ctrlKey === (shortcut.ctrlKey || false) &&
-        event.shiftKey === (shortcut.shiftKey || false) &&
-        event.altKey === (shortcut.altKey || false)
-      ) {
-        event.preventDefault();
-        shortcut.action();
-        return;
-      }
-    }
-  }, [shortcuts, enabled]);
+    },
+    [shortcuts, enabled]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -67,7 +70,7 @@ export function useChatShortcuts({
   onSend,
   onToggleAI,
   onToggleTemplates,
-  onTransfer,
+  _onTransfer,
   onResolve,
   onFocusInput,
 }: {

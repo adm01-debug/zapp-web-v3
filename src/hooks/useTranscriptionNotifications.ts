@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { playNotificationSound, showBrowserNotification, requestNotificationPermission } from '@/utils/notificationSound';
+import {
+  playNotificationSound,
+  showBrowserNotification,
+  requestNotificationPermission,
+} from '@/utils/notificationSound';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { logMessagesSubscribe, wrapMessagesHandler } from '@/lib/devRealtimeLogger';
 import { dbTable } from '@/integrations/datasource/db';
@@ -14,11 +18,11 @@ interface TranscriptionNotificationOptions {
 }
 
 export function useTranscriptionNotifications(options: TranscriptionNotificationOptions = {}) {
-  const { 
-    enabled = true, 
-    showToast = true, 
-    playSound = true, 
-    showBrowserNotification: showBrowserNotif = true 
+  const {
+    enabled = true,
+    showToast = true,
+    playSound = true,
+    showBrowserNotification: showBrowserNotif = true,
   } = options;
 
   const { settings, isQuietHours } = useNotificationSettings();
@@ -32,7 +36,10 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
   useEffect(() => {
     if (!enabled || !settings.transcriptionNotificationEnabled) return;
 
-    logMessagesSubscribe('useTranscriptionNotifications', { event: 'UPDATE', table: dbTable('messages') });
+    logMessagesSubscribe('useTranscriptionNotifications', {
+      event: 'UPDATE',
+      table: dbTable('messages'),
+    });
     const channel = supabase
       .channel('transcription-notifications')
       .on(
@@ -42,74 +49,91 @@ export function useTranscriptionNotifications(options: TranscriptionNotification
           schema: 'public',
           table: dbTable('messages'),
         },
-        wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>('useTranscriptionNotifications', async (payload) => {
-          const newData = payload.new as { id: string; transcription_status?: string; transcription?: string; contact_id?: string };
-          const oldData = payload.old as { transcription_status?: string } | undefined;
+        wrapMessagesHandler<{ new: Record<string, unknown>; old?: Record<string, unknown> }>(
+          'useTranscriptionNotifications',
+          async (payload) => {
+            const newData = payload.new as {
+              id: string;
+              transcription_status?: string;
+              transcription?: string;
+              contact_id?: string;
+            };
+            const oldData = payload.old as { transcription_status?: string } | undefined;
 
-          // Check if transcription just completed
-          if (
-            newData.transcription_status === 'completed' &&
-            oldData?.transcription_status !== 'completed' &&
-            newData.transcription &&
-            !processedIdsRef.current.has(newData.id)
-          ) {
-            // Mark as processed to avoid duplicate notifications
-            processedIdsRef.current.add(newData.id);
+            // Check if transcription just completed
+            if (
+              newData.transcription_status === 'completed' &&
+              oldData?.transcription_status !== 'completed' &&
+              newData.transcription &&
+              !processedIdsRef.current.has(newData.id)
+            ) {
+              // Mark as processed to avoid duplicate notifications
+              processedIdsRef.current.add(newData.id);
 
-            // Check quiet hours
-            if (isQuietHours()) {
-              return;
-            }
+              // Check quiet hours
+              if (isQuietHours()) {
+                return;
+              }
 
-            // Get contact name
-            let contactName = 'Contato';
-            if (newData.contact_id) {
-              const { data: contact , error } = await supabase
-                .from('contacts')
-                .select('name')
-                .eq('id', newData.contact_id)
-                .single();
-              
-              if (contact?.name) {
-                contactName = contact.name;
+              // Get contact name
+              let contactName = 'Contato';
+              if (newData.contact_id) {
+                const { data: contact, _error } = await supabase
+                  .from('contacts')
+                  .select('name')
+                  .eq('id', newData.contact_id)
+                  .single();
+
+                if (contact?.name) {
+                  contactName = contact.name;
+                }
+              }
+
+              // Truncate transcription for preview
+              const transcriptionPreview =
+                newData.transcription.length > 100
+                  ? newData.transcription.slice(0, 100) + '...'
+                  : newData.transcription;
+
+              // Show toast notification
+              if (showToast) {
+                toast({
+                  title: '🎙️ Áudio transcrito',
+                  description: `${contactName}: "${transcriptionPreview}"`,
+                  duration: 5000,
+                });
+              }
+
+              // Play sound
+              if (playSound && settings.soundEnabled) {
+                playNotificationSound('message');
+              }
+
+              // Show browser notification
+              if (showBrowserNotif && settings.browserNotifications) {
+                showBrowserNotification(
+                  'Áudio transcrito',
+                  `${contactName}: "${transcriptionPreview}"`
+                );
               }
             }
-
-            // Truncate transcription for preview
-            const transcriptionPreview = newData.transcription.length > 100
-              ? newData.transcription.slice(0, 100) + '...'
-              : newData.transcription;
-
-            // Show toast notification
-            if (showToast) {
-              toast({
-                title: '🎙️ Áudio transcrito',
-                description: `${contactName}: "${transcriptionPreview}"`,
-                duration: 5000,
-              });
-            }
-
-            // Play sound
-            if (playSound && settings.soundEnabled) {
-              playNotificationSound('message');
-            }
-
-            // Show browser notification
-            if (showBrowserNotif && settings.browserNotifications) {
-              showBrowserNotification(
-                'Áudio transcrito',
-                `${contactName}: "${transcriptionPreview}"`,
-              );
-            }
           }
-        })
+        )
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [enabled, showToast, playSound, showBrowserNotif, settings, isQuietHours, settings.transcriptionNotificationEnabled]);
+  }, [
+    enabled,
+    showToast,
+    playSound,
+    showBrowserNotif,
+    settings,
+    isQuietHours,
+    settings.transcriptionNotificationEnabled,
+  ]);
 
   // Cleanup processed IDs periodically to prevent memory leak
   useEffect(() => {

@@ -27,14 +27,16 @@ export function useCSAT(period: 'today' | 'week' | 'month' = 'month') {
     switch (period) {
       case 'today':
         return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      case 'week':
+      case 'week': {
         const weekAgo = new Date(now);
         weekAgo.setDate(weekAgo.getDate() - 7);
         return weekAgo.toISOString();
-      case 'month':
+      }
+      case 'month': {
         const monthAgo = new Date(now);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
         return monthAgo.toISOString();
+      }
     }
   };
 
@@ -57,12 +59,17 @@ export function useCSAT(period: 'today' | 'week' | 'month' = 'month') {
     queryFn: async () => {
       const surveys = surveysQuery.data || [];
       if (surveys.length === 0) {
-        return { average: 0, total: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, trend: 0 } as CSATStats;
+        return {
+          average: 0,
+          total: 0,
+          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+          trend: 0,
+        } as CSATStats;
       }
 
       const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
       let sum = 0;
-      surveys.forEach(s => {
+      surveys.forEach((s) => {
         distribution[s.rating] = (distribution[s.rating] || 0) + 1;
         sum += s.rating;
       });
@@ -78,7 +85,12 @@ export function useCSAT(period: 'today' | 'week' | 'month' = 'month') {
   });
 
   const submitSurvey = useMutation({
-    mutationFn: async (data: { contact_id: string; agent_id?: string; rating: number; feedback?: string }) => {
+    mutationFn: async (data: {
+      contact_id: string;
+      agent_id?: string;
+      rating: number;
+      feedback?: string;
+    }) => {
       const { error } = await supabase.from('csat_surveys').insert({
         contact_id: data.contact_id,
         agent_id: data.agent_id || null,

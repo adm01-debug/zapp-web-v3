@@ -1,4 +1,3 @@
-
 import { supabase as _supabase } from './client';
 import { PostgrestError } from '@supabase/supabase-js';
 
@@ -26,7 +25,7 @@ const MAX_FAILURES = 50;
 const stats = {
   totalCalls: 0,
   failedCalls: 0,
-  cacheHits: 0
+  cacheHits: 0,
 };
 
 /**
@@ -61,13 +60,22 @@ export const safeClient = {
         stats.failedCalls++;
         return { data: [] as T[], error: this.formatError(error), requestId };
       }
-      
+
       return { data: (Array.isArray(data) ? data : []) as T[], error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico ao consultar tabela ${table}`, err);
-      this.recordFailure(requestId, 'from', table, err instanceof Error ? err.message : String(err));
+      this.recordFailure(
+        requestId,
+        'from',
+        table,
+        err instanceof Error ? err.message : String(err)
+      );
       stats.failedCalls++;
-      return { data: [] as T[], error: err instanceof Error ? err : new Error(String(err)), requestId };
+      return {
+        data: [] as T[],
+        error: err instanceof Error ? err : new Error(String(err)),
+        requestId,
+      };
     }
   },
 
@@ -100,7 +108,12 @@ export const safeClient = {
       return { data: data as T, error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico single ${table}`, err);
-      this.recordFailure(requestId, 'single', table, err instanceof Error ? err.message : String(err));
+      this.recordFailure(
+        requestId,
+        'single',
+        table,
+        err instanceof Error ? err.message : String(err)
+      );
       stats.failedCalls++;
       return { data: null, error: err instanceof Error ? err : new Error(String(err)), requestId };
     }
@@ -109,10 +122,7 @@ export const safeClient = {
   /**
    * Executa um RPC com validação e tratamento de erro
    */
-  async rpc<T = any>(
-    name: string,
-    params?: Record<string, any>
-  ): Promise<SafeResponse<T>> {
+  async rpc<T = any>(name: string, params?: Record<string, any>): Promise<SafeResponse<T>> {
     const requestId = Math.random().toString(36).substring(7);
     stats.totalCalls++;
     try {
@@ -133,9 +143,9 @@ export const safeClient = {
         stats.failedCalls++;
         return { data: null, error: this.formatError(error), requestId };
       }
-      
+
       if (data === undefined || data === null) return { data: null, error: null, requestId };
-      
+
       return { data: data as T, error: null, requestId };
     } catch (err) {
       this.log(requestId, 'error', `Erro crítico RPC ${name}`, err);
@@ -151,7 +161,7 @@ export const safeClient = {
   async validateResource(name: string, type: 'function' | 'table' = 'table'): Promise<boolean> {
     const cacheKey = `${type}:${name}`;
     const cached = resourceCache.get(cacheKey);
-    
+
     if (cached && cached.expires > Date.now()) {
       stats.cacheHits++;
       return cached.exists;
@@ -162,8 +172,11 @@ export const safeClient = {
     try {
       let exists = false;
       if (type === 'table') {
-        const { error } = await (supabase.from(name as any) as any).select('count', { count: 'exact', head: true }).limit(0);
-        exists = !error || !error.message || !error.message.toLowerCase().includes('does not exist');
+        const { error } = await (supabase.from(name as any) as any)
+          .select('count', { count: 'exact', head: true })
+          .limit(0);
+        exists =
+          !error || !error.message || !error.message.toLowerCase().includes('does not exist');
       } else {
         const { error } = await supabase.rpc(name as any).limit(0);
         if (!error) {
@@ -173,12 +186,12 @@ export const safeClient = {
           exists = !msg.includes('does not exist') && !msg.includes('não existe');
         }
       }
-      
+
       resourceCache.set(cacheKey, { exists, expires: Date.now() + CACHE_TTL });
-      
+
       // Sincronizar estado de saúde com o banco para que o Edge possa ver
       this.syncHealthState();
-      
+
       return exists;
     } catch {
       return false;
@@ -202,8 +215,8 @@ export const safeClient = {
         p_metadata: {
           total_calls: telemetry.stats.totalCalls,
           cache_hits: telemetry.stats.cacheHits,
-          last_validation: lastValidation?.toISOString()
-        }
+          last_validation: lastValidation?.toISOString(),
+        },
       });
     } catch (err) {
       console.warn('[safeClient] Erro ao sincronizar estado de saúde', err);
@@ -216,12 +229,13 @@ export const safeClient = {
   log(requestId: string, level: 'info' | 'warn' | 'error', message: string, detail?: any) {
     const prefix = `[safeClient][${requestId}]`;
     const maskedDetail = this.maskSensitiveData(detail);
-    
+
     if (level === 'error') {
       console.error(prefix, message, maskedDetail || '');
     } else if (level === 'warn') {
       console.warn(prefix, message, maskedDetail || '');
     } else {
+      // eslint-disable-next-line no-console
       console.info(prefix, message, maskedDetail || '');
     }
   },
@@ -242,15 +256,15 @@ export const safeClient = {
     }
 
     const masked = Array.isArray(data) ? [...data] : { ...data };
-    
+
     for (const key in masked) {
       const val = masked[key];
       const lowerKey = key.toLowerCase();
-      
+
       if (
-        lowerKey.includes('token') || 
-        lowerKey.includes('secret') || 
-        lowerKey.includes('password') || 
+        lowerKey.includes('token') ||
+        lowerKey.includes('secret') ||
+        lowerKey.includes('password') ||
         lowerKey.includes('key') ||
         lowerKey.includes('auth') ||
         lowerKey.includes('credential') ||
@@ -264,7 +278,7 @@ export const safeClient = {
         masked[key] = this.maskSensitiveData(val);
       }
     }
-    
+
     return masked;
   },
 
@@ -292,11 +306,11 @@ export const safeClient = {
       operation,
       resource,
       error,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     recentFailures.unshift(failure);
-    
+
     if (recentFailures.length > MAX_FAILURES) {
       recentFailures.pop();
     }
@@ -309,7 +323,7 @@ export const safeClient = {
         p_resource: resource,
         p_request_id: requestId,
         p_error_message: error,
-        p_is_failure: true
+        p_is_failure: true,
       });
     } catch (dbErr) {
       // Ignorar erros de persistência para não travar a operação principal
@@ -324,7 +338,7 @@ export const safeClient = {
     return {
       lastValidation,
       recentFailures: [...recentFailures],
-      stats: { ...stats }
+      stats: { ...stats },
     };
   },
 
@@ -333,10 +347,10 @@ export const safeClient = {
    */
   getCacheInfo() {
     const values = Array.from(resourceCache.values());
-    const expiration = values.length > 0 ? Math.max(...values.map(v => v.expires)) : null;
+    const expiration = values.length > 0 ? Math.max(...values.map((v) => v.expires)) : null;
     return {
       expiration,
-      size: resourceCache.size
+      size: resourceCache.size,
     };
   },
 
@@ -366,5 +380,5 @@ export const safeClient = {
       return new Error(error.message);
     }
     return new Error(String(error));
-  }
+  },
 };

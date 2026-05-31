@@ -35,7 +35,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
     try {
       // Check profile
-      const { data: profile , error } = await supabase
+      const { data: profile, _error } = await supabase
         .from('profiles')
         .select('name, avatar_url')
         .eq('user_id', user.id)
@@ -44,7 +44,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
       // Check WhatsApp connection
       try {
-        const { data: connections , error: connectionsErr } = await supabase
+        const { data: connections, error: _connectionsErr } = await supabase
           .from('whatsapp_connections')
           .select('id')
           .eq('status', 'connected')
@@ -55,7 +55,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
       }
 
       // Check user settings
-      const { data: settings , error: settingsErr } = await supabase
+      const { data: settings, error: _settingsErr } = await supabase
         .from('user_settings')
         .select('business_hours_enabled, browser_notifications_enabled, sound_enabled, theme')
         .eq('user_id', user.id)
@@ -63,12 +63,13 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
       if (settings) {
         newStatus.hours = settings.business_hours_enabled === true;
-        newStatus.notifications = settings.browser_notifications_enabled === true || settings.sound_enabled === true;
+        newStatus.notifications =
+          settings.browser_notifications_enabled === true || settings.sound_enabled === true;
         newStatus.theme = settings.theme !== null && settings.theme !== 'system';
       }
 
       // Check templates
-      const { data: templates , error: templatesErr } = await supabase
+      const { data: templates, error: _templatesErr } = await supabase
         .from('message_templates')
         .select('id')
         .eq('user_id', user.id)
@@ -91,7 +92,11 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
     }
 
     let dismissed = false;
-    try { dismissed = localStorage.getItem(`checklist_dismissed_${user.id}`) === 'true'; } catch { /* storage unavailable */ }
+    try {
+      dismissed = localStorage.getItem(`checklist_dismissed_${user.id}`) === 'true';
+    } catch {
+      /* storage unavailable */
+    }
     setIsDismissed(dismissed);
 
     // Don't run queries if already dismissed
@@ -105,14 +110,22 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
   const dismiss = useCallback(() => {
     if (user) {
-      try { localStorage.setItem(`checklist_dismissed_${user.id}`, 'true'); } catch { /* storage unavailable */ }
+      try {
+        localStorage.setItem(`checklist_dismissed_${user.id}`, 'true');
+      } catch {
+        /* storage unavailable */
+      }
       setIsDismissed(true);
     }
   }, [user]);
 
   const reset = useCallback(() => {
     if (user) {
-      try { localStorage.removeItem(`checklist_dismissed_${user.id}`); } catch { /* storage unavailable */ }
+      try {
+        localStorage.removeItem(`checklist_dismissed_${user.id}`);
+      } catch {
+        /* storage unavailable */
+      }
       setIsDismissed(false);
     }
   }, [user]);

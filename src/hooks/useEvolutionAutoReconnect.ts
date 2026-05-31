@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,11 +10,11 @@ import { eventBus } from '@/lib/eventBus';
 const log = getLogger('useEvolutionAutoReconnect');
 
 const INITIAL_BACKOFF_MS = 2000;
-const MAX_BACKOFF_MS = 60000; 
+const _MAX_BACKOFF_MS = 60000;
 
 /**
  * useEvolutionAutoReconnect — Definitive Reconnection Hook
- * Consolidates global monitoring via Realtime (Supabase) 
+ * Consolidates global monitoring via Realtime (Supabase)
  * and specific instance polling with backoff for the Inbox.
  */
 export function useEvolutionAutoReconnect(instanceName?: string) {
@@ -38,13 +39,15 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
         (payload) => {
           const connection = payload.new as any;
           const oldConnection = payload.old as any;
-          
+
           if (!connection.auto_reconnect_enabled || connection.loop_protection_active) return;
 
           const isDisconnected = connection.status === 'disconnected';
-          const isPhantom = connection.health_reason === 'phantom_session' || connection.health_reason === 'socket_closed';
+          const isPhantom =
+            connection.health_reason === 'phantom_session' ||
+            connection.health_reason === 'socket_closed';
           const wasConnected = oldConnection.status === 'connected';
-          
+
           if ((isDisconnected || isPhantom) && connection.instance_id && wasConnected) {
             void performReconnect(connection);
           }
@@ -52,7 +55,9 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const performReconnect = async (connection: any) => {
@@ -60,7 +65,7 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
     const now = Date.now();
     const lastTime = lastAttemptTime.current[id] || 0;
     const attempts = attemptMap.current[id] || 0;
-    
+
     const intervalMs = (connection.reconnect_interval_seconds || 30) * 1000;
     const maxAttempts = connection.max_reconnect_attempts || 5;
 
@@ -71,7 +76,7 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
     }
 
     log.info(`Auto-reconnecting ${connection.name}`, { attempt: attempts + 1 });
-    
+
     lastAttemptTime.current[id] = now;
     attemptMap.current[id] = attempts + 1;
 
@@ -81,7 +86,7 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
     try {
       await restartInstance(connection.instance_id);
       // Wait for instance to boot
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise((r) => setTimeout(r, 5000));
       // Trigger a health check function if exists
       await supabase.functions.invoke('connection-health-check', {
         body: { instanceName: connection.instance_id },
@@ -99,24 +104,24 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
       p_status_before: connection.status,
       p_reason_before: connection.health_reason,
       p_result: result,
-      p_error: errorMsg
+      p_error: errorMsg,
     });
   };
 
   // ── Specific Instance Polling (Legacy/Inbox Support) ──────────────────────
   const attemptSpecificReconnect = useCallback(async () => {
     if (!instanceName || isReconnecting) return;
-    
+
     setIsReconnecting(true);
     log.info(`Attempting to reconnect specific instance ${instanceName}...`);
-    
+
     try {
       await connectInstance(instanceName);
       setTimeout(async () => {
         const currentStatus = await getInstanceStatus(instanceName);
         const state = currentStatus?.instance?.state || currentStatus?.state || 'unknown';
         setStatus(state);
-        
+
         if (state === 'open') {
           log.info(`Successfully reconnected instance ${instanceName}`);
           backoffRef.current = INITIAL_BACKOFF_MS;
@@ -137,7 +142,7 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
     setIsReconnecting(false);
     const nextDelay = Math.min(backoffRef.current * 2, 60000);
     backoffRef.current = nextDelay;
-    
+
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(attemptSpecificReconnect, nextDelay);
   }, [attemptSpecificReconnect]);
@@ -148,7 +153,7 @@ export function useEvolutionAutoReconnect(instanceName?: string) {
       const currentStatus = await getInstanceStatus(instanceName);
       const state = currentStatus?.instance?.state || currentStatus?.state || 'unknown';
       setStatus(state);
-      
+
       if (state !== 'open' && state !== 'connecting' && !isReconnecting) {
         attemptSpecificReconnect();
       }

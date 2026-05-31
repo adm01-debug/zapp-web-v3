@@ -20,7 +20,9 @@ export function useWarRoomAlerts(soundEnabled = true) {
 
   // Initialize alert sound
   useEffect(() => {
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgip6LbUg3WX2OgGtLPE51g3lgSkRHZXVzYFRDSWBwaV5WTFFcaGReW1haYmhkYl9eYGVpZ2VkZGRnamlnZmZnaGlpaGdnaGhpaWhoaGhpaWhoaGlpaGlpaGhpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaQ==');
+    audioRef.current = new Audio(
+      'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgip6LbUg3WX2OgGtLPE51g3lgSkRHZXVzYFRDSWBwaV5WTFFcaGReW1haYmhkYl9eYGVpZ2VkZGRnamlnZmZnaGlpaGdnaGhpaWhoaGhpaWhoaGlpaGlpaGhpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaQ=='
+    );
     audioRef.current.volume = 0.5;
   }, []);
 
@@ -35,7 +37,7 @@ export function useWarRoomAlerts(soundEnabled = true) {
   const { data: alerts = [] } = useQuery({
     queryKey: ['warroom-alerts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, _error } = await supabase
         .from('warroom_alerts')
         .select('*')
         .eq('is_read', false)
@@ -78,7 +80,9 @@ export function useWarRoomAlerts(soundEnabled = true) {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [queryClient, playAlertSound, permission, showNotification]);
 
   // Dismiss alert
@@ -90,7 +94,7 @@ export function useWarRoomAlerts(soundEnabled = true) {
   // SLA breach monitor - checks every 30s and creates alerts
   useEffect(() => {
     const checkSLABreaches = async () => {
-      const { data: breaches , error: breachesErr } = await supabase
+      const { data: breaches, error: _breachesErr } = await supabase
         .from('conversation_sla')
         .select('id, contact_id, first_response_breached, resolution_breached')
         .or('first_response_breached.eq.true,resolution_breached.eq.true');
@@ -98,7 +102,7 @@ export function useWarRoomAlerts(soundEnabled = true) {
       if (breaches && breaches.length > 0) {
         const newBreachCount = breaches.length;
         // Only alert if breaches exist (the insert will be idempotent via unique constraint check)
-        const existingAlerts = alerts.filter(a => a.source === 'sla-monitor');
+        const existingAlerts = alerts.filter((a) => a.source === 'sla-monitor');
         if (existingAlerts.length === 0 || newBreachCount > existingAlerts.length) {
           await supabase.from('warroom_alerts').insert({
             alert_type: 'critical',

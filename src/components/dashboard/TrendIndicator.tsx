@@ -20,7 +20,10 @@ interface TrendIndicatorProps {
   animated?: boolean;
 }
 
-export function calculateTrend(current: number, previous: number): {
+export function calculateTrend(
+  current: number,
+  previous: number
+): {
   percentage: number;
   direction: 'up' | 'down' | 'neutral';
   absoluteChange: number;
@@ -87,13 +90,17 @@ export function TrendIndicator({
     neutral: 'bg-muted/50 text-muted-foreground border-border/30',
   };
 
-  const colorClass = isPositive ? colorClasses.positive : isNegative ? colorClasses.negative : colorClasses.neutral;
+  const colorClass = isPositive
+    ? colorClasses.positive
+    : isNegative
+      ? colorClasses.negative
+      : colorClasses.neutral;
 
-  const TrendIcon = direction === 'up' ? TrendingUp : direction === 'down' ? TrendingDown : Minus;
+  const _TrendIcon = direction === 'up' ? TrendingUp : direction === 'down' ? TrendingDown : Minus;
   const ArrowIcon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : null;
 
-  const displayValue = showAbsoluteChange 
-    ? `${absoluteChange > 0 ? '+' : ''}${absoluteChange.toFixed(0)}` 
+  const displayValue = showAbsoluteChange
+    ? `${absoluteChange > 0 ? '+' : ''}${absoluteChange.toFixed(0)}`
     : `${percentage.toFixed(1)}${suffix}`;
 
   return (
@@ -104,7 +111,7 @@ export function TrendIndicator({
         transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
         whileHover={{ scale: 1.05 }}
         className={cn(
-          "inline-flex items-center rounded-full border font-semibold transition-all duration-300",
+          'inline-flex items-center rounded-full border font-semibold transition-all duration-300',
           colorClass,
           sizes.container
         )}
@@ -112,10 +119,7 @@ export function TrendIndicator({
         {/* Animated Arrow */}
         {ArrowIcon && animated ? (
           <motion.div
-            animate={direction === 'up' 
-              ? { y: [0, -2, 0] }
-              : { y: [0, 2, 0] }
-            }
+            animate={direction === 'up' ? { y: [0, -2, 0] } : { y: [0, 2, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
           >
             <ArrowIcon className={sizes.arrow} />
@@ -129,11 +133,7 @@ export function TrendIndicator({
         <span className={sizes.text}>{displayValue}</span>
       </motion.div>
 
-      {label && (
-        <span className={cn("text-muted-foreground", sizes.text)}>
-          {label}
-        </span>
-      )}
+      {label && <span className={cn('text-muted-foreground', sizes.text)}>{label}</span>}
     </div>
   );
 }
@@ -161,8 +161,8 @@ export function CompactTrendBadge({
       animate={{ scale: 1 }}
       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
       className={cn(
-        "inline-flex items-center justify-center rounded-full",
-        size === 'sm' ? 'w-6 h-6' : 'w-8 h-8',
+        'inline-flex items-center justify-center rounded-full',
+        size === 'sm' ? 'h-6 w-6' : 'h-8 w-8',
         isPositive && 'bg-success/20 text-success',
         isNegative && 'bg-destructive/20 text-destructive',
         !isPositive && !isNegative && 'bg-muted text-muted-foreground'
@@ -170,16 +170,13 @@ export function CompactTrendBadge({
     >
       {ArrowIcon ? (
         <motion.div
-          animate={direction === 'up' 
-            ? { y: [0, -1, 0] }
-            : { y: [0, 1, 0] }
-          }
+          animate={direction === 'up' ? { y: [0, -1, 0] } : { y: [0, 1, 0] }}
           transition={{ duration: 1.2, repeat: Infinity }}
         >
-          <ArrowIcon className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+          <ArrowIcon className={size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
         </motion.div>
       ) : (
-        <Minus className={size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} />
+        <Minus className={size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} />
       )}
     </motion.div>
   );
@@ -222,16 +219,30 @@ export function TrendSparkline({
     <motion.svg
       width={width}
       height={height}
-      className={cn("overflow-visible", className)}
+      className={cn('overflow-visible', className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
       {/* Gradient definition */}
       <defs>
-        <linearGradient id={`sparkline-gradient-${isPositive ? 'up' : 'down'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'} stopOpacity="0" />
+        <linearGradient
+          id={`sparkline-gradient-${isPositive ? 'up' : 'down'}`}
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stopColor={isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
+            stopOpacity="0.3"
+          />
+          <stop
+            offset="100%"
+            stopColor={isPositive ? 'hsl(var(--success))' : 'hsl(var(--destructive))'}
+            stopOpacity="0"
+          />
         </linearGradient>
       </defs>
 

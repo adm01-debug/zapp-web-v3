@@ -34,9 +34,9 @@ export function usePerformanceMetrics() {
       const entries = list.getEntries() as PerformanceEventTiming[];
       const firstEntry = entries[0];
       if (firstEntry) {
-        setMetrics((prev) => ({ 
-          ...prev, 
-          fid: firstEntry.processingStart - firstEntry.startTime 
+        setMetrics((prev) => ({
+          ...prev,
+          fid: firstEntry.processingStart - firstEntry.startTime,
         }));
       }
     });
@@ -44,7 +44,9 @@ export function usePerformanceMetrics() {
     // Cumulative Layout Shift
     let clsValue = 0;
     const clsObserver = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as Array<PerformanceEntry & { hadRecentInput?: boolean; value?: number }>) {
+      for (const entry of list.getEntries() as Array<
+        PerformanceEntry & { hadRecentInput?: boolean; value?: number }
+      >) {
         if (!entry.hadRecentInput) {
           clsValue += entry.value;
           setMetrics((prev) => ({ ...prev, cls: clsValue }));
@@ -66,7 +68,9 @@ export function usePerformanceMetrics() {
       fidObserver.observe({ type: 'first-input', buffered: true });
       clsObserver.observe({ type: 'layout-shift', buffered: true });
       fcpObserver.observe({ type: 'paint', buffered: true });
-    } catch (err) { log.error('Unexpected error in usePerformanceOptimizations:', err); }
+    } catch (err) {
+      log.error('Unexpected error in usePerformanceOptimizations:', err);
+    }
 
     // Time to First Byte
     const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -91,26 +95,26 @@ export { useDebounce, useThrottle } from './usePerformance';
 // Throttled callback hook (different signature - for callbacks)
 type AnyFunction = (...args: unknown[]) => unknown;
 
-export function useThrottledCallback<T extends AnyFunction>(
-  callback: T,
-  delay: number
-): T {
+export function useThrottledCallback<T extends AnyFunction>(callback: T, delay: number): T {
   const lastCall = useRef(0);
   const lastCallTimer = useRef<ReturnType<typeof setTimeout>>();
 
   return useCallback(
     ((...args) => {
       const now = Date.now();
-      
+
       if (now - lastCall.current >= delay) {
         lastCall.current = now;
         callback(...args);
       } else {
         clearTimeout(lastCallTimer.current);
-        lastCallTimer.current = setTimeout(() => {
-          lastCall.current = Date.now();
-          callback(...args);
-        }, delay - (now - lastCall.current));
+        lastCallTimer.current = setTimeout(
+          () => {
+            lastCall.current = Date.now();
+            callback(...args);
+          },
+          delay - (now - lastCall.current)
+        );
       }
     }) as T,
     [callback, delay]
@@ -120,9 +124,10 @@ export function useThrottledCallback<T extends AnyFunction>(
 // Request idle callback hook
 export function useIdleCallback(callback: () => void, timeout = 1000) {
   useEffect(() => {
-    const id = 'requestIdleCallback' in window
-      ? window.requestIdleCallback(callback, { timeout })
-      : setTimeout(callback, timeout);
+    const id =
+      'requestIdleCallback' in window
+        ? window.requestIdleCallback(callback, { timeout })
+        : setTimeout(callback, timeout);
 
     return () => {
       if ('cancelIdleCallback' in window && typeof id === 'number') {
@@ -177,7 +182,7 @@ export function useMemoryPressure() {
 
     // Listen for memory pressure events
     const handleMemoryPressure = () => setIsLowMemory(true);
-    
+
     // devicememory event is experimental - no standard types exist
     const nav = navigator as unknown as EventTarget;
     if ('ondevicememory' in navigator) {
@@ -208,26 +213,35 @@ export function useNetworkStatus() {
     window.addEventListener('offline', handleOffline);
 
     // Connection API
-    const connection = (navigator as Navigator & { connection?: { effectiveType?: string; saveData?: boolean; addEventListener?: Function; removeEventListener?: Function } }).connection;
+    const connection = (
+      navigator as Navigator & {
+        connection?: {
+          effectiveType?: string;
+          saveData?: boolean;
+          addEventListener?: (type: string, listener: () => void) => void;
+          removeEventListener?: (type: string, listener: () => void) => void;
+        };
+      }
+    ).connection;
     if (connection) {
       setConnectionType(connection.effectiveType);
       setIsSlowConnection(
-        connection.saveData || 
-        connection.effectiveType === 'slow-2g' || 
-        connection.effectiveType === '2g'
+        connection.saveData ||
+          connection.effectiveType === 'slow-2g' ||
+          connection.effectiveType === '2g'
       );
 
       const handleChange = () => {
         setConnectionType(connection.effectiveType);
         setIsSlowConnection(
-          connection.saveData || 
-          connection.effectiveType === 'slow-2g' || 
-          connection.effectiveType === '2g'
+          connection.saveData ||
+            connection.effectiveType === 'slow-2g' ||
+            connection.effectiveType === '2g'
         );
       };
 
       connection.addEventListener('change', handleChange);
-      
+
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
@@ -252,7 +266,7 @@ export function useReducedMotion() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    
+
     const handleChange = (event: MediaQueryListEvent) => {
       setPrefersReducedMotion(event.matches);
     };

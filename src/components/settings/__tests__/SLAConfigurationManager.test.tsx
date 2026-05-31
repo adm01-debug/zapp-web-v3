@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -9,33 +10,34 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: () => ({
       select: () => ({
         order: () => ({
-          then: (r: any) => r({
-            data: [
-              {
-                id: 'sla-1',
-                name: 'SLA Crítico',
-                first_response_minutes: 5,
-                resolution_minutes: 30,
-                priority: 'critical',
-                is_default: false,
-                is_active: true,
-                created_at: '2026-01-01',
-                updated_at: '2026-01-01',
-              },
-              {
-                id: 'sla-2',
-                name: 'SLA Padrão',
-                first_response_minutes: 15,
-                resolution_minutes: 120,
-                priority: 'medium',
-                is_default: true,
-                is_active: true,
-                created_at: '2026-01-01',
-                updated_at: '2026-01-01',
-              },
-            ],
-            error: null,
-          }),
+          then: (r: any) =>
+            r({
+              data: [
+                {
+                  id: 'sla-1',
+                  name: 'SLA Crítico',
+                  first_response_minutes: 5,
+                  resolution_minutes: 30,
+                  priority: 'critical',
+                  is_default: false,
+                  is_active: true,
+                  created_at: '2026-01-01',
+                  updated_at: '2026-01-01',
+                },
+                {
+                  id: 'sla-2',
+                  name: 'SLA Padrão',
+                  first_response_minutes: 15,
+                  resolution_minutes: 120,
+                  priority: 'medium',
+                  is_default: true,
+                  is_active: true,
+                  created_at: '2026-01-01',
+                  updated_at: '2026-01-01',
+                },
+              ],
+              error: null,
+            }),
         }),
       }),
       insert: () => ({ then: (r: any) => r({ error: null }) }),

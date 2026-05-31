@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -115,7 +116,9 @@ describe('SLARulesManager', () => {
     render(<SLARulesManager />, { wrapper: createWrapper() });
     await waitFor(() => fireEvent.click(screen.getByText('Nova Regra')));
     await waitFor(() => {
-      expect(screen.getByText(/Defina prazos específicos de resposta e resolução/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Defina prazos específicos de resposta e resolução/)
+      ).toBeInTheDocument();
     });
   });
 

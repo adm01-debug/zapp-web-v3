@@ -11,25 +11,25 @@ import { supabase } from '@/integrations/supabase/client';
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface PotentialDuplicate {
-  id:          string;
-  name:        string;
-  phone:       string | null;
-  email:       string | null;
-  avatar_url:  string | null;
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  avatar_url: string | null;
   match_field: 'phone' | 'email' | 'name';
   similarity?: number; // 0-1
 }
 
 interface UseDuplicateDetectorOptions {
   workspaceId: string;
-  excludeId?:  string; // exclude the current contact when editing
+  excludeId?: string; // exclude the current contact when editing
   debounceMs?: number;
 }
 
 interface DuplicateState {
-  checking:   boolean;
+  checking: boolean;
   duplicates: PotentialDuplicate[];
-  checked:    boolean;
+  checked: boolean;
 }
 
 // ── Normalize ──────────────────────────────────────────────────────────────
@@ -47,10 +47,12 @@ function normalizePhone(phone: string): string {
 export function useContactDuplicateDetector({
   workspaceId,
   excludeId,
-  debounceMs = 600,
+  debounceMs: _debounceMs = 600,
 }: UseDuplicateDetectorOptions) {
   const [state, setState] = useState<DuplicateState>({
-    checking: false, duplicates: [], checked: false,
+    checking: false,
+    duplicates: [],
+    checked: false,
   });
 
   const abortRef = useRef<AbortController | null>(null);
@@ -77,7 +79,7 @@ export function useContactDuplicateDetector({
       try {
         // Check by normalized phone
         if (normalizedPhone && normalizedPhone.length >= 8) {
-          const workspace_id = workspaceId; 
+          const workspace_id = workspaceId;
           const query = (supabase as any)
             .from('contacts')
             .select('id, name, phone, email, avatar_url')
@@ -88,8 +90,8 @@ export function useContactDuplicateDetector({
 
           const { data: phoneMatches } = await query.or(
             `phone.eq.${normalizedPhone}` +
-            `,phone.eq.+55${normalizedPhone}` +
-            `,phone.eq.55${normalizedPhone}`
+              `,phone.eq.+55${normalizedPhone}` +
+              `,phone.eq.55${normalizedPhone}`
           );
 
           if (phoneMatches) {

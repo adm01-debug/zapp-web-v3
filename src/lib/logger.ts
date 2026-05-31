@@ -1,19 +1,20 @@
 // Centralized logging utility with correlation IDs and structured output
 // Logs are automatically filtered in production builds
-import * as Sentry from "@sentry/react";
+import * as Sentry from '@sentry/react';
 
 const isDev = import.meta.env.DEV;
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogContext {
+interface _LogContext {
   module?: string;
   correlationId?: string;
   [key: string]: unknown;
 }
 
 // Session-level correlation ID for tracing across the app lifetime
-const sessionId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const sessionId =
+  crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 // Per-request correlation ID generator
 let requestCounter = 0;
@@ -55,11 +56,13 @@ class Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
+    // eslint-disable-next-line no-console
     if (this.shouldLog('debug')) console.debug(this.formatMessage('debug', message), ...args);
     this.addToSentryBreadcrumb('debug', message, ...args);
   }
 
   info(message: string, ...args: unknown[]): void {
+    // eslint-disable-next-line no-console
     if (this.shouldLog('info')) console.info(this.formatMessage('info', message), ...args);
     this.addToSentryBreadcrumb('info', message, ...args);
   }
@@ -79,12 +82,11 @@ class Logger {
 
   /** Log with explicit correlation ID for request tracing */
   withCorrelation(correlationId: string) {
-    const self = this;
     return {
-      debug: (msg: string, ...a: unknown[]) => self.debug(`[cid:${correlationId}] ${msg}`, ...a),
-      info: (msg: string, ...a: unknown[]) => self.info(`[cid:${correlationId}] ${msg}`, ...a),
-      warn: (msg: string, ...a: unknown[]) => self.warn(`[cid:${correlationId}] ${msg}`, ...a),
-      error: (msg: string, ...a: unknown[]) => self.error(`[cid:${correlationId}] ${msg}`, ...a),
+      debug: (msg: string, ...a: unknown[]) => this.debug(`[cid:${correlationId}] ${msg}`, ...a),
+      info: (msg: string, ...a: unknown[]) => this.info(`[cid:${correlationId}] ${msg}`, ...a),
+      warn: (msg: string, ...a: unknown[]) => this.warn(`[cid:${correlationId}] ${msg}`, ...a),
+      error: (msg: string, ...a: unknown[]) => this.error(`[cid:${correlationId}] ${msg}`, ...a),
     };
   }
 }
@@ -114,10 +116,11 @@ export function logPerformance(label: string, fn: () => void): void {
     fn();
     return;
   }
-  
+
   const start = performance.now();
   fn();
   const end = performance.now();
+  // eslint-disable-next-line no-console
   console.debug(`[PERF] [sid:${sessionId.slice(0, 8)}] ${label}: ${(end - start).toFixed(2)}ms`);
 }
 
@@ -126,10 +129,11 @@ export async function logAsyncPerformance<T>(label: string, fn: () => Promise<T>
   if (!isDev) {
     return fn();
   }
-  
+
   const start = performance.now();
   const result = await fn();
   const end = performance.now();
+  // eslint-disable-next-line no-console
   console.debug(`[PERF] [sid:${sessionId.slice(0, 8)}] ${label}: ${(end - start).toFixed(2)}ms`);
   return result;
 }

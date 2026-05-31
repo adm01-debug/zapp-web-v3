@@ -41,7 +41,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   const navigate = useNavigate();
-  const location = useLocation();
+  const _location = useLocation();
 
   const handleBack = () => {
     if (onBack) {
@@ -52,27 +52,26 @@ export function PageHeader({
   };
 
   return (
-    <header className={cn(
-      'flex flex-col gap-2 px-6 py-4 border-b border-border/50 bg-card',
-      className
-    )}>
+    <header
+      className={cn('flex flex-col gap-2 border-b border-border/50 bg-card px-6 py-4', className)}
+    >
       {/* Breadcrumbs row */}
       {breadcrumbs.length > 0 && (
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink 
-                href="/" 
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              <BreadcrumbLink
+                href="/"
+                className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
               >
-                <Home className="w-3.5 h-3.5" />
+                <Home className="h-3.5 w-3.5" />
                 <span className="sr-only">Início</span>
               </BreadcrumbLink>
             </BreadcrumbItem>
 
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
-              
+
               return (
                 <BreadcrumbItem key={crumb.label}>
                   <BreadcrumbSeparator />
@@ -87,7 +86,7 @@ export function PageHeader({
                           crumb.onClick();
                         }
                       }}
-                      className="hover:text-foreground transition-colors"
+                      className="transition-colors hover:text-foreground"
                     >
                       {crumb.label}
                     </BreadcrumbLink>
@@ -100,33 +99,27 @@ export function PageHeader({
       )}
 
       {/* Title row with actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           {showBack && (
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="w-8 h-8 shrink-0"
+              className="h-8 w-8 shrink-0"
               aria-label="Voltar"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
             </Button>
           )}
 
           <div className="min-w-0">
-            <h1 className="text-xl font-display font-bold text-foreground truncate">{title}</h1>
-            {subtitle && (
-              <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
-            )}
+            <h1 className="truncate font-display text-xl font-bold text-foreground">{title}</h1>
+            {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
 
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>
     </header>
   );

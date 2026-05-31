@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -89,18 +90,21 @@ describe('useExternalEmpresas', () => {
     expect(data).toContain('TechBR');
     expect(data).toContain('SpaceLabs');
     // No duplicates
-    expect(data.filter(e => e === 'Acme Corp')).toHaveLength(1);
+    expect(data.filter((e) => e === 'Acme Corp')).toHaveLength(1);
     // No empty strings
-    expect(data.filter(e => e === '')).toHaveLength(0);
+    expect(data.filter((e) => e === '')).toHaveLength(0);
   });
 
   it('calls search_contacts_advanced RPC', async () => {
     const { result } = renderHook(() => useExternalEmpresas(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockRpc).toHaveBeenCalledWith('search_contacts_advanced', expect.objectContaining({
-      p_page: 0,
-      p_page_size: 200,
-    }));
+    expect(mockRpc).toHaveBeenCalledWith(
+      'search_contacts_advanced',
+      expect.objectContaining({
+        p_page: 0,
+        p_page_size: 200,
+      })
+    );
   });
 
   it('paginates until fewer results than page size', async () => {
@@ -172,9 +176,9 @@ describe('useExternalCargos', () => {
     expect(data).toContain('Diretor');
     expect(data).toContain('Analista');
     // Deduplicated "Gerente" (both sources)
-    expect(data.filter(c => c === 'Gerente')).toHaveLength(1);
+    expect(data.filter((c) => c === 'Gerente')).toHaveLength(1);
     // No empty strings
-    expect(data.filter(c => c === '')).toHaveLength(0);
+    expect(data.filter((c) => c === '')).toHaveLength(0);
   });
 
   it('queries salespeople table directly for roles', async () => {
@@ -186,9 +190,12 @@ describe('useExternalCargos', () => {
   it('also calls RPC for additional cargos', async () => {
     const { result } = renderHook(() => useExternalCargos(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockRpc).toHaveBeenCalledWith('search_contacts_advanced', expect.objectContaining({
-      p_page: 0,
-    }));
+    expect(mockRpc).toHaveBeenCalledWith(
+      'search_contacts_advanced',
+      expect.objectContaining({
+        p_page: 0,
+      })
+    );
   });
 
   it('returns sorted results (pt-BR locale)', async () => {
@@ -222,7 +229,7 @@ describe('ContactForm — Empresa autocomplete logic', () => {
 
   function filterEmpresas(list: string[], query: string) {
     if (query.length < 1) return [];
-    return list.filter(e => e.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+    return list.filter((e) => e.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
   }
 
   it('returns empty for empty query', () => {
@@ -280,8 +287,10 @@ describe('ContactForm — Validation', () => {
     if (cleaned.length <= 2) return cleaned;
     if (cleaned.startsWith('55')) {
       if (cleaned.length <= 4) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2)}`;
-      if (cleaned.length <= 6) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4)}`;
-      if (cleaned.length <= 11) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+      if (cleaned.length <= 6)
+        return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4)}`;
+      if (cleaned.length <= 11)
+        return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
       return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9, 13)}`;
     }
     return value;

@@ -70,25 +70,27 @@ function VirtualizedListInner<T>(
   }, [onEndReached, endReachedThreshold]);
 
   // Expose methods to parent
-  useImperativeHandle(ref, () => ({
-    scrollToIndex: (index: number, options) => {
-      virtualizer.scrollToIndex(index, options);
-    },
-    scrollToTop: () => {
-      parentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    scrollToBottom: () => {
-      virtualizer.scrollToIndex(items.length - 1, { align: 'end' });
-    },
-  }), [virtualizer, items.length]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToIndex: (index: number, options) => {
+        virtualizer.scrollToIndex(index, options);
+      },
+      scrollToTop: () => {
+        parentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      scrollToBottom: () => {
+        virtualizer.scrollToIndex(items.length - 1, { align: 'end' });
+      },
+    }),
+    [virtualizer, items.length]
+  );
 
   // Empty state
   if (!isLoading && items.length === 0) {
     return (
-      <div className={cn('flex items-center justify-center h-full', className)}>
-        {emptyState || (
-          <p className="text-muted-foreground text-sm">Nenhum item encontrado</p>
-        )}
+      <div className={cn('flex h-full items-center justify-center', className)}>
+        {emptyState || <p className="text-sm text-muted-foreground">Nenhum item encontrado</p>}
       </div>
     );
   }
@@ -113,7 +115,7 @@ function VirtualizedListInner<T>(
         <AnimatePresence mode="popLayout">
           {virtualItems.map((virtualItem) => {
             const item = items[virtualItem.index];
-            
+
             return (
               <motion.div
                 key={virtualItem.key}
@@ -150,7 +152,7 @@ function VirtualizedListInner<T>(
         >
           {loadingState || (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-sm">Carregando...</span>
             </div>
           )}
@@ -186,7 +188,7 @@ export function VirtualizedGrid<T>({
   className,
   emptyState,
   isLoading,
-  onEndReached,
+  onEndReached: _onEndReached,
 }: VirtualizedGridProps<T>) {
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -207,9 +209,7 @@ export function VirtualizedGrid<T>({
 
   if (!isLoading && items.length === 0) {
     return (
-      <div className={cn('flex items-center justify-center h-full', className)}>
-        {emptyState}
-      </div>
+      <div className={cn('flex h-full items-center justify-center', className)}>{emptyState}</div>
     );
   }
 
@@ -224,7 +224,7 @@ export function VirtualizedGrid<T>({
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
-          
+
           return (
             <div
               key={virtualRow.key}

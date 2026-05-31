@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { PerformanceMonitor } from '../PerformanceMonitor';
@@ -12,12 +13,12 @@ const mockNav = {
 };
 
 Object.defineProperty(performance, 'getEntriesByType', {
-  value: vi.fn((type: string) => type === 'navigation' ? [mockNav] : []),
+  value: vi.fn((type: string) => (type === 'navigation' ? [mockNav] : [])),
   writable: true,
 });
 
 Object.defineProperty(performance, 'getEntriesByName', {
-  value: vi.fn((name: string) => name === 'first-contentful-paint' ? [{ startTime: 450 }] : []),
+  value: vi.fn((name: string) => (name === 'first-contentful-paint' ? [{ startTime: 450 }] : [])),
   writable: true,
 });
 
@@ -74,7 +75,9 @@ vi.mock('@/lib/formatters', () => ({
 
 // Mock recharts
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="chart">{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="chart">{children}</div>
+  ),
   AreaChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Area: () => <div />,
   LineChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -177,21 +180,30 @@ describe('PerformanceMonitor', () => {
   describe('Score calculation', () => {
     it('calculates score as percentage of good metrics', () => {
       const metrics = [
-        { status: 'good' }, { status: 'good' }, { status: 'warning' }, { status: 'critical' },
+        { status: 'good' },
+        { status: 'good' },
+        { status: 'warning' },
+        { status: 'critical' },
       ];
-      const score = Math.round((metrics.filter(m => m.status === 'good').length / metrics.length) * 100);
+      const score = Math.round(
+        (metrics.filter((m) => m.status === 'good').length / metrics.length) * 100
+      );
       expect(score).toBe(50);
     });
 
     it('returns 100 when all metrics are good', () => {
       const metrics = [{ status: 'good' }, { status: 'good' }];
-      const score = Math.round((metrics.filter(m => m.status === 'good').length / metrics.length) * 100);
+      const score = Math.round(
+        (metrics.filter((m) => m.status === 'good').length / metrics.length) * 100
+      );
       expect(score).toBe(100);
     });
 
     it('returns 0 when no metrics are good', () => {
       const metrics = [{ status: 'critical' }, { status: 'warning' }];
-      const score = Math.round((metrics.filter(m => m.status === 'good').length / metrics.length) * 100);
+      const score = Math.round(
+        (metrics.filter((m) => m.status === 'good').length / metrics.length) * 100
+      );
       expect(score).toBe(0);
     });
 
@@ -281,7 +293,7 @@ describe('PerformanceMonitor', () => {
     it('counts cache keys', () => {
       localStorage.setItem('cache_test1', 'v');
       localStorage.setItem('cache_test2', 'v');
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('cache_'));
       expect(keys.length).toBe(2);
     });
   });

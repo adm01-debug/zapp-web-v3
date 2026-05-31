@@ -15,28 +15,21 @@ export const WHATSAPP_FILE_TYPES: Record<string, FileTypeConfig> = {
     mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     maxSizeMB: 16,
     category: 'image',
-    label: 'Imagem'
+    label: 'Imagem',
   },
   video: {
     extensions: ['.mp4', '.3gp'],
     mimeTypes: ['video/mp4', 'video/3gpp'],
     maxSizeMB: 16,
     category: 'video',
-    label: 'Vídeo'
+    label: 'Vídeo',
   },
   audio: {
     extensions: ['.aac', '.amr', '.mp3', '.ogg', '.opus', '.m4a'],
-    mimeTypes: [
-      'audio/aac',
-      'audio/amr',
-      'audio/mpeg',
-      'audio/ogg',
-      'audio/opus',
-      'audio/mp4'
-    ],
+    mimeTypes: ['audio/aac', 'audio/amr', 'audio/mpeg', 'audio/ogg', 'audio/opus', 'audio/mp4'],
     maxSizeMB: 16,
     category: 'audio',
-    label: 'Áudio'
+    label: 'Áudio',
   },
   document: {
     extensions: [
@@ -50,7 +43,7 @@ export const WHATSAPP_FILE_TYPES: Record<string, FileTypeConfig> = {
       '.txt',
       '.csv',
       '.zip',
-      '.rar'
+      '.rar',
     ],
     mimeTypes: [
       'application/pdf',
@@ -64,29 +57,29 @@ export const WHATSAPP_FILE_TYPES: Record<string, FileTypeConfig> = {
       'text/csv',
       'application/zip',
       'application/x-rar-compressed',
-      'application/vnd.rar'
+      'application/vnd.rar',
     ],
     maxSizeMB: 100,
     category: 'document',
-    label: 'Documento'
+    label: 'Documento',
   },
   sticker: {
     extensions: ['.webp'],
     mimeTypes: ['image/webp'],
     maxSizeMB: 0.5, // 500KB
     category: 'sticker',
-    label: 'Sticker'
-  }
+    label: 'Sticker',
+  },
 };
 
 // Get all allowed file extensions
 export const getAllowedExtensions = (): string[] => {
-  return Object.values(WHATSAPP_FILE_TYPES).flatMap(config => config.extensions);
+  return Object.values(WHATSAPP_FILE_TYPES).flatMap((config) => config.extensions);
 };
 
 // Get all allowed MIME types
 export const getAllowedMimeTypes = (): string[] => {
-  return Object.values(WHATSAPP_FILE_TYPES).flatMap(config => config.mimeTypes);
+  return Object.values(WHATSAPP_FILE_TYPES).flatMap((config) => config.mimeTypes);
 };
 
 // Get accept string for file input
@@ -108,7 +101,7 @@ export const validateFile = (file: File): FileValidationResult => {
   const fileSizeMB = file.size / (1024 * 1024);
 
   // Find matching file type config
-  for (const [key, config] of Object.entries(WHATSAPP_FILE_TYPES)) {
+  for (const [_key, config] of Object.entries(WHATSAPP_FILE_TYPES)) {
     const matchesMime = config.mimeTypes.includes(mimeType);
     const matchesExt = config.extensions.includes(extension);
 
@@ -118,20 +111,20 @@ export const validateFile = (file: File): FileValidationResult => {
           valid: false,
           error: `Arquivo muito grande. O limite para ${config.label.toLowerCase()} é ${config.maxSizeMB}MB. Seu arquivo tem ${fileSizeMB.toFixed(2)}MB.`,
           category: config.category,
-          maxSizeMB: config.maxSizeMB
+          maxSizeMB: config.maxSizeMB,
         };
       }
       return {
         valid: true,
         category: config.category,
-        maxSizeMB: config.maxSizeMB
+        maxSizeMB: config.maxSizeMB,
       };
     }
   }
 
   return {
     valid: false,
-    error: `Tipo de arquivo não suportado: ${mimeType || extension}. Formatos aceitos: imagens (JPG, PNG, WebP), vídeos (MP4, 3GP), áudios (AAC, MP3, OGG, OPUS, M4A), documentos (PDF, DOC, XLS, PPT, TXT, CSV, ZIP, RAR).`
+    error: `Tipo de arquivo não suportado: ${mimeType || extension}. Formatos aceitos: imagens (JPG, PNG, WebP), vídeos (MP4, 3GP), áudios (AAC, MP3, OGG, OPUS, M4A), documentos (PDF, DOC, XLS, PPT, TXT, CSV, ZIP, RAR).`,
   };
 };
 
@@ -145,25 +138,25 @@ export const formatFileSize = (bytes: number): string => {
 // Get file category from MIME type
 export const getFileCategory = (mimeType: string): FileTypeConfig['category'] | null => {
   const mime = mimeType.toLowerCase();
-  
+
   for (const config of Object.values(WHATSAPP_FILE_TYPES)) {
     if (config.mimeTypes.includes(mime)) {
       return config.category;
     }
   }
-  
+
   // Fallback based on MIME prefix
   if (mime.startsWith('image/')) return 'image';
   if (mime.startsWith('video/')) return 'video';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime.startsWith('application/') || mime.startsWith('text/')) return 'document';
-  
+
   return null;
 };
 
 // Get max file size for category
 export const getMaxSizeForCategory = (category: FileTypeConfig['category']): number => {
-  const config = Object.values(WHATSAPP_FILE_TYPES).find(c => c.category === category);
+  const config = Object.values(WHATSAPP_FILE_TYPES).find((c) => c.category === category);
   return config?.maxSizeMB || 16;
 };
 
@@ -198,8 +191,8 @@ export const CONTACT_TYPES = [
   { value: 'outros', label: 'Outros', color: 'bg-muted' },
 ] as const;
 
-export type ContactType = typeof CONTACT_TYPES[number]['value'];
+export type ContactType = (typeof CONTACT_TYPES)[number]['value'];
 
 export const getContactTypeInfo = (type: string) => {
-  return CONTACT_TYPES.find(t => t.value === type) || CONTACT_TYPES[0];
+  return CONTACT_TYPES.find((t) => t.value === type) || CONTACT_TYPES[0];
 };

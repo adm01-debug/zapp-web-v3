@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { authService, Profile } from '@/features/auth/services/authService';
+import { authService, Profile } from '../services/authService';
 import { log } from '@/lib/logger';
-import { AuthContext } from '@/features/auth/context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
 
 /**
  * Componente central que fornece o estado de autenticação para toda a aplicação.
@@ -67,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId);
 
       if (userRoles && userRoles.length > 0) {
-        const roles = userRoles.map(r => r.role);
+        const roles = userRoles.map((r) => r.role);
         const { data: perms } = await supabase
           .from('role_permissions')
           .select('permissions(name)')
@@ -75,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (perms) {
           const permNames = perms
-            .map(p => (p.permissions as unknown as { name: string } | null)?.name)
+            .map((p) => (p.permissions as unknown as { name: string } | null)?.name)
             .filter(Boolean) as string[];
           setPermissions([...new Set(permNames)]);
         }
@@ -89,20 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const refreshAll = useCallback(async (userId: string) => {
-    setLoading(true);
-    await Promise.all([
-      fetchProfile(userId),
-      fetchRoles(userId),
-      fetchPermissions(userId)
-    ]);
-    setLoading(false);
-  }, [fetchProfile, fetchRoles, fetchPermissions]);
+  const refreshAll = useCallback(
+    async (userId: string) => {
+      setLoading(true);
+      await Promise.all([fetchProfile(userId), fetchRoles(userId), fetchPermissions(userId)]);
+      setLoading(false);
+    },
+    [fetchProfile, fetchRoles, fetchPermissions]
+  );
 
   useEffect(() => {
     const subscription = authService.onAuthStateChange((event, session) => {
       log.info(`[Auth] Event: ${event}`);
-      
+
       if (event === 'TOKEN_REFRESHED' && !session) {
         try {
           Object.keys(localStorage)
@@ -126,23 +124,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    authService.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        refreshAll(session.user.id);
-      } else {
+    authService
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          refreshAll(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        log.warn('[Auth] getSession failed, clearing local session', err);
+        try {
+          Object.keys(localStorage)
+            .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
+            .forEach((k) => localStorage.removeItem(k));
+        } catch {
+          /* noop */
+        }
         setLoading(false);
-      }
-    }).catch((err) => {
-      log.warn('[Auth] getSession failed, clearing local session', err);
-      try {
-        Object.keys(localStorage)
-          .filter((k) => k.startsWith('sb-') && k.includes('-auth-token'))
-          .forEach((k) => localStorage.removeItem(k));
-      } catch { /* noop */ }
-      setLoading(false);
-    });
+      });
 
     return () => subscription.unsubscribe();
   }, [refreshAll]);
@@ -192,7 +195,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user, profile?.id, fetchRoles, fetchPermissions]);
 
-
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
@@ -221,20 +223,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      profile, 
-      roles, 
-      permissions, 
-      loading, 
-      signIn, 
-      signUp, 
-      signOut, 
-      refreshProfile,
-      refreshRoles,
-      refreshPermissions
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        profile,
+        roles,
+        permissions,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        refreshProfile,
+        refreshRoles,
+        refreshPermissions,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

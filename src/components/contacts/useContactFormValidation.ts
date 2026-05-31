@@ -16,8 +16,10 @@ export const formatPhone = (value: string): string => {
   if (cleaned.length <= 2) return cleaned;
   if (cleaned.startsWith('55')) {
     if (cleaned.length <= 4) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2)}`;
-    if (cleaned.length <= 6) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4)}`;
-    if (cleaned.length <= 11) return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
+    if (cleaned.length <= 6)
+      return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4)}`;
+    if (cleaned.length <= 11)
+      return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9)}`;
     return `+${cleaned.slice(0, 2)} (${cleaned.slice(2, 4)}) ${cleaned.slice(4, 9)}-${cleaned.slice(9, 13)}`;
   }
   return value;
@@ -39,7 +41,7 @@ interface ContactFormValues {
 export function useContactFormValidation(
   values: ContactFormValues,
   onChange: (field: string, value: string) => void,
-  onSubmit: () => void,
+  onSubmit: () => void
 ) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<FieldError>({});
@@ -48,13 +50,18 @@ export function useContactFormValidation(
 
   const checkDuplicate = useCallback(async (phone: string) => {
     const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length < 10) { setDuplicateWarning(null); return; }
-    const { data, error } = await supabase
+    if (cleaned.length < 10) {
+      setDuplicateWarning(null);
+      return;
+    }
+    const { data, error: _error } = await supabase
       .from('contacts')
       .select('name, phone')
       .or(`phone.ilike.%${cleaned.slice(-8)}%`)
       .limit(1);
-    setDuplicateWarning(data && data.length > 0 ? `Possível duplicata: "${data[0].name}" (${data[0].phone})` : null);
+    setDuplicateWarning(
+      data && data.length > 0 ? `Possível duplicata: "${data[0].name}" (${data[0].phone})` : null
+    );
   }, []);
 
   const validate = useCallback((field: string, value: string): string | null => {
@@ -74,27 +81,37 @@ export function useContactFormValidation(
       case 'surname':
         if (value && value.length > 100) return 'Máximo 100 caracteres';
         return null;
-      default: return null;
+      default:
+        return null;
     }
   }, []);
 
-  const handleChange = useCallback((field: string, value: string) => {
-    onChange(field, value);
-    if (touched[field]) setErrors(prev => ({ ...prev, [field]: validate(field, value) }));
-  }, [onChange, touched, validate]);
+  const handleChange = useCallback(
+    (field: string, value: string) => {
+      onChange(field, value);
+      if (touched[field]) setErrors((prev) => ({ ...prev, [field]: validate(field, value) }));
+    },
+    [onChange, touched, validate]
+  );
 
-  const handleBlur = useCallback((field: string, value: string) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
-    setErrors(prev => ({ ...prev, [field]: validate(field, value) }));
-  }, [validate]);
+  const handleBlur = useCallback(
+    (field: string, value: string) => {
+      setTouched((prev) => ({ ...prev, [field]: true }));
+      setErrors((prev) => ({ ...prev, [field]: validate(field, value) }));
+    },
+    [validate]
+  );
 
-  const handlePhoneChange = useCallback((value: string) => {
-    const formatted = formatPhone(value);
-    onChange('phone', formatted);
-    if (touched.phone) setErrors(prev => ({ ...prev, phone: validate('phone', formatted) }));
-    clearTimeout(dupCheckTimer.current);
-    dupCheckTimer.current = setTimeout(() => checkDuplicate(formatted), 500);
-  }, [onChange, touched, validate, checkDuplicate]);
+  const handlePhoneChange = useCallback(
+    (value: string) => {
+      const formatted = formatPhone(value);
+      onChange('phone', formatted);
+      if (touched.phone) setErrors((prev) => ({ ...prev, phone: validate('phone', formatted) }));
+      clearTimeout(dupCheckTimer.current);
+      dupCheckTimer.current = setTimeout(() => checkDuplicate(formatted), 500);
+    },
+    [onChange, touched, validate, checkDuplicate]
+  );
 
   const handleSubmit = useCallback(() => {
     const newErrors: FieldError = {
@@ -104,16 +121,26 @@ export function useContactFormValidation(
     };
     setErrors(newErrors);
     setTouched({ name: true, phone: true, email: true });
-    if (Object.values(newErrors).some(e => e !== null)) return;
+    if (Object.values(newErrors).some((e) => e !== null)) return;
     onSubmit();
   }, [values, validate, onSubmit]);
 
   const isValid = useMemo(() => {
-    return values.name.trim().length >= 2 && validatePhone(values.phone) && (!values.email || validateEmail(values.email));
+    return (
+      values.name.trim().length >= 2 &&
+      validatePhone(values.phone) &&
+      (!values.email || validateEmail(values.email))
+    );
   }, [values.name, values.phone, values.email]);
 
   return {
-    touched, errors, duplicateWarning, isValid,
-    handleChange, handleBlur, handlePhoneChange, handleSubmit,
+    touched,
+    errors,
+    duplicateWarning,
+    isValid,
+    handleChange,
+    handleBlur,
+    handlePhoneChange,
+    handleSubmit,
   };
 }

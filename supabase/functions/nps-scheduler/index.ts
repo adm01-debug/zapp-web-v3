@@ -13,6 +13,19 @@ const RESOLVED_AGE_DAYS = 3;
 const MAX_PER_RUN = 50;
 
 Deno.serve(async (req) => {
+
+  // Verify cron secret
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  if (cronSecret) {
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    const provided = authHeader?.replace(/^Bearer\s+/i, '') || req.headers.get('x-cron-secret');
+    if (provided !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(

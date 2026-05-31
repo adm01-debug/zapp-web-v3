@@ -3,7 +3,11 @@
  * into the frontend's Message and Conversation types
  */
 import type { EvolutionMessage, DerivedContact } from '@/types/evolutionExternal';
-import type { RealtimeMessage, ConversationContact, ConversationWithMessages } from '@/features/inbox';
+import type {
+  RealtimeMessage,
+  ConversationContact,
+  ConversationWithMessages,
+} from '@/features/inbox';
 
 /**
  * Extract phone number from remote_jid (e.g. "5511999990001@s.whatsapp.net" → "5511999990001")
@@ -17,7 +21,7 @@ export function jidToPhone(jid: string): string {
  */
 export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessage {
   const msgType = extractMessageType(evo.message_type);
-  
+
   // Se não houver conteúdo ou legenda, e for mídia, usamos o label do tipo (ex: [Imagem])
   let content = evo.content || evo.caption || '';
   if (!content && msgType.category === 'media') {
@@ -31,7 +35,7 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
   }
 
   // Enriquecimento de metadados para telemetria (ex: PTT detection)
-  const mediaMeta: any = Array.isArray(evo.media_meta) ? {} : (evo.media_meta || {});
+  const mediaMeta: any = Array.isArray(evo.media_meta) ? {} : evo.media_meta || {};
   if (evo.message_type === 'audioMessage' || evo.message_type === 'audio') {
     if (mediaMeta.ptt === undefined && (evo as any).ptt !== undefined) {
       mediaMeta.ptt = (evo as any).ptt;
@@ -80,12 +84,26 @@ export function evolutionToRealtimeMessage(evo: EvolutionMessage): RealtimeMessa
  * tipo como `unknown` para o operador ver claramente o que falta.
  */
 export type InternalMessageType =
-  | 'text' | 'image' | 'audio' | 'video' | 'document'
-  | 'sticker' | 'location' | 'interactive' | 'unsupported';
+  | 'text'
+  | 'image'
+  | 'audio'
+  | 'video'
+  | 'document'
+  | 'sticker'
+  | 'location'
+  | 'interactive'
+  | 'unsupported';
 
 export type MessageCategory =
-  | 'text' | 'media' | 'interactive' | 'location'
-  | 'contact' | 'poll' | 'reaction' | 'system' | 'unknown';
+  | 'text'
+  | 'media'
+  | 'interactive'
+  | 'location'
+  | 'contact'
+  | 'poll'
+  | 'reaction'
+  | 'system'
+  | 'unknown';
 
 export interface ExtractedMessageType {
   /** Raw type as received from the wire (preserved for telemetry/debug). */
@@ -107,25 +125,95 @@ export interface ExtractedMessageType {
  * retroativa com adapters antigos.
  */
 const MESSAGE_TYPE_BLUEPRINT: Record<string, Omit<ExtractedMessageType, 'rawType'>> = {
-  conversation:           { internalType: 'text',         category: 'text',        supported: true,  label: 'Texto' },
-  extendedTextMessage:    { internalType: 'text',         category: 'text',        supported: true,  label: 'Texto formatado' },
-  imageMessage:           { internalType: 'image',        category: 'media',       supported: true,  label: 'Imagem' },
-  videoMessage:           { internalType: 'video',        category: 'media',       supported: true,  label: 'Vídeo' },
-  ptvMessage:             { internalType: 'video',        category: 'media',       supported: true,  label: 'Vídeo-nota' },
-  audioMessage:           { internalType: 'audio',        category: 'media',       supported: true,  label: 'Áudio' },
-  documentMessage:        { internalType: 'document',     category: 'media',       supported: true,  label: 'Documento' },
-  stickerMessage:         { internalType: 'sticker',      category: 'media',       supported: true,  label: 'Figurinha' },
-  locationMessage:        { internalType: 'location',     category: 'location',    supported: true,  label: 'Localização' },
-  liveLocationMessage:    { internalType: 'location',     category: 'location',    supported: true,  label: 'Localização ao vivo' },
-  contactMessage:         { internalType: 'unsupported',  category: 'contact',     supported: false, label: 'Cartão de contato' },
-  contactsArrayMessage:   { internalType: 'unsupported',  category: 'contact',     supported: false, label: 'Lista de contatos' },
-  pollCreationMessage:    { internalType: 'unsupported',  category: 'poll',        supported: false, label: 'Enquete' },
-  pollUpdateMessage:      { internalType: 'unsupported',  category: 'poll',        supported: false, label: 'Voto em enquete' },
-  reactionMessage:        { internalType: 'unsupported',  category: 'reaction',    supported: false, label: 'Reação' },
-  buttonsMessage:         { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Mensagem com botões' },
-  listMessage:            { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Mensagem de lista' },
-  templateMessage:        { internalType: 'interactive',  category: 'interactive', supported: true,  label: 'Modelo (template)' },
-  viewOnceMessage:        { internalType: 'unsupported',  category: 'media',       supported: false, label: 'Ver uma vez' },
+  conversation: { internalType: 'text', category: 'text', supported: true, label: 'Texto' },
+  extendedTextMessage: {
+    internalType: 'text',
+    category: 'text',
+    supported: true,
+    label: 'Texto formatado',
+  },
+  imageMessage: { internalType: 'image', category: 'media', supported: true, label: 'Imagem' },
+  videoMessage: { internalType: 'video', category: 'media', supported: true, label: 'Vídeo' },
+  ptvMessage: { internalType: 'video', category: 'media', supported: true, label: 'Vídeo-nota' },
+  audioMessage: { internalType: 'audio', category: 'media', supported: true, label: 'Áudio' },
+  documentMessage: {
+    internalType: 'document',
+    category: 'media',
+    supported: true,
+    label: 'Documento',
+  },
+  stickerMessage: {
+    internalType: 'sticker',
+    category: 'media',
+    supported: true,
+    label: 'Figurinha',
+  },
+  locationMessage: {
+    internalType: 'location',
+    category: 'location',
+    supported: true,
+    label: 'Localização',
+  },
+  liveLocationMessage: {
+    internalType: 'location',
+    category: 'location',
+    supported: true,
+    label: 'Localização ao vivo',
+  },
+  contactMessage: {
+    internalType: 'unsupported',
+    category: 'contact',
+    supported: false,
+    label: 'Cartão de contato',
+  },
+  contactsArrayMessage: {
+    internalType: 'unsupported',
+    category: 'contact',
+    supported: false,
+    label: 'Lista de contatos',
+  },
+  pollCreationMessage: {
+    internalType: 'unsupported',
+    category: 'poll',
+    supported: false,
+    label: 'Enquete',
+  },
+  pollUpdateMessage: {
+    internalType: 'unsupported',
+    category: 'poll',
+    supported: false,
+    label: 'Voto em enquete',
+  },
+  reactionMessage: {
+    internalType: 'unsupported',
+    category: 'reaction',
+    supported: false,
+    label: 'Reação',
+  },
+  buttonsMessage: {
+    internalType: 'interactive',
+    category: 'interactive',
+    supported: true,
+    label: 'Mensagem com botões',
+  },
+  listMessage: {
+    internalType: 'interactive',
+    category: 'interactive',
+    supported: true,
+    label: 'Mensagem de lista',
+  },
+  templateMessage: {
+    internalType: 'interactive',
+    category: 'interactive',
+    supported: true,
+    label: 'Modelo (template)',
+  },
+  viewOnceMessage: {
+    internalType: 'unsupported',
+    category: 'media',
+    supported: false,
+    label: 'Ver uma vez',
+  },
 };
 
 /** Aliases internos curtos (legacy + envio outbound). */
@@ -164,7 +252,7 @@ export function extractMessageType(rawType: string | null | undefined): Extracte
 }
 
 /** @deprecated Use `extractMessageType(...).internalType`. Kept for callers that expect a string. */
-function mapMessageType(evoType: string): string {
+function _mapMessageType(evoType: string): string {
   return extractMessageType(evoType).internalType;
 }
 
@@ -199,7 +287,8 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
     // Antes esse valor sobrescrevia o nome do contato, fazendo a sidebar
     // exibir "Você" em vez do nome real do cliente.
     // Tambem filtramos explicitamente "Você" caso algum webhook venha errado.
-    const safePushName = (!msg.from_me && msg.push_name && msg.push_name !== 'Você') ? msg.push_name : undefined;
+    const safePushName =
+      !msg.from_me && msg.push_name && msg.push_name !== 'Você' ? msg.push_name : undefined;
 
     if (!existing) {
       contactMap.set(msg.remote_jid, {
@@ -209,7 +298,12 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
         lastMessageAt: msg.created_at,
         messageCount: 1,
         unreadCount: isUnread ? 1 : 0,
-        lastMessageContent: msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : ''),
+        lastMessageContent:
+          msg.content ||
+          msg.caption ||
+          (extractMessageType(msg.message_type).category !== 'text'
+            ? `[${extractMessageType(msg.message_type).label}]`
+            : ''),
         lastMessageDirection: msg.direction,
         instanceName: msg.instance_name,
         tags: msg.tags,
@@ -223,7 +317,7 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
       if (!existing.pushName && safePushName) {
         existing.pushName = safePushName;
       }
-      
+
       // Atualiza sentiment se a mensagem for mais recente e tiver um
       if (msg.sentiment && new Date(msg.created_at) >= new Date(existing.lastMessageAt)) {
         existing.ai_sentiment = msg.sentiment;
@@ -232,13 +326,18 @@ export function deriveContactsFromMessages(messages: EvolutionMessage[]): Derive
       // Merge tags (union)
       if (msg.tags && Array.isArray(msg.tags)) {
         const currentTags = new Set(existing.tags || []);
-        msg.tags.forEach(t => currentTags.add(t));
+        msg.tags.forEach((t) => currentTags.add(t));
         existing.tags = Array.from(currentTags);
       }
 
       if (new Date(msg.created_at) > new Date(existing.lastMessageAt)) {
         existing.lastMessageAt = msg.created_at;
-        existing.lastMessageContent = msg.content || msg.caption || (extractMessageType(msg.message_type).category !== 'text' ? `[${extractMessageType(msg.message_type).label}]` : '');
+        existing.lastMessageContent =
+          msg.content ||
+          msg.caption ||
+          (extractMessageType(msg.message_type).category !== 'text'
+            ? `[${extractMessageType(msg.message_type).label}]`
+            : '');
         existing.lastMessageDirection = msg.direction;
       }
     }
@@ -280,7 +379,9 @@ export function derivedToConversationContact(dc: DerivedContact): ConversationCo
 /**
  * Build ConversationWithMessages from evolution messages grouped by remote_jid
  */
-export function buildExternalConversations(messages: EvolutionMessage[]): ConversationWithMessages[] {
+export function buildExternalConversations(
+  messages: EvolutionMessage[]
+): ConversationWithMessages[] {
   const derivedContacts = deriveContactsFromMessages(messages);
   const messagesByJid = new Map<string, EvolutionMessage[]>();
 
@@ -297,11 +398,11 @@ export function buildExternalConversations(messages: EvolutionMessage[]): Conver
     const realtimeMessages = evoMessages
       .map(evolutionToRealtimeMessage)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
-    const unreadCount = realtimeMessages.filter(m => !m.is_read && m.sender === 'contact').length;
-    const lastMessage = realtimeMessages.length > 0 ? realtimeMessages[realtimeMessages.length - 1] : null;
+
+    const unreadCount = realtimeMessages.filter((m) => !m.is_read && m.sender === 'contact').length;
+    const lastMessage =
+      realtimeMessages.length > 0 ? realtimeMessages[realtimeMessages.length - 1] : null;
 
     return { contact, messages: realtimeMessages, unreadCount, lastMessage };
   });
 }
-

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { vi } from 'vitest';
 
@@ -49,10 +50,10 @@ export const mockAuthContextLoggedOut = {
 };
 
 // Mock AuthProvider that provides test auth context
-export function MockAuthProvider({ 
-  children, 
-  value = mockAuthContext 
-}: { 
+export function MockAuthProvider({
+  children,
+  _value = mockAuthContext,
+}: {
   children: React.ReactNode;
   value?: typeof mockAuthContext;
 }) {

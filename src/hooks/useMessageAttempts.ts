@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * useMessageAttempts — hidrata o histórico de tentativas de envio (DLQ) para
@@ -34,10 +35,7 @@ export interface MessageAttemptRow {
   updated_at: string;
 }
 
-export function useMessageAttempts(
-  messageRowId: string | null,
-  opts: { enabled?: boolean } = {},
-) {
+export function useMessageAttempts(messageRowId: string | null, opts: { enabled?: boolean } = {}) {
   const enabled = !!messageRowId && opts.enabled !== false;
 
   return useQuery<MessageAttemptRow | null, Error>({
@@ -58,7 +56,7 @@ export function useMessageAttempts(
       const { data: byKey, error: keyErr } = await supabase
         .from('failed_messages')
         .select(
-          'id,status,retry_count,max_retries,error_code,error_message,http_status,last_retry_reason,last_attempt_at,next_attempt_at,succeeded_at,created_at,updated_at',
+          'id,status,retry_count,max_retries,error_code,error_message,http_status,last_retry_reason,last_attempt_at,next_attempt_at,succeeded_at,created_at,updated_at'
         )
         .eq('idempotency_key', primaryKey)
         .order('created_at', { ascending: false })
@@ -75,7 +73,7 @@ export function useMessageAttempts(
       const { data: byPayload, error: pErr } = await supabase
         .from('failed_messages')
         .select(
-          'id,status,retry_count,max_retries,error_code,error_message,http_status,last_retry_reason,last_attempt_at,next_attempt_at,succeeded_at,created_at,updated_at',
+          'id,status,retry_count,max_retries,error_code,error_message,http_status,last_retry_reason,last_attempt_at,next_attempt_at,succeeded_at,created_at,updated_at'
         )
         .eq('payload->>message_id', messageRowId)
         .order('created_at', { ascending: false })

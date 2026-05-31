@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  ShoppingBag, DollarSign, Calendar, ChevronDown, ChevronUp, Package,
-} from 'lucide-react';
+import { ShoppingBag, DollarSign, Calendar, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -39,7 +37,7 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
 
   useEffect(() => {
     async function fetch() {
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('contact_purchases')
         .select('id, title, amount, currency, status, purchased_at, purchase_type, created_at')
         .eq('contact_id', contactId)
@@ -52,22 +50,22 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
   }, [contactId]);
 
   const totalValue = purchases
-    .filter(p => p.status !== 'cancelled')
+    .filter((p) => p.status !== 'cancelled')
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   const displayed = expanded ? purchases : purchases.slice(0, 3);
 
   if (loading) {
     return (
-      <div className={cn("space-y-3", className)}>
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <ShoppingBag className="w-3 h-3" />
+      <div className={cn('space-y-3', className)}>
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <ShoppingBag className="h-3 w-3" />
           Compras
         </h3>
-        {[1, 2].map(i => (
-          <div key={i} className="p-3 rounded-lg bg-muted/20 animate-pulse space-y-2">
-            <div className="h-3 w-24 bg-muted rounded" />
-            <div className="h-2.5 w-16 bg-muted/60 rounded" />
+        {[1, 2].map((i) => (
+          <div key={i} className="animate-pulse space-y-2 rounded-lg bg-muted/20 p-3">
+            <div className="h-3 w-24 rounded bg-muted" />
+            <div className="h-2.5 w-16 rounded bg-muted/60" />
           </div>
         ))}
       </div>
@@ -75,20 +73,22 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <ShoppingBag className="w-3 h-3" />
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <ShoppingBag className="h-3 w-3" />
           Compras
         </h3>
-        <Badge variant="secondary" className="text-[10px]">{purchases.length}</Badge>
+        <Badge variant="secondary" className="text-[10px]">
+          {purchases.length}
+        </Badge>
       </div>
 
       {/* Total value */}
       {purchases.length > 0 && (
-        <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <DollarSign className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-3 rounded-lg border border-primary/10 bg-primary/5 p-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <DollarSign className="h-4 w-4 text-primary" />
           </div>
           <div>
             <p className="text-lg font-bold text-foreground">
@@ -100,8 +100,8 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
       )}
 
       {purchases.length === 0 ? (
-        <div className="text-center py-4">
-          <Package className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+        <div className="py-4 text-center">
+          <Package className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
           <p className="text-xs text-muted-foreground/50">Nenhuma compra registrada</p>
         </div>
       ) : (
@@ -113,28 +113,39 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="p-3 rounded-lg bg-muted/20 border border-border/20"
+                className="rounded-lg border border-border/20 bg-muted/20 p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{purchase.title}</p>
+                    <p className="truncate text-xs font-semibold text-foreground">
+                      {purchase.title}
+                    </p>
                     {purchase.purchase_type && (
                       <p className="text-[10px] text-muted-foreground">{purchase.purchase_type}</p>
                     )}
                   </div>
                   {purchase.amount != null && (
-                    <span className="text-xs font-bold text-foreground whitespace-nowrap">
+                    <span className="whitespace-nowrap text-xs font-bold text-foreground">
                       R$ {purchase.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge className={cn("text-[9px] h-4 px-1.5", STATUS_STYLES[purchase.status || ''] || 'bg-muted text-muted-foreground')}>
-                    {purchase.status === 'completed' ? 'Concluída' : purchase.status === 'pending' ? 'Pendente' : purchase.status || 'N/A'}
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge
+                    className={cn(
+                      'h-4 px-1.5 text-[9px]',
+                      STATUS_STYLES[purchase.status || ''] || 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {purchase.status === 'completed'
+                      ? 'Concluída'
+                      : purchase.status === 'pending'
+                        ? 'Pendente'
+                        : purchase.status || 'N/A'}
                   </Badge>
                   {purchase.purchased_at && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-2.5 h-2.5" />
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Calendar className="h-2.5 w-2.5" />
                       {format(new Date(purchase.purchased_at), 'dd/MM/yyyy', { locale: ptBR })}
                     </span>
                   )}
@@ -147,11 +158,12 @@ export function ContactPurchaseHistory({ contactId, className }: ContactPurchase
 
       {purchases.length > 3 && (
         <Button
-          variant="ghost" size="sm"
-          className="w-full text-xs h-7 text-muted-foreground gap-1"
+          variant="ghost"
+          size="sm"
+          className="h-7 w-full gap-1 text-xs text-muted-foreground"
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           {expanded ? 'Mostrar menos' : `Ver mais ${purchases.length - 3} compras`}
         </Button>
       )}

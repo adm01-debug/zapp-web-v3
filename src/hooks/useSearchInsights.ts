@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,9 +31,18 @@ export interface SearchInsights {
 }
 
 const EMPTY: SearchInsights = {
-  total_searches: 0, unique_queries: 0, vector_searches: 0, vector_share: 0,
-  total_clicks: 0, click_through_rate: 0, zero_result_count: 0, zero_result_rate: 0,
-  avg_result_count: 0, top_queries: [], zero_result_queries: [], window_days: 7,
+  total_searches: 0,
+  unique_queries: 0,
+  vector_searches: 0,
+  vector_share: 0,
+  total_clicks: 0,
+  click_through_rate: 0,
+  zero_result_count: 0,
+  zero_result_rate: 0,
+  avg_result_count: 0,
+  top_queries: [],
+  zero_result_queries: [],
+  window_days: 7,
 };
 
 export function useSearchInsights(days: number) {

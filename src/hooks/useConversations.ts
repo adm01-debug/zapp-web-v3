@@ -15,54 +15,54 @@ import { DEFAULT_WHATSAPP_INSTANCE } from '@/lib/constants/whatsappInstances';
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Conversation {
-  id:                   string;
-  contact_id:           string | null;
-  remote_jid:           string;
-  status:               string;
-  assigned_to:          string | null;
-  department:           string | null;
-  subject:              string | null;
-  priority:             string;
-  labels:               string[];
-  message_count:        number;
-  unread_count:         number;
-  first_message_at:     string | null;
-  last_message_at:      string | null;
+  id: string;
+  contact_id: string | null;
+  remote_jid: string;
+  status: string;
+  assigned_to: string | null;
+  department: string | null;
+  subject: string | null;
+  priority: string;
+  labels: string[];
+  message_count: number;
+  unread_count: number;
+  first_message_at: string | null;
+  last_message_at: string | null;
   last_message_content: string | null;
-  last_message_type:    string | null;
-  first_response_at:    string | null;
+  last_message_type: string | null;
+  first_response_at: string | null;
   first_response_seconds: number | null;
-  resolution_at:        string | null;
-  resolution_seconds:   number | null;
-  is_bot_active:        boolean;
-  satisfaction_score:   number | null;
-  instance_name:        string;
-  created_at:           string;
-  updated_at:           string;
+  resolution_at: string | null;
+  resolution_seconds: number | null;
+  is_bot_active: boolean;
+  satisfaction_score: number | null;
+  instance_name: string;
+  created_at: string;
+  updated_at: string;
   // Joined contact
-  contact_name?:        string;
-  contact_phone?:       string;
-  contact_avatar?:      string;
+  contact_name?: string;
+  contact_phone?: string;
+  contact_avatar?: string;
 }
 
 export interface ConversationFilters {
-  status:       'open' | 'closed' | 'all';
-  assigned_to:  string | null;
-  priority:     string | null;
-  search:       string;
+  status: 'open' | 'closed' | 'all';
+  assigned_to: string | null;
+  priority: string | null;
+  search: string;
   instance_name: string;
-  sort_field:   'last_message_at' | 'created_at' | 'unread_count';
-  sort_order:   'asc' | 'desc';
+  sort_field: 'last_message_at' | 'created_at' | 'unread_count';
+  sort_order: 'asc' | 'desc';
 }
 
 const DEFAULT_FILTERS: ConversationFilters = {
-  status:       'open',
-  assigned_to:  null,
-  priority:     null,
-  search:       '',
+  status: 'open',
+  assigned_to: null,
+  priority: null,
+  search: '',
   instance_name: DEFAULT_WHATSAPP_INSTANCE,
-  sort_field:   'last_message_at',
-  sort_order:   'desc',
+  sort_field: 'last_message_at',
+  sort_order: 'desc',
 };
 
 const PAGE_SIZE = 50;
@@ -72,23 +72,45 @@ const PAGE_SIZE = 50;
 export function useConversations() {
   const { toast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading,       setLoading]       = useState(false);
-  const [loadingMore,   setLoadingMore]   = useState(false);
-  const [hasMore,       setHasMore]       = useState(false);
-  const [total,         setTotal]         = useState(0);
-  const [filters,       setFilters]       = useState<ConversationFilters>(DEFAULT_FILTERS);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<ConversationFilters>(DEFAULT_FILTERS);
   const offsetRef = useRef(0);
-  const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
+  const _searchDebounce = useRef<ReturnType<typeof setTimeout>>();
 
   const buildQuery = useCallback((f: ConversationFilters) => {
     let q = dbFrom('conversations')
-      .select([
-        'id','contact_id','remote_jid','status','assigned_to','department',
-        'subject','priority','labels','message_count','unread_count',
-        'first_message_at','last_message_at','last_message_content','last_message_type',
-        'first_response_at','first_response_seconds','resolution_at','resolution_seconds',
-        'is_bot_active','satisfaction_score','instance_name','created_at','updated_at',
-      ].join(','), { count: 'exact' })
+      .select(
+        [
+          'id',
+          'contact_id',
+          'remote_jid',
+          'status',
+          'assigned_to',
+          'department',
+          'subject',
+          'priority',
+          'labels',
+          'message_count',
+          'unread_count',
+          'first_message_at',
+          'last_message_at',
+          'last_message_content',
+          'last_message_type',
+          'first_response_at',
+          'first_response_seconds',
+          'resolution_at',
+          'resolution_seconds',
+          'is_bot_active',
+          'satisfaction_score',
+          'instance_name',
+          'created_at',
+          'updated_at',
+        ].join(','),
+        { count: 'exact' }
+      )
       .eq('instance_name', f.instance_name)
       .limit(PAGE_SIZE);
 
@@ -105,54 +127,67 @@ export function useConversations() {
   }, []);
 
   const mapRow = (row: Record<string, unknown>): Conversation => ({
-    id:                   String(row.id),
-    contact_id:           row.contact_id as string | null,
-    remote_jid:           String(row.remote_jid ?? ''),
-    status:               String(row.status ?? 'open'),
-    assigned_to:          row.assigned_to as string | null,
-    department:           row.department as string | null,
-    subject:              row.subject ? sanitizeText(row.subject as string) : null,
-    priority:             String(row.priority ?? 'normal'),
-    labels:               Array.isArray(row.labels) ? row.labels as string[] : [],
-    message_count:        Number(row.message_count ?? 0),
-    unread_count:         Number(row.unread_count ?? 0),
-    first_message_at:     row.first_message_at as string | null,
-    last_message_at:      row.last_message_at as string | null,
-    last_message_content: row.last_message_content ? sanitizeText(row.last_message_content as string) : null,
-    last_message_type:    row.last_message_type as string | null,
-    first_response_at:    row.first_response_at as string | null,
+    id: String(row.id),
+    contact_id: row.contact_id as string | null,
+    remote_jid: String(row.remote_jid ?? ''),
+    status: String(row.status ?? 'open'),
+    assigned_to: row.assigned_to as string | null,
+    department: row.department as string | null,
+    subject: row.subject ? sanitizeText(row.subject as string) : null,
+    priority: String(row.priority ?? 'normal'),
+    labels: Array.isArray(row.labels) ? (row.labels as string[]) : [],
+    message_count: Number(row.message_count ?? 0),
+    unread_count: Number(row.unread_count ?? 0),
+    first_message_at: row.first_message_at as string | null,
+    last_message_at: row.last_message_at as string | null,
+    last_message_content: row.last_message_content
+      ? sanitizeText(row.last_message_content as string)
+      : null,
+    last_message_type: row.last_message_type as string | null,
+    first_response_at: row.first_response_at as string | null,
     first_response_seconds: row.first_response_seconds as number | null,
-    resolution_at:        row.resolution_at as string | null,
-    resolution_seconds:   row.resolution_seconds as number | null,
-    is_bot_active:        Boolean(row.is_bot_active ?? false),
-    satisfaction_score:   row.satisfaction_score as number | null,
-    instance_name:        String(row.instance_name ?? DEFAULT_WHATSAPP_INSTANCE),
-    created_at:           String(row.created_at ?? ''),
-    updated_at:           String(row.updated_at ?? ''),
+    resolution_at: row.resolution_at as string | null,
+    resolution_seconds: row.resolution_seconds as number | null,
+    is_bot_active: Boolean(row.is_bot_active ?? false),
+    satisfaction_score: row.satisfaction_score as number | null,
+    instance_name: String(row.instance_name ?? DEFAULT_WHATSAPP_INSTANCE),
+    created_at: String(row.created_at ?? ''),
+    updated_at: String(row.updated_at ?? ''),
   });
 
   // ── Load ──────────────────────────────────────────────────────────────
   const cursorRef = useRef<string | null>(null);
 
-  const loadConversations = useCallback(async (overrideFilters?: Partial<ConversationFilters>) => {
-    const f = { ...filters, ...overrideFilters };
-    setLoading(true); setConversations([]); cursorRef.current = null;
-    try {
-      const { data, count, error } = await buildQuery(f);
-      if (error) throw error;
-      const items = (data ?? []).map(mapRow);
-      const last = items[items.length - 1];
-      if (last) {
-        cursorRef.current = String((last as any)[f.sort_field] ?? '');
+  const loadConversations = useCallback(
+    async (overrideFilters?: Partial<ConversationFilters>) => {
+      const f = { ...filters, ...overrideFilters };
+      setLoading(true);
+      setConversations([]);
+      cursorRef.current = null;
+      try {
+        const { data, count, error } = await buildQuery(f);
+        if (error) throw error;
+        const items = (data ?? []).map(mapRow);
+        const last = items[items.length - 1];
+        if (last) {
+          cursorRef.current = String((last as any)[f.sort_field] ?? '');
+        }
+        setConversations(items);
+        setTotal(count ?? items.length);
+        setHasMore(items.length === PAGE_SIZE);
+      } catch (err) {
+        console.error('[useConversations]', err);
+        toast({
+          title: 'Erro ao carregar conversas',
+          description: String(err),
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
-      setConversations(items);
-      setTotal(count ?? items.length);
-      setHasMore(items.length === PAGE_SIZE);
-    } catch (err) {
-      console.error('[useConversations]', err);
-      toast({ title: 'Erro ao carregar conversas', description: String(err), variant: 'destructive' });
-    } finally { setLoading(false); }
-  }, [filters, buildQuery, toast]);
+    },
+    [filters, buildQuery, toast]
+  );
 
   // ── Load More ─────────────────────────────────────────────────────────
 
@@ -168,49 +203,61 @@ export function useConversations() {
         p_offset: offsetRef.current,
       });
       if (error) throw error;
-      const newItems = (data ?? []).map(row => mapRow(row as any));
+      const newItems = (data ?? []).map((row) => mapRow(row as any));
       setConversations((prev) => [...prev, ...newItems]);
       setHasMore(newItems.length === PAGE_SIZE);
       offsetRef.current += newItems.length;
-    } finally { setLoadingMore(false); }
+    } finally {
+      setLoadingMore(false);
+    }
   }, [loadingMore, hasMore, filters]);
 
   // ── Update Filters ────────────────────────────────────────────────────
 
-  const updateFilters = useCallback((updates: Partial<ConversationFilters>) => {
-    const newFilters = { ...filters, ...updates };
-    setFilters(newFilters);
-    loadConversations(newFilters);
-  }, [filters, loadConversations]);
+  const updateFilters = useCallback(
+    (updates: Partial<ConversationFilters>) => {
+      const newFilters = { ...filters, ...updates };
+      setFilters(newFilters);
+      loadConversations(newFilters);
+    },
+    [filters, loadConversations]
+  );
 
   // ── Actions ───────────────────────────────────────────────────────────
 
   const assignConversation = useCallback(async (id: string, agentId: string) => {
     const { data, error } = await (supabase as any).rpc('assign_conversation', {
-      p_conversation_id: id, p_agent_id: agentId,
+      p_conversation_id: id,
+      p_agent_id: agentId,
     });
     if (error) throw error;
-    setConversations((prev) => prev.map((c) => c.id === id ? { ...c, assigned_to: agentId } : c));
+    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, assigned_to: agentId } : c)));
     return data;
   }, []);
 
-  const closeConversation = useCallback(async (id: string, note?: string) => {
-    const { data, error } = await (supabase as any).rpc('close_conversation', {
-      p_id: id, p_note: note ?? null,
-    });
-    if (error) throw error;
-    // Remove from open list if filtering by open
-    if (filters.status === 'open') {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-      setTotal((t) => Math.max(0, t - 1));
-    }
-    toast({ title: '✅ Conversa encerrada!', duration: 2_500 });
-    return data;
-  }, [filters.status, toast]);
+  const closeConversation = useCallback(
+    async (id: string, note?: string) => {
+      const { data, error } = await (supabase as any).rpc('close_conversation', {
+        p_id: id,
+        p_note: note ?? null,
+      });
+      if (error) throw error;
+      // Remove from open list if filtering by open
+      if (filters.status === 'open') {
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        setTotal((t) => Math.max(0, t - 1));
+      }
+      toast({ title: '✅ Conversa encerrada!', duration: 2_500 });
+      return data;
+    },
+    [filters.status, toast]
+  );
 
   const markAsRead = useCallback(async (id: string) => {
-    await dbFrom('conversations').update({ unread_count: 0, updated_at: new Date().toISOString() }).eq('id', id);
-    setConversations((prev) => prev.map((c) => c.id === id ? { ...c, unread_count: 0 } : c));
+    await dbFrom('conversations')
+      .update({ unread_count: 0, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, unread_count: 0 } : c)));
   }, []);
 
   // ── Realtime ──────────────────────────────────────────────────────────
@@ -218,28 +265,38 @@ export function useConversations() {
   useEffect(() => {
     const channel = supabase
       .channel(`conversations:${filters.instance_name}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: dbTable('conversations'),
-        filter: `instance_name=eq.${filters.instance_name}`,
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newConv = mapRow(payload.new as Record<string, unknown>);
-          if (filters.status === 'all' || newConv.status === filters.status) {
-            setConversations((prev) => [newConv, ...prev]);
-            setTotal((t) => t + 1);
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: dbTable('conversations'),
+          filter: `instance_name=eq.${filters.instance_name}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newConv = mapRow(payload.new as Record<string, unknown>);
+            if (filters.status === 'all' || newConv.status === filters.status) {
+              setConversations((prev) => [newConv, ...prev]);
+              setTotal((t) => t + 1);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setConversations((prev) =>
+              prev.map((c) =>
+                c.id === payload.new.id ? mapRow(payload.new as Record<string, unknown>) : c
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setConversations((prev) => prev.filter((c) => c.id !== payload.old.id));
+            setTotal((t) => Math.max(0, t - 1));
           }
-        } else if (payload.eventType === 'UPDATE') {
-          setConversations((prev) => prev.map((c) =>
-            c.id === payload.new.id ? mapRow(payload.new as Record<string, unknown>) : c
-          ));
-        } else if (payload.eventType === 'DELETE') {
-          setConversations((prev) => prev.filter((c) => c.id !== payload.old.id));
-          setTotal((t) => Math.max(0, t - 1));
         }
-      })
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [filters.instance_name, filters.status]);
 
   // Listen for reconnection to refresh
@@ -253,8 +310,17 @@ export function useConversations() {
   }, [filters.instance_name, loadConversations]);
 
   return {
-    conversations, loading, loadingMore, hasMore, total, filters,
-    loadConversations, loadMore, updateFilters,
-    assignConversation, closeConversation, markAsRead,
+    conversations,
+    loading,
+    loadingMore,
+    hasMore,
+    total,
+    filters,
+    loadConversations,
+    loadMore,
+    updateFilters,
+    assignConversation,
+    closeConversation,
+    markAsRead,
   };
 }

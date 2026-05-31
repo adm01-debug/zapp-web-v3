@@ -99,6 +99,7 @@ export function truncate(str: string, maxLength: number): string {
 export function sanitizeDisplayName(name: string, maxLength = 100): string {
   // Remove zero-width characters, control chars, and direction overrides
   const cleaned = name
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u0000-\u001F\u007F-\u009F]/g, '')
     .trim();
 
@@ -112,7 +113,7 @@ export function sanitizeDisplayName(name: string, maxLength = 100): string {
 export function sanitizeJid(jid: string): string | null {
   // Individual: 5511999999999@s.whatsapp.net
   // Group: 120363XXXX@g.us
-  const jidPattern = /^[\d\-]+@(s\.whatsapp\.net|g\.us|lid|newsletter)$/;
+  const jidPattern = /^[\d-]+@(s\.whatsapp\.net|g\.us|lid|newsletter)$/;
   const trimmed = jid.trim();
 
   if (jidPattern.test(trimmed)) {

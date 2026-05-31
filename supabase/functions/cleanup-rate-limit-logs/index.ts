@@ -5,6 +5,19 @@ Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
+
+  // Verify cron secret
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  if (cronSecret) {
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    const provided = authHeader?.replace(/^Bearer\s+/i, '') || req.headers.get('x-cron-secret');
+    if (provided !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   const log = new Logger("cleanup-rate-limit-logs");
 
   try {

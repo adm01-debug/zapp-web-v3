@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +30,12 @@ interface WhisperMessage {
   reply_count?: number;
 }
 
-export function WhisperMode({ contactId, targetAgentId, className, defaultExpanded = false }: WhisperModeProps) {
+export function WhisperMode({
+  contactId,
+  targetAgentId,
+  className,
+  defaultExpanded = false,
+}: WhisperModeProps) {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
@@ -45,20 +51,22 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
     queryFn: async () => {
       let query = supabase
         .from('whisper_messages')
-        .select(`
+        .select(
+          `
           id, content, sender_id, is_read, created_at, whisper_thread_id
-        `)
+        `
+        )
         .eq('contact_id', contactId)
         .order('created_at', { ascending: false });
-      
+
       if (activeThreadId) {
         query = query.or(`id.eq.${activeThreadId},whisper_thread_id.eq.${activeThreadId}`);
       } else {
         query = query.is('whisper_thread_id', null);
       }
 
-      const { data, error } = await (query as any).limit(50);
-      
+      const { data, _error } = await (query as any).limit(50);
+
       if (!data) return [];
 
       const senderIds = [...new Set(data.map((w: any) => w.sender_id))];
@@ -67,8 +75,8 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
         .select('id, name')
         .in('id', senderIds);
 
-      const nameMap = new Map((profiles || []).map(p => [p.id, p.name]));
-      
+      const nameMap = new Map((profiles || []).map((p) => [p.id, p.name]));
+
       const threadCounts: Record<string, number> = {};
       if (!activeThreadId && data.length > 0) {
         const parentIds = data.map((d: any) => d.id);
@@ -76,7 +84,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
           .from('whisper_messages')
           .select('whisper_thread_id')
           .in('whisper_thread_id', parentIds);
-        
+
         counts?.forEach((c: any) => {
           if (c.whisper_thread_id) {
             threadCounts[c.whisper_thread_id] = (threadCounts[c.whisper_thread_id] || 0) + 1;
@@ -104,33 +112,39 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   useEffect(() => {
     const channel = supabase
       .channel(`whisper-${contactId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'whisper_messages',
-        filter: `contact_id=eq.${contactId}`,
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['whispers', contactId] });
-        setIsExpanded(true);
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'whisper_messages',
+          filter: `contact_id=eq.${contactId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['whispers', contactId] });
+          setIsExpanded(true);
+        }
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [contactId, queryClient]);
 
   // Mark as read when viewing
   useEffect(() => {
-    if (isExpanded && whispers.some(w => !w.is_read)) {
+    if (isExpanded && whispers.some((w) => !w.is_read)) {
       const markAsRead = async () => {
         const { error } = await supabase
           .from('whisper_messages')
           .update({ is_read: true })
           .eq('contact_id', contactId)
           .eq('is_read', false);
-        
+
         if (!error) {
-          queryClient.setQueryData(['whispers', contactId], (old: WhisperMessage[] | undefined) => 
-            old?.map(w => ({ ...w, is_read: true }))
+          queryClient.setQueryData(['whispers', contactId], (old: WhisperMessage[] | undefined) =>
+            old?.map((w) => ({ ...w, is_read: true }))
           );
         }
       };
@@ -138,7 +152,7 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
     }
   }, [isExpanded, whispers, contactId, queryClient]);
 
-  const unreadCount = whispers.filter(w => !w.is_read).length;
+  const unreadCount = whispers.filter((w) => !w.is_read).length;
 
   const sendWhisper = async () => {
     if (!message.trim() || !profile?.id) return;
@@ -154,7 +168,11 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
     });
 
     if (error) {
-      toast({ title: 'Erro ao enviar sussurro', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Erro ao enviar sussurro',
+        description: error.message,
+        variant: 'destructive',
+      });
     } else {
       setMessage('');
       queryClient.invalidateQueries({ queryKey: ['whispers', contactId] });
@@ -164,25 +182,31 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
   if (!isSupervisor && whispers.length === 0) return null;
 
   return (
-    <div className={cn("relative flex items-center", className)} role="region" aria-label="Modo Sussurro">
+    <div
+      className={cn('relative flex items-center', className)}
+      role="region"
+      aria-label="Modo Sussurro"
+    >
       <Button
         variant="ghost"
         size="sm"
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          "relative gap-1.5 text-xs transition-all duration-200",
-          isExpanded ? "bg-warning text-warning-foreground hover:bg-warning" : "text-muted-foreground hover:text-foreground"
+          'relative gap-1.5 text-xs transition-all duration-200',
+          isExpanded
+            ? 'bg-warning text-warning-foreground hover:bg-warning'
+            : 'text-muted-foreground hover:text-foreground'
         )}
         title="Modo Sussurro — Notas internas invisíveis ao cliente (Alt+W)"
         aria-expanded={isExpanded}
         aria-haspopup="dialog"
       >
-        <EyeOff className={cn("w-3.5 h-3.5", isExpanded && "animate-pulse")} />
+        <EyeOff className={cn('h-3.5 w-3.5', isExpanded && 'animate-pulse')} />
         <span className="hidden sm:inline">Sussurro</span>
         {unreadCount > 0 && (
-          <Badge 
-            variant="destructive" 
-            className="h-4 min-w-[16px] px-1 text-[9px] flex items-center justify-center animate-bounce"
+          <Badge
+            variant="destructive"
+            className="flex h-4 min-w-[16px] animate-bounce items-center justify-center px-1 text-[9px]"
             aria-label={`${unreadCount} novas mensagens de sussurro`}
           >
             {unreadCount}
@@ -196,117 +220,146 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute bottom-full right-0 mb-3 z-[100] bg-card border border-warning/50 rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5"
+            className="absolute bottom-full right-0 z-[100] mb-3 overflow-hidden rounded-xl border border-warning/50 bg-card shadow-2xl ring-1 ring-black/5"
             style={{ width: 340 }}
             role="dialog"
             aria-modal="true"
             aria-label="Painel de Sussurro"
           >
-            <div className="p-3 bg-warning/50 border-b border-warning flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-warning-foreground uppercase tracking-wider">
+            <div className="flex items-center justify-between border-b border-warning bg-warning/50 p-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-warning-foreground">
                 {activeThreadId ? (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 mr-1 text-warning-foreground hover:bg-warning" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="mr-1 h-6 w-6 text-warning-foreground hover:bg-warning"
                     onClick={() => setActiveThreadId(null)}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-warning" />
                 )}
                 {activeThreadId ? 'Discussão em Thread' : 'Equipe — Interno'}
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 hover:bg-warning text-warning-foreground" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-warning-foreground hover:bg-warning"
                 onClick={() => {
                   setIsExpanded(false);
                   setActiveThreadId(null);
                 }}
                 aria-label="Fechar sussurro"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
 
-            <div 
-              className="max-h-[300px] overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-amber-50/20 to-transparent flex flex-col-reverse relative"
+            <div
+              className="relative flex max-h-[300px] flex-col-reverse space-y-3 overflow-y-auto bg-gradient-to-b from-amber-50/20 to-transparent p-3"
               role="log"
               aria-live="polite"
             >
               {/* Overlay visual para o modo interno */}
-              <div className="sticky top-0 z-10 bg-warning/80 backdrop-blur-sm border border-warning/50 rounded-lg px-2 py-1 mb-2 flex items-center justify-center gap-1.5 shadow-sm">
-                <EyeOff className="w-3 h-3 text-warning-foreground" />
-                <span className="text-[9px] font-bold text-warning-foreground uppercase tracking-tighter">Ambiente de Equipe — Privado</span>
+              <div className="sticky top-0 z-10 mb-2 flex items-center justify-center gap-1.5 rounded-lg border border-warning/50 bg-warning/80 px-2 py-1 shadow-sm backdrop-blur-sm">
+                <EyeOff className="h-3 w-3 text-warning-foreground" />
+                <span className="text-[9px] font-bold uppercase tracking-tighter text-warning-foreground">
+                  Ambiente de Equipe — Privado
+                </span>
               </div>
 
               {whispers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-2">
-                  <EyeOff className="w-8 h-8 text-warning-foreground" />
-                  <p className="text-xs text-warning-foreground/60 font-medium">Nenhum sussurro registrado para esta conversa.</p>
+                <div className="flex flex-col items-center justify-center space-y-2 py-8 text-center">
+                  <EyeOff className="h-8 w-8 text-warning-foreground" />
+                  <p className="text-xs font-medium text-warning-foreground/60">
+                    Nenhum sussurro registrado para esta conversa.
+                  </p>
                 </div>
               ) : (
                 whispers.map((w, idx) => {
                   const isParent = w.id === activeThreadId;
                   return (
-                    <motion.div 
-                      key={w.id} 
+                    <motion.div
+                      key={w.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       className={cn(
-                        "flex flex-col gap-1 group/whisper",
-                        isParent && "border-l-2 border-warning pl-3 py-1 bg-warning/30 rounded-r-xl"
+                        'group/whisper flex flex-col gap-1',
+                        isParent && 'rounded-r-xl border-l-2 border-warning bg-warning/30 py-1 pl-3'
                       )}
                     >
                       <div className="flex items-center justify-between px-1">
                         <span className="text-[10px] font-bold text-warning-foreground/80">
-                          {w.sender_name} {isParent && <Badge variant="outline" className="text-[8px] h-3 px-1 ml-1 bg-warning border-warning">PAI</Badge>}
+                          {w.sender_name}{' '}
+                          {isParent && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1 h-3 border-warning bg-warning px-1 text-[8px]"
+                            >
+                              PAI
+                            </Badge>
+                          )}
                         </span>
-                        <span className="text-[9px] text-muted-foreground/60">{new Date(w.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-[9px] text-muted-foreground/60">
+                          {new Date(w.created_at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       </div>
-                      <div className="relative text-xs p-2.5 rounded-2xl bg-warning/50 border border-warning/30 text-warning-foreground shadow-sm leading-relaxed group-hover/whisper:bg-warning transition-colors">
+                      <div className="relative rounded-2xl border border-warning/30 bg-warning/50 p-2.5 text-xs leading-relaxed text-warning-foreground shadow-sm transition-colors group-hover/whisper:bg-warning">
                         {w.content}
-                        
-                        <div className="absolute -bottom-1.5 -right-1 opacity-0 group-hover/whisper:opacity-100 transition-opacity flex items-center gap-0.5 bg-background border border-warning rounded-full px-1 shadow-sm z-20">
+
+                        <div className="absolute -bottom-1.5 -right-1 z-20 flex items-center gap-0.5 rounded-full border border-warning bg-background px-1 opacity-0 shadow-sm transition-opacity group-hover/whisper:opacity-100">
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button onClick={() => toast({ title: '👍 Confirmado' })} className="hover:scale-120 transition-transform">👍</button>
+                                <button
+                                  onClick={() => toast({ title: '👍 Confirmado' })}
+                                  className="hover:scale-120 transition-transform"
+                                >
+                                  👍
+                                </button>
                               </TooltipTrigger>
-                              <TooltipContent className="text-[10px] p-1">Confirmar</TooltipContent>
+                              <TooltipContent className="p-1 text-[10px]">Confirmar</TooltipContent>
                             </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button onClick={() => toast({ title: '👀 Ciente' })} className="hover:scale-120 transition-transform">👀</button>
+                                <button
+                                  onClick={() => toast({ title: '👀 Ciente' })}
+                                  className="hover:scale-120 transition-transform"
+                                >
+                                  👀
+                                </button>
                               </TooltipTrigger>
-                              <TooltipContent className="text-[10px] p-1">Ciente</TooltipContent>
+                              <TooltipContent className="p-1 text-[10px]">Ciente</TooltipContent>
                             </Tooltip>
                             {!activeThreadId && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <button 
-                                    onClick={() => setActiveThreadId(w.id)} 
-                                    className="hover:scale-120 transition-transform text-warning-foreground ml-0.5 p-0.5"
+                                  <button
+                                    onClick={() => setActiveThreadId(w.id)}
+                                    className="hover:scale-120 ml-0.5 p-0.5 text-warning-foreground transition-transform"
                                   >
-                                    <MessageSquare className="w-3 h-3" />
+                                    <MessageSquare className="h-3 w-3" />
                                   </button>
                                 </TooltipTrigger>
-                                <TooltipContent className="text-[10px] p-1">Responder em Thread</TooltipContent>
+                                <TooltipContent className="p-1 text-[10px]">
+                                  Responder em Thread
+                                </TooltipContent>
                               </Tooltip>
                             )}
                           </TooltipProvider>
                         </div>
-                        
+
                         {!activeThreadId && w.reply_count && w.reply_count > 0 ? (
-                          <button 
+                          <button
                             onClick={() => setActiveThreadId(w.id)}
-                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-warning-foreground hover:text-warning-foreground transition-colors"
+                            className="mt-1 flex items-center gap-1 text-[9px] font-bold text-warning-foreground transition-colors hover:text-warning-foreground"
                           >
-                            <MessageSquare className="w-2.5 h-2.5" />
+                            <MessageSquare className="h-2.5 w-2.5" />
                             {w.reply_count} {w.reply_count === 1 ? 'resposta' : 'respostas'}
                           </button>
                         ) : null}
@@ -318,16 +371,20 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
             </div>
 
             {isSupervisor && (
-              <div className="p-3 bg-background border-t border-border/40">
+              <div className="border-t border-border/40 bg-background p-3">
                 <div className="relative flex items-end gap-2">
                   <textarea
                     ref={inputRef}
                     value={message}
-                    onChange={e => setMessage(e.target.value)}
-                    placeholder={activeThreadId ? "Responder na thread..." : "Escreva uma orientação privada..."}
-                    aria-label={activeThreadId ? "Resposta de thread" : "Mensagem de sussurro"}
-                    className="flex-1 min-h-[40px] max-h-[120px] bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-amber-400 rounded-xl p-2.5 text-xs resize-none placeholder:text-muted-foreground/50 transition-all"
-                    onKeyDown={e => {
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder={
+                      activeThreadId
+                        ? 'Responder na thread...'
+                        : 'Escreva uma orientação privada...'
+                    }
+                    aria-label={activeThreadId ? 'Resposta de thread' : 'Mensagem de sussurro'}
+                    className="max-h-[120px] min-h-[40px] flex-1 resize-none rounded-xl border-none bg-muted/30 p-2.5 text-xs transition-all placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-amber-400"
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         sendWhisper();
@@ -337,17 +394,17 @@ export function WhisperMode({ contactId, targetAgentId, className, defaultExpand
                       }
                     }}
                   />
-                  <Button 
-                    size="icon" 
-                    className="h-9 w-9 shrink-0 rounded-xl bg-warning hover:bg-warning text-foreground shadow-lg shadow-amber-200" 
-                    onClick={sendWhisper} 
+                  <Button
+                    size="icon"
+                    className="h-9 w-9 shrink-0 rounded-xl bg-warning text-foreground shadow-lg shadow-amber-200 hover:bg-warning"
+                    onClick={sendWhisper}
                     disabled={!message.trim()}
                     aria-label="Enviar sussurro"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    <Send className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <p className="mt-2 text-[9px] text-center text-muted-foreground/60 font-medium italic">
+                <p className="mt-2 text-center text-[9px] font-medium italic text-muted-foreground/60">
                   * Apenas agentes e supervisores podem ver estas mensagens.
                 </p>
               </div>

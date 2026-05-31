@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { fromTable } from '@/lib/supabaseHelpers';
 import { useCallback, useEffect, useRef } from 'react';
 
-interface UseInfiniteScrollOptions<T> {
+interface UseInfiniteScrollOptions<_T> {
   tableName: string;
   pageSize?: number;
   orderBy?: { column: string; ascending?: boolean };
@@ -69,11 +69,7 @@ export function useInfiniteScroll<T extends { id: string }>({
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null;
       // Re-check at flush time: state may have changed during the wait.
-      if (
-        isIntersectingRef.current &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
+      if (isIntersectingRef.current && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     }, debounceMs);
@@ -97,12 +93,12 @@ export function useInfiniteScroll<T extends { id: string }>({
             debounceTimerRef.current = null;
           }
         },
-        { rootMargin, threshold },
+        { rootMargin, threshold }
       );
       if (node) observerRef.current.observe(node);
       loadMoreRef.current = node;
     },
-    [hasNextPage, isFetchingNextPage, scheduleFetch, rootMargin, threshold],
+    [hasNextPage, isFetchingNextPage, scheduleFetch, rootMargin, threshold]
   );
 
   // Cleanup on unmount

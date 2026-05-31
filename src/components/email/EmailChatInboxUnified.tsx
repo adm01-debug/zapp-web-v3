@@ -18,7 +18,7 @@ export function EmailChatInboxUnified() {
     hasOutlook,
     totalUnread,
     totalSlaBreached,
-    isLoading,
+    isLoading: _isLoading,
   } = useEmailAccounts();
 
   const [defaultTab] = useState(() => {
@@ -28,22 +28,26 @@ export function EmailChatInboxUnified() {
   });
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Header unificado */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-background/95 backdrop-blur-sm">
+      <div className="flex items-center gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur-sm">
         <Layers className="h-5 w-5 text-primary" />
         <h1 className="font-semibold">Email Chat</h1>
         {totalUnread > 0 && (
-          <Badge variant="default" className="text-xs h-5 px-1.5">{totalUnread} não lidos</Badge>
+          <Badge variant="default" className="h-5 px-1.5 text-xs">
+            {totalUnread} não lidos
+          </Badge>
         )}
         {totalSlaBreached > 0 && (
-          <Badge variant="destructive" className="text-xs h-5 px-1.5">{totalSlaBreached} SLA violado</Badge>
+          <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+            {totalSlaBreached} SLA violado
+          </Badge>
         )}
       </div>
 
       {/* Tabs por provedor */}
-      <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="px-4 py-2 h-auto justify-start border-b rounded-none bg-transparent gap-1">
+      <Tabs defaultValue={defaultTab} className="flex flex-1 flex-col overflow-hidden">
+        <TabsList className="h-auto justify-start gap-1 rounded-none border-b bg-transparent px-4 py-2">
           <TabsTrigger value="email" className="gap-1.5 text-xs data-[state=active]:bg-muted">
             <Mail className="h-3.5 w-3.5" />
             Email
@@ -54,11 +58,11 @@ export function EmailChatInboxUnified() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="email" className="flex-1 mt-0 overflow-hidden">
+        <TabsContent value="email" className="mt-0 flex-1 overflow-hidden">
           <EmailInboxView />
         </TabsContent>
 
-        <TabsContent value="outlook" className="flex-1 mt-0 overflow-hidden">
+        <TabsContent value="outlook" className="mt-0 flex-1 overflow-hidden">
           <OutlookInboxView />
         </TabsContent>
       </Tabs>

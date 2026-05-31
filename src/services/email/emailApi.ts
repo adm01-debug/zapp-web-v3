@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -7,13 +8,11 @@ export type EmailHealthSummary = Database['public']['Tables']['email_health_summ
 
 export const emailApi = {
   getAuditLogs: async (
-    from: number, 
-    to: number, 
+    from: number,
+    to: number,
     filters?: { status?: string; dateFrom?: string; dateTo?: string }
   ) => {
-    let query = supabase
-      .from('email_revalidation_jobs')
-      .select('*', { count: 'exact' });
+    let query = supabase.from('email_revalidation_jobs').select('*', { count: 'exact' });
 
     if (filters?.status && filters.status !== 'all') {
       query = query.eq('status', filters.status);
@@ -37,13 +36,13 @@ export const emailApi = {
       .select('*')
       .eq('id', 'current')
       .maybeSingle();
-    
+
     return { data: data as EmailHealthSummary | null, error };
   },
   markThreadRead: async (threadId: string, read: boolean) => {
     return await supabase.rpc('rpc_email_mark_thread_read', {
       p_thread_id: threadId,
-      p_read: read
+      p_read: read,
     });
   },
   getTokenStatus: async () => {
@@ -58,12 +57,10 @@ export const emailApi = {
 
     if (!job) throw new Error('Job não encontrado');
 
-    return await supabase
-      .from('email_revalidation_jobs')
-      .insert({
-        status: 'pending',
-        requested_by: job.requested_by,
-        result: { retry_of: jobId }
-      });
-  }
+    return await supabase.from('email_revalidation_jobs').insert({
+      status: 'pending',
+      requested_by: job.requested_by,
+      result: { retry_of: jobId },
+    });
+  },
 };

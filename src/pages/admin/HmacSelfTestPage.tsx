@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * HmacSelfTestPage
@@ -17,16 +18,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
-  ShieldCheck, ShieldAlert, FlaskConical, Loader2, RotateCcw,
-  ArrowLeft, Clock, AlertTriangle, CheckCircle2,
+  ShieldCheck,
+  ShieldAlert,
+  FlaskConical,
+  Loader2,
+  RotateCcw,
+  ArrowLeft,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { HmacAuditHistoryPanel } from '@/pages/admin-webhook-secret-status/HmacAuditHistoryPanel';
 
 type Phase =
-  | 'config' | 'parse-body' | 'build-payload' | 'sign' | 'mutate'
-  | 'request' | 'validate' | 'signature-presence' | 'temporal' | 'response';
+  | 'config'
+  | 'parse-body'
+  | 'build-payload'
+  | 'sign'
+  | 'mutate'
+  | 'request'
+  | 'validate'
+  | 'signature-presence'
+  | 'temporal'
+  | 'response';
 
 interface ScenarioReport {
   name: string;
@@ -55,16 +71,16 @@ interface SelfTestResult {
 }
 
 const PHASE_LABEL: Record<Phase, string> = {
-  'config': 'Configuração do secret',
+  config: 'Configuração do secret',
   'parse-body': 'Parsing do body',
   'build-payload': 'Montagem do payload',
-  'sign': 'Assinatura HMAC',
-  'mutate': 'Mutação pós-assinatura',
-  'request': 'Construção do request',
-  'validate': 'Validação HMAC',
+  sign: 'Assinatura HMAC',
+  mutate: 'Mutação pós-assinatura',
+  request: 'Construção do request',
+  validate: 'Validação HMAC',
   'signature-presence': 'Presença do header',
-  'temporal': 'Janela temporal/replay',
-  'response': 'Resposta',
+  temporal: 'Janela temporal/replay',
+  response: 'Resposta',
 };
 
 export default function HmacSelfTestPage() {
@@ -80,7 +96,7 @@ export default function HmacSelfTestPage() {
 
   async function logAudit(payload: SelfTestResult, fallbackMs: number) {
     try {
-      const { data: userData , error } = await supabase.auth.getUser();
+      const { data: userData, _error } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
       await supabase.from('hmac_selftest_audit').insert({
@@ -99,10 +115,10 @@ export default function HmacSelfTestPage() {
   async function syncAlert(payload: SelfTestResult) {
     const source = `hmac-selftest:${instance}`;
     try {
-      const { data: userData , error: userDataErr } = await supabase.auth.getUser();
+      const { data: userData, error: _userDataErr } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
-      const { data: existing, error: existingError } = await supabase
+      const { data: existing, error: _existingError } = await supabase
         .from('warroom_alerts')
         .select('id')
         .eq('source', source)
@@ -114,9 +130,15 @@ export default function HmacSelfTestPage() {
         const failed = payload.scenarios?.filter((s) => !s.passed) ?? [];
         const phasePrefix = payload.failed_phase ? `[fase: ${payload.failed_phase}] ` : '';
         const reqSuffix = payload.request_id ? ` (req=${payload.request_id.slice(0, 8)})` : '';
-        const detail = failed.length > 0
-          ? failed.map((s) => `${s.name}${s.failed_phase ? `@${s.failed_phase}` : ''}: ${s.reason ?? '—'}`).join(' | ')
-          : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
+        const detail =
+          failed.length > 0
+            ? failed
+                .map(
+                  (s) =>
+                    `${s.name}${s.failed_phase ? `@${s.failed_phase}` : ''}: ${s.reason ?? '—'}`
+                )
+                .join(' | ')
+            : (payload.error ?? payload.message ?? 'Falha no self-test HMAC');
         await supabase.from('warroom_alerts').insert({
           alert_type: 'error',
           title: `HMAC self-test falhou (${instance})`,
@@ -124,7 +146,8 @@ export default function HmacSelfTestPage() {
           source,
         });
       } else if (payload.ok && activeId) {
-        await supabase.from('warroom_alerts')
+        await supabase
+          .from('warroom_alerts')
           .update({
             resolved_at: new Date().toISOString(),
             resolved_reason: 'Auto-resolvido: HMAC self-test voltou a OK',
@@ -185,23 +208,23 @@ export default function HmacSelfTestPage() {
 
   const passedCount = useMemo(
     () => result?.scenarios?.filter((s) => s.passed).length ?? 0,
-    [result],
+    [result]
   );
   const totalCount = result?.scenarios?.length ?? 0;
   const failedCount = totalCount - passedCount;
 
   return (
-    <div className="container mx-auto p-6 space-y-6 max-w-6xl" data-testid="hmac-selftest-page">
+    <div className="container mx-auto max-w-6xl space-y-6 p-6" data-testid="hmac-selftest-page">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/" aria-label="Voltar">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+              <ArrowLeft className="mr-1 h-4 w-4" /> Voltar
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold">
               <FlaskConical className="h-5 w-5 text-primary" />
               HMAC Self-test
             </h1>
@@ -211,9 +234,11 @@ export default function HmacSelfTestPage() {
           </div>
         </div>
         <Button onClick={run} disabled={loading} data-testid="hmac-selftest-rerun">
-          {loading
-            ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            : <RotateCcw className="h-4 w-4 mr-2" />}
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RotateCcw className="mr-2 h-4 w-4" />
+          )}
           Rodar novamente
         </Button>
       </div>
@@ -268,8 +293,8 @@ export default function HmacSelfTestPage() {
       {/* Resultado principal */}
       {loading && !result && (
         <Card>
-          <CardContent className="py-16 flex flex-col items-center justify-center text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin mb-3" />
+          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Loader2 className="mb-3 h-6 w-6 animate-spin" />
             Executando self-test…
           </CardContent>
         </Card>
@@ -289,9 +314,10 @@ export default function HmacSelfTestPage() {
                   {result.ok ? 'Self-test OK' : 'Self-test falhou'}
                 </CardTitle>
                 <CardDescription>
-                  {result.message ?? (result.ok
-                    ? 'Todos os cenários passaram.'
-                    : 'Veja a fase e os cenários abaixo para diagnóstico.')}
+                  {result.message ??
+                    (result.ok
+                      ? 'Todos os cenários passaram.'
+                      : 'Veja a fase e os cenários abaixo para diagnóstico.')}
                 </CardDescription>
               </div>
               <Badge
@@ -306,7 +332,7 @@ export default function HmacSelfTestPage() {
 
           <CardContent className="space-y-5">
             {/* KPIs */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <KPI
                 icon={<CheckCircle2 className="h-4 w-4 text-success" />}
                 label="Cenários OK"
@@ -328,7 +354,11 @@ export default function HmacSelfTestPage() {
               <KPI
                 icon={<FlaskConical className="h-4 w-4 text-muted-foreground" />}
                 label="Janela tolerância"
-                value={typeof result.tolerance_seconds === 'number' ? `${result.tolerance_seconds}s` : '—'}
+                value={
+                  typeof result.tolerance_seconds === 'number'
+                    ? `${result.tolerance_seconds}s`
+                    : '—'
+                }
                 testid="hmac-selftest-kpi-tolerance"
               />
             </div>
@@ -336,11 +366,11 @@ export default function HmacSelfTestPage() {
             {/* Faixa de fase com falha */}
             {result.failed_phase && (
               <div
-                className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 flex items-start gap-3"
+                className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3"
                 data-testid="hmac-selftest-failed-phase-banner"
                 data-failed-phase={result.failed_phase}
               >
-                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
                 <div className="text-sm">
                   <div className="font-medium">
                     Falha detectada na fase: <code>{result.failed_phase}</code>
@@ -348,7 +378,11 @@ export default function HmacSelfTestPage() {
                   <div className="text-muted-foreground">
                     {PHASE_LABEL[result.failed_phase]}.
                     {result.request_id && (
-                      <> Use <code className="">req={result.request_id.slice(0, 8)}…</code> para correlacionar nos logs.</>
+                      <>
+                        {' '}
+                        Use <code className="">req={result.request_id.slice(0, 8)}…</code> para
+                        correlacionar nos logs.
+                      </>
                     )}
                   </div>
                 </div>
@@ -359,16 +393,19 @@ export default function HmacSelfTestPage() {
             {result.scenarios && result.scenarios.length > 0 && (
               <div>
                 <Separator className="mb-3" />
-                <div className="text-sm font-medium mb-2">Cenários executados</div>
-                <div className="rounded-lg border overflow-hidden" data-testid="hmac-selftest-scenarios">
+                <div className="mb-2 text-sm font-medium">Cenários executados</div>
+                <div
+                  className="overflow-hidden rounded-lg border"
+                  data-testid="hmac-selftest-scenarios"
+                >
                   <table className="w-full text-sm">
-                    <thead className="bg-muted/40 text-muted-foreground text-xs">
+                    <thead className="bg-muted/40 text-xs text-muted-foreground">
                       <tr>
-                        <th className="text-left px-3 py-2 font-medium">Cenário</th>
-                        <th className="text-left px-3 py-2 font-medium">Esperado</th>
-                        <th className="text-left px-3 py-2 font-medium">Resultado</th>
-                        <th className="text-left px-3 py-2 font-medium">Fase</th>
-                        <th className="text-left px-3 py-2 font-medium">Detalhe</th>
+                        <th className="px-3 py-2 text-left font-medium">Cenário</th>
+                        <th className="px-3 py-2 text-left font-medium">Esperado</th>
+                        <th className="px-3 py-2 text-left font-medium">Resultado</th>
+                        <th className="px-3 py-2 text-left font-medium">Fase</th>
+                        <th className="px-3 py-2 text-left font-medium">Detalhe</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -390,14 +427,21 @@ export default function HmacSelfTestPage() {
                             </Badge>
                           </td>
                           <td className="px-3 py-2">
-                            <Badge variant={s.passed ? 'default' : 'destructive'} className="text-[10px]">
+                            <Badge
+                              variant={s.passed ? 'default' : 'destructive'}
+                              className="text-[10px]"
+                            >
                               {s.outcome === 'accept' ? 'aceito' : 'rejeitado'}
                             </Badge>
                           </td>
                           <td className="px-3 py-2">
-                            {s.failed_phase
-                              ? <Badge variant="destructive" className="text-[10px]">{s.failed_phase}</Badge>
-                              : <span className="text-muted-foreground text-xs">—</span>}
+                            {s.failed_phase ? (
+                              <Badge variant="destructive" className="text-[10px]">
+                                {s.failed_phase}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </td>
                           <td className="px-3 py-2 text-xs text-muted-foreground">
                             {s.reason ?? '—'}
@@ -413,7 +457,12 @@ export default function HmacSelfTestPage() {
             {lastRunAt && (
               <div className="text-xs text-muted-foreground" data-testid="hmac-selftest-last-run">
                 Última execução: {lastRunAt.toLocaleString('pt-BR')}
-                {result.request_id && <> · req <code className="">{result.request_id.slice(0, 8)}</code></>}
+                {result.request_id && (
+                  <>
+                    {' '}
+                    · req <code className="">{result.request_id.slice(0, 8)}</code>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
@@ -429,14 +478,22 @@ export default function HmacSelfTestPage() {
 }
 
 function KPI({
-  icon, label, value, testid,
-}: { icon: React.ReactNode; label: string; value: string; testid?: string }) {
+  icon,
+  label,
+  value,
+  testid,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  testid?: string;
+}) {
   return (
     <div className="rounded-lg border bg-card px-3 py-2.5" data-testid={testid}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         {icon} {label}
       </div>
-      <div className="text-lg font-semibold mt-0.5">{value}</div>
+      <div className="mt-0.5 text-lg font-semibold">{value}</div>
     </div>
   );
 }

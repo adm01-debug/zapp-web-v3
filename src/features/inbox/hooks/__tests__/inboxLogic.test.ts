@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useInboxFilters } from '../useInboxFilters';
@@ -25,12 +26,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('@/hooks/useUrlFilters', () => ({
   useUrlFilters: () => {
-      const [f, s] = React.useState({ status: [], tags: [], agentId: null });
-      return {
-        filters: f,
-        setFilters: s,
-        clearFilters: vi.fn(),
-      };
+    const [f, s] = React.useState({ status: [], tags: [], agentId: null });
+    return {
+      filters: f,
+      setFilters: s,
+      clearFilters: vi.fn(),
+    };
   },
 }));
 
@@ -71,7 +72,7 @@ describe('useInboxFilters Business Rules', () => {
       contact: { id: 'c3', assigned_to: null, contact_type: 'cliente' },
       messages: [],
       unreadCount: 0,
-    }
+    },
   ] as any;
 
   beforeEach(() => {
@@ -82,45 +83,53 @@ describe('useInboxFilters Business Rules', () => {
   it('filters by department scope for coordinators', () => {
     mockHasPermission.mockImplementation((perm) => perm === 'inbox.view_department');
 
-    const { result } = renderHook(() => useInboxFilters({
-      conversations: mockConversations,
-      profileId: 'agent-1'
-    }), { wrapper });
+    const { result } = renderHook(
+      () =>
+        useInboxFilters({
+          conversations: mockConversations,
+          profileId: 'agent-1',
+        }),
+      { wrapper }
+    );
 
     act(() => {
-        result.current.setScope('department');
-        result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+      result.current.setScope('department');
+      result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
     });
 
     const filtered = result.current.filteredConversations;
-    
+
     expect(filtered.length).toBe(2);
-    expect(filtered.map(f => f.contact.id)).toContain('c1');
-    expect(filtered.map(f => f.contact.id)).toContain('c2');
+    expect(filtered.map((f) => f.contact.id)).toContain('c1');
+    expect(filtered.map((f) => f.contact.id)).toContain('c2');
   });
 
   it('filters by specific agent when selected by coordinator', () => {
     mockHasPermission.mockImplementation((perm) => perm === 'inbox.view_department');
 
-    const { result } = renderHook(() => useInboxFilters({
-      conversations: mockConversations,
-      profileId: 'agent-1'
-    }), { wrapper });
+    const { result } = renderHook(
+      () =>
+        useInboxFilters({
+          conversations: mockConversations,
+          profileId: 'agent-1',
+        }),
+      { wrapper }
+    );
 
     act(() => {
-        result.current.setScope('department');
-        result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
-        
-        result.current.setFilters({
-            status: [],
-            tags: [],
-            agentId: 'agent-2',
-            dateRange: { from: null, to: null }
-        } as any);
+      result.current.setScope('department');
+      result.current.setDepartmentAgentIds(['agent-1', 'agent-2']);
+
+      result.current.setFilters({
+        status: [],
+        tags: [],
+        agentId: 'agent-2',
+        dateRange: { from: null, to: null },
+      } as any);
     });
 
     const filtered = result.current.filteredConversations;
-    
+
     expect(filtered.length).toBe(1);
     expect(filtered[0].contact.id).toBe('c2');
   });
@@ -128,20 +137,22 @@ describe('useInboxFilters Business Rules', () => {
   it('shows only mine for common agents', () => {
     mockHasPermission.mockReturnValue(false);
 
-    const { result } = renderHook(() => useInboxFilters({
-      conversations: mockConversations,
-      profileId: 'agent-1'
-    }), { wrapper });
+    const { result } = renderHook(
+      () =>
+        useInboxFilters({
+          conversations: mockConversations,
+          profileId: 'agent-1',
+        }),
+      { wrapper }
+    );
 
     act(() => {
-        result.current.setScope('mine');
+      result.current.setScope('mine');
     });
 
     const filtered = result.current.filteredConversations;
-    
+
     expect(filtered.length).toBe(1);
     expect(filtered[0].contact.id).toBe('c1');
   });
 });
-
-
