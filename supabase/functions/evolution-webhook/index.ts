@@ -22,6 +22,7 @@ import {
 } from "../_shared/evolution-webhook-messages.ts";
 import { createWebhookValidator, readWebhookSecretsFromEnv } from "../_shared/hmac-validation.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
 
 // Multi-secret support enables zero-downtime rotation:
 //   - EVOLUTION_WEBHOOK_SECRETS=new,old  → validate both, sign with `new`
@@ -128,6 +129,25 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: 'instance_paused', instance, requestId }),
       { status: 503, headers: { ...corsHeaders, 'Retry-After': '60' } },
+    );
+  }
+
+  // Rate Limit guard: prevent storming from a single instance/event
+  const rateLimit = await checkRateLimit(supabase, {
+    instanceId: instance || 'unknown',
+    eventType: event,
+    limit: 300, // 300 events per minute per instance/event
+  });
+  if (!rateLimit.allowed) {
+    await auditWebhookEvent(supabase, {
+      request_id: requestId, instance, event_type: event, status: 'rejected',
+      error_message: 'rate_limit_exceeded',
+      duration_ms: Date.now() - startedAt,
+    });
+    console.warn(`[webhook][${requestId}] rate limit exceeded for ${instance}:${event} (${rateLimit.currentCount}/${rateLimit.limit})`);
+    return new Response(
+      JSON.stringify({ error: 'rate_limit_exceeded', instance, requestId }),
+      { status: 429, headers: corsHeaders }
     );
   }
 
