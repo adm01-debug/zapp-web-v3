@@ -153,7 +153,7 @@ export const SentimentEmoji = forwardRef<
             whileHover={{ scale: 1.2 }}
             transition={{ type: 'spring', stiffness: 300 }}
             className={cn(
-              'text-sm cursor-help',
+              'text-[16px] cursor-help',
               sentiment === 'critical' && 'animate-pulse',
               className
             )}
