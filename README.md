@@ -330,6 +330,7 @@ O deploy é gerenciado automaticamente pelo **Lovable**:
 
 | Documento | Descrição |
 |-----------|-----------|
+| [`docs/ARCHITECTURE_AND_FLOW.md`](docs/ARCHITECTURE_AND_FLOW.md) | Guia de Arquitetura e Fluxo de Dados |
 | [`docs/TECHNICAL_DOCUMENTATION.md`](docs/TECHNICAL_DOCUMENTATION.md) | Documentação técnica (90KB) |
 | [`docs/COMPLETE_SYSTEM_FEATURES.md`](docs/COMPLETE_SYSTEM_FEATURES.md) | Funcionalidades do sistema (45KB) |
 | [`docs/EVOLUTION_API_REFERENCE.md`](docs/EVOLUTION_API_REFERENCE.md) | Referência de 60+ endpoints |
