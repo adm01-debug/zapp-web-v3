@@ -101,6 +101,11 @@ interface ConversationItemProps {
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const safeName = (name === 'Você' ? '' : name) || 'Contato';
+  
+  const parts = safeName.split(' ').filter(p => p.length > 0);
+  if (parts.length > 1) {
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  }
   return safeName;
 }
 
@@ -243,7 +248,7 @@ export const ConversationItem = memo(function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          'truncate block min-w-0 tracking-tight transition-colors duration-200 font-sans text-left font-normal border-0 rounded-none text-base mx-0',
+                          'truncate block min-w-0 tracking-tight transition-colors duration-200 font-sans text-left font-normal border-0 rounded-none text-[17px] mx-0',
                           isSelected ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
