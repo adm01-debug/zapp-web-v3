@@ -3,8 +3,20 @@ import { motion } from 'framer-motion';
 import { format, formatDistanceStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  MessageCircle, Reply, Clock, CheckCircle2, RotateCcw, Activity, AlertTriangle,
-  Filter, XCircle, Target, Users, User, MinusCircle, ExternalLink,
+  MessageCircle,
+  Reply,
+  Clock,
+  CheckCircle2,
+  RotateCcw,
+  Activity,
+  AlertTriangle,
+  Filter,
+  XCircle,
+  Target,
+  Users,
+  User,
+  MinusCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,7 +59,10 @@ function isWithinPeriod(date: Date | null, period: PeriodFilter): boolean {
 const STATUS_STYLES: Record<SLAStatus, { label: string; className: string }> = {
   ok: { label: 'Dentro do SLA', className: 'bg-success/15 text-success border-success/30' },
   warning: { label: 'Em risco', className: 'bg-warning/15 text-warning border-warning/30' },
-  breached: { label: 'Violado', className: 'bg-destructive/15 text-destructive border-destructive/30' },
+  breached: {
+    label: 'Violado',
+    className: 'bg-destructive/15 text-destructive border-destructive/30',
+  },
   na: { label: '—', className: 'bg-muted/40 text-muted-foreground border-border/40' },
 };
 
@@ -60,7 +75,7 @@ function formatDurationMs(ms: number | null): string {
 }
 
 function formatTs(d: Date | null): string {
-  return d ? format(d, "dd/MM HH:mm", { locale: ptBR }) : '—';
+  return d ? format(d, 'dd/MM HH:mm', { locale: ptBR }) : '—';
 }
 
 interface MilestoneProps {
@@ -83,8 +98,19 @@ interface MilestoneProps {
 }
 
 function Milestone({
-  index, icon: Icon, label, timestamp, durationLabel, status, pulse, iconColor,
-  agentName, queueName, attributionNote, attributionTone = 'info', onOpenConversation,
+  index,
+  icon: Icon,
+  label,
+  timestamp,
+  durationLabel,
+  status,
+  pulse,
+  iconColor,
+  agentName,
+  queueName,
+  attributionNote,
+  attributionTone = 'info',
+  onOpenConversation,
 }: MilestoneProps) {
   const statusStyle = status ? STATUS_STYLES[status] : null;
   const showOpenCta = onOpenConversation && (status === 'warning' || status === 'breached');
@@ -96,34 +122,34 @@ function Milestone({
       role="listitem"
       className={cn(
         'relative flex gap-3 py-2',
-        status === 'breached' && 'rounded-md -mx-1 px-1 bg-destructive/5',
-        status === 'warning' && 'rounded-md -mx-1 px-1 bg-warning/5',
+        status === 'breached' && '-mx-1 rounded-md bg-destructive/5 px-1',
+        status === 'warning' && '-mx-1 rounded-md bg-warning/5 px-1'
       )}
     >
       <div
         className={cn(
-          'relative z-10 mt-0.5 w-[22px] h-[22px] rounded-full bg-background border-2 border-border flex items-center justify-center shrink-0',
+          'relative z-10 mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full border-2 border-border bg-background',
           pulse && 'animate-pulse border-warning/60',
           status === 'breached' && 'border-destructive/60',
-          status === 'warning' && !pulse && 'border-warning/60',
+          status === 'warning' && !pulse && 'border-warning/60'
         )}
       >
-        <Icon className={cn('w-3 h-3', iconColor || 'text-muted-foreground')} />
+        <Icon className={cn('h-3 w-3', iconColor || 'text-muted-foreground')} />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-medium text-foreground">{label}</span>
           {statusStyle && (
             <Badge
               variant="outline"
               className={cn(
-                'text-[9px] h-4 px-1.5 font-medium border inline-flex items-center gap-1',
-                statusStyle.className,
+                'inline-flex h-4 items-center gap-1 border px-1.5 text-[9px] font-medium',
+                statusStyle.className
               )}
               aria-label={`SLA: ${statusStyle.label}`}
             >
-              {status === 'breached' && <XCircle className="w-2.5 h-2.5" aria-hidden />}
-              {status === 'warning' && <AlertTriangle className="w-2.5 h-2.5" aria-hidden />}
+              {status === 'breached' && <XCircle className="h-2.5 w-2.5" aria-hidden />}
+              {status === 'warning' && <AlertTriangle className="h-2.5 w-2.5" aria-hidden />}
               {statusStyle.label}
             </Badge>
           )}
@@ -134,32 +160,32 @@ function Milestone({
               variant="outline"
               onClick={onOpenConversation}
               className={cn(
-                'h-5 px-1.5 text-[10px] gap-1 ml-auto',
+                'ml-auto h-5 gap-1 px-1.5 text-[10px]',
                 status === 'breached'
                   ? 'border-destructive/40 text-destructive hover:bg-destructive/10'
-                  : 'border-warning/40 text-warning hover:bg-warning/10',
+                  : 'border-warning/40 text-warning hover:bg-warning/10'
               )}
             >
-              <ExternalLink className="w-2.5 h-2.5" aria-hidden />
+              <ExternalLink className="h-2.5 w-2.5" aria-hidden />
               Abrir conversa
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+        <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
           <span>{formatTs(timestamp)}</span>
           {durationLabel && <span className="text-foreground/60">· {durationLabel}</span>}
         </div>
         {(agentName || queueName) && (
-          <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground/90 flex-wrap">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground/90">
             {agentName && (
-              <span className="inline-flex items-center gap-1 bg-muted/40 rounded px-1.5 py-0.5">
-                <User className="w-2.5 h-2.5" />
-                <span className="text-foreground/80 font-medium">{agentName}</span>
+              <span className="inline-flex items-center gap-1 rounded bg-muted/40 px-1.5 py-0.5">
+                <User className="h-2.5 w-2.5" />
+                <span className="font-medium text-foreground/80">{agentName}</span>
               </span>
             )}
             {queueName && (
-              <span className="inline-flex items-center gap-1 bg-muted/40 rounded px-1.5 py-0.5">
-                <Users className="w-2.5 h-2.5" />
+              <span className="inline-flex items-center gap-1 rounded bg-muted/40 px-1.5 py-0.5">
+                <Users className="h-2.5 w-2.5" />
                 <span className="text-foreground/80">{queueName}</span>
               </span>
             )}
@@ -168,14 +194,14 @@ function Milestone({
         {attributionNote && (
           <div
             className={cn(
-              'mt-1 inline-flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5',
+              'mt-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px]',
               attributionTone === 'fallback'
-                ? 'bg-warning/10 text-warning border border-warning/30'
+                ? 'border border-warning/30 bg-warning/10 text-warning'
                 : 'bg-muted/40 text-muted-foreground'
             )}
             role="note"
           >
-            <AlertTriangle className="w-2.5 h-2.5" />
+            <AlertTriangle className="h-2.5 w-2.5" />
             <span>{attributionNote}</span>
           </div>
         )}
@@ -204,11 +230,17 @@ function loadFilters(): { status: SLAStatus[]; period: PeriodFilter; scope: SLAS
       const status = Array.isArray(parsed.status)
         ? parsed.status.filter((s: string): s is SLAStatus => ALL_STATUSES.includes(s as SLAStatus))
         : ALL_STATUSES;
-      const period: PeriodFilter = ['24h', '7d', '30d', 'all'].includes(parsed.period) ? parsed.period : 'all';
-      const scope: SLAScope = ['current', 'queue', 'agent', 'none'].includes(parsed.scope) ? parsed.scope : 'current';
+      const period: PeriodFilter = ['24h', '7d', '30d', 'all'].includes(parsed.period)
+        ? parsed.period
+        : 'all';
+      const scope: SLAScope = ['current', 'queue', 'agent', 'none'].includes(parsed.scope)
+        ? parsed.scope
+        : 'current';
       return { status: status.length ? status : ALL_STATUSES, period, scope };
     }
-  } catch { /* storage unavailable */ }
+  } catch {
+    /* storage unavailable */
+  }
   return { status: ALL_STATUSES, period: 'all', scope: 'current' };
 }
 
@@ -237,7 +269,9 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
         FILTER_STORAGE_KEY,
         JSON.stringify({ status: statusFilter, period: periodFilter, scope })
       );
-    } catch { /* storage unavailable */ }
+    } catch {
+      /* storage unavailable */
+    }
   }, [statusFilter, periodFilter, scope]);
 
   const { data: timeline, isLoading } = useConversationSLATimeline(remoteJid, contact.id);
@@ -253,12 +287,69 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
     agentId: slaAgentId,
   });
 
+  const firstResponseLimit = sla?.firstResponseMinutes ?? 5;
+  const resolutionLimit = sla?.resolutionMinutes ?? 60;
+
+  const firstResponseStatus: SLAStatus =
+    !timeline || scope === 'none'
+      ? 'na'
+      : timeline.isAwaitingFirstResponse
+        ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
+        : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
+
+  const resolutionStatus: SLAStatus =
+    !timeline || scope === 'none'
+      ? 'na'
+      : timeline.resolutionDurationMs !== null
+        ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
+        : 'na';
+
+  const handleOpenConversation = useMemo(() => {
+    return () => {
+      // Notify any inbox container/router that wants to focus this conversation.
+      try {
+        window.dispatchEvent(
+          new CustomEvent('inbox:focus-conversation', {
+            detail: { contactId: contact.id, remoteJid, conversationId: conversation.id },
+          })
+        );
+      } catch {
+        /* SSR / older browsers — no-op */
+      }
+
+      // Open the conversation details panel for THIS contact first, then any open
+      // details panel, then fall back to the chat panel.
+      const detailsPanel =
+        document.querySelector<HTMLElement>(
+          `[data-contact-details][data-contact-id="${contact.id}"]`
+        ) || document.querySelector<HTMLElement>('[data-contact-details]');
+
+      const target = detailsPanel || document.querySelector<HTMLElement>('[data-chat-panel]');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.focus({ preventScroll: true });
+      }
+    };
+  }, [contact.id, remoteJid, conversation.id]);
+
+  useSLAAlerts({
+    contactId: contact.id ?? null,
+    contactName: contact.name || contact.phone || 'Contato',
+    scope,
+    firstResponseStatus,
+    resolutionStatus,
+    ruleName: sla?.ruleName ?? null,
+    awaitingMs: timeline?.awaitingMs ?? 0,
+    resolutionDurationMs: timeline?.resolutionDurationMs ?? null,
+    onOpenConversation: handleOpenConversation,
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-3 py-2">
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex gap-3">
-            <Skeleton className="w-[22px] h-[22px] rounded-full" />
+            <Skeleton className="h-[22px] w-[22px] rounded-full" />
             <div className="flex-1 space-y-1.5">
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-2.5 w-24" />
@@ -279,59 +370,6 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
       />
     );
   }
-
-  const firstResponseLimit = sla?.firstResponseMinutes ?? 5;
-  const resolutionLimit = sla?.resolutionMinutes ?? 60;
-
-  const firstResponseStatus: SLAStatus = scope === 'none'
-    ? 'na'
-    : timeline.isAwaitingFirstResponse
-      ? getSLAStatus(timeline.awaitingMs, firstResponseLimit)
-      : getSLAStatus(timeline.firstResponseDurationMs, firstResponseLimit);
-
-  const resolutionStatus: SLAStatus = scope === 'none'
-    ? 'na'
-    : timeline.resolutionDurationMs !== null
-      ? getSLAStatus(timeline.resolutionDurationMs, resolutionLimit)
-      : 'na';
-
-  const handleOpenConversation = useMemo(() => {
-    return () => {
-      // Notify any inbox container/router that wants to focus this conversation.
-      try {
-        window.dispatchEvent(
-          new CustomEvent('inbox:focus-conversation', {
-            detail: { contactId: contact.id, remoteJid, conversationId: conversation.id },
-          }),
-        );
-      } catch { /* SSR / older browsers — no-op */ }
-
-      // Open the conversation details panel for THIS contact first, then any open
-      // details panel, then fall back to the chat panel.
-      const detailsPanel =
-        document.querySelector<HTMLElement>(
-          `[data-contact-details][data-contact-id="${contact.id}"]`,
-        ) || document.querySelector<HTMLElement>('[data-contact-details]');
-
-      const target = detailsPanel || document.querySelector<HTMLElement>('[data-chat-panel]');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        target.focus({ preventScroll: true });
-      }
-    };
-  }, [contact.id, remoteJid, conversation.id]);
-
-  useSLAAlerts({
-    contactId: contact.id ?? null,
-    contactName: contact.name || contact.phone || 'Contato',
-    scope,
-    firstResponseStatus,
-    resolutionStatus,
-    ruleName: sla?.ruleName ?? null,
-    awaitingMs: timeline.awaitingMs,
-    resolutionDurationMs: timeline.resolutionDurationMs,
-    onOpenConversation: handleOpenConversation,
-  });
 
   const firstResponseDurationLabel = timeline.isAwaitingFirstResponse
     ? `Aguardando há ${formatDurationMs(timeline.awaitingMs)}`
@@ -364,11 +402,11 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   // fall back to the conversation's CURRENT assignment, but flag it to the user.
   const attributionFromEvents = attributionSource === 'assign-event';
   const firstResponseAgentName = attributionFromEvents
-    ? timeline.firstResponseBy?.agentName ?? null
-    : assignedTo?.name ?? null;
+    ? (timeline.firstResponseBy?.agentName ?? null)
+    : (assignedTo?.name ?? null);
   const firstResponseQueueName = attributionFromEvents
-    ? timeline.firstResponseBy?.queueName ?? null
-    : queue?.name ?? null;
+    ? (timeline.firstResponseBy?.queueName ?? null)
+    : (queue?.name ?? null);
 
   let attributionNote: string | null = null;
   let attributionTone: 'fallback' | 'info' = 'info';
@@ -378,12 +416,14 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
       attributionNote = `Atribuição calculada do assign em ${format(w.from, 'HH:mm', { locale: ptBR })} até a resposta em ${format(w.to, 'HH:mm', { locale: ptBR })}`;
       attributionTone = 'info';
     } else if (attributionSource === 'pre-contact-assign') {
-      attributionNote = 'Sem evento de assign após o contato — exibindo a atribuição atual da conversa';
+      attributionNote =
+        'Sem evento de assign após o contato — exibindo a atribuição atual da conversa';
       attributionTone = 'fallback';
     } else if (attributionSource === 'insufficient-events') {
-      attributionNote = firstResponseAgentName || firstResponseQueueName
-        ? 'Sem eventos de assign no período — atribuição estimada pelo estado atual'
-        : 'Sem eventos suficientes para identificar agente/fila';
+      attributionNote =
+        firstResponseAgentName || firstResponseQueueName
+          ? 'Sem eventos de assign no período — atribuição estimada pelo estado atual'
+          : 'Sem eventos suficientes para identificar agente/fila';
       attributionTone = 'fallback';
     }
   }
@@ -399,7 +439,11 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           key="first-response"
           index={i}
           icon={timeline.isAwaitingFirstResponse ? AlertTriangle : Reply}
-          label={timeline.isAwaitingFirstResponse ? 'Aguardando primeira resposta' : 'Primeira resposta do agente'}
+          label={
+            timeline.isAwaitingFirstResponse
+              ? 'Aguardando primeira resposta'
+              : 'Primeira resposta do agente'
+          }
           timestamp={timeline.firstResponseAt}
           durationLabel={firstResponseDurationLabel}
           status={firstResponseStatus}
@@ -480,7 +524,8 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
   }
 
   const filteredMilestones = milestones.filter(
-    (m) => m.alwaysVisible || (statusFilter.includes(m.status) && isWithinPeriod(m.date, periodFilter))
+    (m) =>
+      m.alwaysVisible || (statusFilter.includes(m.status) && isWithinPeriod(m.date, periodFilter))
   );
 
   const clearFilters = () => {
@@ -491,10 +536,12 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-muted/30 p-2 space-y-2">
+      <div className="space-y-2 rounded-lg bg-muted/30 p-2">
         <div className="flex items-center gap-2">
-          <Filter className="w-3 h-3 text-muted-foreground" />
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Filtros</span>
+          <Filter className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Filtros
+          </span>
           {(() => {
             const onlyAtRisk =
               statusFilter.length === 2 &&
@@ -505,24 +552,22 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
                 type="button"
                 variant={onlyAtRisk ? 'default' : 'outline'}
                 size="sm"
-                onClick={() =>
-                  setStatusFilter(onlyAtRisk ? ALL_STATUSES : ['warning', 'breached'])
-                }
+                onClick={() => setStatusFilter(onlyAtRisk ? ALL_STATUSES : ['warning', 'breached'])}
                 aria-pressed={onlyAtRisk}
                 className={cn(
-                  'h-5 px-2 text-[10px] gap-1',
+                  'h-5 gap-1 px-2 text-[10px]',
                   onlyAtRisk
-                    ? 'bg-destructive/15 text-destructive border border-destructive/30 hover:bg-destructive/20'
-                    : 'border-border/60',
+                    ? 'border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/20'
+                    : 'border-border/60'
                 )}
                 title="Mostrar apenas marcos em risco ou violados para o escopo selecionado"
               >
-                <AlertTriangle className="w-2.5 h-2.5" aria-hidden />
+                <AlertTriangle className="h-2.5 w-2.5" aria-hidden />
                 Só em risco/violado
               </Button>
             );
           })()}
-          <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1.5">
+          <Badge variant="outline" className="ml-auto h-4 px-1.5 text-[9px]">
             {filteredMilestones.length} de {milestones.length}
           </Badge>
         </div>
@@ -535,14 +580,26 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           aria-label="Filtrar marcos por status"
           className="flex-wrap justify-start gap-1"
         >
-          <ToggleGroupItem value="ok" className="h-6 px-2 text-[10px] data-[state=on]:bg-success/15 data-[state=on]:text-success">
-            <CheckCircle2 className="w-3 h-3 mr-1" />OK
+          <ToggleGroupItem
+            value="ok"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-success/15 data-[state=on]:text-success"
+          >
+            <CheckCircle2 className="mr-1 h-3 w-3" />
+            OK
           </ToggleGroupItem>
-          <ToggleGroupItem value="warning" className="h-6 px-2 text-[10px] data-[state=on]:bg-warning/15 data-[state=on]:text-warning">
-            <AlertTriangle className="w-3 h-3 mr-1" />Em risco
+          <ToggleGroupItem
+            value="warning"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-warning/15 data-[state=on]:text-warning"
+          >
+            <AlertTriangle className="mr-1 h-3 w-3" />
+            Em risco
           </ToggleGroupItem>
-          <ToggleGroupItem value="breached" className="h-6 px-2 text-[10px] data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive">
-            <XCircle className="w-3 h-3 mr-1" />Violado
+          <ToggleGroupItem
+            value="breached"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive"
+          >
+            <XCircle className="mr-1 h-3 w-3" />
+            Violado
           </ToggleGroupItem>
           <ToggleGroupItem value="na" className="h-6 px-2 text-[10px]">
             Outros
@@ -557,10 +614,18 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           aria-label="Filtrar por período"
           className="flex-wrap justify-start gap-1"
         >
-          <ToggleGroupItem value="24h" className="h-6 px-2 text-[10px]">24h</ToggleGroupItem>
-          <ToggleGroupItem value="7d" className="h-6 px-2 text-[10px]">7d</ToggleGroupItem>
-          <ToggleGroupItem value="30d" className="h-6 px-2 text-[10px]">30d</ToggleGroupItem>
-          <ToggleGroupItem value="all" className="h-6 px-2 text-[10px]">Tudo</ToggleGroupItem>
+          <ToggleGroupItem value="24h" className="h-6 px-2 text-[10px]">
+            24h
+          </ToggleGroupItem>
+          <ToggleGroupItem value="7d" className="h-6 px-2 text-[10px]">
+            7d
+          </ToggleGroupItem>
+          <ToggleGroupItem value="30d" className="h-6 px-2 text-[10px]">
+            30d
+          </ToggleGroupItem>
+          <ToggleGroupItem value="all" className="h-6 px-2 text-[10px]">
+            Tudo
+          </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup
           type="single"
@@ -571,17 +636,33 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
           aria-label="Escopo da regra de SLA"
           className="flex-wrap justify-start gap-1"
         >
-          <ToggleGroupItem value="current" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
-            <Target className="w-3 h-3 mr-1" />Atual
+          <ToggleGroupItem
+            value="current"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+          >
+            <Target className="mr-1 h-3 w-3" />
+            Atual
           </ToggleGroupItem>
-          <ToggleGroupItem value="queue" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
-            <Users className="w-3 h-3 mr-1" />Fila
+          <ToggleGroupItem
+            value="queue"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+          >
+            <Users className="mr-1 h-3 w-3" />
+            Fila
           </ToggleGroupItem>
-          <ToggleGroupItem value="agent" className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary">
-            <User className="w-3 h-3 mr-1" />Agente
+          <ToggleGroupItem
+            value="agent"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+          >
+            <User className="mr-1 h-3 w-3" />
+            Agente
           </ToggleGroupItem>
-          <ToggleGroupItem value="none" className="h-6 px-2 text-[10px] data-[state=on]:bg-muted data-[state=on]:text-muted-foreground">
-            <MinusCircle className="w-3 h-3 mr-1" />Sem SLA
+          <ToggleGroupItem
+            value="none"
+            className="h-6 px-2 text-[10px] data-[state=on]:bg-muted data-[state=on]:text-muted-foreground"
+          >
+            <MinusCircle className="mr-1 h-3 w-3" />
+            Sem SLA
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -595,16 +676,17 @@ export function SLATimelineSection({ conversation }: SLATimelineSectionProps) {
         </div>
       ) : (
         <div role="list" aria-label="Marcos de SLA da conversa" className="relative">
-          <div className="absolute left-[11px] top-3 bottom-3 w-px bg-border/50" />
+          <div className="absolute bottom-3 left-[11px] top-3 w-px bg-border/50" />
           {filteredMilestones.map((m, i) => m.render(i))}
         </div>
       )}
 
-      <p className="pl-1 text-[10px] text-muted-foreground/80 leading-relaxed">
-        Avaliado por: <span className="text-foreground/80 font-medium">{SCOPE_LABELS[scope]}</span>
+      <p className="pl-1 text-[10px] leading-relaxed text-muted-foreground/80">
+        Avaliado por: <span className="font-medium text-foreground/80">{SCOPE_LABELS[scope]}</span>
         {scope !== 'none' && sla && (
           <>
-            {' · Regra '}<span className="text-foreground/80 font-medium">{sla.ruleName}</span>
+            {' · Regra '}
+            <span className="font-medium text-foreground/80">{sla.ruleName}</span>
             {' · '}1ª resp. {sla.firstResponseMinutes}min · Resolução {sla.resolutionMinutes}min
           </>
         )}
