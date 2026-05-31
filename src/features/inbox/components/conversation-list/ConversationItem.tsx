@@ -114,8 +114,8 @@ function buildFullPrimaryLabel(conversation: any): string {
 }
 
 function buildSecondaryLabel(conversation: any): string | null {
-  const phone = conversation.contact?.phone?.trim();
-  return phone || null;
+  const jobTitle = conversation.contact?.job_title?.trim() || conversation.contact?.jobTitle?.trim() || conversation.contact?.role?.trim();
+  return jobTitle || null;
 }
 
 // Short relative time: "4min", "2h", "3d"
