@@ -188,11 +188,24 @@ async function callAi(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const errJson = (msg: string, status: number) =>
+    new Response(JSON.stringify({ error: msg }), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  // Require valid JWT before consuming AI resources
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return errJson("unauthorized", 401);
+
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+
+    const { data: { user }, error: authErr } = await createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } }, auth: { persistSession: false },
+    }).auth.getUser();
+    if (authErr || !user) return errJson("unauthorized", 401);
 
     const body = (await req.json()) as Body;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);

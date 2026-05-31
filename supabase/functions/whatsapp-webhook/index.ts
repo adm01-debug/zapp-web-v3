@@ -75,7 +75,23 @@ serve(async (req) => {
       const supabaseServiceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-      const rawPayload = await req.json();
+      // Validate X-Hub-Signature-256 when WHATSAPP_APP_SECRET is configured
+      const appSecret = Deno.env.get('WHATSAPP_APP_SECRET');
+      const rawBody = await req.text();
+      if (appSecret) {
+        const sigHeader = req.headers.get('x-hub-signature-256') ?? '';
+        const keyData = new TextEncoder().encode(appSecret);
+        const msgData = new TextEncoder().encode(rawBody);
+        const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const sigBuf = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+        const expected = 'sha256=' + Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        if (sigHeader !== expected) {
+          log.warn("Invalid X-Hub-Signature-256");
+          return new Response('Forbidden', { status: 403, headers: getCorsHeaders(req) });
+        }
+      }
+
+      const rawPayload = JSON.parse(rawBody);
       const parsed = WhatsAppWebhookSchema.safeParse(rawPayload);
 
       if (!parsed.success) {

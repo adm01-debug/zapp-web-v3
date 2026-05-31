@@ -21,11 +21,14 @@ export { parseEdgeEvents };
 
 const REPO_ROOT = resolve(__dirname, '../..');
 const MMD_PATH = resolve(__dirname, 'fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd');
-const UPDATE_HINT = 'Atualize src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd (e a cópia em /mnt/documents/).';
+const UPDATE_HINT =
+  'Atualize src/test/fixtures/TRILHA_MENSAGENS_NAVEGAVEL.mmd (e a cópia em /mnt/documents/).';
 
 // Mapeia node id no .mmd -> caminho do arquivo no repo (espelha bloco `click`).
 const NODE_TO_FILE: Record<string, string> = {
-  URM: 'src/hooks/useRealtimeMessages.ts',
+  // The actual subscription code lives in features/inbox, not in the re-export stub at src/hooks/.
+  URM: 'src/features/inbox/hooks/useRealtimeMessages.ts',
+  // src/hooks/useMessages.ts is the direct subscriber (INSERT+UPDATE via dbTable).
   UM: 'src/hooks/useMessages.ts',
   UMS: 'src/hooks/useMessageStatus.ts',
   UTN: 'src/hooks/useTranscriptionNotifications.ts',
@@ -33,7 +36,6 @@ const NODE_TO_FILE: Record<string, string> = {
   UEM: 'src/components/monitoring/hooks/useEvolutionMonitoring.ts',
   AMP: 'src/features/inbox/components/AudioMessagePlayer.tsx',
 };
-
 
 function parseDiagramEdges(): Record<string, Set<Evt>> {
   const mmd = readFileSync(MMD_PATH, 'utf8');
@@ -72,18 +74,25 @@ describe('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — eventos realtime nas arestas',
   for (const [node, file] of Object.entries(NODE_TO_FILE)) {
     it(`aresta DB -> ${node} (${file}) reflete os eventos assinados`, () => {
       const declared = diagram[node];
-      expect(declared, `Aresta DB -.->|...| ${node} ausente no diagrama. ${UPDATE_HINT}`).toBeDefined();
+      expect(
+        declared,
+        `Aresta DB -.->|...| ${node} ausente no diagrama. ${UPDATE_HINT}`
+      ).toBeDefined();
 
       const actual = parseFileEvents(resolve(REPO_ROOT, file));
-      expect(actual.size, `${file} nao assina nenhum evento em table:'messages'.`).toBeGreaterThan(0);
+      expect(actual.size, `${file} nao assina nenhum evento em table:'messages'.`).toBeGreaterThan(
+        0
+      );
 
       const missingInDiagram = [...actual].filter((e) => !declared!.has(e));
       const phantomInDiagram = [...declared!].filter((e) => !actual.has(e));
 
       if (missingInDiagram.length || phantomInDiagram.length) {
         const parts: string[] = [];
-        if (missingInDiagram.length) parts.push(`faltam no diagrama: ${missingInDiagram.join(', ')}`);
-        if (phantomInDiagram.length) parts.push(`fantasma no diagrama: ${phantomInDiagram.join(', ')}`);
+        if (missingInDiagram.length)
+          parts.push(`faltam no diagrama: ${missingInDiagram.join(', ')}`);
+        if (phantomInDiagram.length)
+          parts.push(`fantasma no diagrama: ${phantomInDiagram.join(', ')}`);
         throw new Error(`Aresta DB -> ${node} desalinhada (${parts.join(' | ')}). ${UPDATE_HINT}`);
       }
     });
