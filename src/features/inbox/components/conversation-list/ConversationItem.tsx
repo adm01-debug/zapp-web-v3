@@ -269,12 +269,6 @@ export const ConversationItem = memo(function ConversationItem({
                   </TruncatedTooltip>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className={cn(
-                    "text-[10px] font-semibold tabular-nums tracking-tight",
-                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
-                  )}>
-                    {shortRelativeTime(displayDate)}
-                  </span>
                   {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                   {unreadCount > 0 && (
                     <span className={cn(
@@ -284,6 +278,12 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
+                  <span className={cn(
+                    "text-[10px] font-semibold tabular-nums tracking-tight",
+                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
+                  )}>
+                    {shortRelativeTime(displayDate)}
+                  </span>
                 </div>
               </div>
 
@@ -457,12 +457,6 @@ export const ConversationItem = memo(function ConversationItem({
                   </TruncatedTooltip>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className={cn(
-                    "text-[11px] font-semibold tabular-nums tracking-tight",
-                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
-                  )}>
-                    {shortRelativeTime(displayDate)}
-                  </span>
                   {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                   {unreadCount > 0 && (
                     <span className={cn(
@@ -472,6 +466,12 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
+                  <span className={cn(
+                    "text-[11px] font-semibold tabular-nums tracking-tight",
+                    isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
+                  )}>
+                    {shortRelativeTime(displayDate)}
+                  </span>
                 </div>
 
               </div>
