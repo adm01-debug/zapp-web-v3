@@ -115,7 +115,8 @@ function buildFullPrimaryLabel(conversation: any): string {
 
 function buildSecondaryLabel(conversation: any): string | null {
   const jobTitle = conversation.contact?.job_title?.trim() || conversation.contact?.jobTitle?.trim() || conversation.contact?.role?.trim();
-  return jobTitle || null;
+  // Return the job title if it exists, otherwise return a fallback value
+  return jobTitle || 'Cargo não informado';
 }
 
 // Short relative time: "4min", "2h", "3d"
