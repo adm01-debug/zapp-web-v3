@@ -267,9 +267,8 @@ export const ConversationItem = memo(function ConversationItem({
                       </span>
                     )}
                   </TruncatedTooltip>
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className={cn(
                     "text-[10px] font-semibold tabular-nums tracking-tight",
                     isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
@@ -284,8 +283,10 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
               </div>
+
               {secondaryLabel && (
                 <span
                   className={cn(
@@ -454,16 +455,25 @@ export const ConversationItem = memo(function ConversationItem({
                       </span>
                     )}
                   </TruncatedTooltip>
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className={cn(
                     "text-[11px] font-semibold tabular-nums tracking-tight",
                     isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
                   )}>
                     {shortRelativeTime(displayDate)}
                   </span>
+                  {unreadCount > 0 && (
+                    <span className={cn(
+                      "min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[11px] font-black tabular-nums shadow-lg animate-bounce-in",
+                      isSelected ? "bg-white text-primary" : "bg-primary text-primary-foreground"
+                    )}>
+                      {unreadCount}
+                    </span>
+                  )}
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
+
               </div>
               {secondaryLabel && (
                 <span
@@ -510,14 +520,6 @@ export const ConversationItem = memo(function ConversationItem({
                   </Badge>
                 ))}
                 
-                {unreadCount > 0 && (
-                  <span className={cn(
-                    "min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[11px] font-black tabular-nums shadow-lg animate-bounce-in",
-                    isSelected ? "bg-white text-primary" : "bg-primary text-primary-foreground"
-                  )}>
-                    {unreadCount}
-                  </span>
-                )}
               </div>
             </div>
             {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
