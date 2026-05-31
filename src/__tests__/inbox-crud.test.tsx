@@ -1,5 +1,5 @@
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Message } from '../types/chat';
 import { renderHook, act } from '@testing-library/react';
 import { useMessages } from '../features/inbox/hooks/useMessages';
 import { messageService } from '../features/inbox/services/messageService';
@@ -24,10 +24,8 @@ describe('Inbox CRUD Flows', () => {
   });
 
   it('should fetch messages for a contact', async () => {
-    const mockMessages = [
-      { id: '1', content: 'Hello', sender: 'contact', timestamp: new Date() },
-    ];
-    (messageService.getAllMessagesForContact as any).mockResolvedValueOnce(mockMessages);
+    const mockMessages = [{ id: '1', content: 'Hello', sender: 'contact', timestamp: new Date() }];
+    vi.mocked(messageService.getAllMessagesForContact).mockResolvedValueOnce(mockMessages);
 
     const { result } = renderHook(() => useMessages({ contactId: 'contact-1' }));
 
@@ -43,20 +41,24 @@ describe('Inbox CRUD Flows', () => {
   it('should add messages optimistically', async () => {
     const { result } = renderHook(() => useMessages({ contactId: 'contact-1' }));
 
-    const newMessage = { id: '2', content: 'New message', sender: 'agent' as const, timestamp: new Date(), conversationId: 'contact-1' };
-    
+    const newMessage = {
+      id: '2',
+      content: 'New message',
+      sender: 'agent' as const,
+      timestamp: new Date(),
+      conversationId: 'contact-1',
+    } as Message;
+
     act(() => {
-      result.current.addMessage(newMessage as any);
+      result.current.addMessage(newMessage);
     });
 
     expect(result.current.messages).toContainEqual(newMessage);
   });
 
   it('should remove messages optimistically', async () => {
-    const mockMessages = [
-      { id: '1', content: 'Hello', sender: 'contact', timestamp: new Date() },
-    ];
-    (messageService.getAllMessagesForContact as any).mockResolvedValueOnce(mockMessages);
+    const mockMessages = [{ id: '1', content: 'Hello', sender: 'contact', timestamp: new Date() }];
+    vi.mocked(messageService.getAllMessagesForContact).mockResolvedValueOnce(mockMessages);
 
     const { result } = renderHook(() => useMessages({ contactId: 'contact-1' }));
 
