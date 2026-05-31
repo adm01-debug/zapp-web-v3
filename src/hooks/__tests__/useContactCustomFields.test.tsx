@@ -1,15 +1,27 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
-const mockSelect = vi.fn();
-const mockUpsert = vi.fn();
-const mockDelete = vi.fn();
+const _mockSelect = vi.fn();
+const _mockUpsert = vi.fn();
+const _mockDelete = vi.fn();
 const mockFrom = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: (...args: any[]) => mockFrom(...args) },
 }));
-vi.mock('@/lib/logger', () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useContactCustomFields } from '@/hooks/useContactCustomFields';
 
@@ -19,9 +31,20 @@ describe('useContactCustomFields', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [
-            { id: 'cf1', contact_id: 'c1', field_name: 'CPF', field_value: '123', field_type: 'text' },
-          ], error: null }),
+          order: vi
+            .fn()
+            .mockResolvedValue({
+              data: [
+                {
+                  id: 'cf1',
+                  contact_id: 'c1',
+                  field_name: 'CPF',
+                  field_value: '123',
+                  field_type: 'text',
+                },
+              ],
+              error: null,
+            }),
         }),
       }),
       upsert: vi.fn().mockResolvedValue({ error: null }),

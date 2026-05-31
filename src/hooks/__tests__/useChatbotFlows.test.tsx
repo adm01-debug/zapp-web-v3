@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
@@ -19,7 +20,14 @@ function createWrapper() {
 }
 
 const mockFlows = [
-  { id: 'f1', name: 'Welcome Flow', is_active: true, trigger_type: 'first_message', nodes: [], edges: [] },
+  {
+    id: 'f1',
+    name: 'Welcome Flow',
+    is_active: true,
+    trigger_type: 'first_message',
+    nodes: [],
+    edges: [],
+  },
   { id: 'f2', name: 'FAQ Flow', is_active: false, trigger_type: 'keyword', nodes: [], edges: [] },
 ];
 
@@ -75,14 +83,23 @@ describe('useChatbotFlows', () => {
   });
 
   it('validates flow node types', () => {
-    const validTypes = ['start', 'message', 'question', 'condition', 'action', 'delay', 'transfer', 'end'];
-    validTypes.forEach(type => {
+    const validTypes = [
+      'start',
+      'message',
+      'question',
+      'condition',
+      'action',
+      'delay',
+      'transfer',
+      'end',
+    ];
+    validTypes.forEach((type) => {
       expect(typeof type).toBe('string');
     });
   });
 
   it('validates flow trigger types', () => {
     const triggerTypes = ['keyword', 'first_message', 'menu', 'webhook', 'schedule'];
-    triggerTypes.forEach(t => expect(typeof t).toBe('string'));
+    triggerTypes.forEach((t) => expect(typeof t).toBe('string'));
   });
 });

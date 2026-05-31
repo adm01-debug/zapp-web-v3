@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -8,6 +7,7 @@ const mockFrom = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     from: (...args: any[]) => mockFrom(...args),
   },
 }));
@@ -16,9 +16,18 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useBusinessHours } from '@/hooks/useBusinessHours';
 
@@ -30,10 +39,25 @@ function createWrapper() {
 }
 
 const mockHours = [
-  { id: 'bh1', whatsapp_connection_id: 'wc1', day_of_week: 1, is_open: true, open_time: '09:00', close_time: '18:00' },
-  { id: 'bh2', whatsapp_connection_id: 'wc1', day_of_week: 0, is_open: false, open_time: null, close_time: null },
+  {
+    id: 'bh1',
+    whatsapp_connection_id: 'wc1',
+    day_of_week: 1,
+    is_open: true,
+    open_time: '09:00',
+    close_time: '18:00',
+  },
+  {
+    id: 'bh2',
+    whatsapp_connection_id: 'wc1',
+    day_of_week: 0,
+    is_open: false,
+    open_time: null,
+    close_time: null,
+  },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeMockChain(data: any[] | null, error: any = null) {
   return {
     select: vi.fn().mockReturnValue({
@@ -68,6 +92,7 @@ describe('useBusinessHours', () => {
   it('identifies closed days correctly', async () => {
     const { result } = renderHook(() => useBusinessHours('wc1'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sunday = result.current.businessHours?.find((h: any) => h.day_of_week === 0);
     expect(sunday?.is_open).toBe(false);
   });

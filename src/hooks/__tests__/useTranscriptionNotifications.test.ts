@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockChannel = vi.fn();
@@ -83,11 +84,13 @@ describe('useTranscriptionNotifications', () => {
   });
 
   it('accepts custom options', () => {
-    renderHook(() => useTranscriptionNotifications({
-      showToast: false,
-      playSound: false,
-      showBrowserNotification: false,
-    }));
+    renderHook(() =>
+      useTranscriptionNotifications({
+        showToast: false,
+        playSound: false,
+        showBrowserNotification: false,
+      })
+    );
     expect(mockChannel).toHaveBeenCalled();
   });
 });

@@ -37,7 +37,7 @@ interface InteractionSummary {
 export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
   const [company, setCompany] = useState<CompanyInfo | null>(null);
   const [interactions, setInteractions] = useState<InteractionSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!contact || !isExternalConfigured) return;
@@ -71,13 +71,15 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
     };
 
     loadData().catch(console.error);
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [contact?.id, contact?.company_id]);
 
   if (!contact || !isExternalConfigured) return null;
 
   const bitrixUrl = contact.bitrix_contact_id
-    ? `https://promobrindes.bitrix24.com.br/crm/contact/details/${contact.bitrix_contact_id}/`
+    ? `${import.meta.env.VITE_BITRIX_PORTAL_URL || 'https://app.bitrix24.com'}/crm/contact/details/${contact.bitrix_contact_id}/`
     : null;
 
   const stageColor: Record<string, string> = {
@@ -99,7 +101,9 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
             {contact.relationship_stage}
           </Badge>
           {contact.relationship_score != null && (
-            <span className="text-xs text-muted-foreground">Score: {contact.relationship_score}/100</span>
+            <span className="text-xs text-muted-foreground">
+              Score: {contact.relationship_score}/100
+            </span>
           )}
         </div>
       )}
@@ -119,12 +123,16 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
 
       {/* Company */}
       {company && (
-        <div className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg">
-          <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-2">
+          <Building2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{company.name}</p>
+            <p className="truncate text-sm font-medium">{company.name}</p>
             {company.cnpj && <p className="text-xs text-muted-foreground">{company.cnpj}</p>}
-            {company.segment && <Badge variant="outline" className="text-xs mt-1">{company.segment}</Badge>}
+            {company.segment && (
+              <Badge variant="outline" className="mt-1 text-xs">
+                {company.segment}
+              </Badge>
+            )}
           </div>
         </div>
       )}
@@ -137,12 +145,15 @@ export function ContactBitrix24Panel({ contact }: ContactBitrix24PanelProps) {
             \u00daltimas intera\u00e7\u00f5es
           </div>
           {interactions.map((int) => (
-            <div key={int.id} className="text-xs p-1.5 bg-muted/30 rounded">
+            <div key={int.id} className="rounded bg-muted/30 p-1.5 text-xs">
               <span className="font-medium">{int.interaction_type}</span>
               {int.description && (
-                <span className="text-muted-foreground"> \u2014 {int.description.slice(0, 60)}...</span>
+                <span className="text-muted-foreground">
+                  {' '}
+                  \u2014 {int.description.slice(0, 60)}...
+                </span>
               )}
-              <span className="text-muted-foreground block">
+              <span className="block text-muted-foreground">
                 {new Date(int.created_at).toLocaleDateString('pt-BR')}
               </span>
             </div>

@@ -13,7 +13,18 @@ vi.mock('@/integrations/supabase/client', () => ({
     removeChannel: vi.fn(),
   },
 }));
-vi.mock('@/lib/logger', () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useTypingPresence } from '@/hooks/useTypingPresence';
 
@@ -28,39 +39,49 @@ describe('useTypingPresence', () => {
   });
 
   it('initializes with empty typing users', () => {
-    const { result } = renderHook(() => useTypingPresence({
-      conversationId: 'conv-1',
-      currentUserId: 'user-1',
-      currentUserName: 'Agent',
-    }));
+    const { result } = renderHook(() =>
+      useTypingPresence({
+        conversationId: 'conv-1',
+        currentUserId: 'user-1',
+        currentUserName: 'Agent',
+      })
+    );
     expect(result.current.typingUsers).toEqual([]);
   });
 
   it('exposes handleTypingStop function', () => {
-    const { result } = renderHook(() => useTypingPresence({
-      conversationId: 'conv-1',
-    }));
+    const { result } = renderHook(() =>
+      useTypingPresence({
+        conversationId: 'conv-1',
+      })
+    );
     expect(typeof result.current.handleTypingStop).toBe('function');
   });
 
   it('exposes handleTypingStart function', () => {
-    const { result } = renderHook(() => useTypingPresence({
-      conversationId: 'conv-1',
-    }));
+    const { result } = renderHook(() =>
+      useTypingPresence({
+        conversationId: 'conv-1',
+      })
+    );
     expect(typeof result.current.handleTypingStart).toBe('function');
   });
 
   it('isContactTyping defaults to false', () => {
-    const { result } = renderHook(() => useTypingPresence({
-      conversationId: 'conv-1',
-    }));
+    const { result } = renderHook(() =>
+      useTypingPresence({
+        conversationId: 'conv-1',
+      })
+    );
     expect(result.current.isContactTyping).toBe(false);
   });
 
   it('handles missing currentUserId with defaults', () => {
-    const { result } = renderHook(() => useTypingPresence({
-      conversationId: 'conv-1',
-    }));
+    const { result } = renderHook(() =>
+      useTypingPresence({
+        conversationId: 'conv-1',
+      })
+    );
     expect(result.current).toBeDefined();
   });
 });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -25,8 +26,26 @@ function createWrapper() {
 }
 
 const mockVersions = [
-  { id: 'v2', entity_type: 'contacts', entity_id: 'c1', version_number: 2, data: { name: 'Updated' }, changed_by: 'u1', changed_at: '2024-01-02', change_summary: 'Updated name' },
-  { id: 'v1', entity_type: 'contacts', entity_id: 'c1', version_number: 1, data: { name: 'Original' }, changed_by: 'u1', changed_at: '2024-01-01', change_summary: 'Created' },
+  {
+    id: 'v2',
+    entity_type: 'contacts',
+    entity_id: 'c1',
+    version_number: 2,
+    data: { name: 'Updated' },
+    changed_by: 'u1',
+    changed_at: '2024-01-02',
+    change_summary: 'Updated name',
+  },
+  {
+    id: 'v1',
+    entity_type: 'contacts',
+    entity_id: 'c1',
+    version_number: 1,
+    data: { name: 'Original' },
+    changed_by: 'u1',
+    changed_at: '2024-01-01',
+    change_summary: 'Created',
+  },
 ];
 
 describe('useVersions', () => {
@@ -47,13 +66,17 @@ describe('useVersions', () => {
   });
 
   it('fetches versions for entity', async () => {
-    const { result } = renderHook(() => useVersions('contacts', 'c1'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useVersions('contacts', 'c1'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.versions).toHaveLength(2);
   });
 
   it('currentVersion is the latest', async () => {
-    const { result } = renderHook(() => useVersions('contacts', 'c1'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useVersions('contacts', 'c1'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.currentVersion?.version_number).toBe(2);
   });
@@ -64,7 +87,9 @@ describe('useVersions', () => {
   });
 
   it('exposes restoreVersion function', async () => {
-    const { result } = renderHook(() => useVersions('contacts', 'c1'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useVersions('contacts', 'c1'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(typeof result.current.restoreVersion).toBe('function');
   });
@@ -80,7 +105,9 @@ describe('useVersions', () => {
       }),
     });
 
-    const { result } = renderHook(() => useVersions('contacts', 'c1'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useVersions('contacts', 'c1'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
   });
 
@@ -95,7 +122,9 @@ describe('useVersions', () => {
       }),
     });
 
-    const { result } = renderHook(() => useVersions('contacts', 'c1'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useVersions('contacts', 'c1'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.versions).toEqual([]);
     expect(result.current.currentVersion).toBeUndefined();

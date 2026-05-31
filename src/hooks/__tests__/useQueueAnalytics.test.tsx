@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -9,9 +10,18 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useQueueAnalytics } from '@/hooks/useQueueAnalytics';
 
@@ -44,8 +54,18 @@ describe('useQueueAnalytics', () => {
               gte: vi.fn().mockReturnValue({
                 lte: vi.fn().mockResolvedValue({
                   data: [
-                    { id: 'm1', contact_id: 'c1', sender: 'agent', created_at: '2024-01-03T10:00:00Z' },
-                    { id: 'm2', contact_id: 'c1', sender: 'contact', created_at: '2024-01-03T11:00:00Z' },
+                    {
+                      id: 'm1',
+                      contact_id: 'c1',
+                      sender: 'agent',
+                      created_at: '2024-01-03T10:00:00Z',
+                    },
+                    {
+                      id: 'm2',
+                      contact_id: 'c1',
+                      sender: 'contact',
+                      created_at: '2024-01-03T11:00:00Z',
+                    },
                   ],
                   error: null,
                 }),
@@ -145,7 +165,7 @@ describe('useQueueAnalytics', () => {
     const { result } = renderHook(() => useQueueAnalytics('q1', dateRange));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    result.current.statusData.forEach(s => {
+    result.current.statusData.forEach((s) => {
       // Colors are now semantic HSL tokens like 'hsl(var(--primary))'
       expect(s.color).toContain('hsl(var(--');
       expect(s.name).toBeTruthy();

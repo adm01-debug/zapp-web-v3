@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -11,9 +12,18 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useSLAMetrics } from '@/hooks/useSLAMetrics';
 
@@ -25,8 +35,24 @@ function createWrapper() {
 }
 
 const mockSLAData = [
-  { id: 's1', contact_id: 'c1', first_response_breached: false, resolution_breached: false, first_response_at: '2024-01-01T10:05:00Z', first_message_at: '2024-01-01T10:00:00Z', resolved_at: '2024-01-01T11:00:00Z' },
-  { id: 's2', contact_id: 'c2', first_response_breached: true, resolution_breached: true, first_response_at: null, first_message_at: '2024-01-01T10:00:00Z', resolved_at: null },
+  {
+    id: 's1',
+    contact_id: 'c1',
+    first_response_breached: false,
+    resolution_breached: false,
+    first_response_at: '2024-01-01T10:05:00Z',
+    first_message_at: '2024-01-01T10:00:00Z',
+    resolved_at: '2024-01-01T11:00:00Z',
+  },
+  {
+    id: 's2',
+    contact_id: 'c2',
+    first_response_breached: true,
+    resolution_breached: true,
+    first_response_at: null,
+    first_message_at: '2024-01-01T10:00:00Z',
+    resolved_at: null,
+  },
 ];
 
 describe('useSLAMetrics', () => {

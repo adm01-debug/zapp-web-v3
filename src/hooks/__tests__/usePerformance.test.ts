@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useDebounce, useThrottle } from '@/hooks/usePerformance';
 
@@ -22,10 +31,9 @@ describe('useDebounce (from usePerformance)', () => {
   });
 
   it('debounces value changes', async () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 300),
-      { initialProps: { value: 'initial' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 300), {
+      initialProps: { value: 'initial' },
+    });
 
     rerender({ value: 'updated' });
     expect(result.current).toBe('initial');
@@ -38,10 +46,9 @@ describe('useDebounce (from usePerformance)', () => {
   });
 
   it('only takes last value during delay', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 300),
-      { initialProps: { value: 'a' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 300), {
+      initialProps: { value: 'a' },
+    });
 
     rerender({ value: 'b' });
     rerender({ value: 'c' });
@@ -55,10 +62,9 @@ describe('useDebounce (from usePerformance)', () => {
   });
 
   it('works with number values', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 100),
-      { initialProps: { value: 0 } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 100), {
+      initialProps: { value: 0 },
+    });
 
     rerender({ value: 42 });
 
@@ -73,10 +79,9 @@ describe('useDebounce (from usePerformance)', () => {
     const obj1 = { key: 'a' };
     const obj2 = { key: 'b' };
 
-    const { result, rerender } = renderHook(
-      ({ value }) => useDebounce(value, 200),
-      { initialProps: { value: obj1 } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useDebounce(value, 200), {
+      initialProps: { value: obj1 },
+    });
 
     rerender({ value: obj2 });
 
@@ -103,10 +108,9 @@ describe('useThrottle (from usePerformance)', () => {
   });
 
   it('throttles rapid updates', () => {
-    const { result, rerender } = renderHook(
-      ({ value }) => useThrottle(value, 300),
-      { initialProps: { value: 'a' } }
-    );
+    const { result, rerender } = renderHook(({ value }) => useThrottle(value, 300), {
+      initialProps: { value: 'a' },
+    });
 
     rerender({ value: 'b' });
     rerender({ value: 'c' });

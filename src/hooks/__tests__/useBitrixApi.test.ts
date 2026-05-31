@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
@@ -13,9 +14,18 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useBitrixApi } from '@/hooks/useBitrixApi';
 
@@ -130,9 +140,12 @@ describe('useBitrixApi', () => {
     await act(async () => {
       await result.current.listLeads();
     });
-    expect(mockFunctionsInvoke).toHaveBeenCalledWith('bitrix-api', expect.objectContaining({
-      body: expect.objectContaining({ action: 'list', entityType: 'lead' }),
-    }));
+    expect(mockFunctionsInvoke).toHaveBeenCalledWith(
+      'bitrix-api',
+      expect.objectContaining({
+        body: expect.objectContaining({ action: 'list', entityType: 'lead' }),
+      })
+    );
   });
 
   it('handles invoke error', async () => {
@@ -155,13 +168,21 @@ describe('useBitrixApi', () => {
 
   it('sets loading during API call', async () => {
     let resolvePromise: (value: any) => void;
-    mockFunctionsInvoke.mockReturnValue(new Promise(r => { resolvePromise = r; }));
+    mockFunctionsInvoke.mockReturnValue(
+      new Promise((r) => {
+        resolvePromise = r;
+      })
+    );
     const { result } = renderHook(() => useBitrixApi());
-    
-    act(() => { result.current.listLeads(); });
+
+    act(() => {
+      result.current.listLeads();
+    });
     expect(result.current.loading).toBe(true);
-    
-    await act(async () => { resolvePromise!({ data: { success: true }, error: null }); });
+
+    await act(async () => {
+      resolvePromise!({ data: { success: true }, error: null });
+    });
     expect(result.current.loading).toBe(false);
   });
 });

@@ -17,20 +17,36 @@ const mockGainNode = {
   },
 };
 
-vi.stubGlobal('AudioContext', vi.fn().mockImplementation(() => ({
-  createOscillator: vi.fn().mockReturnValue({ ...mockOscillator }),
-  createGain: vi.fn().mockReturnValue({ ...mockGainNode }),
-  currentTime: 0,
-  destination: {},
-  state: 'running',
-  resume: vi.fn(),
-})));
+vi.stubGlobal(
+  'AudioContext',
+  vi.fn().mockImplementation(() => ({
+    createOscillator: vi.fn().mockReturnValue({ ...mockOscillator }),
+    createGain: vi.fn().mockReturnValue({ ...mockGainNode }),
+    currentTime: 0,
+    destination: {},
+    state: 'running',
+    resume: vi.fn(),
+  }))
+);
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
-import { playNotificationSound, requestNotificationPermission, showBrowserNotification } from '@/utils/notificationSound';
+import {
+  playNotificationSound,
+  requestNotificationPermission,
+  showBrowserNotification,
+} from '@/utils/notificationSound';
 
 describe('notificationSound (singular)', () => {
   beforeEach(() => {
@@ -96,7 +112,10 @@ describe('notificationSound (singular)', () => {
       vi.stubGlobal('Notification', NotificationSpy);
       Object.defineProperty(NotificationSpy, 'permission', { value: 'granted' });
       showBrowserNotification('Test', 'Body');
-      expect(NotificationSpy).toHaveBeenCalledWith('Test', expect.objectContaining({ body: 'Body' }));
+      expect(NotificationSpy).toHaveBeenCalledWith(
+        'Test',
+        expect.objectContaining({ body: 'Body' })
+      );
     });
 
     it('does not create notification when denied', () => {
@@ -112,7 +131,10 @@ describe('notificationSound (singular)', () => {
       vi.stubGlobal('Notification', NotificationSpy);
       Object.defineProperty(NotificationSpy, 'permission', { value: 'granted' });
       showBrowserNotification('Test', 'Body', '/custom-icon.png');
-      expect(NotificationSpy).toHaveBeenCalledWith('Test', expect.objectContaining({ icon: '/custom-icon.png' }));
+      expect(NotificationSpy).toHaveBeenCalledWith(
+        'Test',
+        expect.objectContaining({ icon: '/custom-icon.png' })
+      );
     });
   });
 });

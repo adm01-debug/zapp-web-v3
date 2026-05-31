@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -42,9 +43,22 @@ describe('useWarRoomAlerts', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: [
-                  { id: 'a1', alert_type: 'sla_breach', title: 'SLA Alert', message: 'Breach!', is_read: false, source: null, created_at: new Date().toISOString() },
-                ], error: null }),
+                limit: vi
+                  .fn()
+                  .mockResolvedValue({
+                    data: [
+                      {
+                        id: 'a1',
+                        alert_type: 'sla_breach',
+                        title: 'SLA Alert',
+                        message: 'Breach!',
+                        is_read: false,
+                        source: null,
+                        created_at: new Date().toISOString(),
+                      },
+                    ],
+                    error: null,
+                  }),
               }),
             }),
           }),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import React from 'react';
@@ -11,9 +12,18 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useSearch } from '@/hooks/useSearch';
 
@@ -39,35 +49,31 @@ describe('useSearch', () => {
   });
 
   it('initializes with empty results', () => {
-    const { result } = renderHook(
-      () => useSearch('contacts', { columns: ['name', 'phone'] }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useSearch('contacts', { columns: ['name', 'phone'] }), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.results).toEqual([]);
     expect(result.current.isLoading).toBe(false);
   });
 
   it('provides setSearchTerm function', () => {
-    const { result } = renderHook(
-      () => useSearch('contacts', { columns: ['name'] }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useSearch('contacts', { columns: ['name'] }), {
+      wrapper: createWrapper(),
+    });
     expect(typeof result.current.setSearchTerm).toBe('function');
   });
 
   it('provides clearSearch function', () => {
-    const { result } = renderHook(
-      () => useSearch('contacts', { columns: ['name'] }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useSearch('contacts', { columns: ['name'] }), {
+      wrapper: createWrapper(),
+    });
     expect(typeof result.current.clearSearch).toBe('function');
   });
 
   it('hasResults is false initially', () => {
-    const { result } = renderHook(
-      () => useSearch('contacts', { columns: ['name'] }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useSearch('contacts', { columns: ['name'] }), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.hasResults).toBe(false);
   });
 });

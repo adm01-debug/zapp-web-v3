@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
@@ -36,7 +38,9 @@ vi.mock('sip.js', () => {
     },
     Registerer: class {
       stateChange = {
-        addListener: (fn: Function) => { mockRegisterStateListeners.push(fn); },
+        addListener: (fn: Function) => {
+          mockRegisterStateListeners.push(fn);
+        },
       };
       register = vi.fn().mockResolvedValue(undefined);
       unregister = vi.fn().mockResolvedValue(undefined);
@@ -45,7 +49,9 @@ vi.mock('sip.js', () => {
       state = 'Initial';
       sessionDescriptionHandler = mockSessionDescriptionHandler;
       stateChange = {
-        addListener: (fn: Function) => { mockStateChangeListeners.push(fn); },
+        addListener: (fn: Function) => {
+          mockStateChangeListeners.push(fn);
+        },
       };
       invite = mockInvite;
       bye = mockBye;
@@ -61,7 +67,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
     from: vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: {}, error: null }) }) }),
+      insert: vi
+        .fn()
+        .mockReturnValue({
+          select: vi
+            .fn()
+            .mockReturnValue({ single: vi.fn().mockResolvedValue({ data: {}, error: null }) }),
+        }),
     }),
   },
 }));
@@ -69,7 +81,9 @@ vi.mock('@/integrations/supabase/client', () => ({
 // Polyfill MediaStream for jsdom
 globalThis.MediaStream = class MediaStream {
   addTrack() {}
-  getTracks() { return []; }
+  getTracks() {
+    return [];
+  }
 } as any;
 
 vi.mock('sonner', () => ({
@@ -115,7 +129,7 @@ describe('useSipClient', () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Registered'));
+      mockRegisterStateListeners.forEach((fn) => fn('Registered'));
     });
     expect(result.current.sipStatus).toBe('registered');
     expect(toast.success).toHaveBeenCalledWith('VoIP conectado!');
@@ -127,10 +141,10 @@ describe('useSipClient', () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Registered'));
+      mockRegisterStateListeners.forEach((fn) => fn('Registered'));
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Unregistered'));
+      mockRegisterStateListeners.forEach((fn) => fn('Unregistered'));
     });
     expect(result.current.sipStatus).toBe('disconnected');
   });
@@ -141,7 +155,7 @@ describe('useSipClient', () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Terminated'));
+      mockRegisterStateListeners.forEach((fn) => fn('Terminated'));
     });
     expect(result.current.sipStatus).toBe('disconnected');
   });
@@ -158,7 +172,7 @@ describe('useSipClient', () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Registered'));
+      mockRegisterStateListeners.forEach((fn) => fn('Registered'));
     });
     expect(result.current.sipStatus).toBe('registered');
 
@@ -185,7 +199,7 @@ describe('useSipClient', () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
     act(() => {
-      mockRegisterStateListeners.forEach(fn => fn('Registered'));
+      mockRegisterStateListeners.forEach((fn) => fn('Registered'));
     });
 
     await act(async () => {
@@ -200,14 +214,14 @@ describe('useSipClient', () => {
     await act(async () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
-    act(() => mockRegisterStateListeners.forEach(fn => fn('Registered')));
+    act(() => mockRegisterStateListeners.forEach((fn) => fn('Registered')));
 
     await act(async () => {
       await result.current.makeCall('123');
     });
 
     act(() => {
-      mockStateChangeListeners.forEach(fn => fn('Establishing'));
+      mockStateChangeListeners.forEach((fn) => fn('Establishing'));
     });
     expect(result.current.callStatus).toBe('ringing');
   });
@@ -218,18 +232,20 @@ describe('useSipClient', () => {
     await act(async () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
-    act(() => mockRegisterStateListeners.forEach(fn => fn('Registered')));
+    act(() => mockRegisterStateListeners.forEach((fn) => fn('Registered')));
 
     await act(async () => {
       await result.current.makeCall('123');
     });
 
     act(() => {
-      mockStateChangeListeners.forEach(fn => fn('Established'));
+      mockStateChangeListeners.forEach((fn) => fn('Established'));
     });
     expect(result.current.callStatus).toBe('active');
 
-    act(() => { vi.advanceTimersByTime(3000); });
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
     expect(result.current.callDuration).toBe(3);
 
     vi.useRealTimers();
@@ -279,8 +295,10 @@ describe('useSipClient', () => {
   it('should handle all DTMF digits', () => {
     const { result } = renderHook(() => useSipClient());
     const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '#'];
-    digits.forEach(d => {
-      act(() => { result.current.sendDTMF(d); });
+    digits.forEach((d) => {
+      act(() => {
+        result.current.sendDTMF(d);
+      });
     });
   });
 
@@ -304,7 +322,7 @@ describe('useSipClient', () => {
     await act(async () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
-    act(() => mockRegisterStateListeners.forEach(fn => fn('Registered')));
+    act(() => mockRegisterStateListeners.forEach((fn) => fn('Registered')));
     await act(async () => {
       await result.current.makeCall('');
     });
@@ -315,7 +333,7 @@ describe('useSipClient', () => {
     await act(async () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
-    act(() => mockRegisterStateListeners.forEach(fn => fn('Registered')));
+    act(() => mockRegisterStateListeners.forEach((fn) => fn('Registered')));
     await act(async () => {
       await result.current.makeCall('+55 (11) 99999-9999');
     });
@@ -331,8 +349,12 @@ describe('useSipClient', () => {
 
   it('should handle double hangUp gracefully', () => {
     const { result } = renderHook(() => useSipClient());
-    act(() => { result.current.hangUp(); });
-    act(() => { result.current.hangUp(); });
+    act(() => {
+      result.current.hangUp();
+    });
+    act(() => {
+      result.current.hangUp();
+    });
     expect(result.current.callStatus).toBe('idle');
   });
 
@@ -341,7 +363,7 @@ describe('useSipClient', () => {
     await act(async () => {
       await result.current.connect({ server: 'test.com', user: 'user1', password: 'pass' });
     });
-    act(() => mockRegisterStateListeners.forEach(fn => fn('Registered')));
+    act(() => mockRegisterStateListeners.forEach((fn) => fn('Registered')));
     const longNumber = '1'.repeat(100);
     await act(async () => {
       await result.current.makeCall(longNumber);

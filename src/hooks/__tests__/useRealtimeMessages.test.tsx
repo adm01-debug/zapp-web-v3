@@ -1,4 +1,4 @@
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -238,9 +238,12 @@ describe('useRealtimeMessages', () => {
 
     const { result } = renderHook(() => useRealtimeMessages());
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(result.current.loading).toBe(false);
+      },
+      { timeout: 10000 }
+    );
 
     expect(result.current.conversations.map((c: any) => c.contact.id)).toContain(
       hiddenActiveContact.id

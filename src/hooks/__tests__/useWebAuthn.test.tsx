@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
@@ -9,7 +10,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: (...args: any[]) => mockFrom(...args),
     functions: { invoke: (...args: any[]) => mockInvoke(...args) },
     auth: {
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
     },
   },
@@ -19,9 +22,18 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 const mockUseAuth = vi.fn();
 vi.mock('@/hooks/useAuth', () => ({
@@ -172,7 +184,14 @@ describe('useWebAuthn', () => {
 
   it('fetchPasskeys returns passkeys for logged-in user', async () => {
     const mockPasskeys = [
-      { id: 'pk-1', credential_id: 'cred-1', friendly_name: 'iPhone', device_type: 'platform', created_at: '2024-01-01', last_used_at: null },
+      {
+        id: 'pk-1',
+        credential_id: 'cred-1',
+        friendly_name: 'iPhone',
+        device_type: 'platform',
+        created_at: '2024-01-01',
+        last_used_at: null,
+      },
     ];
 
     mockUseAuth.mockReturnValue({ user: { id: 'u1' } });

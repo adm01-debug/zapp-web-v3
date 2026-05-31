@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
@@ -25,7 +26,11 @@ describe('useSpeechToText', () => {
     originalSR = (window as any).SpeechRecognition;
     (window as any).SpeechRecognition = MockSpeechRecognition;
     // Mock navigator.vibrate
-    Object.defineProperty(navigator, 'vibrate', { value: vi.fn(), writable: true, configurable: true });
+    Object.defineProperty(navigator, 'vibrate', {
+      value: vi.fn(),
+      writable: true,
+      configurable: true,
+    });
   });
 
   afterEach(() => {
@@ -84,11 +89,9 @@ describe('useSpeechToText', () => {
     });
 
     // Simulate a speech recognition result
-    const mockEvent = {
+    const _mockEvent = {
       resultIndex: 0,
-      results: [
-        { 0: { transcript: 'hello world' }, isFinal: true, length: 1 },
-      ],
+      results: [{ 0: { transcript: 'hello world' }, isFinal: true, length: 1 }],
     };
 
     // Get the recognition instance and trigger onresult

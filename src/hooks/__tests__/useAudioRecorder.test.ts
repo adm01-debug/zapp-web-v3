@@ -6,7 +6,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     storage: {
       from: vi.fn().mockReturnValue({
         upload: vi.fn().mockResolvedValue({ data: { path: 'test.webm' }, error: null }),
-        getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/test.webm' } }),
+        getPublicUrl: vi
+          .fn()
+          .mockReturnValue({ data: { publicUrl: 'https://example.com/test.webm' } }),
       }),
     },
   },
@@ -17,9 +19,18 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 

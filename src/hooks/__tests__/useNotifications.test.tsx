@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -16,7 +17,9 @@ vi.mock('@/integrations/supabase/client', () => ({
     channel: (...args: any[]) => mockChannel(...args),
     removeChannel: (...args: any[]) => mockRemoveChannel(...args),
     auth: {
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
     },
   },
@@ -28,9 +31,18 @@ vi.mock('@/hooks/useAuth', () => ({
   AuthProvider: ({ children }: any) => children,
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -42,8 +54,24 @@ function createWrapper() {
 }
 
 const mockNotifications = [
-  { id: 'n1', user_id: 'u1', title: 'New message', message: 'You have a new message', type: 'message', is_read: false, created_at: '2024-01-01' },
-  { id: 'n2', user_id: 'u1', title: 'SLA alert', message: 'SLA breached', type: 'sla', is_read: true, created_at: '2024-01-02' },
+  {
+    id: 'n1',
+    user_id: 'u1',
+    title: 'New message',
+    message: 'You have a new message',
+    type: 'message',
+    is_read: false,
+    created_at: '2024-01-01',
+  },
+  {
+    id: 'n2',
+    user_id: 'u1',
+    title: 'SLA alert',
+    message: 'SLA breached',
+    type: 'sla',
+    is_read: true,
+    created_at: '2024-01-02',
+  },
 ];
 
 describe('useNotifications', () => {

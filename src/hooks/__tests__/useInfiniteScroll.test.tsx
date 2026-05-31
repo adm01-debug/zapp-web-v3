@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import React from 'react';
@@ -41,26 +42,23 @@ describe('useInfiniteScroll', () => {
   });
 
   it('initializes with loading state', () => {
-    const { result } = renderHook(
-      () => useInfiniteScroll({ tableName: 'contacts' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useInfiniteScroll({ tableName: 'contacts' }), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.isLoading).toBe(true);
   });
 
   it('exposes setLoadMoreRef', () => {
-    const { result } = renderHook(
-      () => useInfiniteScroll({ tableName: 'contacts' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useInfiniteScroll({ tableName: 'contacts' }), {
+      wrapper: createWrapper(),
+    });
     expect(typeof result.current.setLoadMoreRef).toBe('function');
   });
 
   it('exposes totalLoaded number', () => {
-    const { result } = renderHook(
-      () => useInfiniteScroll({ tableName: 'contacts' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useInfiniteScroll({ tableName: 'contacts' }), {
+      wrapper: createWrapper(),
+    });
     expect(typeof result.current.totalLoaded).toBe('number');
   });
 
@@ -74,7 +72,8 @@ describe('useInfiniteScroll', () => {
 
   it('accepts custom orderBy', () => {
     const { result } = renderHook(
-      () => useInfiniteScroll({ tableName: 'contacts', orderBy: { column: 'name', ascending: true } }),
+      () =>
+        useInfiniteScroll({ tableName: 'contacts', orderBy: { column: 'name', ascending: true } }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toBeDefined();

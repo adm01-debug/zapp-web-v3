@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -15,9 +16,18 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useCSAT } from '@/hooks/useCSAT';
 
@@ -29,9 +39,30 @@ function createWrapper() {
 }
 
 const mockSurveys = [
-  { id: 's1', contact_id: 'c1', agent_id: 'a1', rating: 5, feedback: 'Great!', created_at: '2024-01-01' },
-  { id: 's2', contact_id: 'c2', agent_id: 'a1', rating: 3, feedback: null, created_at: '2024-01-02' },
-  { id: 's3', contact_id: 'c3', agent_id: 'a2', rating: 1, feedback: 'Bad', created_at: '2024-01-03' },
+  {
+    id: 's1',
+    contact_id: 'c1',
+    agent_id: 'a1',
+    rating: 5,
+    feedback: 'Great!',
+    created_at: '2024-01-01',
+  },
+  {
+    id: 's2',
+    contact_id: 'c2',
+    agent_id: 'a1',
+    rating: 3,
+    feedback: null,
+    created_at: '2024-01-02',
+  },
+  {
+    id: 's3',
+    contact_id: 'c3',
+    agent_id: 'a2',
+    rating: 1,
+    feedback: 'Bad',
+    created_at: '2024-01-03',
+  },
 ];
 
 describe('useCSAT', () => {

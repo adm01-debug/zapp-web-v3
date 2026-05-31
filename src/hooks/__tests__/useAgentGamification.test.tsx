@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -9,7 +10,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: any[]) => mockFrom(...args),
     auth: {
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
     },
   },
@@ -49,7 +52,17 @@ describe('useAgentGamification', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               maybeSingle: vi.fn().mockResolvedValue({
-                data: { id: 's1', profile_id: 'p1', xp: 500, level: 3, current_streak: 5, best_streak: 10, messages_sent: 100, conversations_resolved: 20, achievements_count: 5 },
+                data: {
+                  id: 's1',
+                  profile_id: 'p1',
+                  xp: 500,
+                  level: 3,
+                  current_streak: 5,
+                  best_streak: 10,
+                  messages_sent: 100,
+                  conversations_resolved: 20,
+                  achievements_count: 5,
+                },
                 error: null,
               }),
             }),
@@ -62,7 +75,16 @@ describe('useAgentGamification', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               order: vi.fn().mockResolvedValue({
-                data: [{ id: 'a1', profile_id: 'p1', achievement_type: 'fast_response', achievement_name: 'Fast', xp_earned: 50, earned_at: '2024-01-01' }],
+                data: [
+                  {
+                    id: 'a1',
+                    profile_id: 'p1',
+                    achievement_type: 'fast_response',
+                    achievement_name: 'Fast',
+                    xp_earned: 50,
+                    earned_at: '2024-01-01',
+                  },
+                ],
                 error: null,
               }),
             }),

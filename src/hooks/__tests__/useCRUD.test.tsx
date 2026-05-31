@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
@@ -69,10 +70,9 @@ describe('useCRUD', () => {
   });
 
   it('initializes with CRUD functions', () => {
-    const { result } = renderHook(
-      () => useCRUD<TestEntity>({ tableName: 'test_table' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useCRUD<TestEntity>({ tableName: 'test_table' }), {
+      wrapper: createWrapper(),
+    });
 
     expect(typeof result.current.create).toBe('function');
     expect(typeof result.current.update).toBe('function');
@@ -84,10 +84,9 @@ describe('useCRUD', () => {
   });
 
   it('isCreating defaults to false', () => {
-    const { result } = renderHook(
-      () => useCRUD<TestEntity>({ tableName: 'test_table' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useCRUD<TestEntity>({ tableName: 'test_table' }), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.isCreating).toBe(false);
     expect(result.current.isUpdating).toBe(false);
     expect(result.current.isDeleting).toBe(false);
@@ -95,14 +94,15 @@ describe('useCRUD', () => {
 
   it('accepts custom messages', () => {
     const { result } = renderHook(
-      () => useCRUD<TestEntity>({
-        tableName: 'test_table',
-        messages: {
-          createSuccess: 'Criado!',
-          updateSuccess: 'Atualizado!',
-          deleteSuccess: 'Removido!',
-        },
-      }),
+      () =>
+        useCRUD<TestEntity>({
+          tableName: 'test_table',
+          messages: {
+            createSuccess: 'Criado!',
+            updateSuccess: 'Atualizado!',
+            deleteSuccess: 'Removido!',
+          },
+        }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toBeDefined();
@@ -110,10 +110,11 @@ describe('useCRUD', () => {
 
   it('accepts orderBy config', () => {
     const { result } = renderHook(
-      () => useCRUD<TestEntity>({
-        tableName: 'test_table',
-        orderBy: { column: 'name', ascending: true },
-      }),
+      () =>
+        useCRUD<TestEntity>({
+          tableName: 'test_table',
+          orderBy: { column: 'name', ascending: true },
+        }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toBeDefined();
@@ -121,10 +122,11 @@ describe('useCRUD', () => {
 
   it('accepts defaultFilters config', () => {
     const { result } = renderHook(
-      () => useCRUD<TestEntity>({
-        tableName: 'test_table',
-        defaultFilters: { is_active: true },
-      }),
+      () =>
+        useCRUD<TestEntity>({
+          tableName: 'test_table',
+          defaultFilters: { is_active: true },
+        }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toBeDefined();
@@ -132,20 +134,20 @@ describe('useCRUD', () => {
 
   it('accepts softDeleteColumn config', () => {
     const { result } = renderHook(
-      () => useCRUD<TestEntity>({
-        tableName: 'test_table',
-        softDeleteColumn: 'archived_at',
-      }),
+      () =>
+        useCRUD<TestEntity>({
+          tableName: 'test_table',
+          softDeleteColumn: 'archived_at',
+        }),
       { wrapper: createWrapper() }
     );
     expect(result.current).toBeDefined();
   });
 
   it('create triggers mutation', async () => {
-    const { result } = renderHook(
-      () => useCRUD<TestEntity>({ tableName: 'test_table' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useCRUD<TestEntity>({ tableName: 'test_table' }), {
+      wrapper: createWrapper(),
+    });
 
     await act(async () => {
       result.current.create({ name: 'New Item' } as Partial<TestEntity>);
@@ -155,10 +157,9 @@ describe('useCRUD', () => {
   });
 
   it('bulkDelete calls delete with multiple ids', async () => {
-    const { result } = renderHook(
-      () => useCRUD<TestEntity>({ tableName: 'test_table' }),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useCRUD<TestEntity>({ tableName: 'test_table' }), {
+      wrapper: createWrapper(),
+    });
 
     await act(async () => {
       await result.current.bulkDelete(['id1', 'id2', 'id3']);

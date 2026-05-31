@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-vi.mock('@/lib/logger', () => ({
-  createLogger: () => ({ debug: vi.fn(), info: vi.fn(), error: vi.fn(), warn: vi.fn() }),
-  log: { debug: vi.fn(), info: vi.fn(), error: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useShoppingCart } from '@/hooks/useShoppingCart';
 
@@ -68,9 +76,15 @@ describe('useShoppingCart', () => {
     const { result } = renderHook(() => useShoppingCart());
     const product = mockProduct({ stock_quantity: 2 });
 
-    act(() => { result.current.addItem(product); });
-    act(() => { result.current.addItem(product); });
-    act(() => { result.current.addItem(product); }); // exceeds stock
+    act(() => {
+      result.current.addItem(product);
+    });
+    act(() => {
+      result.current.addItem(product);
+    });
+    act(() => {
+      result.current.addItem(product);
+    }); // exceeds stock
 
     expect(result.current.items[0].quantity).toBe(2);
   });
@@ -92,8 +106,12 @@ describe('useShoppingCart', () => {
   it('updateQuantity changes item quantity', () => {
     const { result } = renderHook(() => useShoppingCart());
 
-    act(() => { result.current.addItem(mockProduct()); });
-    act(() => { result.current.updateQuantity('p1', 5); });
+    act(() => {
+      result.current.addItem(mockProduct());
+    });
+    act(() => {
+      result.current.updateQuantity('p1', 5);
+    });
 
     expect(result.current.items[0].quantity).toBe(5);
     expect(result.current.totalItems).toBe(5);
@@ -117,8 +135,12 @@ describe('useShoppingCart', () => {
   it('removeItem on non-existent product does nothing', () => {
     const { result } = renderHook(() => useShoppingCart());
 
-    act(() => { result.current.addItem(mockProduct()); });
-    act(() => { result.current.removeItem('nonexistent'); });
+    act(() => {
+      result.current.addItem(mockProduct());
+    });
+    act(() => {
+      result.current.removeItem('nonexistent');
+    });
 
     expect(result.current.items).toHaveLength(1);
   });
@@ -144,13 +166,13 @@ describe('useShoppingCart', () => {
 
     act(() => {
       result.current.addItem(mockProduct({ id: 'p1', price: 10 }));
-      result.current.addItem(mockProduct({ id: 'p2', price: 25.50 }));
+      result.current.addItem(mockProduct({ id: 'p2', price: 25.5 }));
     });
     act(() => {
       result.current.updateQuantity('p1', 3);
     });
 
-    expect(result.current.totalPrice).toBeCloseTo(55.50);
+    expect(result.current.totalPrice).toBeCloseTo(55.5);
     expect(result.current.totalItems).toBe(4);
   });
 

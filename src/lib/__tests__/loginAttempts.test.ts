@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockRpc = vi.fn();
@@ -8,11 +9,25 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
-import { checkAccountLock, recordFailedLogin, clearLoginAttempts, formatLockTime } from '@/lib/loginAttempts';
+import {
+  checkAccountLock,
+  recordFailedLogin,
+  clearLoginAttempts,
+  formatLockTime,
+} from '@/lib/loginAttempts';
 
 describe('loginAttempts', () => {
   beforeEach(() => {
@@ -72,9 +87,12 @@ describe('loginAttempts', () => {
       });
 
       const result = await recordFailedLogin('test@test.com');
-      expect(mockRpc).toHaveBeenCalledWith('record_failed_login', expect.objectContaining({
-        p_email: 'test@test.com',
-      }));
+      expect(mockRpc).toHaveBeenCalledWith(
+        'record_failed_login',
+        expect.objectContaining({
+          p_email: 'test@test.com',
+        })
+      );
       expect(result.isLocked).toBe(false);
     });
 

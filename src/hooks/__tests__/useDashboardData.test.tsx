@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -79,10 +80,9 @@ describe('useDashboardData', () => {
       agentId: 'p1',
     };
 
-    const { result } = renderHook(
-      () => useDashboardData(customFilters),
-      { wrapper: createWrapper() }
-    );
+    const { result } = renderHook(() => useDashboardData(customFilters), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);

@@ -36,9 +36,18 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 describe('useWhatsAppStatus', () => {
   beforeEach(() => {
@@ -48,7 +57,7 @@ describe('useWhatsAppStatus', () => {
   // ========== NO PHONE ==========
   it('returns empty data when phone is undefined', async () => {
     const { result } = renderHook(() => useWhatsAppStatus(undefined));
-    
+
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -58,7 +67,7 @@ describe('useWhatsAppStatus', () => {
 
   it('returns empty data when phone is empty string', async () => {
     const { result } = renderHook(() => useWhatsAppStatus(''));
-    
+
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
@@ -105,9 +114,7 @@ describe('useWhatsAppStatus', () => {
       .mockResolvedValueOnce({ data: { id: 'fallback1', instance_id: 'inst-fallback' } }) // fallback
       .mockResolvedValueOnce({ data: { instance_id: 'inst-fallback' } }); // connection details
 
-    mockInvoke
-      .mockResolvedValueOnce({ data: [] })
-      .mockResolvedValueOnce({ data: {} });
+    mockInvoke.mockResolvedValueOnce({ data: [] }).mockResolvedValueOnce({ data: {} });
 
     const { result } = renderHook(() => useWhatsAppStatus('+5511888888888'));
 
@@ -121,8 +128,7 @@ describe('useWhatsAppStatus', () => {
   it('handles API errors gracefully', async () => {
     // When Promise.allSettled is used, individual rejections don't throw
     // The error path is only hit if getInstanceForPhone or the try block itself throws
-    mockMaybeSingle
-      .mockRejectedValueOnce(new Error('DB connection failed'));
+    mockMaybeSingle.mockRejectedValueOnce(new Error('DB connection failed'));
 
     const { result } = renderHook(() => useWhatsAppStatus('+5511999999999'));
 
@@ -170,14 +176,21 @@ describe('useWhatsAppStatus', () => {
       .mockResolvedValueOnce({ data: { instance_id: 'inst1' } });
 
     const statuses = [
-      { key: { remoteJid: '5511999999999@s.whatsapp.net', id: 'match' }, message: { conversation: 'Matched' } },
-      { key: { remoteJid: '5511888888888@s.whatsapp.net', id: 'no-match' }, message: { conversation: 'Not matched' } },
-      { key: { remoteJid: 'status@broadcast', id: 'broadcast' }, message: { conversation: 'Broadcast' } },
+      {
+        key: { remoteJid: '5511999999999@s.whatsapp.net', id: 'match' },
+        message: { conversation: 'Matched' },
+      },
+      {
+        key: { remoteJid: '5511888888888@s.whatsapp.net', id: 'no-match' },
+        message: { conversation: 'Not matched' },
+      },
+      {
+        key: { remoteJid: 'status@broadcast', id: 'broadcast' },
+        message: { conversation: 'Broadcast' },
+      },
     ];
 
-    mockInvoke
-      .mockResolvedValueOnce({ data: statuses })
-      .mockResolvedValueOnce({ data: {} });
+    mockInvoke.mockResolvedValueOnce({ data: statuses }).mockResolvedValueOnce({ data: {} });
 
     const { result } = renderHook(() => useWhatsAppStatus('+5511999999999'));
 

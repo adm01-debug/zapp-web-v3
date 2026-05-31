@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -29,8 +30,20 @@ function createWrapper() {
 }
 
 const mockFilters = [
-  { id: 'f1', name: 'Active', filters: { status: 'active' }, is_default: true, created_at: '2024-01-01' },
-  { id: 'f2', name: 'Urgent', filters: { priority: 'high' }, is_default: false, created_at: '2024-01-02' },
+  {
+    id: 'f1',
+    name: 'Active',
+    filters: { status: 'active' },
+    is_default: true,
+    created_at: '2024-01-01',
+  },
+  {
+    id: 'f2',
+    name: 'Urgent',
+    filters: { priority: 'high' },
+    is_default: false,
+    created_at: '2024-01-02',
+  },
 ];
 
 describe('useSavedFilters', () => {

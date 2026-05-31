@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -19,9 +20,42 @@ vi.mock('@/integrations/supabase/client', () => ({
 import { useRateLimitLogs } from '@/hooks/useRateLimitLogs';
 
 const mockLogs = [
-  { id: '1', ip_address: '1.2.3.4', endpoint: '/api/messages', user_id: null, request_count: 50, blocked: false, user_agent: 'Chrome', country: 'BR', city: 'SP', created_at: '2024-01-01' },
-  { id: '2', ip_address: '5.6.7.8', endpoint: '/api/auth', user_id: 'u1', request_count: 200, blocked: true, user_agent: 'Bot', country: 'US', city: 'NY', created_at: '2024-01-01' },
-  { id: '3', ip_address: '1.2.3.4', endpoint: '/api/messages', user_id: null, request_count: 30, blocked: false, user_agent: 'Chrome', country: 'BR', city: 'SP', created_at: '2024-01-02' },
+  {
+    id: '1',
+    ip_address: '1.2.3.4',
+    endpoint: '/api/messages',
+    user_id: null,
+    request_count: 50,
+    blocked: false,
+    user_agent: 'Chrome',
+    country: 'BR',
+    city: 'SP',
+    created_at: '2024-01-01',
+  },
+  {
+    id: '2',
+    ip_address: '5.6.7.8',
+    endpoint: '/api/auth',
+    user_id: 'u1',
+    request_count: 200,
+    blocked: true,
+    user_agent: 'Bot',
+    country: 'US',
+    city: 'NY',
+    created_at: '2024-01-01',
+  },
+  {
+    id: '3',
+    ip_address: '1.2.3.4',
+    endpoint: '/api/messages',
+    user_id: null,
+    request_count: 30,
+    blocked: false,
+    user_agent: 'Chrome',
+    country: 'BR',
+    city: 'SP',
+    created_at: '2024-01-02',
+  },
 ];
 
 describe('useRateLimitLogs', () => {
@@ -70,7 +104,7 @@ describe('useRateLimitLogs', () => {
     const { result } = renderHook(() => useRateLimitLogs());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    const blockedIP = result.current.stats!.topIPs.find(ip => ip.blocked);
+    const blockedIP = result.current.stats!.topIPs.find((ip) => ip.blocked);
     expect(blockedIP?.ip).toBe('5.6.7.8');
   });
 

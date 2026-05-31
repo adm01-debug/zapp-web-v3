@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
@@ -38,7 +39,9 @@ describe('useCampaigns', () => {
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { id: 'c1', status: 'sending' }, error: null }),
+            single: vi
+              .fn()
+              .mockResolvedValue({ data: { id: 'c1', status: 'sending' }, error: null }),
           }),
         }),
       }),

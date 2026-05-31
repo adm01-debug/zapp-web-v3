@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -20,15 +21,40 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useQueueGoals } from '@/hooks/useQueueGoals';
 
 const mockGoals = [
-  { id: 'g1', queue_id: 'q1', max_waiting_contacts: 10, max_avg_wait_minutes: 5, min_assignment_rate: 80, max_messages_pending: 50, alerts_enabled: true },
-  { id: 'g2', queue_id: 'q2', max_waiting_contacts: 20, max_avg_wait_minutes: 10, min_assignment_rate: 70, max_messages_pending: 100, alerts_enabled: false },
+  {
+    id: 'g1',
+    queue_id: 'q1',
+    max_waiting_contacts: 10,
+    max_avg_wait_minutes: 5,
+    min_assignment_rate: 80,
+    max_messages_pending: 50,
+    alerts_enabled: true,
+  },
+  {
+    id: 'g2',
+    queue_id: 'q2',
+    max_waiting_contacts: 20,
+    max_avg_wait_minutes: 10,
+    min_assignment_rate: 70,
+    max_messages_pending: 100,
+    alerts_enabled: false,
+  },
 ];
 
 describe('useQueueGoals', () => {

@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
-vi.mock('@/lib/logger', () => ({
-  log: { debug: vi.fn(), error: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 const mockUnregister = vi.fn().mockResolvedValue(true);
 const mockCaches = {
@@ -29,7 +38,7 @@ describe('useServiceWorker', () => {
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'serviceWorker', {
       value: {
         register: vi.fn().mockResolvedValue(mockRegistration),
@@ -50,10 +59,10 @@ describe('useServiceWorker', () => {
   it('registers service worker on mount', async () => {
     const { useServiceWorker } = await import('@/hooks/useServiceWorker');
     renderHook(() => useServiceWorker());
-    
+
     // Allow async registration
     await vi.advanceTimersByTimeAsync(0);
-    
+
     expect(navigator.serviceWorker.register).toHaveBeenCalledWith('/sw.js', {
       scope: '/',
       updateViaCache: 'none',
@@ -81,7 +90,7 @@ describe('useServiceWorker', () => {
       writable: true,
       configurable: true,
     });
-    
+
     const { useServiceWorker } = await import('@/hooks/useServiceWorker');
     expect(() => renderHook(() => useServiceWorker())).not.toThrow();
   });

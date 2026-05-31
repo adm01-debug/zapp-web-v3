@@ -1,11 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
-import { usePrefetch, useRoutePrefetch, useImagePrefetch, clearPrefetchCache, getPrefetchedData } from '@/hooks/useResourcePrefetch';
+import {
+  usePrefetch,
+  useRoutePrefetch,
+  useImagePrefetch,
+  clearPrefetchCache,
+  getPrefetchedData,
+} from '@/hooks/useResourcePrefetch';
 
 describe('usePrefetch', () => {
   beforeEach(() => {
@@ -59,13 +74,19 @@ describe('usePrefetch', () => {
   it('returns cached data on second call', async () => {
     const fetcher = vi.fn().mockResolvedValue('data');
     const { result } = renderHook(() => usePrefetch('key9', fetcher));
-    await act(async () => { await result.current.prefetch(); });
-    await act(async () => { await result.current.prefetch(); });
+    await act(async () => {
+      await result.current.prefetch();
+    });
+    await act(async () => {
+      await result.current.prefetch();
+    });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetcher error gracefully', async () => {
-    const { result } = renderHook(() => usePrefetch('key10', () => Promise.reject(new Error('fail'))));
+    const { result } = renderHook(() =>
+      usePrefetch('key10', () => Promise.reject(new Error('fail')))
+    );
     const data = await act(async () => result.current.prefetch());
     expect(data).toBeNull();
   });
@@ -98,7 +119,9 @@ describe('useImagePrefetch', () => {
 describe('clearPrefetchCache', () => {
   it('clears all cached data', async () => {
     const { result } = renderHook(() => usePrefetch('cleartest', () => Promise.resolve('data')));
-    await act(async () => { await result.current.prefetch(); });
+    await act(async () => {
+      await result.current.prefetch();
+    });
     expect(result.current.isCached()).toBe(true);
     clearPrefetchCache();
     expect(result.current.isCached()).toBe(false);

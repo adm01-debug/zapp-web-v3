@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
@@ -35,9 +36,18 @@ vi.mock('@/utils/notificationSound', () => ({
   requestNotificationPermission: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useSentimentAlerts } from '@/hooks/useSentimentAlerts';
 
@@ -118,7 +128,10 @@ describe('useSentimentAlerts', () => {
   });
 
   it('checkAndTriggerAlert returns triggered when alerted', async () => {
-    mockFunctionsInvoke.mockResolvedValue({ data: { alerted: true, consecutiveLow: 3, emailSent: true }, error: null });
+    mockFunctionsInvoke.mockResolvedValue({
+      data: { alerted: true, consecutiveLow: 3, emailSent: true },
+      error: null,
+    });
     const { result } = renderHook(() => useSentimentAlerts());
     const outcome = await result.current.checkAndTriggerAlert({
       contactId: 'c1',
@@ -151,7 +164,15 @@ describe('useSentimentAlerts', () => {
         eq: vi.fn().mockReturnValue({
           order: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue({
-              data: [{ id: 'a1', entity_id: 'c1', created_at: '2024-01-01', action: 'sentiment_alert', details: { score: 10 } }],
+              data: [
+                {
+                  id: 'a1',
+                  entity_id: 'c1',
+                  created_at: '2024-01-01',
+                  action: 'sentiment_alert',
+                  details: { score: 10 },
+                },
+              ],
               error: null,
             }),
           }),

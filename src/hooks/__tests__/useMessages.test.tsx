@@ -1,4 +1,4 @@
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
@@ -17,14 +17,24 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useMessages } from '@/hooks/useMessages';
 
 function makeQueryChain(data: any[] = [], error: any = null) {
-  const rangeMock = vi.fn()
+  const rangeMock = vi
+    .fn()
     .mockResolvedValueOnce({ data, error })
     .mockResolvedValue({ data: [], error: null });
   return {
@@ -58,7 +68,13 @@ describe('useMessages', () => {
 
   it('fetches messages when contactId is provided', async () => {
     const mockMessages = [
-      { id: 'msg-1', contact_id: 'c1', content: 'Hello', sender: 'contact', created_at: '2024-01-01' },
+      {
+        id: 'msg-1',
+        contact_id: 'c1',
+        content: 'Hello',
+        sender: 'contact',
+        created_at: '2024-01-01',
+      },
       { id: 'msg-2', contact_id: 'c1', content: 'Hi!', sender: 'agent', created_at: '2024-01-01' },
     ];
     mockFrom.mockReturnValue(makeQueryChain(mockMessages));
@@ -69,7 +85,7 @@ describe('useMessages', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.messages).toEqual(mockMessages.map(m => ({ ...m, isEdited: false })));
+    expect(result.current.messages).toEqual(mockMessages.map((m) => ({ ...m, isEdited: false })));
   });
 
   it('sets error when fetch fails', async () => {
@@ -91,7 +107,13 @@ describe('useMessages', () => {
 
   it('clears messages when contactId changes to null', async () => {
     const mockMessages = [
-      { id: 'msg-1', contact_id: 'c1', content: 'Hello', sender: 'contact', created_at: '2024-01-01' },
+      {
+        id: 'msg-1',
+        contact_id: 'c1',
+        content: 'Hello',
+        sender: 'contact',
+        created_at: '2024-01-01',
+      },
     ];
     mockFrom.mockReturnValue(makeQueryChain(mockMessages));
 

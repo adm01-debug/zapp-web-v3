@@ -1,12 +1,39 @@
-// @ts-nocheck
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockProfiles = [
-  { id: 'p1', user_id: 'u1', name: 'Agent Alpha', is_active: true, role: 'agent', max_chats: 5, email: null, avatar_url: null, job_title: null, department: null, phone: null, created_at: '', updated_at: '' },
-  { id: 'p2', user_id: 'u2', name: 'Agent Beta', is_active: false, role: 'agent', max_chats: 10, email: null, avatar_url: null, job_title: null, department: null, phone: null, created_at: '', updated_at: '' },
+  {
+    id: 'p1',
+    user_id: 'u1',
+    name: 'Agent Alpha',
+    is_active: true,
+    role: 'agent',
+    max_chats: 5,
+    email: null,
+    avatar_url: null,
+    job_title: null,
+    department: null,
+    phone: null,
+    created_at: '',
+    updated_at: '',
+  },
+  {
+    id: 'p2',
+    user_id: 'u2',
+    name: 'Agent Beta',
+    is_active: false,
+    role: 'agent',
+    max_chats: 10,
+    email: null,
+    avatar_url: null,
+    job_title: null,
+    department: null,
+    phone: null,
+    created_at: '',
+    updated_at: '',
+  },
 ];
 
 const mockQueuesData = {
@@ -41,7 +68,12 @@ vi.mock('@/integrations/supabase/client', () => ({
       if (table === 'contacts') {
         return {
           select: vi.fn().mockReturnValue({
-            not: vi.fn().mockResolvedValue({ data: [{ assigned_to: 'p1' }, { assigned_to: 'p1' }], error: null }),
+            not: vi
+              .fn()
+              .mockResolvedValue({
+                data: [{ assigned_to: 'p1' }, { assigned_to: 'p1' }],
+                error: null,
+              }),
           }),
         };
       }

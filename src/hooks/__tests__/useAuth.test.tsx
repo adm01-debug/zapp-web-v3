@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAuth, AuthProvider } from '../useAuth';
@@ -35,29 +36,29 @@ describe('useAuth hook', () => {
 
   it('initializes with loading state', async () => {
     (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
-    
+
     const { result } = renderHook(() => useAuth(), { wrapper });
-    
+
     expect(result.current.loading).toBe(true);
     expect(result.current.user).toBeNull();
   });
 
   it('handles sign in successfully', async () => {
-    (supabase.auth.signInWithPassword as any).mockResolvedValue({ 
-      data: { user: { id: '123' } }, 
-      error: null 
+    (supabase.auth.signInWithPassword as any).mockResolvedValue({
+      data: { user: { id: '123' } },
+      error: null,
     });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
-    
+
     let response;
     await act(async () => {
       response = await result.current.signIn('test@test.com', 'password123');
     });
-    
+
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
       email: 'test@test.com',
-      password: 'password123'
+      password: 'password123',
     });
     expect((response as any).error).toBeNull();
   });
@@ -66,11 +67,11 @@ describe('useAuth hook', () => {
     (supabase.auth.signOut as any).mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
-    
+
     await act(async () => {
       await result.current.signOut();
     });
-    
+
     expect(supabase.auth.signOut).toHaveBeenCalled();
   });
 });

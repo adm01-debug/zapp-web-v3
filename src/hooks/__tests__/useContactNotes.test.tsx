@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -9,7 +10,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: any[]) => mockFrom(...args),
     auth: {
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      onAuthStateChange: vi
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
     },
   },
@@ -26,9 +29,18 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-vi.mock('@/lib/logger', () => ({
-  log: { error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
+vi.mock('@/lib/logger', () => {
+  const makeLog = () => ({ error: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn() });
+  return {
+    log: makeLog(),
+    logger: makeLog(),
+    getLogger: vi.fn(() => makeLog()),
+    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
+    getSessionId: vi.fn(() => 'test-session-id'),
+    logPerformance: vi.fn(),
+    logAsyncPerformance: vi.fn(),
+  };
+});
 
 import { useContactNotes } from '@/hooks/useContactNotes';
 
@@ -40,8 +52,24 @@ function createWrapper() {
 }
 
 const mockNotes = [
-  { id: 'n1', contact_id: 'c1', author_id: 'p1', content: 'VIP customer', created_at: '2024-01-01', updated_at: '2024-01-01', profiles: { id: 'p1', name: 'Agent', avatar_url: null } },
-  { id: 'n2', contact_id: 'c1', author_id: 'p2', content: 'Needs follow-up', created_at: '2024-01-02', updated_at: '2024-01-02', profiles: { id: 'p2', name: 'Admin', avatar_url: null } },
+  {
+    id: 'n1',
+    contact_id: 'c1',
+    author_id: 'p1',
+    content: 'VIP customer',
+    created_at: '2024-01-01',
+    updated_at: '2024-01-01',
+    profiles: { id: 'p1', name: 'Agent', avatar_url: null },
+  },
+  {
+    id: 'n2',
+    contact_id: 'c1',
+    author_id: 'p2',
+    content: 'Needs follow-up',
+    created_at: '2024-01-02',
+    updated_at: '2024-01-02',
+    profiles: { id: 'p2', name: 'Admin', avatar_url: null },
+  },
 ];
 
 describe('useContactNotes', () => {
@@ -53,7 +81,12 @@ describe('useContactNotes', () => {
         return {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'p1', name: 'Agent', avatar_url: null }, error: null }),
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({
+                  data: { id: 'p1', name: 'Agent', avatar_url: null },
+                  error: null,
+                }),
             }),
           }),
         };
@@ -91,12 +124,32 @@ describe('useContactNotes', () => {
   it('returns empty notes for new contact', async () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
-        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) }) }) };
+        return {
+          select: vi
+            .fn()
+            .mockReturnValue({
+              eq: vi
+                .fn()
+                .mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+            }),
+        };
       }
-      return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }) }) };
+      return {
+        select: vi
+          .fn()
+          .mockReturnValue({
+            eq: vi
+              .fn()
+              .mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+          }),
+      };
     });
 
-    const { result } = renderHook(() => useContactNotes('new-contact'), { wrapper: createWrapper() });
+    const { result } = renderHook(() => useContactNotes('new-contact'), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.notes).toEqual([]);
   });
@@ -104,9 +157,27 @@ describe('useContactNotes', () => {
   it('handles fetch error', async () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
-        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) }) }) };
+        return {
+          select: vi
+            .fn()
+            .mockReturnValue({
+              eq: vi
+                .fn()
+                .mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                }),
+            }),
+        };
       }
-      return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ order: vi.fn().mockRejectedValue(new Error('DB error')) }) }) };
+      return {
+        select: vi
+          .fn()
+          .mockReturnValue({
+            eq: vi
+              .fn()
+              .mockReturnValue({ order: vi.fn().mockRejectedValue(new Error('DB error')) }),
+          }),
+      };
     });
 
     const { result } = renderHook(() => useContactNotes('c1'), { wrapper: createWrapper() });

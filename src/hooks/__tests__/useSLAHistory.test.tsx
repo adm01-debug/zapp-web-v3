@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -65,8 +66,26 @@ describe('useSLAHistory', () => {
   it('handles SLA records with breaches', async () => {
     const now = new Date();
     const mockRecords = [
-      { id: '1', contact_id: 'c1', first_response_breached: true, resolution_breached: false, created_at: now.toISOString(), first_message_at: now.toISOString(), first_response_at: now.toISOString(), resolved_at: null },
-      { id: '2', contact_id: 'c2', first_response_breached: false, resolution_breached: true, created_at: now.toISOString(), first_message_at: now.toISOString(), first_response_at: now.toISOString(), resolved_at: now.toISOString() },
+      {
+        id: '1',
+        contact_id: 'c1',
+        first_response_breached: true,
+        resolution_breached: false,
+        created_at: now.toISOString(),
+        first_message_at: now.toISOString(),
+        first_response_at: now.toISOString(),
+        resolved_at: null,
+      },
+      {
+        id: '2',
+        contact_id: 'c2',
+        first_response_breached: false,
+        resolution_breached: true,
+        created_at: now.toISOString(),
+        first_message_at: now.toISOString(),
+        first_response_at: now.toISOString(),
+        resolved_at: now.toISOString(),
+      },
     ];
 
     mockFrom.mockReturnValue({
