@@ -48,14 +48,11 @@ export function useRealtimeInbox() {
   const externalMsgs = useExternalMessages(USE_EXTERNAL_DB ? selectedContactId : null);
 
   // Local messages (fallback)
-  const localMsgs = useMessages({
-    contactId: USE_EXTERNAL_DB ? null : selectedContactId,
-    enabled: !USE_EXTERNAL_DB && Boolean(selectedContactId),
-  });
+  const localMsgs = useMessages(USE_EXTERNAL_DB ? null : selectedContactId);
 
   const selectedMessages = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
   const selectedMessagesLoading = USE_EXTERNAL_DB ? externalMsgs.loading : localMsgs.loading;
-  const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
+  const refetchSelectedMessages = USE_EXTERNAL_DB ? (externalMsgs as any).refetch : () => { if (selectedContactId) localMsgs.loadMessages(selectedContactId); };
 
   // Listen for open-contact-chat events
   useEffect(() => {
