@@ -347,15 +347,28 @@ export const ConversationItem = memo(function ConversationItem({
                   <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
                   <RetryFailureBadge message={lastMessage} compact />
                 </div>
-              )}
+               )}
             </div>
             {conversation.priority === 'high' && <div className="w-0.5 h-5 rounded-full bg-destructive flex-shrink-0" />}
           </div>
         </motion.div>
       </TooltipProvider>
+    );
 });
 
 ConversationItem.displayName = 'ConversationItem';
+
+export function LegacyConversationItem({
+  conversation,
+  isSelected,
+  onSelect,
+  compact = false,
+  selectionMode = false,
+  isMultiSelected = false,
+  onToggleSelection,
+  isPinned = false,
+}: ConversationItemProps) {
+
 
 
   const quickPeekPreview = (

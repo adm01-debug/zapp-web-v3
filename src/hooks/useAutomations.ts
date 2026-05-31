@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getExternalSupabase } from "@/integrations/supabase/externalClient";
+import { log } from "@/lib/logger";
 
 // Lazy: getExternalSupabase() can return null when FATOR X env vars are absent.
 // Resolve at call time so module import never crashes the inbox.
@@ -10,12 +11,6 @@ const getClient = () => getExternalSupabase();
 /**
  * Hook que avalia regras de automação contra a conversa ativa.
  * Roda em intervalo curto e dispara registros de execução pendentes.
- *
- * Gatilhos suportados:
- * - first_response_pending: última msg é inbound e não houve resposta há > X seg
- * - inactivity: nenhum lado falou há > X seg (configurável: side: 'client'|'agent'|'any')
- * - keyword_match: última msg inbound contém alguma palavra-chave
- * - tag_applied / tag_removed: avaliados via realtime/edge (placeholder — log)
  */
 
 interface AutomationRule {
@@ -43,6 +38,14 @@ export function useAutomations({
 }: UseAutomationsArgs) {
   const rulesRef = useRef<AutomationRule[]>([]);
   const prevTagsRef = useRef<string[] | null>(null);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Reseta snapshot de tags ao trocar de conversa
   useEffect(() => {
@@ -53,13 +56,20 @@ export function useAutomations({
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data, error } = await supabase
-        .from('automation_rules')
-        .select("id,name,trigger_type,trigger_config,actions,is_active,priority")
-        .eq("is_active", true)
-        .order("priority", { ascending: true });
-      if (!cancelled && data) rulesRef.current = data as AutomationRule[];
+      try {
+        const { data, error } = await supabase
+          .from('automation_rules')
+          .select("id,name,trigger_type,trigger_config,actions,is_active,priority")
+          .eq("is_active", true)
+          .order("priority", { ascending: true });
+        
+        if (error) throw error;
+        if (!cancelled && data) rulesRef.current = data as AutomationRule[];
+      } catch (err) {
+        log.error("Error loading automation rules:", err);
+      }
     };
+    
     load();
     const t = setInterval(load, 60_000);
     return () => {
@@ -69,21 +79,25 @@ export function useAutomations({
   }, []);
 
   // Avalia gatilhos para a conversa ativa
-  useEffect(() => {
-    if (!remoteJid) return;
-    let cancelled = false;
+  const evaluate = useCallback(async () => {
+    if (!remoteJid || !isMounted.current) return;
 
-    const evaluate = async () => {
+    try {
       const rules = rulesRef.current;
       if (!rules.length) return;
 
+      const client = getClient();
+      if (!client) return;
+
       // Pega últimas 10 msgs do FATOR X
-      const { data: msgs } = await getClient()?.rpc("rpc_list_messages", {
+      const { data: msgs, error } = await client.rpc("rpc_list_messages", {
         p_remote_jid: remoteJid,
         p_instance: instanceName,
         p_limit: 10,
       });
-      if (!msgs || !Array.isArray(msgs) || cancelled) return;
+
+      if (error) throw error;
+      if (!msgs || !Array.isArray(msgs) || !isMounted.current) return;
 
       const sorted = [...msgs].sort(
         (a: any, b: any) =>
@@ -101,7 +115,7 @@ export function useAutomations({
       let addedTags: string[] = [];
       let removedTags: string[] = [];
       try {
-        const { data: contact } = await getClient()?.rpc("rpc_get_contact", {
+        const { data: contact } = await client.rpc("rpc_get_contact", {
           p_remote_jid: remoteJid,
           p_instance: instanceName,
         } as any);
@@ -215,7 +229,7 @@ export function useAutomations({
         const allTags = [...new Set([...cfgTags, ...slaTags])];
         if (allTags.length) {
           try {
-            await getClient()?.rpc("rpc_upsert_contact", {
+            await client.rpc("rpc_upsert_contact", {
               p_remote_jid: remoteJid,
               p_instance: instanceName,
               p_tags: allTags,
@@ -265,7 +279,7 @@ export function useAutomations({
                 .eq("id", execId)
                 .maybeSingle();
               if (exec?.suggestion_text) {
-                await getClient()?.rpc("rpc_insert_message", {
+                await client.rpc("rpc_insert_message", {
                   p_remote_jid: remoteJid,
                   p_content: exec.suggestion_text,
                   p_from_me: true,
@@ -287,13 +301,14 @@ export function useAutomations({
           }
         }
       }
-    };
+    } catch (err) {
+      log.error("Error evaluating automations:", err);
+    }
+  }, [remoteJid, instanceName]);
 
-    evaluate();
+  useEffect(() => {
+    if (!remoteJid) return;
     const t = setInterval(evaluate, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [remoteJid, instanceName, assignedTo]);
+    return () => clearInterval(t);
+  }, [remoteJid, evaluate]);
 }
