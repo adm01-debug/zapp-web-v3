@@ -115,11 +115,9 @@ function buildFullPrimaryLabel(conversation: any): string {
 
 function buildSecondaryLabel(conversation: any): string | null {
   const jobTitle = conversation.contact?.job_title?.trim() || conversation.contact?.jobTitle?.trim() || conversation.contact?.role?.trim();
-  // Return the job title if it exists, otherwise return a fallback value
   return jobTitle || 'Cargo não informado';
 }
 
-// Short relative time: "4min", "2h", "3d"
 function shortRelativeTime(date: Date): string {
   const diff = Date.now() - date.getTime();
   const min = Math.floor(diff / 60000);
@@ -134,6 +132,7 @@ function shortRelativeTime(date: Date): string {
   const mo = Math.floor(d / 30);
   return `${mo}mês`;
 }
+
 
 export const ConversationItem = memo(function ConversationItem({ 
   conversation, 
@@ -335,7 +334,7 @@ export const ConversationItem = memo(function ConversationItem({
                   <SLAIndicatorForContact conversation={conversation} compact={isCompactMode} className="w-full justify-start" />
                   <RetryFailureBadge message={lastMessage} compact />
                 </div>
-              )}
+               )}
             </div>
             {conversation.priority === 'high' && <div className="w-0.5 h-5 rounded-full bg-destructive flex-shrink-0" />}
           </div>
@@ -343,6 +342,13 @@ export const ConversationItem = memo(function ConversationItem({
       </TooltipProvider>
     );
   }
+
+
+
+
+
+
+
 
   const quickPeekPreview = (
     <div className="space-y-1.5">
@@ -529,3 +535,6 @@ export const ConversationItem = memo(function ConversationItem({
     </TooltipProvider>
   );
 });
+
+ConversationItem.displayName = 'ConversationItem';
+
