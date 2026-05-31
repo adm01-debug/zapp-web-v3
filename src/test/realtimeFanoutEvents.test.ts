@@ -84,8 +84,9 @@ describe('Diagrama TRILHA_MENSAGENS_NAVEGAVEL — eventos realtime nas arestas',
         0
       );
 
-      const missingInDiagram = [...actual].filter((e) => !declared!.has(e));
-      const phantomInDiagram = [...declared!].filter((e) => !actual.has(e));
+      if (!declared) return; // guard — expect() above would have thrown first
+      const missingInDiagram = [...actual].filter((e) => !declared.has(e));
+      const phantomInDiagram = [...declared].filter((e) => !actual.has(e));
 
       if (missingInDiagram.length || phantomInDiagram.length) {
         const parts: string[] = [];

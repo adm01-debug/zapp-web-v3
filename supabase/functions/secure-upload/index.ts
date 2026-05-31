@@ -55,9 +55,14 @@ Deno.serve(async (req) => {
     const bucket = rawBucket;
 
     const rawPath = formData.get("path") as string | null;
-    // Strip path-traversal sequences before storing
+    // Sanitize path by splitting into segments and rejecting any traversal components.
+    // Regex-based replacement is insufficient (overlapping matches can reconstruct "../").
     const customPath = rawPath
-      ? rawPath.replace(/\.\.[/\\]/g, "").replace(/^[/\\]+/, "").replace(/\0/g, "")
+      ? rawPath
+          .replace(/\0/g, "")
+          .split(/[/\\]/)
+          .filter((seg) => seg !== ".." && seg !== "." && seg !== "")
+          .join("/") || null
       : null;
 
     if (!file) {

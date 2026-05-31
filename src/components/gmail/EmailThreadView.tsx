@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { supabase as _supabase } from '@/integrations/supabase/client';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = _supabase as any;
 import { type EmailMessage, type EmailThread } from '@/hooks/gmail/gmailTypes';
 import { EmailChatBubble } from '../email/EmailChatBubble';
@@ -43,12 +44,12 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
     }
 
     setIsLoading(true);
-    (supabase as any)
+    supabase
       .from('email_messages')
       .select('*, email_attachments(*)')
       .eq('thread_id_ref', thread.id)
       .order('internal_date', { ascending: true })
-      .then(({ data, error }: any) => {
+      .then(({ data, error }: { data: EmailMessage[] | null; error: unknown }) => {
         setIsLoading(false);
         if (error || !data) return;
         setMessages(data as EmailMessage[]);
@@ -58,18 +59,17 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
           .filter((m) => !m.is_read)
           .map((m) => m.message_id);
         if (unreadIds.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           emailMarkRead({ accountId, messageIds: unreadIds, read: true } as any).catch(
             (e: unknown) => {
               console.warn('[EmailThreadView] auto-mark-read failed:', e);
             }
           );
-          (supabase as any)
-            .from('email_messages')
-            .update({ is_read: true })
-            .in('message_id', unreadIds);
-          (supabase as any).from('email_threads').update({ unread_count: 0 }).eq('id', thread.id);
+          supabase.from('email_messages').update({ is_read: true }).in('message_id', unreadIds);
+          supabase.from('email_threads').update({ unread_count: 0 }).eq('id', thread.id);
         }
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread?.id, accountId]);
 
   // Realtime: novas mensagens
@@ -100,6 +100,7 @@ export function EmailThreadView({ thread, accountId, onBack, className }: EmailT
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread?.id]);
 
   // Auto-scroll quando mensagens carregam
