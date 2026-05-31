@@ -100,22 +100,18 @@ interface ConversationItemProps {
 
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
-  const safeName = name === 'Você' ? '' : name;
-  return safeName || 'Contato';
+  const safeName = (name === 'Você' ? '' : name) || 'Contato';
+  const company = conversation.contact?.company?.trim();
+  return company ? `${company} — ${safeName}` : safeName;
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
-  const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || 'Contato').trim();
-  const company = conversation.contact?.company?.trim();
-  const safeName = name === 'Você' ? 'Contato' : name;
-  if (company) return `${safeName} · ${company}`;
-  return safeName;
+  return buildPrimaryLabel(conversation);
 }
 
 function buildSecondaryLabel(conversation: any): string | null {
-  const company = conversation.contact?.company?.trim();
   const phone = conversation.contact?.phone?.trim();
-  return company || phone || null;
+  return phone || null;
 }
 
 // Short relative time: "4min", "2h", "3d"
