@@ -307,7 +307,7 @@ export const ConversationItem = memo(function ConversationItem({
       </TooltipProvider>
     );
   }
-);
+
 
 
 
@@ -498,3 +498,8 @@ export const ConversationItem = memo(function ConversationItem({
         </div>
       </QuickPeek>
     </TooltipProvider>
+  );
+});
+
+ConversationItem.displayName = 'ConversationItem';
+
