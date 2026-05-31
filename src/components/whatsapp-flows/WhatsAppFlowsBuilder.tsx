@@ -75,7 +75,7 @@ export function WhatsAppFlowsBuilder() {
 
   const fetchFlows = useCallback(async () => {
     setLoading(true);
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('whatsapp_flows')
       .select('*')
       .order('created_at', { ascending: false });

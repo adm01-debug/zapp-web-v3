@@ -32,7 +32,7 @@ export function useOnboarding() {
     // Check user_settings in database
     const checkOnboarding = async () => {
       try {
-        const { data, _error } = await supabase
+        const { data } = await supabase
           .from('user_settings')
           .select('onboarding_completed')
           .eq('user_id', user.id)

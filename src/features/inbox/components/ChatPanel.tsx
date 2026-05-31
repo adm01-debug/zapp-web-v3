@@ -104,7 +104,7 @@ export function ChatPanel({
   const { roles: userRoles } = useUserRole();
   const isDevExact = userRoles.includes('dev');
   const [selectedQuickReplyIndex, setSelectedQuickReplyIndex] = useState(0);
-  const { dialogs, openDialog, closeDialog, _toggleDialog, _resetDialogs } = useChatDialogs();
+  const { dialogs, openDialog, closeDialog } = useChatDialogs();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);

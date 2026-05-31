@@ -46,7 +46,7 @@ export function FollowUpSequences() {
   const { data: sequences = [], isLoading } = useQuery({
     queryKey: ['followup-sequences'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('followup_sequences')
         .select('*, followup_steps(*)')
         .order('created_at', { ascending: false });

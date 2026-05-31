@@ -57,7 +57,7 @@ async function invokeViaFetch<T>(
   }
   let authHeader = `Bearer ${SUPABASE_ANON}`;
   try {
-    const { data, _error } = await supabase.auth.getSession();
+    const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (token) authHeader = `Bearer ${token}`;
   } catch {

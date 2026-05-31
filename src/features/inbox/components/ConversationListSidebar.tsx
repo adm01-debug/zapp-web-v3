@@ -46,7 +46,7 @@ export function ConversationListSidebar({
   _width = 340,
 }: ConversationListSidebarProps) {
   const isMobile = useIsMobile();
-  const { density, _setDensity } = useDensity();
+  const { density } = useDensity();
   const contactSearchRef = useRef<HTMLInputElement>(null);
   const [_contactSearch, setContactSearch] = useState('');
 

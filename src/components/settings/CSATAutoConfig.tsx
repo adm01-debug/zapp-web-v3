@@ -25,21 +25,15 @@ export function CSATAutoConfig() {
   const { data: connections = [] } = useQuery({
     queryKey: ['whatsapp-connections-csat'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('whatsapp_connections')
-        .select('id, name, status');
+      const { data } = await supabase.from('whatsapp_connections').select('id, name, status');
       return data || [];
     },
   });
 
-  const { data: config, _isLoading } = useQuery({
+  const { data: config } = useQuery({
     queryKey: ['csat-auto-config'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('csat_auto_config')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
+      const { data } = await supabase.from('csat_auto_config').select('*').limit(1).maybeSingle();
       return data;
     },
   });

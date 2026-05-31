@@ -105,7 +105,7 @@ export function useEmail() {
 
   // ── Verificar status dos tokens ─────────────────────────────────────────
   const checkTokenStatus = useCallback(async () => {
-    const { data, error: rpcErr, _requestId } = await safeClient.rpc('rpc_email_token_status');
+    const { data, error: rpcErr } = await safeClient.rpc('rpc_email_token_status');
     if (rpcErr && (rpcErr.message.includes('disponível') || rpcErr.message.includes('not found'))) {
       setTokenStatus(GMAIL_MOCKS.tokenStatus);
     } else if (!rpcErr && data) {
@@ -305,7 +305,7 @@ export function useEmail() {
 
   // ── Marcar thread como lida/não lida ───────────────────────────────────
   const markAsRead = useCallback(async (threadId: string, read = true) => {
-    const { error: rpcErr, _requestId } = await safeClient.rpc('rpc_email_mark_thread_read', {
+    const { error: rpcErr } = await safeClient.rpc('rpc_email_mark_thread_read', {
       p_thread_id: threadId,
       p_read: read,
       p_message_ids: null,
@@ -322,7 +322,7 @@ export function useEmail() {
 
   // ── Star/Unstar thread ──────────────────────────────────────────────────
   const starThread = useCallback(async (threadId: string, starred = true) => {
-    const { error: rpcErr, _requestId } = await safeClient.rpc('rpc_email_star_thread', {
+    const { error: rpcErr } = await safeClient.rpc('rpc_email_star_thread', {
       p_thread_id: threadId,
       p_starred: starred,
     });
@@ -336,7 +336,7 @@ export function useEmail() {
 
   // ── Archive thread ──────────────────────────────────────────────────────
   const archiveThread = useCallback(async (threadId: string) => {
-    const { error: rpcErr, _requestId } = await safeClient.rpc('rpc_email_archive_thread', {
+    const { error: rpcErr } = await safeClient.rpc('rpc_email_archive_thread', {
       p_thread_id: threadId,
       p_archived: true,
     });

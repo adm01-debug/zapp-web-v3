@@ -274,7 +274,7 @@ interface StickerPreviewProps {
   isSent: boolean;
 }
 
-export function StickerPreview({ url, _isSent }: StickerPreviewProps) {
+export function StickerPreview({ url }: StickerPreviewProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   return (
     <motion.div

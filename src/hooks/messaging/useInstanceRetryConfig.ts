@@ -55,10 +55,7 @@ export function useInstanceRetryConfig(
 
       if (instanceName !== GLOBAL) {
         const keys = RETRY_CONFIG_FIELDS.map((f) => settingKeyFor(f, instanceName));
-        const { data, _error } = await supabase
-          .from('global_settings')
-          .select('key')
-          .in('key', keys);
+        const { data } = await supabase.from('global_settings').select('key').in('key', keys);
         setHasInstanceOverride((data?.length ?? 0) > 0);
       } else {
         setHasInstanceOverride(false);

@@ -30,7 +30,7 @@ export async function resolveSendFunction(
   if (cached && cached.expiresAt > Date.now()) return cached.fn;
 
   try {
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('whatsapp_connections')
       .select('api_type, status')
       .eq('instance_id', instanceName)

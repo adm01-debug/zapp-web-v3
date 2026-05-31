@@ -30,7 +30,7 @@ export function useGeoBlocking() {
 
   const fetchData = async () => {
     try {
-      const { data: settingsData, _error } = await supabase
+      const { data: settingsData } = await supabase
         .from('geo_blocking_settings')
         .select('*')
         .limit(1)
@@ -94,13 +94,11 @@ export function useGeoBlocking() {
           ? await supabase
               .from('allowed_countries')
               .insert({ country_code: countryCode, country_name: countryName, added_by: user?.id })
-          : await supabase
-              .from('blocked_countries')
-              .insert({
-                country_code: countryCode,
-                country_name: countryName,
-                blocked_by: user?.id,
-              });
+          : await supabase.from('blocked_countries').insert({
+              country_code: countryCode,
+              country_name: countryName,
+              blocked_by: user?.id,
+            });
       if (error) {
         if (error.code === '23505') {
           toast.error('Este país já está na lista');

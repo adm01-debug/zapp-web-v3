@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, TrendingUp, Star, Filter } from 'lucide-react';
 import type { MediaItem, MediaType } from './useMediaLibrary';
 
-export function StatsCards({ items, _type }: { items: MediaItem[]; type: MediaType }) {
+export function StatsCards({ items }: { items: MediaItem[]; type: MediaType }) {
   const total = items.length;
   const totalUses = items.reduce((s, i) => s + (i.use_count || 0), 0);
   const favorites = items.filter((i) => i.is_favorite).length;

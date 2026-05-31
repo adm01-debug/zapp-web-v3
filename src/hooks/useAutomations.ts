@@ -54,7 +54,7 @@ export function useAutomations({
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('automation_rules')
         .select('id,name,trigger_type,trigger_config,actions,is_active,priority')
         .eq('is_active', true)

@@ -25,7 +25,7 @@ export function useEvolutionAutoSync(onSynced?: () => void) {
   const syncAll = async () => {
     try {
       // 1. Get existing connections from Supabase
-      const { data: existing, _error } = await supabase
+      const { data: existing } = await supabase
         .from('whatsapp_connections')
         .select('instance_id, phone_number');
       const knownIds = new Set((existing ?? []).map((c) => c.instance_id));

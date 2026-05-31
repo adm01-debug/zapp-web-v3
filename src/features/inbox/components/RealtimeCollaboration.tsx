@@ -19,7 +19,7 @@ export function RealtimeCollaboration({ contactId, className }: RealtimeCollabor
   const handleHandoff = async (agentId: string, comment: string) => {
     await dbFrom('contacts').update({ assigned_to: agentId }).eq('id', contactId);
     if (comment) {
-      const { data: profile, _error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)

@@ -55,7 +55,7 @@ export function useNewConversation(
     }
     const timeout = setTimeout(async () => {
       setIsLoading(true);
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('id, name, phone, avatar_url')
         .or(`name.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`)

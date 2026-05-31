@@ -104,7 +104,7 @@ export default function QueueDetails() {
             .maybeSingle();
           let assignedAgent = null;
           if (contact.assigned_to) {
-            const { data, _error } = await supabase
+            const { data } = await supabase
               .from('profiles')
               .select('name, avatar_url')
               .eq('id', contact.assigned_to)

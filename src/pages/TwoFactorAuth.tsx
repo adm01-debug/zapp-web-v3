@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 export default function TwoFactorAuth() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getAssuranceLevel, _isMFAEnabled, fetchFactors } = useMFA();
+  const { getAssuranceLevel, fetchFactors } = useMFA();
   const [needsVerification, setNeedsVerification] = useState(false);
 
   useEffect(() => {

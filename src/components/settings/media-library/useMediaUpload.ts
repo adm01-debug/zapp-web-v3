@@ -75,7 +75,7 @@ export function useMediaUpload(type: MediaType, onComplete: () => void) {
               type === 'audio_memes'
                 ? { audio_url: urlData.publicUrl, file_name: file.name }
                 : { image_url: urlData.publicUrl };
-            const { data: classifyData, _error } = await supabase.functions.invoke(fnName, {
+            const { data: classifyData } = await supabase.functions.invoke(fnName, {
               body,
             });
             if (classifyData?.category) aiCategory = classifyData.category;

@@ -35,7 +35,7 @@ export function useOnboardingChecklist({ enabled = true }: { enabled?: boolean }
 
     try {
       // Check profile
-      const { data: profile, _error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('name, avatar_url')
         .eq('user_id', user.id)

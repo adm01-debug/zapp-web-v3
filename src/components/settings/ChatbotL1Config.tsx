@@ -17,10 +17,10 @@ export function ChatbotL1Config() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: flow, _isLoading } = useQuery({
+  const { data: flow } = useQuery({
     queryKey: ['chatbot-l1-flow'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('chatbot_flows')
         .select('*')
         .eq('trigger_type', 'ai_l1')
@@ -256,7 +256,7 @@ export function ChatbotL1Config() {
               variant="outline"
               onClick={async () => {
                 try {
-                  const { _data, error } = await supabase.functions.invoke('chatbot-l1', {
+                  const { error } = await supabase.functions.invoke('chatbot-l1', {
                     body: {
                       contactId: 'test',
                       message: 'Olá, teste de conexão',

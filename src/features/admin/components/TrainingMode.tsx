@@ -76,17 +76,13 @@ export function TrainingMode() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    const { data, _error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    const { data } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
     if (data) setProfileId(data.id);
   };
 
   const loadSessions = async () => {
     if (!profileId) return;
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('training_sessions')
       .select('*')
       .eq('profile_id', profileId)
@@ -105,7 +101,7 @@ export function TrainingMode() {
     setMessages([firstMsg]);
     setCustomerStep(1);
 
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('training_sessions')
       .insert({
         profile_id: profileId,

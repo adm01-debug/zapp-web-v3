@@ -33,7 +33,7 @@ export function ConnectionAlertPreferences() {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return setLoading(false);
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('connection_alert_preferences')
         .select('push_enabled, email_enabled, alert_on_degraded, alert_on_disconnected')
         .eq('user_id', auth.user.id)

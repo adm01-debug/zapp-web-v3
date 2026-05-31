@@ -105,9 +105,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
             if (idx !== -1) {
               const pathWithQuery = url.substring(idx + marker.length);
               const path = decodeURIComponent(pathWithQuery.split('?')[0]);
-              const { data, _error } = await supabase.storage
-                .from(bucket)
-                .createSignedUrl(path, 3600);
+              const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 3600);
               if (data?.signedUrl) return data.signedUrl;
             }
           }
@@ -135,7 +133,7 @@ export function useAudioPlayer({ audioUrl, messageId, refreshKey }: UseAudioPlay
             .from(bucket)
             .list('', { search: messageId, limit: 5 });
           if (files && files.length > 0) {
-            const { data, _error } = await supabase.storage
+            const { data } = await supabase.storage
               .from(bucket)
               .createSignedUrl(files[0].name, 3600);
             if (data?.signedUrl) return data.signedUrl;

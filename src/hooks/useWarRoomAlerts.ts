@@ -37,7 +37,7 @@ export function useWarRoomAlerts(soundEnabled = true) {
   const { data: alerts = [] } = useQuery({
     queryKey: ['warroom-alerts'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('warroom_alerts')
         .select('*')
         .eq('is_read', false)

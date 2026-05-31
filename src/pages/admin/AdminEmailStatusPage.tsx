@@ -37,7 +37,7 @@ const castStatus = (status: string | null): EmailHealthInfo['status'] => {
 };
 
 export default function AdminEmailStatusPage() {
-  const { accounts, _schemaStatus, _lastRequestId } = useEmail();
+  const { accounts } = useEmail();
   const [health, setHealth] = useState<EmailHealthInfo | null>(null);
   const [_loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({

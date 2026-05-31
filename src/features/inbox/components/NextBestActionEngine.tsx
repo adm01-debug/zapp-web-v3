@@ -41,7 +41,7 @@ export function NextBestActionEngine({ contactId, contactName }: NextBestActionP
     const suggestedActions: NextAction[] = [];
 
     // Check last message time
-    const { data: lastMsg, _error } = await supabase
+    const { data: lastMsg } = await supabase
       .from('messages')
       .select('created_at, sender')
       .eq('contact_id', contactId)

@@ -27,7 +27,7 @@ export function useMessageSignature() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user || !mountedRef.current) return;
-      const { data: profile, _error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('name, job_title')
         .eq('user_id', user.id)

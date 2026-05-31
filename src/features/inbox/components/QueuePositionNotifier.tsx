@@ -13,7 +13,7 @@ export function QueuePositionNotifier({ contactId, className }: QueuePositionNot
   const { data: position } = useQuery({
     queryKey: ['queue-position', contactId],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('queue_positions')
         .select('position, estimated_wait_minutes, queue_id')
         .eq('contact_id', contactId)

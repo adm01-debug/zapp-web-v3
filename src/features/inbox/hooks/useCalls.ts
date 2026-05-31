@@ -37,7 +37,7 @@ export const useCalls = () => {
   const getProfileId = useCallback(async (): Promise<string | null> => {
     if (!user) return null;
 
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('profiles')
       .select('id')
       .eq('user_id', user.id)

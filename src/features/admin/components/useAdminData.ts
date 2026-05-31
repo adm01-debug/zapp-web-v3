@@ -56,7 +56,7 @@ export function useAdminData(activeTab: 'users' | 'audit' | 'crm') {
     setLoading(true);
 
     if (activeTab === 'users') {
-      const { data: profiles, _error } = await supabase.from('profiles').select('*').order('name');
+      const { data: profiles } = await supabase.from('profiles').select('*').order('name');
 
       const { data: roles, error: _rolesErr } = await supabase.from('user_roles').select('*');
 

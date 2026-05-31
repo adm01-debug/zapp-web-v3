@@ -42,7 +42,7 @@ export function LeadRiskScorePanel({ contactId }: LeadRiskScorePanelProps) {
   }, [contactId]);
 
   const loadData = async () => {
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('contacts')
       .select('lead_score, risk_score, lead_origin, consent_status')
       .eq('id', contactId)

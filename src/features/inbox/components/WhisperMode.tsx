@@ -65,7 +65,7 @@ export function WhisperMode({
         query = query.is('whisper_thread_id', null);
       }
 
-      const { data, _error } = await (query as any).limit(50);
+      const { data } = await (query as any).limit(50);
 
       if (!data) return [];
 

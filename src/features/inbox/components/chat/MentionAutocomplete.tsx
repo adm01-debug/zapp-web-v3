@@ -34,7 +34,7 @@ export function MentionAutocomplete({
   // Fetch agents once
   useEffect(() => {
     const fetchAgents = async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('id, name, email, avatar_url')
         .limit(50);

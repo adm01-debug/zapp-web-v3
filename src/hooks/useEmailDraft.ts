@@ -49,7 +49,7 @@ export function useEmailDraft(accountId: string | null, threadId?: string) {
         if (localId) {
           await safeClient.from('email_drafts', (q) => q.update(payload).eq('id', localId));
         } else {
-          const { data, _error } = await supabase
+          const { data } = await supabase
             .from('email_drafts')
             .insert(payload)
             .select('id')

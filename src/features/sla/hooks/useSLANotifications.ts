@@ -33,7 +33,7 @@ export const useSLANotifications = () => {
       contactId: string
     ) => {
       // Fetch contact info
-      const { data: contact, _error } = await supabase
+      const { data: contact } = await supabase
         .from('contacts')
         .select('name, phone')
         .eq('id', contactId)

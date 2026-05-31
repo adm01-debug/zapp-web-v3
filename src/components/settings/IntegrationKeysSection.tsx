@@ -50,8 +50,8 @@ const INTEGRATION_KEYS: KeyField[] = [
 ];
 
 export function IntegrationKeysSection() {
-  const { isLoading, getSetting, addSetting, _refetch } = useGlobalSettings();
-  const { listInstances, _getInstanceStatus, isLoading: _evolutionLoading } = useEvolutionApi();
+  const { isLoading, getSetting, addSetting } = useGlobalSettings();
+  const { listInstances, isLoading: _evolutionLoading } = useEvolutionApi();
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({});
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);

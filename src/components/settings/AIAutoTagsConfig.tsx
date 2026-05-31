@@ -16,9 +16,7 @@ export function AIAutoTagsConfig() {
   const { data: tagStats = [], isLoading } = useQuery({
     queryKey: ['ai-tag-stats'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('ai_conversation_tags')
-        .select('tag_name, confidence');
+      const { data } = await supabase.from('ai_conversation_tags').select('tag_name, confidence');
 
       if (!data) return [];
 

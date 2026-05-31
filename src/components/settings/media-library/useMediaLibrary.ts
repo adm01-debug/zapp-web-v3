@@ -268,7 +268,7 @@ export function useMediaLibrary(type: MediaType) {
           type === 'audio_memes'
             ? { audio_url: item.audio_url || '', file_name: item.name || '' }
             : { image_url: item.image_url || '' };
-        const { data, _error } = await supabase.functions.invoke(fnName, { body });
+        const { data } = await supabase.functions.invoke(fnName, { body });
         if (data?.category && data.category !== item.category) {
           const { error } = await supabase
             .from(type)

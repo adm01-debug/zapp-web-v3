@@ -50,10 +50,7 @@ export function useRolesPageState() {
   };
 
   const fetchAvailableUsers = async () => {
-    const { data, _error } = await supabase
-      .from('profiles')
-      .select('user_id, name, email')
-      .order('name');
+    const { data } = await supabase.from('profiles').select('user_id, name, email').order('name');
     if (data) {
       const usersWithRoles = users.map((u) => u.user_id);
       setAvailableUsers(

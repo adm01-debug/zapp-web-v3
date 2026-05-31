@@ -95,7 +95,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
           if (transcription.trim() === '' && audioBlob.size > 1000) {
             try {
               setIsTranscribing(true);
-              const { data, _error } = await supabase.functions.invoke('speech-to-text', {
+              const { data } = await supabase.functions.invoke('speech-to-text', {
                 body: { audio: await blobToBase64(audioBlob) },
               });
               if (data?.text) {
@@ -264,7 +264,7 @@ export function useAudioRecorder(options: UseAudioRecorderOptions = {}) {
   const uploadAudio = useCallback(async (blob: Blob, conversationId: string) => {
     const fileName = `${conversationId}/${Date.now()}.webm`;
 
-    const { _data, error } = await supabase.storage.from('audio-messages').upload(fileName, blob, {
+    const { error } = await supabase.storage.from('audio-messages').upload(fileName, blob, {
       contentType: 'audio/webm',
     });
 

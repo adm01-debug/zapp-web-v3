@@ -85,7 +85,7 @@ export function RetryConfigPanel() {
     let cancelled = false;
     (async () => {
       try {
-        const { data, _error } = await supabase
+        const { data } = await supabase
           .from('whatsapp_connections')
           .select('instance_id')
           .not('instance_id', 'is', null);

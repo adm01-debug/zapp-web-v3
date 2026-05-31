@@ -24,7 +24,7 @@ interface HandoffDialogProps {
   onHandoff: (agentId: string, comment: string) => Promise<void>;
 }
 
-export function HandoffDialog({ open, onOpenChange, _contactId, onHandoff }: HandoffDialogProps) {
+export function HandoffDialog({ open, onOpenChange, onHandoff }: HandoffDialogProps) {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

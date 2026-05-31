@@ -26,16 +26,12 @@ export function useConversationActions() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user || !mountedRef.current) return;
-    const { data, _error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    const { data } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
     if (data && mountedRef.current) setProfileId(data.id);
   }, []);
 
   const loadPinned = useCallback(async (pid: string) => {
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('pinned_conversations')
       .select('contact_id')
       .eq('pinned_by', pid);
@@ -47,7 +43,7 @@ export function useConversationActions() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user || !mountedRef.current) return;
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('favorite_contacts')
       .select('contact_id')
       .eq('user_id', user.id);
@@ -56,7 +52,7 @@ export function useConversationActions() {
   }, []);
 
   const loadSnoozed = useCallback(async (pid: string) => {
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('conversation_snoozes')
       .select('contact_id')
       .eq('snoozed_by', pid)

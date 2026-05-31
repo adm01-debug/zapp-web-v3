@@ -82,7 +82,7 @@ export function TalkXBlacklist() {
   const { data: availableContacts = [] } = useQuery({
     queryKey: ['contacts-for-blacklist'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('id, name, phone, company')
         .not('phone', 'is', null)

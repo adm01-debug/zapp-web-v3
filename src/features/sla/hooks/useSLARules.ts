@@ -53,8 +53,14 @@ export function useSLARules(scope?: SLARuleScope) {
 
       if (scope === 'contact') query = query.not('contact_id', 'is', null);
       else if (scope === 'company') query = query.not('company', 'is', null).is('contact_id', null);
-      else if (scope === 'job_title') query = query.not('job_title', 'is', null).is('contact_id', null).is('company', null);
-      else if (scope === 'contact_type') query = query.not('contact_type', 'is', null).is('contact_id', null).is('company', null).is('job_title', null);
+      else if (scope === 'job_title')
+        query = query.not('job_title', 'is', null).is('contact_id', null).is('company', null);
+      else if (scope === 'contact_type')
+        query = query
+          .not('contact_type', 'is', null)
+          .is('contact_id', null)
+          .is('company', null)
+          .is('job_title', null);
       else if (scope === 'queue') query = query.not('queue_id', 'is', null).is('contact_id', null);
       else if (scope === 'agent') query = query.not('agent_id', 'is', null).is('contact_id', null);
 
@@ -129,10 +135,12 @@ export function useSLARules(scope?: SLARuleScope) {
     onMutate: async (id: string) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<SLARule[]>(queryKey);
-      queryClient.setQueryData<SLARule[]>(queryKey, old => (old || []).filter(r => r.id !== id));
+      queryClient.setQueryData<SLARule[]>(queryKey, (old) =>
+        (old || []).filter((r) => r.id !== id)
+      );
       return { previous };
     },
-    onError: (err: Error, _id, context) => {
+    onError: (err: Error, context) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
       toast.error(err.message);
     },
@@ -151,12 +159,12 @@ export function useSLARules(scope?: SLARuleScope) {
     onMutate: async ({ id, is_active }) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<SLARule[]>(queryKey);
-      queryClient.setQueryData<SLARule[]>(queryKey, old =>
-        (old || []).map(r => r.id === id ? { ...r, is_active } : r)
+      queryClient.setQueryData<SLARule[]>(queryKey, (old) =>
+        (old || []).map((r) => (r.id === id ? { ...r, is_active } : r))
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_err, context) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['sla-rules'] }),

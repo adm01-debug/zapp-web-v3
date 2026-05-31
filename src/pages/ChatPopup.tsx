@@ -47,11 +47,7 @@ export default function ChatPopup() {
   useEffect(() => {
     if (!contactId) return;
     (async () => {
-      const { data, _error } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('id', contactId)
-        .single();
+      const { data } = await supabase.from('contacts').select('*').eq('id', contactId).single();
       if (data) {
         setContact(data);
         document.title = `Chat — ${data.name}`;

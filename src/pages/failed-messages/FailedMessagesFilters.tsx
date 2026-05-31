@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ALL_ROOT_CAUSES, getRootCauseMeta } from '@/lib/failureRootCause';
 
 export function FailedMessagesFilters({ ui, stats }: { ui: any; stats: any }) {
-  const { api, _aggregates } = ui;
+  const { api } = ui;
 
   return (
     <Card>

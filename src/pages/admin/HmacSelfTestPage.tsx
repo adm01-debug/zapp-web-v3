@@ -96,7 +96,7 @@ export default function HmacSelfTestPage() {
 
   async function logAudit(payload: SelfTestResult, fallbackMs: number) {
     try {
-      const { data: userData, _error } = await supabase.auth.getUser();
+      const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
       await supabase.from('hmac_selftest_audit').insert({

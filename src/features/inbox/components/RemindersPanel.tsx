@@ -41,7 +41,7 @@ export function RemindersPanel({ contactId, profileId }: RemindersPanelProps) {
   const loadReminders = async () => {
     if (!profileId) return;
     setLoading(true);
-    const { data, _error } = await supabase
+    const { data } = await supabase
       .from('reminders')
       .select('*')
       .eq('contact_id', contactId)

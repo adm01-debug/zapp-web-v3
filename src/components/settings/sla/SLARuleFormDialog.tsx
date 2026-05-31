@@ -85,10 +85,7 @@ export function SLARuleFormDialog({
   const { data: companies = [] } = useQuery({
     queryKey: ['sla-scope-companies'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('contacts')
-        .select('company')
-        .not('company', 'is', null);
+      const { data } = await supabase.from('contacts').select('company').not('company', 'is', null);
       return [...new Set((data || []).map((d) => d.company).filter(Boolean))] as string[];
     },
     enabled: open && scope === 'company',
@@ -97,7 +94,7 @@ export function SLARuleFormDialog({
   const { data: jobTitles = [] } = useQuery({
     queryKey: ['sla-scope-jobtitles'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('job_title')
         .not('job_title', 'is', null);
@@ -109,7 +106,7 @@ export function SLARuleFormDialog({
   const { data: queues = [] } = useQuery({
     queryKey: ['sla-scope-queues'],
     queryFn: async () => {
-      const { data, _error } = await supabase.from('queues').select('id, name');
+      const { data } = await supabase.from('queues').select('id, name');
       return data || [];
     },
     enabled: open && scope === 'queue',
@@ -118,10 +115,7 @@ export function SLARuleFormDialog({
   const { data: agents = [] } = useQuery({
     queryKey: ['sla-scope-agents'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('is_active', true);
+      const { data } = await supabase.from('profiles').select('id, name').eq('is_active', true);
       return data || [];
     },
     enabled: open && scope === 'agent',
@@ -130,7 +124,7 @@ export function SLARuleFormDialog({
   const { data: contacts = [] } = useQuery({
     queryKey: ['sla-scope-contacts', contactSearch],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('contacts')
         .select('id, name, phone')
         .or(`name.ilike.%${contactSearch}%,phone.ilike.%${contactSearch}%`)

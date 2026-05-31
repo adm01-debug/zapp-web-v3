@@ -39,10 +39,7 @@ export function SkillBasedRoutingSettings() {
   const { data: profiles = [] } = useQuery({
     queryKey: ['profiles-for-skills'],
     queryFn: async () => {
-      const { data, _error } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('is_active', true);
+      const { data } = await supabase.from('profiles').select('id, name').eq('is_active', true);
       return data || [];
     },
   });
@@ -50,7 +47,7 @@ export function SkillBasedRoutingSettings() {
   const { data: queues = [] } = useQuery({
     queryKey: ['queues-for-skills'],
     queryFn: async () => {
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('queues')
         .select('id, name, color')
         .eq('is_active', true);
@@ -62,7 +59,7 @@ export function SkillBasedRoutingSettings() {
     queryKey: ['agent-skills', selectedProfile],
     queryFn: async () => {
       if (!selectedProfile) return [];
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('agent_skills')
         .select('*')
         .eq('profile_id', selectedProfile);
@@ -75,7 +72,7 @@ export function SkillBasedRoutingSettings() {
     queryKey: ['queue-skills', selectedQueue],
     queryFn: async () => {
       if (!selectedQueue) return [];
-      const { data, _error } = await supabase
+      const { data } = await supabase
         .from('queue_skill_requirements')
         .select('*')
         .eq('queue_id', selectedQueue);
