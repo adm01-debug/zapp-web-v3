@@ -62,16 +62,26 @@ function AppContent() {
 
   // Hide the initial boot loader once the App is mounted
   useEffect(() => {
+    log.info('AppContent mounted, preparing to hide root loader');
     // Small delay to ensure first paint is done
     const timer = setTimeout(() => {
-      if (typeof window !== 'undefined' && window.__zappHideRootLoader) {
-        window.__zappHideRootLoader();
-      } else {
-        // Fallback if the global function isn't available
-        const loader = document.getElementById('root-loading');
-        if (loader) {
-          loader.style.opacity = '0';
-          setTimeout(() => loader.remove(), 400);
+      if (typeof window !== 'undefined') {
+        log.info('Hiding root loader...');
+        if (window.__zappHideRootLoader) {
+          window.__zappHideRootLoader();
+          log.info('Root loader hidden via window.__zappHideRootLoader');
+        } else {
+          // Fallback if the global function isn't available
+          const loader = document.getElementById('root-loading');
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              if (loader.parentNode) loader.remove();
+              log.info('Root loader removed via DOM fallback');
+            }, 400);
+          } else {
+            log.warn('Root loader element not found for fallback');
+          }
         }
       }
     }, 100);
