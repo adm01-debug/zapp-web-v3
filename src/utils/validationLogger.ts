@@ -15,6 +15,7 @@ declare global {
 class ValidationLogger {
   private events: ValidationEvent[] = [];
   private maxEvents = 200;
+  private isProcessing = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -76,23 +77,31 @@ class ValidationLogger {
   }
 
   public addEvent(type: ValidationEvent['type'], message: string, data?: any) {
-    const event: ValidationEvent = {
-      timestamp: new Date().toISOString(),
-      type,
-      message,
-      data
-    };
-    this.events.unshift(event);
-    if (this.events.length > this.maxEvents) {
-      this.events.pop();
-    }
-    
-    // Save to localStorage
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
     try {
-      localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 100)));
-    } catch (e) {
-      // Quota exceeded / storage disabled — non-fatal for logging.
-      console.warn('[validationLogger] failed to persist events', e);
+      const event: ValidationEvent = {
+        timestamp: new Date().toISOString(),
+        type,
+        message,
+        data
+      };
+      this.events.unshift(event);
+      if (this.events.length > this.maxEvents) {
+        this.events.pop();
+      }
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('zapp_validation_evidence', JSON.stringify(this.events.slice(0, 100)));
+      } catch (e) {
+        // Quota exceeded / storage disabled — non-fatal for logging.
+        // Using originalWarn to avoid re-entry if we weren't using isProcessing
+        console.warn('[validationLogger] failed to persist events', e);
+      }
+    } finally {
+      this.isProcessing = false;
     }
   }
 
