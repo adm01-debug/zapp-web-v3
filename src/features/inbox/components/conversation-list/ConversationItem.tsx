@@ -156,6 +156,8 @@ export const ConversationItem = memo(function ConversationItem({
   const tags = contact?.tags ?? [];
   const avatarUrl = contact?.avatar || contact?.avatar_url;
   
+  const companyName = contact?.company_name || contact?.company || contact?.organization;
+  
   const displayDate =
     toValidDate(conversation.updatedAt, null as any) ||
     toValidDate(lastMessage?.created_at, null as any) ||
