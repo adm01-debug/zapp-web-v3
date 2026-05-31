@@ -116,7 +116,6 @@ export function AppRoutes() {
         <Route path="/debug/realtime-fanout" element={<ProtectedRoute><RealtimeFanoutDebug /></ProtectedRoute>} />
         <Route path="/admin/roles" element={<ProtectedRoute requiredRoles={['admin']}><RolesPage /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
-        <Route path="/admin/departamentos" element={<ProtectedRoute requiredRoles={['admin']}><DepartmentsPage /></ProtectedRoute>} />
         <Route path="/admin/rate-limit" element={<ProtectedRoute requiredRoles={['admin']}><RateLimitDashboard /></ProtectedRoute>} />
         <Route path="/admin/hmac-selftest" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><HmacSelfTestPage /></ProtectedRoute>} />
         <Route path="/admin/operations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminOperationsPage /></ProtectedRoute>} />
@@ -136,7 +135,6 @@ export function AppRoutes() {
         <Route path="/admin/automations" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationsPage /></ProtectedRoute>} />
         <Route path="/admin/automations/logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminAutomationLogsPage /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
-        <Route path="/admin/settings/whatsapp-mode" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppModePage /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-logs" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminWhatsAppLogsPage /></ProtectedRoute>} />
         <Route path="/admin/email-status" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminEmailStatusPage /></ProtectedRoute>} />
         <Route path="/admin/email-audit" element={<ProtectedRoute requiredRoles={['admin', 'supervisor']}><AdminEmailAuditPage /></ProtectedRoute>} />

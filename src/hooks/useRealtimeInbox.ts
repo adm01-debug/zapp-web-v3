@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
 import { useMessages } from '@/hooks/useMessages';
@@ -48,14 +48,11 @@ export function useRealtimeInbox() {
   const externalMsgs = useExternalMessages(USE_EXTERNAL_DB ? selectedContactId : null);
 
   // Local messages (fallback)
-  const localMsgs = useMessages({
-    contactId: USE_EXTERNAL_DB ? null : selectedContactId,
-    enabled: !USE_EXTERNAL_DB && Boolean(selectedContactId),
-  });
+  const localMsgs = useMessages(USE_EXTERNAL_DB ? null : selectedContactId);
 
   const selectedMessages = USE_EXTERNAL_DB ? externalMsgs.messages : localMsgs.messages;
   const selectedMessagesLoading = USE_EXTERNAL_DB ? externalMsgs.loading : localMsgs.loading;
-  const refetchSelectedMessages = USE_EXTERNAL_DB ? externalMsgs.refetch : localMsgs.refetch;
+  const refetchSelectedMessages = USE_EXTERNAL_DB ? (externalMsgs as any).refetch : () => { if (selectedContactId) localMsgs.loadMessages(selectedContactId); };
 
   // Listen for open-contact-chat events
   useEffect(() => {
@@ -178,7 +175,7 @@ export function useRealtimeInbox() {
           avatar: resolvedSelectedConversation.contact.avatar_url || undefined,
           tags: resolvedSelectedConversation.contact.tags || [],
           createdAt: new Date(resolvedSelectedConversation.contact.created_at),
-          contact_type: resolvedSelectedConversation.contact.contact_type || undefined,
+          contact_type: (resolvedSelectedConversation.contact as any).contact_type || undefined,
           whatsapp_connection_id: resolvedSelectedConversation.contact.whatsapp_connection_id || undefined,
         },
         lastMessage: resolvedSelectedConversation.lastMessage
@@ -212,8 +209,8 @@ export function useRealtimeInbox() {
     timestamp: new Date(m.created_at),
     status: (m.status as Message['status'] | null) || (m.is_read ? 'read' : 'delivered'),
     mediaUrl: m.media_url || undefined,
-    transcription: m.transcription || null,
-    transcriptionStatus: m.transcription_status as Message['transcriptionStatus'] || null,
+    transcription: (m as any).transcription || null,
+    transcriptionStatus: (m as any).transcription_status as Message['transcriptionStatus'] || null,
     is_deleted: m.is_deleted ?? false,
     external_id: m.external_id || undefined,
   }));

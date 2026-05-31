@@ -79,7 +79,7 @@ export const useThemeAudit = () => {
 
       setResult({ oledPass, fontPass, colorPass, violations });
 
-      if (violations.length > 0) {
+      if (violations.length > 0 && import.meta.env.DEV) {
         console.group('🔍 Relatório de Auditoria Visual');
         violations.forEach(v => console.warn(v));
         console.groupEnd();
