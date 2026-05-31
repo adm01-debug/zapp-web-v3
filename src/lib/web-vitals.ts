@@ -4,6 +4,7 @@
  */
 
 import { getLogger } from '@/lib/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 const log = getLogger('WebVitals');
 
@@ -34,11 +35,10 @@ function getRating(name: string, value: number): 'good' | 'needs-improvement' | 
 const metricsBuffer: WebVitalMetric[] = [];
 const uploadQueue: WebVitalMetric[] = [];
 let uploadTimer: number | null = null;
-const OBS_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/client-observability`;
-const OBS_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+const OBS_FUNCTION = 'client-observability';
 
 async function flushMetrics() {
-  if (!uploadQueue.length || !OBS_KEY || !import.meta.env.VITE_SUPABASE_URL) return;
+  if (!uploadQueue.length || !import.meta.env.VITE_SUPABASE_URL) return;
 
   const batch = uploadQueue.splice(0, uploadQueue.length).map((metric) => ({
     ...metric,
@@ -49,15 +49,8 @@ async function flushMetrics() {
   }));
 
   try {
-    await fetch(OBS_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: OBS_KEY,
-        Authorization: `Bearer ${OBS_KEY}`,
-      },
-      body: JSON.stringify({ metrics: batch }),
-      keepalive: true,
+    await supabase.functions.invoke(OBS_FUNCTION, {
+      body: { metrics: batch },
     });
   } catch (err) {
     log.warn('Failed sending web-vitals to backend observability', err);

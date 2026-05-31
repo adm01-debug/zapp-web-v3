@@ -95,12 +95,15 @@
             setTimeout(function() { if (loader.parentNode) loader.remove(); }, 400);
           }
         };
+        // Auto-hide if React takes too long but root has content
         var i = setInterval(function() {
           if (root && root.childElementCount > 0) {
             window.__zappHideRootLoader();
             clearInterval(i);
           }
-        }, 200);
+        }, 100);
+        // Safety timeout: 10 seconds
+        setTimeout(function() { clearInterval(i); window.__zappHideRootLoader(); }, 10000);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>

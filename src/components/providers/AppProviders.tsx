@@ -42,6 +42,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   }), []);
 
   useEffect(() => {
+    log.info('AppProviders mounted');
     setErrorKey(prev => prev + 1);
     retryCountRef.current = 0;
   }, []);
