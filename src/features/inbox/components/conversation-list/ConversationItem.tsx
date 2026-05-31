@@ -101,8 +101,7 @@ interface ConversationItemProps {
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const safeName = (name === 'Você' ? '' : name) || 'Contato';
-  const company = conversation.contact?.company?.trim();
-  return company ? `${safeName} — ${company}` : safeName;
+  return safeName;
 }
 
 function buildFullPrimaryLabel(conversation: any): string {
@@ -244,7 +243,7 @@ export const ConversationItem = memo(function ConversationItem({
                         ref={ref}
                         data-testid="conversation-primary"
                         className={cn(
-                          'leading-tight truncate block min-w-0 tracking-tight transition-colors duration-200 font-thin text-sm font-serif',
+                          'truncate block min-w-0 tracking-tight transition-colors duration-200 font-sans text-left font-normal border-0 rounded-none text-base mx-0',
                           isSelected ? 'text-primary-foreground' : 'text-foreground'
                         )}
                       >
