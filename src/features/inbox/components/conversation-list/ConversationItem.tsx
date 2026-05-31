@@ -529,12 +529,3 @@ export const ConversationItem = memo(function ConversationItem({
     </TooltipProvider>
   );
 });
-
-            </div>
-            {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
-          </div>
-        </div>
-      </QuickPeek>
-    </TooltipProvider>
-  );
-});
