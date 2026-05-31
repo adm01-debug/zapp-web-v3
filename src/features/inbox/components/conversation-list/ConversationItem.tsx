@@ -267,9 +267,8 @@ export const ConversationItem = memo(function ConversationItem({
                       </span>
                     )}
                   </TruncatedTooltip>
-                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className={cn(
                     "text-[10px] font-semibold tabular-nums tracking-tight",
                     isSelected ? "text-primary-foreground/80" : "text-muted-foreground/80"
@@ -284,8 +283,10 @@ export const ConversationItem = memo(function ConversationItem({
                       {unreadCount}
                     </span>
                   )}
+                  {sentiment && <SentimentEmoji sentiment={sentiment} animated={!isSelected} />}
                 </div>
               </div>
+
               {secondaryLabel && (
                 <span
                   className={cn(
