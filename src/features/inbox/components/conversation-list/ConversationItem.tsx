@@ -306,9 +306,11 @@ export const ConversationItem = memo(function ConversationItem({
         </motion.div>
       </TooltipProvider>
     );
-});
+  }
+);
 
-ConversationItem.displayName = 'ConversationItem';
+
+
 
 
 
@@ -496,5 +498,3 @@ ConversationItem.displayName = 'ConversationItem';
         </div>
       </QuickPeek>
     </TooltipProvider>
-  );
-});
