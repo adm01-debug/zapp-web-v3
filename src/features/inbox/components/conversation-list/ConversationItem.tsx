@@ -98,6 +98,18 @@ interface ConversationItemProps {
   isPinned?: boolean;
 }
 
+export const ConversationItem = memo(({
+  conversation,
+  isSelected,
+  onSelect,
+  compact = false,
+  selectionMode = false,
+  isMultiSelected = false,
+  onToggleSelection,
+  isPinned = false,
+}: ConversationItemProps) => {
+
+
 function buildPrimaryLabel(conversation: any): string {
   const name = (conversation.contact?.name || conversation.contact?.pushName || conversation.contact?.phone || '').trim();
   const safeName = (name === 'Você' ? '' : name) || 'Contato';
@@ -341,8 +353,10 @@ export const ConversationItem = memo(function ConversationItem({
           </div>
         </motion.div>
       </TooltipProvider>
-    );
-  }
+});
+
+ConversationItem.displayName = 'ConversationItem';
+
 
   const quickPeekPreview = (
     <div className="space-y-1.5">
