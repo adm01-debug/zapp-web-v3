@@ -1,12 +1,13 @@
-import { handleCors, errorResponse, jsonResponse, requireEnv, Logger } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, requireEnv, requireUser, Logger } from "../_shared/validation.ts";
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
-  const log = new Logger("elevenlabs-scribe-token");
+  const log = new Logger("elevenlabs-scribe-token", req);
 
   try {
+    await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
     const ELEVENLABS_API_KEY = requireEnv('ELEVENLABS_API_KEY');
 
     log.info("Requesting ElevenLabs realtime scribe token");
@@ -27,8 +28,10 @@ Deno.serve(async (req) => {
     const data = await response.json();
     log.done(200);
     return jsonResponse({ token: data.token }, 200, req);
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Unknown error';
+  } catch (err) {
+    const e = err as { message?: string; status?: number };
+    if (e.status === 401) return errorResponse("Não autorizado", 401, req);
+    const msg = e.message || 'Unknown error';
     log.error("Unhandled error", { error: msg });
     return errorResponse(msg, 500, req);
   }

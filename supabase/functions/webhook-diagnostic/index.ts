@@ -1,16 +1,15 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { handleCors, errorResponse, authorizeRoles, requireEnv } from '../_shared/validation.ts';
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  const cors = handleCors(req);
+  if (cors) return cors;
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseUrl = requireEnv('SUPABASE_URL');
+    const anonKey = requireEnv('SUPABASE_ANON_KEY');
+    await authorizeRoles(req, supabaseUrl, anonKey, ['admin', 'dev']);
+
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const evolutionUrl = (Deno.env.get('EVOLUTION_API_URL') || '').replace(/\/+$/, '');
     const evolutionKey = Deno.env.get('EVOLUTION_API_KEY')!;
@@ -175,12 +174,16 @@ Deno.serve(async (req: Request) => {
     };
 
     return new Response(JSON.stringify(results), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': req.headers.get('origin') || '*' },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }), {
+    const e = err as { message?: string; status?: number };
+    if (e.status === 401 || e.status === 403) {
+      return errorResponse(e.message || 'Não autorizado', e.status, req);
+    }
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': req.headers.get('origin') || '*' },
     });
   }
 });

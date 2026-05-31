@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.87.1";
-import { handleCors, errorResponse, jsonResponse, checkRateLimit, getClientIP, requireEnv, Logger } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, checkRateLimit, getClientIP, requireEnv, requireUser, Logger } from "../_shared/validation.ts";
 import { AiSuggestReplySchema, parseBody } from "../_shared/schemas.ts";
 import { callAiWithTracking, extractUserIdFromRequest } from "../_shared/ai-usage.ts";
 
@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
   const userId = extractUserIdFromRequest(req);
 
   try {
+    await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
     const ip = getClientIP(req);
     const { allowed } = checkRateLimit(`suggest:${ip}`, 15, 60_000);
     if (!allowed) return errorResponse("Rate limit exceeded. Please try again later.", 429, req);

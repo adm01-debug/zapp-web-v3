@@ -1,4 +1,4 @@
-import { handleCors, errorResponse, jsonResponse, checkRateLimit, getClientIP, requireEnv, Logger } from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, checkRateLimit, getClientIP, requireEnv, requireUser, Logger } from "../_shared/validation.ts";
 import { TranscribeAudioSchema, parseBody } from "../_shared/schemas.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
   const log = new Logger("ai-transcribe-audio");
 
   try {
+    await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
     const ip = getClientIP(req);
     const { allowed } = checkRateLimit(`transcribe:${ip}`, 10, 60_000);
     if (!allowed) return errorResponse("Limite de transcrições excedido. Tente novamente em 1 minuto.", 429, req);

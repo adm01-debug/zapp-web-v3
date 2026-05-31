@@ -1,6 +1,6 @@
 import {
   handleCors, errorResponse, jsonResponse,
-  sanitizeString, isValidUUID, checkRateLimit, getClientIP, requireEnv, Logger,
+  sanitizeString, isValidUUID, checkRateLimit, getClientIP, requireEnv, requireUser, Logger,
 } from "../_shared/validation.ts";
 import { AiEnhanceMessageSchema, parseBody } from "../_shared/schemas.ts";
 import { callAiWithTracking, extractUserIdFromRequest } from "../_shared/ai-usage.ts";
@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
   const userId = extractUserIdFromRequest(req);
 
   try {
+    await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
     const ip = getClientIP(req);
     const { allowed } = checkRateLimit(`enhance:${ip}`, 20, 60_000);
     if (!allowed) return errorResponse("Limite de requisições excedido. Tente novamente em 1 minuto.", 429, req);

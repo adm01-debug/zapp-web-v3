@@ -468,4 +468,22 @@ export async function authorizeRoles(
   return { user, roles: userRoles };
 }
 
+/**
+ * Verify the caller has a valid Supabase JWT (any authenticated user).
+ * Returns the user object or throws { message, status }.
+ */
+export async function requireUser(
+  req: Request,
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+): Promise<{ id: string; email?: string }> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) throw { message: "Não autorizado", status: 401 };
 
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error || !user) throw { message: "Não autorizado", status: 401 };
+  return user;
+}
