@@ -520,15 +520,16 @@ export const ConversationItem = memo(function ConversationItem({
                   </Badge>
                 ))}
                 
-                {unreadCount > 0 && (
-                  <span className={cn(
-                    "min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center text-[11px] font-black tabular-nums shadow-lg animate-bounce-in",
-                    isSelected ? "bg-white text-primary" : "bg-primary text-primary-foreground"
-                  )}>
-                    {unreadCount}
-                  </span>
-                )}
               </div>
+            </div>
+            {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
+          </div>
+        </div>
+      </QuickPeek>
+    </TooltipProvider>
+  );
+});
+
             </div>
             {conversation.priority === 'high' && <div className="w-1 h-8 rounded-full bg-destructive flex-shrink-0" />}
           </div>
