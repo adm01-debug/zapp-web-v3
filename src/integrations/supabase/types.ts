@@ -2949,6 +2949,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_accounts: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email_address: string
+          id: string
+          is_active: boolean | null
+          picture_url: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email_address: string
+          id?: string
+          is_active?: boolean | null
+          picture_url?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email_address?: string
+          id?: string
+          is_active?: boolean | null
+          picture_url?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_labels: {
         Row: {
           color: string | null
@@ -8543,20 +8579,31 @@ export type Database = {
         Args: { connection_id: string }
         Returns: boolean
       }
-      log_audit_event: {
-        Args: {
-          p_action: string
-          p_details?: Json
-          p_entity_id?: string
-          p_entity_type?: string
-          p_user_agent?: string
-        }
-        Returns: undefined
-      }
+      log_audit_event:
+        | {
+            Args: {
+              p_action: string
+              p_details?: Json
+              p_entity_id?: string
+              p_entity_type?: string
+              p_user_agent?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_action: string
+              p_details: Json
+              p_event_type: string
+              p_resource: string
+              p_status: string
+            }
+            Returns: undefined
+          }
       log_security_event: {
         Args: {
           p_action: string
-          p_details?: Json
+          p_details: Json
           p_event_type: string
           p_resource: string
           p_status: string
@@ -8707,6 +8754,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      rpc_migrate_whatsapp_integration: { Args: never; Returns: Json }
       rpc_upsert_contact: {
         Args: { p_instance: string; p_push_name?: string; p_remote_jid: string }
         Returns: string
