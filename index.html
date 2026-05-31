@@ -86,6 +86,35 @@
       </div>
     </div>
     <script>
+      // Preview recovery: nuke any stale service worker / cache that may be
+      // intercepting /src/main.tsx and freezing the boot loader.
+      (function recoverPreview() {
+        try {
+          var FLAG = 'zapp_sw_purged_v2';
+          if ('serviceWorker' in navigator && !sessionStorage.getItem(FLAG)) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              var hadAny = regs.length > 0;
+              return Promise.all(regs.map(function (r) { return r.unregister(); }))
+                .then(function () {
+                  if (typeof caches !== 'undefined') {
+                    return caches.keys().then(function (keys) {
+                      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+                    }).then(function () { return hadAny || (keys && keys.length); });
+                  }
+                  return hadAny;
+                })
+                .then(function (needsReload) {
+                  if (needsReload) {
+                    sessionStorage.setItem(FLAG, '1');
+                    window.location.reload();
+                  }
+                });
+            }).catch(function () {});
+          }
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
+    <script>
       (function() {
         var root = document.getElementById('root');
         var loader = document.getElementById('root-loading');
@@ -95,15 +124,24 @@
             setTimeout(function() { if (loader.parentNode) loader.remove(); }, 400);
           }
         };
-        // Auto-hide if React takes too long but root has content
+        // Auto-hide as soon as React renders anything into #root
         var i = setInterval(function() {
           if (root && root.childElementCount > 0) {
             window.__zappHideRootLoader();
             clearInterval(i);
           }
         }, 100);
-        // Safety timeout: 10 seconds
-        setTimeout(function() { clearInterval(i); window.__zappHideRootLoader(); }, 10000);
+        // Safety timeout: hide loader after 6s so user is never trapped
+        setTimeout(function() {
+          clearInterval(i);
+          if (root && root.childElementCount === 0) {
+            var sub = document.getElementById('root-loading-subtitle');
+            if (sub) sub.textContent = 'Recarregando…';
+            setTimeout(function () { window.location.reload(); }, 800);
+          } else {
+            window.__zappHideRootLoader();
+          }
+        }, 6000);
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
