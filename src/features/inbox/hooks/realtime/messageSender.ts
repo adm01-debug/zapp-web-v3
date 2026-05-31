@@ -182,14 +182,12 @@ export async function sendMessageToContact(
       log.warn('WhatsApp connection not active, message marked as failed');
       await dbFrom('messages').update({ status: 'failed' }).eq('id', data.id);
       
-      if (opts.conversationId) {
-        await supabase.from('conversation_audit_logs').insert({
+        await (supabase.from('conversation_audit_logs' as any).insert({
           conversation_id: opts.conversationId,
           event_type: 'failed',
           status: 'error',
           error_message: 'Nenhuma conexão WhatsApp ativa disponível'
-        });
-      }
+        }) as any);
       
       throw new Error('Nenhuma conexão WhatsApp ativa disponível');
     }
@@ -236,15 +234,13 @@ export async function sendMessageToContact(
           const sid = opts.optimisticId || data.id;
           emitSendStatus(sid, { status: 'retrying', attempt, totalRetries: total }, { contactId, source: 'messageSender' });
           
-          if (opts.conversationId) {
-            supabase.from('conversation_audit_logs').insert({
+            (supabase.from('conversation_audit_logs' as any).insert({
               conversation_id: opts.conversationId,
               event_type: 'send_attempt',
               status: 'retrying',
               attempt_number: attempt,
               metadata: { totalRetries: total }
-            }).then(() => null);
-          }
+            }) as any).then(() => null);
 
           // Persist counters so the "2/3" indicator survives a page reload.
           // Fire-and-forget — never block the retry loop.
@@ -337,15 +333,13 @@ export async function sendMessageToContact(
       emitSendStatus(sid, { status: 'failed_retries', totalRetries: MAX_RETRIES, errorReason: reason }, { contactId, source: 'messageSender' });
     }
 
-    if (opts.conversationId) {
-      await supabase.from('conversation_audit_logs').insert({
+      await (supabase.from('conversation_audit_logs' as any).insert({
         conversation_id: opts.conversationId,
         event_type: 'failed',
         status: 'error',
         error_message: reason,
         metadata: { authError: auth.isAuth, errorCode: auth.code }
-      });
-    }
+      }) as any);
     throw evolutionError;
   }
 
