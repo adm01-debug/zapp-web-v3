@@ -67,7 +67,14 @@ Deno.serve(async (req) => {
   const log = new Logger("ai-transcribe-audio");
 
   try {
-    await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
+    // Allow internal service-role callers (e.g. evolution-webhook-messages).
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isServiceRole = serviceKey && token === serviceKey;
+    if (!isServiceRole) {
+      await requireUser(req, requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_ANON_KEY"));
+    }
     const ip = getClientIP(req);
     const { allowed } = checkRateLimit(`transcribe:${ip}`, 10, 60_000);
     if (!allowed) return errorResponse("Limite de transcrições excedido. Tente novamente em 1 minuto.", 429, req);

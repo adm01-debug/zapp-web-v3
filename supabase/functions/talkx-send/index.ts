@@ -73,17 +73,22 @@ Deno.serve(async (req) => {
     const evolutionKey = Deno.env.get("EVOLUTION_API_KEY")!;
 
     // Reject unauthenticated callers — bulk messaging requires a valid session
+    // Exception: internal service-role callers (e.g. talkx-scheduler) are allowed.
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers });
     }
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false },
-    });
-    const { data: { user }, error: authErr } = await callerClient.auth.getUser();
-    if (authErr || !user) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers });
+    const token = authHeader.replace("Bearer ", "");
+    const isServiceRole = serviceKey && token === serviceKey;
+    if (!isServiceRole) {
+      const callerClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false },
+      });
+      const { data: { user }, error: authErr } = await callerClient.auth.getUser();
+      if (authErr || !user) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers });
+      }
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);

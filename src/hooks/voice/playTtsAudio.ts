@@ -1,4 +1,5 @@
 import { log } from '@/lib/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface TtsPlayback {
   promise: Promise<void>;
@@ -58,7 +59,10 @@ function splitTextIntoTtsChunks(text: string): string[] {
   const normalized = text.replace(/\s+/g, ' ').trim();
   if (!normalized) return [];
 
-  const sentences = normalized.match(/[^.!?…]+(?:[.!?…]+|$)/g)?.map((part) => part.trim()).filter(Boolean) ?? [normalized];
+  const sentences = normalized
+    .match(/[^.!?…]+(?:[.!?…]+|$)/g)
+    ?.map((part) => part.trim())
+    .filter(Boolean) ?? [normalized];
 
   const chunks: string[] = [];
   let currentChunk = '';
@@ -137,16 +141,21 @@ export function playTtsAudio(
   const fetchChunkAudio = (chunkText: string) => {
     const timeout = setTimeout(() => controller.abort(), TTS_REQUEST_TIMEOUT_MS);
 
-    return fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts-stream`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify({ text: chunkText }),
-      signal: controller.signal,
-    })
+    return supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        const accessToken = session?.access_token ?? supabaseKey;
+        return fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts-stream`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseKey,
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ text: chunkText }),
+          signal: controller.signal,
+        });
+      })
       .then(async (response) => {
         if (!response.ok) {
           const errorBody = await response.text().catch(() => '');
