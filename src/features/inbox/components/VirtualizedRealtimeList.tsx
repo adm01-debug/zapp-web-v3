@@ -84,9 +84,9 @@ export function VirtualizedRealtimeList({
   selectionMode = false,
   selectedIds = EMPTY_SET,
   onToggleSelection,
-  _onMarkAsRead,
-  _onArchive,
-  _onPin,
+  onMarkAsRead: _onMarkAsRead,
+  onArchive: _onArchive,
+  onPin: _onPin,
   pinnedIds = EMPTY_SET,
 }: VirtualizedRealtimeListProps) {
   const { density } = useDensity();

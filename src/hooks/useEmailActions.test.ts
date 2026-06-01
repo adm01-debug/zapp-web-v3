@@ -100,10 +100,11 @@ describe('useEmail - Labels and RPC Actions', () => {
     });
 
     it('should handle RPC errors', async () => {
-      vi.mocked(safeClient.rpc).mockResolvedValueOnce({
-        data: null,
-        error: { message: 'RPC Error' } as any,
-        requestId: 'req_123',
+      vi.mocked(safeClient.rpc).mockImplementation(async (fnName: string) => {
+        if (fnName === 'rpc_email_assign_thread') {
+          return { data: null, error: { message: 'RPC Error' } as any, requestId: 'req_123' };
+        }
+        return { data: null, error: null };
       });
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

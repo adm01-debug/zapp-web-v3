@@ -13,7 +13,7 @@ interface ConversationHealthProps {
 }
 
 export function ConversationHealth({
-  _conversation,
+  conversation: _conversation,
   messages,
   className,
 }: ConversationHealthProps) {

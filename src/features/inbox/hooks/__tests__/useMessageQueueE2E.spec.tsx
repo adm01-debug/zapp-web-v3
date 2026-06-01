@@ -81,9 +81,12 @@ describe('useMessageQueue E2E & Persistence', () => {
     render(<QueueTestComponent processMessage={failedProcess} contactId="contact-1" />);
     fireEvent.click(screen.getByTestId('add-btn'));
 
-    await act(async () => {
-      vi.advanceTimersByTime(1000); // Wait for retries to exhaust
-    });
+    // Advance enough time for all retries to exhaust (baseDelay=1000ms, maxRetries=3, exponential backoff)
+    for (let i = 0; i < 5; i++) {
+      await act(async () => {
+        vi.advanceTimersByTime(15000);
+      });
+    }
 
     expect(screen.getByText('failed')).toBeDefined();
 

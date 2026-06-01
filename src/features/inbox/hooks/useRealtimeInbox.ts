@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useOfflineCache } from '@/hooks/useOfflineCache';
-import { _useMessages } from '@/features/inbox';
+import { useMessages as _useMessages } from '@/features/inbox';
 import {
   type ConversationWithMessages,
   type ConversationContact,

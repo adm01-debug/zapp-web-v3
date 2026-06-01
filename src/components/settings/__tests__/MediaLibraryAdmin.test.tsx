@@ -1775,7 +1775,7 @@ describe('MediaLibraryAdmin - Pure Logic', () => {
       const _selected = new Set(['a', 'b']);
       const _filterCategory = 'riso';
       // When filter changes, selection is cleared
-      selected = new Set();
+      const selected = new Set();
       expect(selected.size).toBe(0);
     });
   });

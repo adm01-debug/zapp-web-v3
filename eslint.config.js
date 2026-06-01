@@ -130,7 +130,6 @@ export default tseslint.config(
     files: ["scripts/**/*.{ts,js}"],
     rules: {
       "no-console": "off",
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
       "no-useless-escape": "warn",
     },
   },

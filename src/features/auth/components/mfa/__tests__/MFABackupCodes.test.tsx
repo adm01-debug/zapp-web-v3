@@ -3,8 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MFABackupCodes } from '../MFABackupCodes';
 
 // Mock clipboard
-Object.assign(navigator, {
-  clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+Object.defineProperty(navigator, 'clipboard', {
+  value: { writeText: vi.fn().mockResolvedValue(undefined) },
+  writable: true,
+  configurable: true,
 });
 
 // Mock URL
@@ -175,7 +177,7 @@ describe('MFABackupCodes', () => {
       render(<MFABackupCodes />);
       const codeElements = screen.getAllByText(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
       expect(codeElements.length).toBe(10);
-      codeElements.forEach(el => {
+      codeElements.forEach((el) => {
         expect(el.textContent).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
       });
     });
@@ -183,7 +185,7 @@ describe('MFABackupCodes', () => {
     it('generates unique codes', () => {
       render(<MFABackupCodes />);
       const codeElements = screen.getAllByText(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
-      const codes = codeElements.map(el => el.textContent);
+      const codes = codeElements.map((el) => el.textContent);
       const unique = new Set(codes);
       expect(unique.size).toBe(codes.length);
     });

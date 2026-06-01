@@ -366,8 +366,10 @@ export function useEmail() {
   // ── Desconectar conta ───────────────────────────────────────────────────
   const disconnect = useCallback(
     async (accountId: string) => {
-      const { _requestId, error: _dbErr } = await safeClient.from('email_accounts', (q) =>
-        q.update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', accountId)
+      const { requestId: _requestId, error: _dbErr } = await safeClient.from(
+        'email_accounts',
+        (q) =>
+          q.update({ is_active: false, updated_at: new Date().toISOString() }).eq('id', accountId)
       );
 
       setAccounts((prev) => prev.filter((a) => a.id !== accountId));

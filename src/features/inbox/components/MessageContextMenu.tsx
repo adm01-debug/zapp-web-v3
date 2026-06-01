@@ -57,7 +57,7 @@ export function MessageContextMenu({
   onDelete,
   onReport,
   onSpeak,
-  _onDownload,
+  onDownload: _onDownload,
   onScheduleReply,
   onMarkAsRead,
   onMarkAsUnread,

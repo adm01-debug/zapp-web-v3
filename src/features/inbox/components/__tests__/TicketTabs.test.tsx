@@ -10,7 +10,7 @@ const mockUserRole = vi.fn(() => ({
   isManager: false,
   isAdmin: false,
   roles: ['agent'],
-  loading: false
+  loading: false,
 }));
 
 vi.mock('@/features/auth', () => ({
@@ -18,12 +18,16 @@ vi.mock('@/features/auth', () => ({
   useUserRole: () => mockUserRole(),
   usePermissions: () => ({
     hasPermission: mockHasPermission,
-    loading: false
-  })
+    loading: false,
+  }),
 }));
 
 vi.mock('@/hooks/useQueues', () => ({
-  useQueues: () => ({ queues: [] })
+  useQueues: () => ({ queues: [] }),
+}));
+
+vi.mock('@/features/admin', () => ({
+  useAgents: () => ({ agents: [], loading: false }),
 }));
 
 vi.mock('@/features/inbox', () => ({
@@ -31,19 +35,19 @@ vi.mock('@/features/inbox', () => ({
 }));
 
 vi.mock('@/hooks/useDensity', () => ({
-  useDensity: () => ({ density: 'default' })
+  useDensity: () => ({ density: 'default' }),
 }));
 
 vi.mock('@/hooks/use-mobile', () => ({
-  useIsMobile: () => false
+  useIsMobile: () => false,
 }));
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: null })
-    }))
-  }
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })),
+  },
 }));
 
 describe('TicketTabs - Visibilidade de Escopo', () => {
@@ -51,11 +55,11 @@ describe('TicketTabs - Visibilidade de Escopo', () => {
     vi.clearAllMocks();
   });
 
-  it('renderiza apenas "Meus" para Agente sem permissões extras', () => {
+  it('não renderiza seletor de escopo para Agente sem permissões extras', () => {
     mockHasPermission.mockImplementation((perm) => perm === 'inbox.view_mine');
-    
+
     render(
-      <TicketTabs 
+      <TicketTabs
         conversations={[]}
         mainTab="open"
         subTab="attending"
@@ -68,18 +72,19 @@ describe('TicketTabs - Visibilidade de Escopo', () => {
       />
     );
 
-    expect(screen.getByText('Meus')).toBeDefined();
+    // Scope selector is hidden when user only has inbox.view_mine
+    expect(screen.queryByText('Meus')).toBeNull();
     expect(screen.queryByText('Departamento')).toBeNull();
     expect(screen.queryByText('Todos depts.')).toBeNull();
   });
 
   it('renderiza "Departamento" quando tem permissão inbox.view_department', () => {
-    mockHasPermission.mockImplementation((perm) => 
-      perm === 'inbox.view_mine' || perm === 'inbox.view_department'
+    mockHasPermission.mockImplementation(
+      (perm) => perm === 'inbox.view_mine' || perm === 'inbox.view_department'
     );
-    
+
     render(
-      <TicketTabs 
+      <TicketTabs
         conversations={[]}
         mainTab="open"
         subTab="attending"
@@ -99,9 +104,9 @@ describe('TicketTabs - Visibilidade de Escopo', () => {
 
   it('renderiza todos os escopos quando tem permissão inbox.view_all', () => {
     mockHasPermission.mockReturnValue(true);
-    
+
     render(
-      <TicketTabs 
+      <TicketTabs
         conversations={[]}
         mainTab="open"
         subTab="attending"

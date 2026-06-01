@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Hierarquia de papéis (do mais alto ao mais baixo):
@@ -30,20 +30,20 @@ export function useUserRole() {
   const { roles: authRoles, loading, refreshRoles } = useAuth();
 
   const roles = useMemo(() => {
-    return authRoles.map(r => (r === 'special_agent' ? 'agent' : r) as AppRole);
+    return authRoles.map((r) => (r === 'special_agent' ? 'agent' : r) as AppRole);
   }, [authRoles]);
 
   const maxRank = useMemo(() => {
-    return roles.reduce(
-      (acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0),
-      0
-    );
+    return roles.reduce((acc, r) => Math.max(acc, ROLE_RANK[r] ?? 0), 0);
   }, [roles]);
 
-  const hasRole = useMemo(() => (role: AppRole) => {
-    const required = ROLE_RANK[role] ?? 0;
-    return roles.some((r) => (ROLE_RANK[r] ?? 0) >= required);
-  }, [roles]);
+  const hasRole = useMemo(
+    () => (role: AppRole) => {
+      const required = ROLE_RANK[role] ?? 0;
+      return roles.some((r) => (ROLE_RANK[r] ?? 0) >= required);
+    },
+    [roles]
+  );
 
   return {
     roles,

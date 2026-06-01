@@ -7,7 +7,7 @@ import type { IncomingCall } from '@/types/incomingCall';
 export type { IncomingCall } from '@/types/incomingCall';
 
 export function useIncomingCallListener() {
-  const { _user, profile } = useAuth();
+  const { user: _user, profile } = useAuth();
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
 
   const dismissCall = useCallback(() => {

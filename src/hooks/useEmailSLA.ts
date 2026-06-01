@@ -5,8 +5,6 @@ import { SLAStatus } from '@/types/gmail';
 
 export type { SLAStatus };
 
-const _supabase = _supabase as any;
-
 export interface EmailSLARecord {
   thread_id: string;
   account_id: string;

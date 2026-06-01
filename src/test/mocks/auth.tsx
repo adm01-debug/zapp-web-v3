@@ -52,7 +52,7 @@ export const mockAuthContextLoggedOut = {
 // Mock AuthProvider that provides test auth context
 export function MockAuthProvider({
   children,
-  _value = mockAuthContext,
+  value: _value = mockAuthContext,
 }: {
   children: React.ReactNode;
   value?: typeof mockAuthContext;

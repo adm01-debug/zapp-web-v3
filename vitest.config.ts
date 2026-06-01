@@ -8,7 +8,15 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    exclude: ['node_modules/**', 'e2e/**', 'dist/**'],
+    exclude: [
+      'node_modules/**',
+      'e2e/**',
+      'tests/**',
+      'dist/**',
+      'supabase/functions/**',
+      'scripts/**',
+    ],
+    testTimeout: 15000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

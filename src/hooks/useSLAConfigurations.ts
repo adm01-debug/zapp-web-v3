@@ -101,7 +101,7 @@ export function useSLAConfigurations() {
       );
       return { previous };
     },
-    onError: (_err, context) => {
+    onError: (_err, _variables, context: { previous?: SLAConfig[] } | undefined) => {
       if (context?.previous) queryClient.setQueryData(['sla-configurations'], context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['sla-configurations'] }),
@@ -120,7 +120,7 @@ export function useSLAConfigurations() {
       );
       return { previous };
     },
-    onError: (err: Error, context) => {
+    onError: (err: Error, _variables: string, context: { previous?: SLAConfig[] } | undefined) => {
       if (context?.previous) queryClient.setQueryData(['sla-configurations'], context.previous);
       toast.error(err.message);
     },

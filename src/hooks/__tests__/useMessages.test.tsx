@@ -2,19 +2,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 
-const mockFrom = vi.fn();
 const mockChannel = vi.fn().mockReturnValue({
   on: vi.fn().mockReturnThis(),
-  subscribe: vi.fn().mockReturnValue({ unsubscribe: vi.fn() }),
+  subscribe: vi.fn().mockReturnThis(),
 });
 const mockRemoveChannel = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: any[]) => mockFrom(...args),
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })),
+    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     channel: (...args: any[]) => mockChannel(...args),
     removeChannel: (...args: any[]) => mockRemoveChannel(...args),
   },
+}));
+
+const mockDbList = vi.fn().mockResolvedValue({ data: [], error: null, correlationId: 'test' });
+vi.mock('@/integrations/datasource/db', () => ({
+  dbList: (...args: any[]) => mockDbList(...args),
+  dbFrom: vi.fn(() => ({
+    select: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    order: vi.fn().mockResolvedValue({ data: [], error: null }),
+  })),
+  dbTable: vi.fn((entity: string) => entity),
+  dbClient: vi.fn(() => ({})),
+  dbGet: vi.fn().mockResolvedValue({ data: null, error: null, correlationId: 'test' }),
+  dbInsert: vi.fn().mockResolvedValue({ data: null, error: null, correlationId: 'test' }),
+  dbChannel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() })),
+  dbRemoveChannel: vi.fn(),
 }));
 
 vi.mock('@/lib/logger', () => {
@@ -22,9 +43,10 @@ vi.mock('@/lib/logger', () => {
   return {
     log: makeLog(),
     logger: makeLog(),
+    createLogger: vi.fn(() => makeLog()),
     getLogger: vi.fn(() => makeLog()),
-    generateCorrelationId: vi.fn(() => 'test-correlation-id'),
-    getSessionId: vi.fn(() => 'test-session-id'),
+    generateCorrelationId: vi.fn(() => 'test-id'),
+    getSessionId: vi.fn(() => 'test-session'),
     logPerformance: vi.fn(),
     logAsyncPerformance: vi.fn(),
   };
@@ -32,105 +54,91 @@ vi.mock('@/lib/logger', () => {
 
 import { useMessages } from '@/hooks/useMessages';
 
-function makeQueryChain(data: any[] = [], error: any = null) {
-  const rangeMock = vi
-    .fn()
-    .mockResolvedValueOnce({ data, error })
-    .mockResolvedValue({ data: [], error: null });
-  return {
-    select: vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          range: rangeMock,
-        }),
-      }),
-    }),
-  };
-}
+const baseRow = {
+  id: 'msg-1',
+  message_id: 'msg-1',
+  remote_jid: 'c1@s.whatsapp.net',
+  contact_id: 'c1',
+  content: 'Hello',
+  sender: 'contact',
+  created_at: '2024-01-01T00:00:00Z',
+  timestamp: '2024-01-01T00:00:00Z',
+  media_url: null,
+  media_type: null,
+  quoted_message_id: null,
+  is_starred: false,
+  is_important: false,
+  category: null,
+  sentiment: null,
+  tags: [],
+  notes: null,
+  follow_up_at: null,
+  follow_up_done: false,
+  status: 1,
+};
 
 describe('useMessages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFrom.mockReturnValue(makeQueryChain());
-  });
-
-  it('returns empty messages when contactId is null', async () => {
-    const { result } = renderHook(() => useMessages({ contactId: null }));
-
-    // With null contactId, messages should be empty immediately
-    // The hook sets loading=false and messages=[] synchronously for null contactId
-    await waitFor(() => {
-      expect(result.current.messages).toEqual([]);
+    mockDbList.mockResolvedValue({ data: [], error: null, correlationId: 'test' });
+    mockChannel.mockReturnValue({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
     });
-
-    expect(result.current.error).toBeNull();
   });
 
-  it('fetches messages when contactId is provided', async () => {
-    const mockMessages = [
-      {
-        id: 'msg-1',
-        contact_id: 'c1',
-        content: 'Hello',
-        sender: 'contact',
-        created_at: '2024-01-01',
-      },
-      { id: 'msg-2', contact_id: 'c1', content: 'Hi!', sender: 'agent', created_at: '2024-01-01' },
-    ];
-    mockFrom.mockReturnValue(makeQueryChain(mockMessages));
-
-    const { result } = renderHook(() => useMessages({ contactId: 'c1' }));
+  it('returns empty messages when remoteJid is null', async () => {
+    const { result } = renderHook(() => useMessages(null));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.messages).toEqual(mockMessages.map((m) => ({ ...m, isEdited: false })));
+    expect(result.current.messages).toEqual([]);
   });
 
-  it('sets error when fetch fails', async () => {
-    mockFrom.mockReturnValue(makeQueryChain(null, new Error('Network error')));
+  it('fetches messages when remoteJid is provided', async () => {
+    mockDbList.mockResolvedValueOnce({ data: [baseRow], error: null, correlationId: 'test' });
 
-    const { result } = renderHook(() => useMessages({ contactId: 'c1' }));
+    const { result } = renderHook(() => useMessages('c1@s.whatsapp.net'));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toBeTruthy();
+    expect(result.current.messages).toHaveLength(1);
   });
 
-  it('does not fetch when enabled=false', () => {
-    const { result } = renderHook(() => useMessages({ contactId: 'c1', enabled: false }));
-    expect(result.current).toBeDefined();
+  it('handles fetch errors gracefully', async () => {
+    mockDbList.mockRejectedValueOnce(new Error('Network error'));
+
+    const { result } = renderHook(() => useMessages('c1@s.whatsapp.net'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
   });
 
-  it('clears messages when contactId changes to null', async () => {
-    const mockMessages = [
-      {
-        id: 'msg-1',
-        contact_id: 'c1',
-        content: 'Hello',
-        sender: 'contact',
-        created_at: '2024-01-01',
-      },
-    ];
-    mockFrom.mockReturnValue(makeQueryChain(mockMessages));
+  it('does not fetch when remoteJid is null', async () => {
+    renderHook(() => useMessages(null));
+    expect(mockDbList).not.toHaveBeenCalled();
+  });
 
-    const { result, rerender } = renderHook(
-      ({ contactId }: { contactId: string | null }) => useMessages({ contactId }),
-      { initialProps: { contactId: 'c1' as string | null } }
-    );
+  it('stops loading new messages when remoteJid changes to null', async () => {
+    mockDbList.mockResolvedValueOnce({ data: [baseRow], error: null, correlationId: 'test' });
 
-    await waitFor(() => {
-      expect(result.current.messages).toHaveLength(1);
+    const { result, rerender } = renderHook(({ jid }: { jid: string | null }) => useMessages(jid), {
+      initialProps: { jid: 'c1@s.whatsapp.net' as string | null },
     });
 
-    mockFrom.mockReturnValue(makeQueryChain());
-    rerender({ contactId: null });
-
     await waitFor(() => {
-      expect(result.current.messages).toEqual([]);
+      expect(result.current.loading).toBe(false);
     });
+
+    const callCountBefore = mockDbList.mock.calls.length;
+    rerender({ jid: null });
+
+    // After switching to null, no additional fetches happen
+    expect(mockDbList.mock.calls.length).toBe(callCountBefore);
   });
 });

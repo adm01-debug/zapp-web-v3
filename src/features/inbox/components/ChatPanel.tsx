@@ -95,7 +95,7 @@ export function ChatPanel({
   hasMoreOlder = false,
   initialHighlightMessageId,
   onHighlightConsumed,
-  _whisperCount = 0,
+  whisperCount: _whisperCount = 0,
   isLoading = false,
   messageQueue,
 }: ChatPanelProps) {

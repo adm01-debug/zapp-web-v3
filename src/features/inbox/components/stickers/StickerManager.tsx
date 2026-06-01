@@ -19,7 +19,7 @@ interface StickerManagerProps {
   mode?: 'picker' | 'manager';
 }
 
-export function StickerManager({ onSend, _mode = 'manager' }: StickerManagerProps) {
+export function StickerManager({ onSend, mode: _mode = 'manager' }: StickerManagerProps) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string | null>(null);

@@ -87,13 +87,13 @@ function ToolButton({ icon, label, active, onClick, disabled, badge, highlight }
 
 export function ChatHeaderToolbar({
   activeTool,
-  _showAIAssistant,
+  showAIAssistant: _showAIAssistant,
   showDetails,
   showSummaryPanel,
   isSummaryLoading,
   onOpenSearch,
   onSetActiveTool,
-  _onToggleAIAssistant,
+  onToggleAIAssistant: _onToggleAIAssistant,
   onToggleDetails,
   onGenerateSummary,
   failuresOnly,

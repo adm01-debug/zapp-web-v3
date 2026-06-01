@@ -42,7 +42,7 @@ interface DocumentPreviewProps {
   isSent: boolean;
 }
 
-export function DocumentPreview({ _url, fileName, fileSize, isSent }: DocumentPreviewProps) {
+export function DocumentPreview({ url: _url, fileName, fileSize, isSent }: DocumentPreviewProps) {
   const [isDownloading, _setIsDownloading] = useState(false);
   const extension = getFileExtension(fileName).toUpperCase();
 

@@ -4,8 +4,6 @@ import { safeClient } from '@/integrations/supabase/safeClient';
 import { emailMappers } from '@/utils/emailMappers';
 import { EmailMetricsSummary, EmailSLADashboard } from '@/types/gmail';
 
-const _supabase = _supabase as any;
-
 export function useEmailMetrics(accountId: string | null, days = 7) {
   const [summary, setSummary] = useState<EmailMetricsSummary | null>(null);
   const [slaDash, setSlaDash] = useState<EmailSLADashboard | null>(null);

@@ -70,7 +70,7 @@ export function useChatShortcuts({
   onSend,
   onToggleAI,
   onToggleTemplates,
-  _onTransfer,
+  onTransfer: _onTransfer,
   onResolve,
   onFocusInput,
 }: {

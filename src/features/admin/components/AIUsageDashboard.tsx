@@ -29,7 +29,7 @@ import { AIUsageUsersTab } from './AIUsageUsersTab';
 export function AIUsageDashboard() {
   const {
     logs,
-    _isLoading,
+    isLoading: _isLoading,
     refetch,
     timeFilter,
     setTimeFilter,

@@ -23,7 +23,7 @@ export function VoiceTranscriptArea({
   finalTranscript,
   agentResponse,
   error,
-  _colors,
+  colors: _colors,
 }: VoiceTranscriptAreaProps) {
   const prefersReduced = useReducedMotion();
 

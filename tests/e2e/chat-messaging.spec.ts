@@ -26,7 +26,7 @@ test.describe('Inbox E2E - Chat Module Validation', () => {
     await expect(conversationItems.first()).toBeVisible({ timeout: 10000 });
     
     const count = await conversationItems.count();
-    console.log(`Found ${count} conversations`);
+    console.warn(`Found ${count} conversations`);
     
     // Select the first conversation
     await conversationItems.first().click();

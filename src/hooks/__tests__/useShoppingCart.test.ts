@@ -6,6 +6,7 @@ vi.mock('@/lib/logger', () => {
   return {
     log: makeLog(),
     logger: makeLog(),
+    createLogger: vi.fn(() => makeLog()),
     getLogger: vi.fn(() => makeLog()),
     generateCorrelationId: vi.fn(() => 'test-correlation-id'),
     getSessionId: vi.fn(() => 'test-session-id'),

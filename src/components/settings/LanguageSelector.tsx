@@ -11,7 +11,7 @@ import { Globe, Check } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 
 export const LanguageSelector = forwardRef<HTMLDivElement>((_, _ref) => {
-  const { _t } = useTranslation();
+  const { t: _t } = useTranslation();
   const { currentLanguage, changeLanguage, languages } = useLanguage();
 
   const currentLang = languages.find((l) => l.code === currentLanguage);

@@ -55,9 +55,6 @@ Filas: ${queueData.data?.map((q) => q.name).join(', ') || 'nenhuma'}
 Agentes: ${agentData.data?.map((a) => `${a.name} (${a.role})`).join(', ') || 'nenhum'}
       `.trim();
 
-      const {
-        data: { _session },
-      } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke('ai-proxy', {
         body: {
           messages: [

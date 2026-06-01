@@ -4,7 +4,13 @@ import { TourProvider, useTour, DEFAULT_ONBOARDING_STEPS, TourStep } from '../On
 import { WelcomeModal } from '../WelcomeModal';
 
 // Helper component to access tour context
-function TourConsumer({ steps, _autoStart }: { steps?: TourStep[]; autoStart?: boolean }) {
+function TourConsumer({
+  steps,
+  autoStart: _autoStart,
+}: {
+  steps?: TourStep[];
+  autoStart?: boolean;
+}) {
   const {
     isActive,
     currentStep,

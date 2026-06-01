@@ -43,7 +43,7 @@ export function ConversationListSidebar({
   inboxFilters,
   bulkActions,
   pullToRefresh,
-  _width = 340,
+  width: _width = 340,
 }: ConversationListSidebarProps) {
   const isMobile = useIsMobile();
   const { density } = useDensity();

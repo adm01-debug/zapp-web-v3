@@ -43,7 +43,7 @@ export function RichTextToolbar({
   inputValue,
   onInputChange,
   visible,
-  _onToggle,
+  onToggle: _onToggle,
 }: RichTextToolbarProps) {
   const applyFormat = (type: FormatType) => {
     const input = inputRef.current;

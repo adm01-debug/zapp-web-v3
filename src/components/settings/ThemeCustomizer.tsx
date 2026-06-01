@@ -18,8 +18,8 @@ export function ThemeCustomizer() {
     applyPreset,
     handleBorderRadiusChange,
     resetTheme,
-    _exportTheme,
-    _importTheme,
+    exportTheme: _exportTheme,
+    importTheme: _importTheme,
   } = useThemePreset();
 
   return (

@@ -33,12 +33,12 @@ export function MessageContextActions({
 }: MessageContextActionsProps) {
   const {
     deleteMessage,
-    _updateMessage,
+    updateMessage: _updateMessage,
     markMessageAsRead,
     markMessageAsUnread,
     archiveChat,
     updateBlockStatus,
-    _isLoading,
+    isLoading: _isLoading,
   } = useEvolutionApi();
 
   const isSent = message.sender === 'agent';

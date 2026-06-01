@@ -43,17 +43,17 @@ const mockHours = [
     id: 'bh1',
     whatsapp_connection_id: 'wc1',
     day_of_week: 1,
-    is_open: true,
-    open_time: '09:00',
-    close_time: '18:00',
+    is_enabled: true,
+    start_time: '09:00',
+    end_time: '18:00',
   },
   {
     id: 'bh2',
     whatsapp_connection_id: 'wc1',
     day_of_week: 0,
-    is_open: false,
-    open_time: null,
-    close_time: null,
+    is_enabled: false,
+    start_time: '09:00',
+    end_time: '18:00',
   },
 ];
 
@@ -94,6 +94,6 @@ describe('useBusinessHours', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sunday = result.current.businessHours?.find((h: any) => h.day_of_week === 0);
-    expect(sunday?.is_open).toBe(false);
+    expect(sunday?.is_enabled).toBe(false);
   });
 });

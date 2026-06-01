@@ -31,7 +31,14 @@ describe('useUserRole', () => {
   });
 
   it('returns empty roles when no user is logged in', async () => {
-    mockUseAuth.mockReturnValue({ user: null, session: null, profile: null, loading: false });
+    mockUseAuth.mockReturnValue({
+      user: null,
+      session: null,
+      profile: null,
+      loading: false,
+      roles: [],
+      refreshRoles: vi.fn(),
+    });
 
     const { result } = renderHook(() => useUserRole());
 
@@ -50,26 +57,13 @@ describe('useUserRole', () => {
       session: {},
       profile: null,
       loading: false,
-    });
-
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [
-            { id: '1', user_id: 'user-1', role: 'admin' },
-            { id: '2', user_id: 'user-1', role: 'supervisor' },
-          ],
-          error: null,
-        }),
-      }),
+      roles: ['admin', 'supervisor'],
+      refreshRoles: vi.fn(),
     });
 
     const { result } = renderHook(() => useUserRole());
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
+    expect(result.current.loading).toBe(false);
     expect(result.current.roles).toContain('admin');
     expect(result.current.roles).toContain('supervisor');
     expect(result.current.isAdmin).toBe(true);
@@ -82,23 +76,13 @@ describe('useUserRole', () => {
       session: {},
       profile: null,
       loading: false,
-    });
-
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [{ id: '1', user_id: 'user-1', role: 'agent' }],
-          error: null,
-        }),
-      }),
+      roles: ['agent'],
+      refreshRoles: vi.fn(),
     });
 
     const { result } = renderHook(() => useUserRole());
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
+    expect(result.current.loading).toBe(false);
     expect(result.current.hasRole('agent')).toBe(true);
     expect(result.current.hasRole('admin')).toBe(false);
     expect(result.current.isAdmin).toBe(false);
@@ -111,23 +95,13 @@ describe('useUserRole', () => {
       session: {},
       profile: null,
       loading: false,
-    });
-
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [{ id: '1', user_id: 'user-1', role: 'supervisor' }],
-          error: null,
-        }),
-      }),
+      roles: ['supervisor'],
+      refreshRoles: vi.fn(),
     });
 
     const { result } = renderHook(() => useUserRole());
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
+    expect(result.current.loading).toBe(false);
     expect(result.current.isSupervisor).toBe(true);
     expect(result.current.isAdmin).toBe(false);
   });

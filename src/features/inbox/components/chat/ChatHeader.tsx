@@ -103,7 +103,7 @@ interface ChatHeaderProps {
 
 export const ChatHeader = memo(function ChatHeader({
   conversation,
-  _messages,
+  messages: _messages,
   isContactTyping,
   showAIAssistant,
   showDetails,

@@ -1,4 +1,4 @@
-import { Message } from '@/hooks/useMessages';
+import type { Message } from '@/hooks/useMessages';
 
 /**
  * Chat performance optimization utilities.

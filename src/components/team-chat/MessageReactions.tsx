@@ -126,7 +126,7 @@ export function MessageReactions({ messageId, reactions, isMine, isToggling, onT
 }
 
 export function TeamQuickReactionBar({
-  _messageId,
+  messageId: _messageId,
   isMine,
   onToggle,
   reactions = [],

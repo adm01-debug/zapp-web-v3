@@ -24,8 +24,8 @@ import { Link } from 'react-router-dom';
 export default function Auth() {
   const {
     loading,
-    _activeTab,
-    _setActiveTab,
+    activeTab: _activeTab,
+    setActiveTab: _setActiveTab,
     passkeyAvailable,
     passkeyLoading,
     lockStatus,
@@ -33,7 +33,7 @@ export default function Auth() {
     setFormData,
     errors,
     handleLogin,
-    _handleSignUp,
+    handleSignUp: _handleSignUp,
     handlePasskeyLogin,
     handleGoogleLogin,
   } = useAuthForm();

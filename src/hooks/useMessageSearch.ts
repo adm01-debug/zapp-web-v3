@@ -10,7 +10,6 @@
  */
 import { useState, useCallback, useEffect } from 'react';
 import { supabase as _supabase } from '@/integrations/supabase/client';
-const _supabase = _supabase as any;
 import { useDebouncedValue } from '@/hooks/useDebounce';
 import { dbFrom } from '@/integrations/datasource/db';
 

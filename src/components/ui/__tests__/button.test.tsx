@@ -18,11 +18,15 @@ describe('Button Component', () => {
 
     rerender(<Button variant="outline">Outline</Button>);
     button = screen.getByRole('button', { name: /outline/i });
-    expect(button.className).toContain('border-input');
+    expect(button.className).toContain('border-border');
   });
 
   it('renders in loading state and is disabled', () => {
-    render(<Button isLoading loadingText="Loading...">Submit</Button>);
+    render(
+      <Button isLoading loadingText="Loading...">
+        Submit
+      </Button>
+    );
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
     expect(screen.getByText(/loading.../i)).toBeDefined();

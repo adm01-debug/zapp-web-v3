@@ -67,24 +67,33 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) },
     from: vi.fn().mockReturnValue({
-      insert: vi
-        .fn()
-        .mockReturnValue({
-          select: vi
-            .fn()
-            .mockReturnValue({ single: vi.fn().mockResolvedValue({ data: {}, error: null }) }),
-        }),
+      insert: vi.fn().mockReturnValue({
+        select: vi
+          .fn()
+          .mockReturnValue({ single: vi.fn().mockResolvedValue({ data: {}, error: null }) }),
+      }),
     }),
   },
 }));
 
-// Polyfill MediaStream for jsdom
+// Polyfill MediaStream for happy-dom
 globalThis.MediaStream = class MediaStream {
   addTrack() {}
   getTracks() {
     return [];
   }
 } as any;
+
+// Override srcObject setter — happy-dom rejects custom MediaStream instances
+Object.defineProperty(HTMLMediaElement.prototype, 'srcObject', {
+  set: function (_src: unknown) {
+    /* no-op in tests */
+  },
+  get: function () {
+    return null;
+  },
+  configurable: true,
+});
 
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },

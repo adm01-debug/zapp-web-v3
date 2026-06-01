@@ -140,7 +140,7 @@ export function useSLARules(scope?: SLARuleScope) {
       );
       return { previous };
     },
-    onError: (err: Error, context) => {
+    onError: (err: Error, _variables: string, context: { previous?: SLARule[] } | undefined) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
       toast.error(err.message);
     },
@@ -164,7 +164,7 @@ export function useSLARules(scope?: SLARuleScope) {
       );
       return { previous };
     },
-    onError: (_err, context) => {
+    onError: (_err, _variables, context: { previous?: SLARule[] } | undefined) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['sla-rules'] }),

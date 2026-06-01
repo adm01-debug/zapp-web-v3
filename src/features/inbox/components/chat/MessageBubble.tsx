@@ -87,7 +87,7 @@ export const MessageBubble = memo(function MessageBubble({
   density = 'comfortable',
   onAudioVoiceChange,
 }: MessageBubbleProps) {
-  const { _toast } = useToast();
+  const { toast: _toast } = useToast();
   const { profile } = useAuth();
   const [_historyOpen, _setHistoryOpen] = useState(false);
   const [isActionsActive, setIsActionsActive] = useState(false);

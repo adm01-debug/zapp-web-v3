@@ -11,7 +11,7 @@ import { WhatsAppModeSetting } from '@/components/settings/WhatsAppModeSetting';
 import { ConnectionTestPanel } from '@/components/settings/ConnectionTestPanel';
 
 export function GlobalSettingsSection() {
-  const { _settings, isLoading, getSetting, updateSetting } = useGlobalSettings();
+  const { settings: _settings, isLoading, getSetting, updateSetting } = useGlobalSettings();
 
   const handleToggle = async (key: string, currentValue: string | null) => {
     const newValue = currentValue === 'enabled' ? 'disabled' : 'enabled';
