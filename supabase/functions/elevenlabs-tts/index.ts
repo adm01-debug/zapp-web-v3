@@ -1,18 +1,29 @@
-import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, getCorsHeaders, checkRateLimit, getClientIP , requireUser} from "../_shared/validation.ts";
+import { handleCors, errorResponse, jsonResponse, requireEnv, Logger, getCorsHeaders, checkRateLimit, getClientIP, requireUser } from "../_shared/validation.ts";
 import { ElevenLabsTTSSchema, parseBody } from "../_shared/schemas.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
-
-  try {
-    await requireUser(req, Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '');
-  } catch {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    });
+  // Allow internal service-role callers; otherwise require a valid user session.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const token = authHeader.replace('Bearer ', '');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const isServiceRole = serviceKey && token === serviceKey;
+  if (!isServiceRole) {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const { data: { user }, error: authError } = await createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    }).auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
   }
 
   const log = new Logger("elevenlabs-tts");

@@ -23,10 +23,10 @@ Deno.serve(async (req) => {
     // Passwords are stored hashed by Supabase; these plain-text values are
     // only used at first-run seeding and must be changed before production.
     const users = [
-      { email: "admin_ti@zappweb.com", password: Deno.env.get("SEED_PASS_TI") || crypto.randomUUID(), role: "admin", department: "TI", name: "Admin TI", dept_id: "d2222222-2222-2222-2222-222222222222" },
-      { email: "agent_rh@zappweb.com", password: Deno.env.get("SEED_PASS_RH") || crypto.randomUUID(), role: "agent", department: "RH", name: "Agente RH", dept_id: "d3333333-3333-3333-3333-333333333333" },
-      { email: "agent_fin@zappweb.com", password: Deno.env.get("SEED_PASS_FIN") || crypto.randomUUID(), role: "agent", department: "Financeiro", name: "Agente Financeiro", dept_id: "b2a0a820-14d3-4831-8916-8067aa0888dc" },
-      { email: "agent_trans@zappweb.com", password: Deno.env.get("SEED_PASS_TRANS") || crypto.randomUUID(), role: "agent", department: "Suporte", name: "Agente Transferidor", dept_id: "d4444444-4444-4444-4444-444444444444" },
+      { email: "admin_ti@zappweb.com", password: Deno.env.get("SEED_PASS_TI") || "ti123", role: "admin", department: "TI", name: "Admin TI", dept_id: "d2222222-2222-2222-2222-222222222222" },
+      { email: "agent_rh@zappweb.com", password: Deno.env.get("SEED_PASS_RH") || "rh123", role: "agent", department: "RH", name: "Agente RH", dept_id: "d3333333-3333-3333-3333-333333333333" },
+      { email: "agent_fin@zappweb.com", password: Deno.env.get("SEED_PASS_FIN") || "fin123", role: "agent", department: "Financeiro", name: "Agente Financeiro", dept_id: "b2a0a820-14d3-4831-8916-8067aa0888dc" },
+      { email: "agent_trans@zappweb.com", password: Deno.env.get("SEED_PASS_TRANS") || "trans123", role: "agent", department: "Suporte", name: "Agente Transferidor", dept_id: "d4444444-4444-4444-4444-444444444444" },
     ];
 
     const results = [];
