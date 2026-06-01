@@ -64,4 +64,9 @@ DO $$ BEGIN
     CREATE POLICY salespeople_authenticated ON salespeople
       FOR ALL TO authenticated USING (true);
   END IF;
+  -- useExternalCargos reads salespeople via anon client for job-title suggestions
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='salespeople' AND policyname='salespeople_anon_read') THEN
+    CREATE POLICY salespeople_anon_read ON salespeople
+      FOR SELECT TO anon USING (true);
+  END IF;
 END $$;

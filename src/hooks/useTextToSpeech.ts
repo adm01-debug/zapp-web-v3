@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 // Default voice: Custom voice from Voice Library
 const DEFAULT_VOICE_ID = 'TY3h8ANhQUsJaa0Bga5F';
@@ -42,21 +43,27 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options.initialSpeed]);
 
-  const setVoiceId = useCallback((newVoiceId: string) => {
-    setVoiceIdState(newVoiceId);
-    options.onVoiceChange?.(newVoiceId);
-  }, [options.onVoiceChange]);
+  const setVoiceId = useCallback(
+    (newVoiceId: string) => {
+      setVoiceIdState(newVoiceId);
+      options.onVoiceChange?.(newVoiceId);
+    },
+    [options.onVoiceChange]
+  );
 
-  const setSpeed = useCallback((newSpeed: number) => {
-    // Clamp speed between 0.5 and 2.0
-    const clampedSpeed = Math.max(0.5, Math.min(2.0, newSpeed));
-    setSpeedState(clampedSpeed);
-    // Update current audio playback rate if playing
-    if (audioRef.current) {
-      audioRef.current.playbackRate = clampedSpeed;
-    }
-    options.onSpeedChange?.(clampedSpeed);
-  }, [options.onSpeedChange]);
+  const setSpeed = useCallback(
+    (newSpeed: number) => {
+      // Clamp speed between 0.5 and 2.0
+      const clampedSpeed = Math.max(0.5, Math.min(2.0, newSpeed));
+      setSpeedState(clampedSpeed);
+      // Update current audio playback rate if playing
+      if (audioRef.current) {
+        audioRef.current.playbackRate = clampedSpeed;
+      }
+      options.onSpeedChange?.(clampedSpeed);
+    },
+    [options.onSpeedChange]
+  );
 
   const stop = useCallback(() => {
     if (audioRef.current) {
@@ -71,95 +78,102 @@ export function useTextToSpeech(options: UseTextToSpeechOptions = {}) {
     setCurrentMessageId(null);
   }, []);
 
-  const speak = useCallback(async (text: string, messageId?: string) => {
-    // Stop any current playback
-    stop();
+  const speak = useCallback(
+    async (text: string, messageId?: string) => {
+      // Stop any current playback
+      stop();
 
-    if (!text || text.trim() === '') {
-      toast.error('Texto vazio para reproduzir');
-      return;
-    }
-
-    // Clean text (remove emojis, special characters that don't make sense in speech)
-    const cleanText = text
-      .replace(/\[.*?\]/g, '') // Remove [Imagem], [Áudio], etc.
-      .replace(/https?:\/\/\S+/g, 'link') // Replace URLs with "link"
-      .trim();
-
-    if (!cleanText) {
-      toast.error('Nenhum texto para reproduzir');
-      return;
-    }
-
-    setIsLoading(true);
-    setCurrentMessageId(messageId || null);
-
-    try {
-      const endpoint = options.useStreaming
-        ? 'elevenlabs-tts-stream'
-        : 'elevenlabs-tts';
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ 
-            text: cleanText,
-            voiceId
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        let errorMessage = 'Erro ao gerar áudio';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          log.warn('[useTextToSpeech] falha ao ler erro da resposta:', e);
-        }
-        throw new Error(errorMessage);
+      if (!text || text.trim() === '') {
+        toast.error('Texto vazio para reproduzir');
+        return;
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      audioUrlRef.current = audioUrl;
+      // Clean text (remove emojis, special characters that don't make sense in speech)
+      const cleanText = text
+        .replace(/\[.*?\]/g, '') // Remove [Imagem], [Áudio], etc.
+        .replace(/https?:\/\/\S+/g, 'link') // Replace URLs with "link"
+        .trim();
 
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      
-      // Set playback rate
-      audio.playbackRate = speed;
+      if (!cleanText) {
+        toast.error('Nenhum texto para reproduzir');
+        return;
+      }
 
-      audio.onplay = () => setIsPlaying(true);
-      audio.onended = () => {
-        setIsPlaying(false);
-        setCurrentMessageId(null);
-        if (audioUrlRef.current) {
-          URL.revokeObjectURL(audioUrlRef.current);
-          audioUrlRef.current = null;
+      setIsLoading(true);
+      setCurrentMessageId(messageId || null);
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const authToken = session?.access_token ?? supabaseKey;
+
+        const endpoint = options.useStreaming ? 'elevenlabs-tts-stream' : 'elevenlabs-tts';
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: supabaseKey,
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              text: cleanText,
+              voiceId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          let errorMessage = 'Erro ao gerar áudio';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            log.warn('[useTextToSpeech] falha ao ler erro da resposta:', e);
+          }
+          throw new Error(errorMessage);
         }
-      };
-      audio.onerror = () => {
-        setIsPlaying(false);
-        setCurrentMessageId(null);
-        toast.error('Erro ao reproduzir áudio');
-      };
 
-      await audio.play();
-    } catch (error) {
-      log.error('TTS error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar áudio';
-      toast.error(errorMessage);
-      setCurrentMessageId(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [voiceId, speed, stop]);
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioUrlRef.current = audioUrl;
+
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        // Set playback rate
+        audio.playbackRate = speed;
+
+        audio.onplay = () => setIsPlaying(true);
+        audio.onended = () => {
+          setIsPlaying(false);
+          setCurrentMessageId(null);
+          if (audioUrlRef.current) {
+            URL.revokeObjectURL(audioUrlRef.current);
+            audioUrlRef.current = null;
+          }
+        };
+        audio.onerror = () => {
+          setIsPlaying(false);
+          setCurrentMessageId(null);
+          toast.error('Erro ao reproduzir áudio');
+        };
+
+        await audio.play();
+      } catch (error) {
+        log.error('TTS error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar áudio';
+        toast.error(errorMessage);
+        setCurrentMessageId(null);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [voiceId, speed, stop]
+  );
 
   return {
     speak,

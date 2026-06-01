@@ -11,15 +11,24 @@ serve(async (req) => {
   if (corsResponse) return corsResponse;
 
 
-  // Verify cron secret
+  // Verify cron secret or valid user JWT
   const cronSecret = Deno.env.get('CRON_SECRET');
   if (cronSecret) {
     const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
     const provided = authHeader?.replace(/^Bearer\s+/i, '') || req.headers.get('x-cron-secret');
     if (provided !== cronSecret) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { 'Content-Type': 'application/json' },
-      });
+      // Not a cron call — accept valid user JWTs (e.g. manual UI trigger)
+      const jwtClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader || '' } } },
+      );
+      const { error: jwtError } = await jwtClient.auth.getUser();
+      if (jwtError) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
   }
 
