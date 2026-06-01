@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { log } from '@/lib/logger';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -24,7 +24,7 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -34,10 +34,10 @@ export function useNotifications() {
         .limit(100);
 
       if (error) throw error;
-      
+
       const typedData = (data || []) as Notification[];
       setNotifications(typedData);
-      setUnreadCount(typedData.filter(n => !n.is_read).length);
+      setUnreadCount(typedData.filter((n) => !n.is_read).length);
     } catch (error) {
       log.error('Error fetching notifications:', error);
     } finally {
@@ -61,23 +61,25 @@ export function useNotifications() {
           event: '*',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
             const newNotification = payload.new as Notification;
-            setNotifications(prev => [newNotification, ...prev]);
-            setUnreadCount(prev => prev + 1);
+            setNotifications((prev) => [newNotification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
           } else if (payload.eventType === 'UPDATE') {
             const updatedNotification = payload.new as Notification;
-            setNotifications(prev => {
-              const updated = prev.map(n => n.id === updatedNotification.id ? updatedNotification : n);
-              setUnreadCount(updated.filter(n => !n.is_read).length);
+            setNotifications((prev) => {
+              const updated = prev.map((n) =>
+                n.id === updatedNotification.id ? updatedNotification : n
+              );
+              setUnreadCount(updated.filter((n) => !n.is_read).length);
               return updated;
             });
           } else if (payload.eventType === 'DELETE') {
             const deletedId = payload.old.id;
-            setNotifications(prev => prev.filter(n => n.id !== deletedId));
+            setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
           }
         }
       )
@@ -96,11 +98,13 @@ export function useNotifications() {
         .eq('id', notificationId);
 
       if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n)
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+        )
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       log.error('Error marking notification as read:', error);
     }
@@ -108,7 +112,7 @@ export function useNotifications() {
 
   const markAllAsRead = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const { error } = await supabase
         .from('notifications')
@@ -117,9 +121,9 @@ export function useNotifications() {
         .eq('is_read', false);
 
       if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
+
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
       );
       setUnreadCount(0);
     } catch (error) {
@@ -127,37 +131,34 @@ export function useNotifications() {
     }
   }, [user]);
 
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    try {
-      const notification = notifications.find(n => n.id === notificationId);
-      
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', notificationId);
+  const deleteNotification = useCallback(
+    async (notificationId: string) => {
+      try {
+        const notification = notifications.find((n) => n.id === notificationId);
 
-      if (error) throw error;
-      
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      if (notification && !notification.is_read) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        const { error } = await supabase.from('notifications').delete().eq('id', notificationId);
+
+        if (error) throw error;
+
+        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        if (notification && !notification.is_read) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      } catch (error) {
+        log.error('Error deleting notification:', error);
       }
-    } catch (error) {
-      log.error('Error deleting notification:', error);
-    }
-  }, [notifications]);
+    },
+    [notifications]
+  );
 
   const clearAll = useCallback(async () => {
     if (!user) return;
-    
+
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('user_id', user.id);
+      const { error } = await supabase.from('notifications').delete().eq('user_id', user.id);
 
       if (error) throw error;
-      
+
       setNotifications([]);
       setUnreadCount(0);
     } catch (error) {
@@ -165,30 +166,33 @@ export function useNotifications() {
     }
   }, [user]);
 
-  const createNotification = useCallback(async (
-    title: string,
-    message: string,
-    type: Notification['type'] = 'info',
-    metadata: Json = {}
-  ) => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .insert([{
-          user_id: user.id,
-          title,
-          message,
-          type,
-          metadata
-        }]);
+  const createNotification = useCallback(
+    async (
+      title: string,
+      message: string,
+      type: Notification['type'] = 'info',
+      metadata: Json = {}
+    ) => {
+      if (!user) return;
 
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error creating notification:', error);
-    }
-  }, [user]);
+      try {
+        const { error } = await supabase.from('notifications').insert([
+          {
+            user_id: user.id,
+            title,
+            message,
+            type,
+            metadata,
+          },
+        ]);
+
+        if (error) throw error;
+      } catch (error) {
+        log.error('Error creating notification:', error);
+      }
+    },
+    [user]
+  );
 
   return {
     notifications,
@@ -199,6 +203,6 @@ export function useNotifications() {
     deleteNotification,
     clearAll,
     createNotification,
-    refetch: fetchNotifications
+    refetch: fetchNotifications,
   };
 }

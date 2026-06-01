@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { log } from '@/lib/logger';
 
 interface UserDevice {
@@ -44,7 +44,7 @@ export function useDeviceDetection() {
       ctx.font = '14px Arial';
       ctx.fillText('fingerprint', 2, 2);
     }
-    
+
     const components = [
       navigator.userAgent,
       navigator.language,
@@ -56,10 +56,13 @@ export function useDeviceDetection() {
     ];
 
     // Simple hash function
-    const hash = components.join('|').split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
+    const hash = components
+      .join('|')
+      .split('')
+      .reduce((a, b) => {
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      }, 0);
 
     return Math.abs(hash).toString(36);
   }, []);
@@ -99,7 +102,9 @@ export function useDeviceDetection() {
       const fingerprint = generateFingerprint();
       const { browser, os, deviceName } = getBrowserInfo();
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.access_token) return;
 
       const response = await supabase.functions.invoke('detect-new-device', {
@@ -156,57 +161,63 @@ export function useDeviceDetection() {
   }, [user]);
 
   // Trust a device
-  const trustDevice = useCallback(async (deviceId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_devices')
-        .update({ is_trusted: true })
-        .eq('id', deviceId);
+  const trustDevice = useCallback(
+    async (deviceId: string) => {
+      try {
+        const { error } = await supabase
+          .from('user_devices')
+          .update({ is_trusted: true })
+          .eq('id', deviceId);
 
-      if (error) throw error;
-      await fetchDevices();
-    } catch (error) {
-      log.error('Error trusting device:', error);
-    }
-  }, [fetchDevices]);
+        if (error) throw error;
+        await fetchDevices();
+      } catch (error) {
+        log.error('Error trusting device:', error);
+      }
+    },
+    [fetchDevices]
+  );
 
   // Remove a device
-  const removeDevice = useCallback(async (deviceId: string) => {
-    try {
-      // First, end all sessions for this device
-      await supabase
-        .from('user_sessions')
-        .update({ is_active: false, ended_at: new Date().toISOString() })
-        .eq('device_id', deviceId);
+  const removeDevice = useCallback(
+    async (deviceId: string) => {
+      try {
+        // First, end all sessions for this device
+        await supabase
+          .from('user_sessions')
+          .update({ is_active: false, ended_at: new Date().toISOString() })
+          .eq('device_id', deviceId);
 
-      // Then remove the device
-      const { error } = await supabase
-        .from('user_devices')
-        .delete()
-        .eq('id', deviceId);
+        // Then remove the device
+        const { error } = await supabase.from('user_devices').delete().eq('id', deviceId);
 
-      if (error) throw error;
-      await fetchDevices();
-      await fetchSessions();
-    } catch (error) {
-      log.error('Error removing device:', error);
-    }
-  }, [fetchDevices, fetchSessions]);
+        if (error) throw error;
+        await fetchDevices();
+        await fetchSessions();
+      } catch (error) {
+        log.error('Error removing device:', error);
+      }
+    },
+    [fetchDevices, fetchSessions]
+  );
 
   // End a session
-  const endSession = useCallback(async (sessionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_sessions')
-        .update({ is_active: false, ended_at: new Date().toISOString() })
-        .eq('id', sessionId);
+  const endSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        const { error } = await supabase
+          .from('user_sessions')
+          .update({ is_active: false, ended_at: new Date().toISOString() })
+          .eq('id', sessionId);
 
-      if (error) throw error;
-      await fetchSessions();
-    } catch (error) {
-      log.error('Error ending session:', error);
-    }
-  }, [fetchSessions]);
+        if (error) throw error;
+        await fetchSessions();
+      } catch (error) {
+        log.error('Error ending session:', error);
+      }
+    },
+    [fetchSessions]
+  );
 
   // End all other sessions
   const endAllOtherSessions = useCallback(async () => {
@@ -230,8 +241,9 @@ export function useDeviceDetection() {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      Promise.all([checkDevice(), fetchDevices(), fetchSessions()])
-        .finally(() => setLoading(false));
+      Promise.all([checkDevice(), fetchDevices(), fetchSessions()]).finally(() =>
+        setLoading(false)
+      );
     }
   }, [user, checkDevice, fetchDevices, fetchSessions]);
 

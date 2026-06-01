@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { log } from '@/lib/logger';
 
 export type SoundTypeOption = 'beep' | 'chime' | 'bell' | 'alert' | 'soft';
@@ -64,16 +64,25 @@ function mapDbToSettings(data: Record<string, unknown>): NotificationSettings {
     quietHoursEnabled: (data.quiet_hours_enabled as boolean) ?? DEFAULT_SETTINGS.quietHoursEnabled,
     quietHoursStart: (data.quiet_hours_start as string) ?? DEFAULT_SETTINGS.quietHoursStart,
     quietHoursEnd: (data.quiet_hours_end as string) ?? DEFAULT_SETTINGS.quietHoursEnd,
-    browserNotifications: (data.browser_notifications_enabled as boolean) ?? DEFAULT_SETTINGS.browserNotifications,
-    sentimentAlertEnabled: (data.sentiment_alert_enabled as boolean) ?? DEFAULT_SETTINGS.sentimentAlertEnabled,
-    sentimentAlertThreshold: (data.sentiment_alert_threshold as number) ?? DEFAULT_SETTINGS.sentimentAlertThreshold,
-    sentimentConsecutiveCount: (data.sentiment_consecutive_count as number) ?? DEFAULT_SETTINGS.sentimentConsecutiveCount,
-    transcriptionNotificationEnabled: (data.transcription_notification_enabled as boolean) ?? DEFAULT_SETTINGS.transcriptionNotificationEnabled,
-    messageSoundType: (data.message_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.messageSoundType,
-    mentionSoundType: (data.mention_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.mentionSoundType,
+    browserNotifications:
+      (data.browser_notifications_enabled as boolean) ?? DEFAULT_SETTINGS.browserNotifications,
+    sentimentAlertEnabled:
+      (data.sentiment_alert_enabled as boolean) ?? DEFAULT_SETTINGS.sentimentAlertEnabled,
+    sentimentAlertThreshold:
+      (data.sentiment_alert_threshold as number) ?? DEFAULT_SETTINGS.sentimentAlertThreshold,
+    sentimentConsecutiveCount:
+      (data.sentiment_consecutive_count as number) ?? DEFAULT_SETTINGS.sentimentConsecutiveCount,
+    transcriptionNotificationEnabled:
+      (data.transcription_notification_enabled as boolean) ??
+      DEFAULT_SETTINGS.transcriptionNotificationEnabled,
+    messageSoundType:
+      (data.message_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.messageSoundType,
+    mentionSoundType:
+      (data.mention_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.mentionSoundType,
     slaSoundType: (data.sla_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.slaSoundType,
     goalSoundType: (data.goal_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.goalSoundType,
-    transcriptionSoundType: (data.transcription_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.transcriptionSoundType,
+    transcriptionSoundType:
+      (data.transcription_sound_type as SoundTypeOption) ?? DEFAULT_SETTINGS.transcriptionSoundType,
   };
 }
 
@@ -88,7 +97,9 @@ export const useNotificationSettings = () => {
 
       const { data, error } = await supabase
         .from('user_settings')
-        .select('sound_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, browser_notifications_enabled, sentiment_alert_enabled, sentiment_alert_threshold, sentiment_consecutive_count, transcription_notification_enabled, message_sound_type, mention_sound_type, sla_sound_type, goal_sound_type, transcription_sound_type')
+        .select(
+          'sound_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, browser_notifications_enabled, sentiment_alert_enabled, sentiment_alert_threshold, sentiment_consecutive_count, transcription_notification_enabled, message_sound_type, mention_sound_type, sla_sound_type, goal_sound_type, transcription_sound_type'
+        )
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -106,50 +117,61 @@ export const useNotificationSettings = () => {
 
   const isSaving = false; // tracked per-mutation below
 
-  const updateSettings = useCallback(async (updates: Partial<NotificationSettings>) => {
-    if (!user) return;
+  const updateSettings = useCallback(
+    async (updates: Partial<NotificationSettings>) => {
+      if (!user) return;
 
-    // Optimistic update
-    queryClient.setQueryData(
-      [NOTIFICATION_SETTINGS_QUERY_KEY, user.id],
-      (prev: NotificationSettings | undefined) => ({ ...(prev ?? DEFAULT_SETTINGS), ...updates }),
-    );
+      // Optimistic update
+      queryClient.setQueryData(
+        [NOTIFICATION_SETTINGS_QUERY_KEY, user.id],
+        (prev: NotificationSettings | undefined) => ({ ...(prev ?? DEFAULT_SETTINGS), ...updates })
+      );
 
-    try {
-      const dbUpdates: Record<string, unknown> = {};
+      try {
+        const dbUpdates: Record<string, unknown> = {};
 
-      if ('soundEnabled' in updates) dbUpdates.sound_enabled = updates.soundEnabled;
-      if ('quietHoursEnabled' in updates) dbUpdates.quiet_hours_enabled = updates.quietHoursEnabled;
-      if ('quietHoursStart' in updates) dbUpdates.quiet_hours_start = updates.quietHoursStart;
-      if ('quietHoursEnd' in updates) dbUpdates.quiet_hours_end = updates.quietHoursEnd;
-      if ('browserNotifications' in updates) dbUpdates.browser_notifications_enabled = updates.browserNotifications;
-      if ('sentimentAlertEnabled' in updates) dbUpdates.sentiment_alert_enabled = updates.sentimentAlertEnabled;
-      if ('sentimentAlertThreshold' in updates) dbUpdates.sentiment_alert_threshold = updates.sentimentAlertThreshold;
-      if ('sentimentConsecutiveCount' in updates) dbUpdates.sentiment_consecutive_count = updates.sentimentConsecutiveCount;
-      if ('transcriptionNotificationEnabled' in updates) dbUpdates.transcription_notification_enabled = updates.transcriptionNotificationEnabled;
-      if ('messageSoundType' in updates) dbUpdates.message_sound_type = updates.messageSoundType;
-      if ('mentionSoundType' in updates) dbUpdates.mention_sound_type = updates.mentionSoundType;
-      if ('slaSoundType' in updates) dbUpdates.sla_sound_type = updates.slaSoundType;
-      if ('goalSoundType' in updates) dbUpdates.goal_sound_type = updates.goalSoundType;
-      if ('transcriptionSoundType' in updates) dbUpdates.transcription_sound_type = updates.transcriptionSoundType;
+        if ('soundEnabled' in updates) dbUpdates.sound_enabled = updates.soundEnabled;
+        if ('quietHoursEnabled' in updates)
+          dbUpdates.quiet_hours_enabled = updates.quietHoursEnabled;
+        if ('quietHoursStart' in updates) dbUpdates.quiet_hours_start = updates.quietHoursStart;
+        if ('quietHoursEnd' in updates) dbUpdates.quiet_hours_end = updates.quietHoursEnd;
+        if ('browserNotifications' in updates)
+          dbUpdates.browser_notifications_enabled = updates.browserNotifications;
+        if ('sentimentAlertEnabled' in updates)
+          dbUpdates.sentiment_alert_enabled = updates.sentimentAlertEnabled;
+        if ('sentimentAlertThreshold' in updates)
+          dbUpdates.sentiment_alert_threshold = updates.sentimentAlertThreshold;
+        if ('sentimentConsecutiveCount' in updates)
+          dbUpdates.sentiment_consecutive_count = updates.sentimentConsecutiveCount;
+        if ('transcriptionNotificationEnabled' in updates)
+          dbUpdates.transcription_notification_enabled = updates.transcriptionNotificationEnabled;
+        if ('messageSoundType' in updates) dbUpdates.message_sound_type = updates.messageSoundType;
+        if ('mentionSoundType' in updates) dbUpdates.mention_sound_type = updates.mentionSoundType;
+        if ('slaSoundType' in updates) dbUpdates.sla_sound_type = updates.slaSoundType;
+        if ('goalSoundType' in updates) dbUpdates.goal_sound_type = updates.goalSoundType;
+        if ('transcriptionSoundType' in updates)
+          dbUpdates.transcription_sound_type = updates.transcriptionSoundType;
 
-      if (Object.keys(dbUpdates).length > 0) {
-        const { error } = await supabase
-          .from('user_settings')
-          .upsert({
-            user_id: user.id,
-            ...dbUpdates,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' });
+        if (Object.keys(dbUpdates).length > 0) {
+          const { error } = await supabase.from('user_settings').upsert(
+            {
+              user_id: user.id,
+              ...dbUpdates,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' }
+          );
 
-        if (error) throw error;
+          if (error) throw error;
+        }
+      } catch (error) {
+        log.warn('Failed to save notification settings:', error);
+        // Rollback optimistic update
+        queryClient.invalidateQueries({ queryKey: [NOTIFICATION_SETTINGS_QUERY_KEY, user.id] });
       }
-    } catch (error) {
-      log.warn('Failed to save notification settings:', error);
-      // Rollback optimistic update
-      queryClient.invalidateQueries({ queryKey: [NOTIFICATION_SETTINGS_QUERY_KEY, user.id] });
-    }
-  }, [user, queryClient]);
+    },
+    [user, queryClient]
+  );
 
   const resetSettings = useCallback(async () => {
     if (!user) return;
@@ -157,9 +179,8 @@ export const useNotificationSettings = () => {
     queryClient.setQueryData([NOTIFICATION_SETTINGS_QUERY_KEY, user.id], DEFAULT_SETTINGS);
 
     try {
-      await supabase
-        .from('user_settings')
-        .upsert({
+      await supabase.from('user_settings').upsert(
+        {
           user_id: user.id,
           sound_enabled: DEFAULT_SETTINGS.soundEnabled,
           quiet_hours_enabled: DEFAULT_SETTINGS.quietHoursEnabled,
@@ -176,7 +197,9 @@ export const useNotificationSettings = () => {
           goal_sound_type: DEFAULT_SETTINGS.goalSoundType,
           transcription_sound_type: DEFAULT_SETTINGS.transcriptionSoundType,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+        },
+        { onConflict: 'user_id' }
+      );
     } catch (error) {
       log.warn('Failed to reset notification settings:', error);
     }

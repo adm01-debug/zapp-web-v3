@@ -41,9 +41,40 @@ const mockQueuesData = {
   members: [{ queue_id: 'q1', profile_id: 'p1' }],
 };
 
+const mockAgentsData = [
+  {
+    id: 'a1',
+    user_id: 'u1',
+    name: 'Agent Alpha',
+    status: 'production',
+    mission: '',
+    persona: '',
+    avatar_emoji: '',
+    model: '',
+    version: '1',
+    config: {},
+    tags: [],
+    is_template: false,
+    template_category: null,
+    workspace_id: null,
+    created_at: '',
+    updated_at: '',
+  },
+];
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn().mockImplementation((table: string) => {
+      if (table === 'agents') {
+        const chain: Record<string, unknown> = {};
+        chain.select = vi.fn().mockReturnValue(chain);
+        chain.not = vi.fn().mockReturnValue(chain);
+        chain.order = vi.fn().mockReturnValue(chain);
+        chain.eq = vi.fn().mockReturnValue(chain);
+        chain.then = (resolve: (v: unknown) => void) =>
+          resolve({ data: mockAgentsData, error: null });
+        return chain;
+      }
       if (table === 'profiles') {
         return {
           select: vi.fn().mockReturnValue({
@@ -68,12 +99,10 @@ vi.mock('@/integrations/supabase/client', () => ({
       if (table === 'contacts') {
         return {
           select: vi.fn().mockReturnValue({
-            not: vi
-              .fn()
-              .mockResolvedValue({
-                data: [{ assigned_to: 'p1' }, { assigned_to: 'p1' }],
-                error: null,
-              }),
+            not: vi.fn().mockResolvedValue({
+              data: [{ assigned_to: 'p1' }, { assigned_to: 'p1' }],
+              error: null,
+            }),
           }),
         };
       }
@@ -100,10 +129,10 @@ describe('useAgents', () => {
     const { result } = renderHook(() => useAgents(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+      expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.agents).toHaveLength(2);
+    expect(result.current.agents).toHaveLength(1);
   });
 
   it('getAgentStatus utility works correctly', () => {
@@ -117,7 +146,7 @@ describe('useAgents', () => {
     const { result } = renderHook(() => useAgents(), { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+      expect(result.current.loading).toBe(false);
     });
 
     // At least one agent should exist

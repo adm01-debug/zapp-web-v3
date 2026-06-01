@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { playNotificationSound, showBrowserNotification } from '@/utils/notificationSounds';
 import { toast } from 'sonner';
@@ -28,35 +28,44 @@ export function useGoalNotifications() {
   const achievedGoals = useRef<Set<string>>(new Set());
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const createNotification = useCallback(async (
-    title: string,
-    message: string,
-    metadata: { goal_id: string; goal_type: string; period: string; current: number; target: number }
-  ) => {
-    if (!user) return;
-    
-    try {
-      const jsonMetadata: Json = {
-        goal_id: metadata.goal_id,
-        goal_type: metadata.goal_type,
-        period: metadata.period,
-        current: metadata.current,
-        target: metadata.target
-      };
+  const createNotification = useCallback(
+    async (
+      title: string,
+      message: string,
+      metadata: {
+        goal_id: string;
+        goal_type: string;
+        period: string;
+        current: number;
+        target: number;
+      }
+    ) => {
+      if (!user) return;
 
-      await supabase
-        .from('notifications')
-        .insert([{
-          user_id: user.id,
-          title,
-          message,
-          type: 'goal',
-          metadata: jsonMetadata
-        }]);
-    } catch (error) {
-      log.error('Error creating notification:', error);
-    }
-  }, [user]);
+      try {
+        const jsonMetadata: Json = {
+          goal_id: metadata.goal_id,
+          goal_type: metadata.goal_type,
+          period: metadata.period,
+          current: metadata.current,
+          target: metadata.target,
+        };
+
+        await supabase.from('notifications').insert([
+          {
+            user_id: user.id,
+            title,
+            message,
+            type: 'goal',
+            metadata: jsonMetadata,
+          },
+        ]);
+      } catch (error) {
+        log.error('Error creating notification:', error);
+      }
+    },
+    [user]
+  );
 
   const getDateRange = (period: Period) => {
     const now = new Date();
@@ -64,7 +73,10 @@ export function useGoalNotifications() {
       case 'daily':
         return { start: startOfDay(now), end: endOfDay(now) };
       case 'weekly':
-        return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+        return {
+          start: startOfWeek(now, { weekStartsOn: 1 }),
+          end: endOfWeek(now, { weekStartsOn: 1 }),
+        };
       case 'monthly':
         return { start: startOfMonth(now), end: endOfMonth(now) };
     }
@@ -106,7 +118,7 @@ export function useGoalNotifications() {
         for (const period of periods) {
           const targetKey = `${period}_target` as keyof GoalConfiguration;
           const target = goal[targetKey] as number;
-          
+
           if (!target || target === 0) continue;
 
           const { start, end } = getDateRange(period);
@@ -148,9 +160,10 @@ export function useGoalNotifications() {
           if (current >= target && !achievedGoals.current.has(achievedKey)) {
             achievedGoals.current.add(achievedKey);
 
-            const periodLabel = period === 'daily' ? 'diária' : period === 'weekly' ? 'semanal' : 'mensal';
+            const periodLabel =
+              period === 'daily' ? 'diária' : period === 'weekly' ? 'semanal' : 'mensal';
             const goalLabel = getGoalLabel(goal.goal_type);
-            
+
             const title = `🎯 Meta ${periodLabel} alcançada!`;
             const message = `Você atingiu sua meta de ${goalLabel}: ${current}/${target}`;
 
@@ -160,7 +173,7 @@ export function useGoalNotifications() {
               goal_type: goal.goal_type,
               period,
               current,
-              target
+              target,
             });
 
             // Show toast

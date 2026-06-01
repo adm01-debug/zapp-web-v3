@@ -63,7 +63,9 @@ describe('useOnboarding', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: { id: 's1' }, error: null }),
+          maybeSingle: vi
+            .fn()
+            .mockResolvedValue({ data: { onboarding_completed: true }, error: null }),
         }),
       }),
     });

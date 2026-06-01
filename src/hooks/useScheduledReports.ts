@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { log } from '@/lib/logger';
 
@@ -32,9 +32,18 @@ function calculateNextSendAt(frequency: string): string {
   const now = new Date();
   const next = new Date(now);
   switch (frequency) {
-    case 'daily': next.setDate(next.getDate() + 1); next.setHours(8, 0, 0, 0); break;
-    case 'weekly': next.setDate(next.getDate() + ((1 + 7 - next.getDay()) % 7 || 7)); next.setHours(8, 0, 0, 0); break;
-    case 'monthly': next.setMonth(next.getMonth() + 1, 1); next.setHours(8, 0, 0, 0); break;
+    case 'daily':
+      next.setDate(next.getDate() + 1);
+      next.setHours(8, 0, 0, 0);
+      break;
+    case 'weekly':
+      next.setDate(next.getDate() + ((1 + 7 - next.getDay()) % 7 || 7));
+      next.setHours(8, 0, 0, 0);
+      break;
+    case 'monthly':
+      next.setMonth(next.getMonth() + 1, 1);
+      next.setHours(8, 0, 0, 0);
+      break;
   }
   return next.toISOString();
 }
@@ -51,7 +60,10 @@ export function useScheduledReports() {
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('scheduled_reports').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('scheduled_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       setReports((data || []) as unknown as ScheduledReport[]);
     } catch (err) {
@@ -62,23 +74,40 @@ export function useScheduledReports() {
     }
   }, []);
 
-  useEffect(() => { fetchReports(); }, [fetchReports]);
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const addRecipient = useCallback(() => {
     const email = recipientInput.trim();
-    if (!email || !email.includes('@')) { toast.error('Digite um email válido'); return; }
-    if (editingReport.recipients?.includes(email)) { toast.error('Email já adicionado'); return; }
-    setEditingReport(prev => ({ ...prev, recipients: [...(prev.recipients || []), email] }));
+    if (!email || !email.includes('@')) {
+      toast.error('Digite um email válido');
+      return;
+    }
+    if (editingReport.recipients?.includes(email)) {
+      toast.error('Email já adicionado');
+      return;
+    }
+    setEditingReport((prev) => ({ ...prev, recipients: [...(prev.recipients || []), email] }));
     setRecipientInput('');
   }, [recipientInput, editingReport.recipients]);
 
   const removeRecipient = useCallback((email: string) => {
-    setEditingReport(prev => ({ ...prev, recipients: (prev.recipients || []).filter(r => r !== email) }));
+    setEditingReport((prev) => ({
+      ...prev,
+      recipients: (prev.recipients || []).filter((r) => r !== email),
+    }));
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!editingReport.name?.trim()) { toast.error('Nome é obrigatório'); return; }
-    if (!editingReport.recipients?.length) { toast.error('Adicione pelo menos um destinatário'); return; }
+    if (!editingReport.name?.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+    if (!editingReport.recipients?.length) {
+      toast.error('Adicione pelo menos um destinatário');
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -94,7 +123,10 @@ export function useScheduledReports() {
       };
 
       if (editingReport.id) {
-        const { error } = await supabase.from('scheduled_reports').update(reportData).eq('id', editingReport.id);
+        const { error } = await supabase
+          .from('scheduled_reports')
+          .update(reportData)
+          .eq('id', editingReport.id);
         if (error) throw error;
         toast.success('Relatório atualizado!');
       } else {
@@ -114,40 +146,54 @@ export function useScheduledReports() {
     }
   }, [editingReport, user?.id, fetchReports]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      const { error } = await supabase.from('scheduled_reports').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Relatório removido!');
-      fetchReports();
-    } catch (err) {
-      log.error('Error deleting report:', err);
-      toast.error('Erro ao remover relatório');
-    }
-  }, [fetchReports]);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        const { error } = await supabase.from('scheduled_reports').delete().eq('id', id);
+        if (error) throw error;
+        toast.success('Relatório removido!');
+        fetchReports();
+      } catch (err) {
+        log.error('Error deleting report:', err);
+        toast.error('Erro ao remover relatório');
+      }
+    },
+    [fetchReports]
+  );
 
-  const toggleActive = useCallback(async (id: string, isActive: boolean) => {
-    try {
-      const { error } = await supabase.from('scheduled_reports').update({ is_active: isActive }).eq('id', id);
-      if (error) throw error;
-      fetchReports();
-    } catch (err) {
-      log.error('Error toggling report:', err);
-    }
-  }, [fetchReports]);
+  const toggleActive = useCallback(
+    async (id: string, isActive: boolean) => {
+      try {
+        const { error } = await supabase
+          .from('scheduled_reports')
+          .update({ is_active: isActive })
+          .eq('id', id);
+        if (error) throw error;
+        fetchReports();
+      } catch (err) {
+        log.error('Error toggling report:', err);
+      }
+    },
+    [fetchReports]
+  );
 
-  const handleSendNow = useCallback(async (report: ScheduledReport) => {
-    try {
-      toast.info('Enviando relatório...');
-      const { error } = await supabase.functions.invoke('send-scheduled-report', { body: { reportId: report.id } });
-      if (error) throw error;
-      toast.success('Relatório enviado!');
-      fetchReports();
-    } catch (err) {
-      log.error('Error sending report:', err);
-      toast.error('Erro ao enviar relatório');
-    }
-  }, [fetchReports]);
+  const handleSendNow = useCallback(
+    async (report: ScheduledReport) => {
+      try {
+        toast.info('Enviando relatório...');
+        const { error } = await supabase.functions.invoke('send-scheduled-report', {
+          body: { reportId: report.id },
+        });
+        if (error) throw error;
+        toast.success('Relatório enviado!');
+        fetchReports();
+      } catch (err) {
+        log.error('Error sending report:', err);
+        toast.error('Erro ao enviar relatório');
+      }
+    },
+    [fetchReports]
+  );
 
   const openCreateDialog = useCallback(() => {
     setEditingReport(EMPTY_REPORT);
@@ -162,21 +208,53 @@ export function useScheduledReports() {
   }, []);
 
   return {
-    reports, loading, isDialogOpen, setIsDialogOpen,
-    editingReport, setEditingReport, recipientInput, setRecipientInput,
-    isSaving, addRecipient, removeRecipient,
-    handleSave, handleDelete, toggleActive, handleSendNow,
-    openCreateDialog, openEditDialog,
+    reports,
+    loading,
+    isDialogOpen,
+    setIsDialogOpen,
+    editingReport,
+    setEditingReport,
+    recipientInput,
+    setRecipientInput,
+    isSaving,
+    addRecipient,
+    removeRecipient,
+    handleSave,
+    handleDelete,
+    toggleActive,
+    handleSendNow,
+    openCreateDialog,
+    openEditDialog,
   };
 }
 
 export type { ScheduledReport };
 
 export const REPORT_TYPES = [
-  { value: 'dashboard_summary', label: 'Resumo do Dashboard', icon: 'BarChart3', description: 'Métricas gerais de atendimento' },
-  { value: 'agent_performance', label: 'Performance de Agentes', icon: 'Users', description: 'Relatório individual por agente' },
-  { value: 'conversation_analytics', label: 'Análise de Conversas', icon: 'MessageSquare', description: 'Volume e métricas de conversas' },
-  { value: 'sla_compliance', label: 'Cumprimento de SLA', icon: 'Target', description: 'Taxa de cumprimento e violações' },
+  {
+    value: 'dashboard_summary',
+    label: 'Resumo do Dashboard',
+    icon: 'BarChart3',
+    description: 'Métricas gerais de atendimento',
+  },
+  {
+    value: 'agent_performance',
+    label: 'Performance de Agentes',
+    icon: 'Users',
+    description: 'Relatório individual por agente',
+  },
+  {
+    value: 'conversation_analytics',
+    label: 'Análise de Conversas',
+    icon: 'MessageSquare',
+    description: 'Volume e métricas de conversas',
+  },
+  {
+    value: 'sla_compliance',
+    label: 'Cumprimento de SLA',
+    icon: 'Target',
+    description: 'Taxa de cumprimento e violações',
+  },
 ] as const;
 
 export const FREQUENCIES = [

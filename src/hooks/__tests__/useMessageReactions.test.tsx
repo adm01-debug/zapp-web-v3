@@ -6,9 +6,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const mockFrom = vi.fn();
 
+const mockChannel = {
+  on: vi.fn().mockReturnThis(),
+  subscribe: vi.fn().mockReturnThis(),
+};
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: any[]) => mockFrom(...args),
+    channel: vi.fn(() => mockChannel),
+    removeChannel: vi.fn(),
     auth: {
       onAuthStateChange: vi
         .fn()
@@ -113,15 +120,11 @@ describe('useMessageReactions', () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
-          select: vi
-            .fn()
-            .mockReturnValue({
-              eq: vi
-                .fn()
-                .mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
             }),
+          }),
         };
       }
       return {
@@ -142,15 +145,11 @@ describe('useMessageReactions', () => {
     mockFrom.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
-          select: vi
-            .fn()
-            .mockReturnValue({
-              eq: vi
-                .fn()
-                .mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
             }),
+          }),
         };
       }
       return {

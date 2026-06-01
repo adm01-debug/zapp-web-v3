@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 const STORAGE_KEY = 'screen-protection-enabled';
 
@@ -7,7 +7,9 @@ function getStoredState(): boolean {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
     return v === null ? true : v === 'true';
-  } catch { return true; }
+  } catch {
+    return true;
+  }
 }
 
 /**
@@ -19,7 +21,7 @@ export function useScreenProtection() {
   const [enabled, setEnabled] = useState(getStoredState);
 
   const toggle = useCallback(() => {
-    setEnabled(prev => {
+    setEnabled((prev) => {
       const next = !prev;
       localStorage.setItem(STORAGE_KEY, String(next));
       window.dispatchEvent(new Event('screen-protection-change'));
@@ -67,7 +69,8 @@ export function useScreenProtection() {
       }
 
       const target = e.target as HTMLElement;
-      const isInputElement = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const isInputElement =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && !isInputElement) {
         e.preventDefault();
@@ -96,7 +99,8 @@ export function useScreenProtection() {
 
     const handleCopy = (e: ClipboardEvent) => {
       const target = e.target as HTMLElement;
-      const isInputElement = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      const isInputElement =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
       if (!isInputElement) {
         e.preventDefault();
         e.clipboardData?.setData('text/plain', '');

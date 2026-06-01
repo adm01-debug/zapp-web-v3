@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 export interface ScheduledMessage {
@@ -78,7 +78,11 @@ export function useScheduledMessages(contactId?: string) {
       toast({ title: 'Mensagem agendada com sucesso!' });
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao agendar mensagem', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Erro ao agendar mensagem',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 

@@ -71,7 +71,7 @@ describe('useServiceWorker', () => {
 
   it('cleans legacy caches before registering the current worker', async () => {
     mockCaches.keys.mockResolvedValueOnce(['whatsapp-crm-v2']);
-    sessionStorage.setItem('legacy-sw-reset-done', '1');
+    sessionStorage.setItem('sw-cache-reset-done', '1');
 
     const { useServiceWorker } = await import('@/hooks/useServiceWorker');
     renderHook(() => useServiceWorker());
