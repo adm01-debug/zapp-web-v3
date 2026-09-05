@@ -131,21 +131,60 @@ describe('useEvolutionAutoReconnect — latch de esgotamento', () => {
   );
 
   it(
-    'checkStatus continua acionando tentativas apos o backoff timer disparar (regressao B-2)',
+    'checkStatus re-dispara apos backoff timer completar ciclo bem-sucedido (regressao B-2)',
     { timeout: 60_000 },
     async () => {
-      // Garante que timerRef.current e zerado dentro do callback do setTimeout,
-      // evitando que o guard "isReconnectingRef || reconnectExhaustedRef" (sem
-      // timerRef) bloqueie o checkStatus de re-entrar apos cada backoff disparar.
+      /**
+       * PROVA PRECISA DO BUG B-2
+       *
+       * Lacuna do teste anterior (>= 4 em 90 s): a cadeia de callbacks do
+       * backoff chama attemptSpecificReconnect diretamente — mesmo com a regressão
+       * B-2 (guard timerRef !== null em checkStatus) acumulariam-se 5 chamadas em
+       * 90 s sem que checkStatus precisasse re-entrar. Esse assert passaria *com*
+       * a regressão.
+       *
+       * Sequência que prova B-2 de forma inequívoca:
+       *   chamada getInstanceStatus 1 (checkStatus t=0)  → 'close' → tentativa 1
+       *   chamada getInstanceStatus 2 (pós-connectInstance 1, t≈5s)  → 'close'
+       *     → scheduleNextAttempt(4 s) → timerRef.current = <handle>
+       *   timer dispara (t≈9 s): timerRef.current = null  ← FIX B-2 no callback
+       *     → tentativa 2 via callback
+       *   chamada getInstanceStatus 3 (pós-connectInstance 2, t≈14 s) → 'open'
+       *     → sucesso; timerRef.current já é null (zerado no callback)
+       *   chamada getInstanceStatus 4 (checkStatus t=30 s) → 'close'
+       *     → tentativa 3  ← SÓ OCORRE SE timerRef.current == null
+       *
+       * COM regressão B-2 (guard timerRef !== null em checkStatus):
+       *   timer dispara mas timerRef NÃO é zerado → no t=30 s checkStatus vê
+       *   timerRef !== null → bloqueado → connectInstance para em 2 chamadas.
+       *
+       * COM o fix (timerRef = null no callback):
+       *   timer dispara, timerRef = null antes de chamar a tentativa →
+       *   checkStatus em t=30 s passa pelo guard → tentativa 3 ocorre.
+       */
+      let callCount = 0;
+      getInstanceStatus.mockImplementation(async () => {
+        callCount += 1;
+        // Terceira chamada (pós-tentativa 2): simula reconexão bem-sucedida.
+        if (callCount === 3) return { instance: { state: 'open' } };
+        return { instance: { state: 'close' } };
+      });
+
       renderHook(() => useEvolutionAutoReconnect('wpp2'));
 
-      // Avanca 90s: tempo suficiente para 1 tentativa inicial (checkStatus ~30s)
-      // + backoff inicial (5s) disparar + checkStatus acionar 2a tentativa.
-      await advance(90_000);
-      // Se B-2 regredisse, checkStatus ficaria mudo apos o 1o backoff timer
-      // e connectInstance seria chamado apenas 1x. A sequencia de backoff em 90s:
-      // t=0 (tentativa 1), t=9 (2), t=22 (3), t=43 (4), t=80 (5) → >= 4.
-      expect(connectInstance.mock.calls.length).toBeGreaterThanOrEqual(4);
+      // t=0..20s: tentativa 1 (checkStatus) + backoff 4s + tentativa 2 (timer callback)
+      // → 'open' → sucesso; timerRef.current == null após callback zerá-lo.
+      await advance(20_000);
+      expect(connectInstance.mock.calls.length).toBeGreaterThanOrEqual(2);
+
+      const callsAfterBackoffCycle = connectInstance.mock.calls.length;
+
+      // t=30s: checkStatus detecta 'close' (chamada 4+).
+      // COM fix B-2:  timerRef.current == null → guard passa → tentativa 3 disparada.
+      // SEM fix B-2:  timerRef.current !== null (stale handle) → guard bloqueia →
+      //               connectInstance permanece em callsAfterBackoffCycle.
+      await advance(30_000);
+      expect(connectInstance.mock.calls.length).toBeGreaterThan(callsAfterBackoffCycle);
     }
   );
 
