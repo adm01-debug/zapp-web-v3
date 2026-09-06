@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { parseBRL } from '@/utils/currency';
 import { fetchContactPurchases, createContactPurchase } from '../hooks/useContactPurchasesData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,7 +85,7 @@ export function ContactPurchasesPanel({ contactId, profileId }: ContactPurchases
     const { error } = await createContactPurchase({
       contact_id: contactId,
       title: title.trim(),
-      amount: amount ? parseFloat(amount) : 0,
+      amount: parseBRL(amount),
       purchase_type: type,
       created_by: profileId as string,
     });

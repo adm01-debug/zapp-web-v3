@@ -1,4 +1,5 @@
 import { sendMedia, sendText } from '@/lib/whatsappAdapter';
+import { parseBRL } from '@/utils/currency';
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -545,7 +546,7 @@ export function useBusinessLogicPipelineManagement(
     if (!formTitle.trim()) return;
     const payload = {
       title: formTitle,
-      value: parseFloat(formValue) || 0,
+      value: parseBRL(formValue),
       stage_id: formStageId || null,
       contact_id: formContactId || null,
       assigned_to: formAssignedTo || null,
