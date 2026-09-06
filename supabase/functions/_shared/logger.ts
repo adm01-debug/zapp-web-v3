@@ -32,11 +32,10 @@ function emit(level: LogLevel, message: string, ctx: LogContext): void {
       message,
       ...ctx,
     };
-    // Deno + Node.js: console.log vai para stdout (capturado pelo runtime)
     if (level === 'error' || level === 'warn') {
       console.error(JSON.stringify(entry));
     } else {
-      console.log(JSON.stringify(entry));
+      console.info(JSON.stringify(entry));
     }
   } catch {
     // silencioso — log nunca deve quebrar o caller

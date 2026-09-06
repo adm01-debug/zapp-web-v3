@@ -34,14 +34,14 @@ describe('Auth & Data Integration', () => {
     }));
 
     const result = await mockSupabase.from('profiles').select('*').eq('id', '1');
-    expect(result.error?.message).toBe('Connection Timeout');
+    expect((result as any).error?.message).toBe('Connection Timeout');
   });
 
   it('should mock successful auth session', async () => {
     const session = { user: { id: '123' } };
     mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session }, error: null });
 
-    const { data } = await mockSupabase.auth.getSession();
+    const { data } = await mockSupabase.auth.getSession() as any;
     expect(data.session?.user.id).toBe('123');
   });
 });
