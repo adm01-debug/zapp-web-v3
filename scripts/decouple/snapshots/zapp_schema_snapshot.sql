@@ -15097,6 +15097,8 @@ DECLARE
   v_sicoob_user_id text := COALESCE(p_sender_id, 'sender-' || p_message_id);
   v_phone          text;
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(v_sicoob_user_id || '|' || coalesce(p_singular_id, ''), 42));
+
   SELECT em.contact_id, em.id INTO v_contact_id, v_message_id
   FROM evo.evolution_messages em
   WHERE em.message_id = p_message_id
