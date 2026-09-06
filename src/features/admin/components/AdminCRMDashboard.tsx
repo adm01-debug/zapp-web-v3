@@ -13,6 +13,7 @@ import {
 import { useExternalSelect } from '@/hooks/useExternalApiManagement';
 import { useNavigate } from 'react-router-dom';
 import type { ExtCustomer, ExtCompanyRFMScore, ExtSale } from '@/types/externalDB';
+import { formatBRL } from '@/utils/currency';
 
 // ─── Metric Card ─────────────────────────────────────────────
 function MetricCard({ label, table, icon: Icon, color }: {
@@ -54,7 +55,6 @@ function TopCustomers() {
     limit: 5,
     staleTime: 10 * 60 * 1000,
   });
-  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -77,7 +77,7 @@ function TopCustomers() {
                   </Badge>
                 </div>
                 <div className="text-right">
-                  <span className="font-semibold">{fmt(c.valor_total_compras)}</span>
+                  <span className="font-semibold">{formatBRL(c.valor_total_compras)}</span>
                   <span className="text-muted-foreground ml-2">({c.total_pedidos} ped.)</span>
                 </div>
               </div>
@@ -151,8 +151,6 @@ function RecentSales() {
     limit: 5,
     staleTime: 5 * 60 * 1000,
   });
-  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -173,7 +171,7 @@ function RecentSales() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-[9px]">{s.status}</Badge>
-                  <span className="font-semibold">{fmt(s.amount)}</span>
+                  <span className="font-semibold">{formatBRL(s.amount)}</span>
                 </div>
               </div>
             ))}

@@ -2,6 +2,7 @@
  * CRM360 Explorer — Tab definitions and utility functions
  */
 import { formatDistanceToNow } from 'date-fns';
+import { formatBRL } from '@/utils/currency';
 import { ptBR } from 'date-fns/locale';
 import type { TabConfig } from './crm360TabsData';
 import {
@@ -38,7 +39,7 @@ export function formatCellValue(value: unknown, format?: string): string {
     }
   }
   if (format === 'currency' && typeof value === 'number') {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return formatBRL(value);
   }
   if (format === 'boolean') return value ? '✅' : '❌';
   if (format === 'number' && typeof value === 'number') {

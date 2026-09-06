@@ -26,7 +26,7 @@
  * function sendMessage(to: Jid) {...}
  * const to = parseJid('5511999999999@s.whatsapp.net');
  */
-export type Jid = string; // TODO Fase 2: & { readonly __juid: 'Jid' }
+export type Jid = string; // Fase 2 (planejado): & { readonly __juid: 'Jid' }
 
 /**
  * UUID do PostgreSQL (supabase).
@@ -37,7 +37,7 @@ export type Jid = string; // TODO Fase 2: & { readonly __juid: 'Jid' }
  * function getContact(id: Uuid) {...}
  * const id = parseUuid('12345678-1234-1234-1234-1234567890ab');
  */
-export type Uuid = string; // TODO Fase 2: & { readonly __uuid: 'Uuid' }
+export type Uuid = string; // Fase 2 (planejado): & { readonly __uuid: 'Uuid' }
 
 /** Identificador de mensagem (pode ser UUID ou ID da Evolution) */
 export type MessageId = string;

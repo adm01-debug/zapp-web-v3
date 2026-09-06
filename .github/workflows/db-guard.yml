@@ -40,13 +40,12 @@ concurrency:
   group: db-guard-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event.pull_request.number == '' }}
 
-permissions:
-  contents: write
-
 jobs:
   catalog-fresh:
     name: Catalog fresh + ACL RPC MCP
     runs-on: [Linux, X64, vps-zapp]
+    permissions:
+      contents: read
     env:
       SCHEMA_CATALOG_SCHEMAS: public,zapp,evo
       META_URL: ${{ secrets.ZAPP_META_URL }}
@@ -55,8 +54,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -74,7 +71,6 @@ jobs:
 
       - name: Gerar catálogo vivo via postgres-meta
         if: ${{ env.META_URL != '' && env.META_TOKEN != '' }}
-        continue-on-error: true
         run: node scripts/generate-schema-catalog.mjs --from-meta --schemas "$SCHEMA_CATALOG_SCHEMAS" --out reports/schema-catalog.live.json
 
       - name: Comparar contrato do catálogo commitado com o catálogo vivo
@@ -97,9 +93,6 @@ jobs:
 
       - name: Assertion ACL RPC MCP
         run: |
-          # Mesmo contrato dos outros guards DB do repositório: sem secret,
-          # sem psql ou sem conectividade -> avisa e passa. Com conexão de pé,
-          # a assertion ACL é bloqueante de verdade.
           if [ -z "${SUPABASE_DB_URL:-}" ]; then
             echo "::notice title=ACL RPC MCP nao verificada::secret SUPABASE_DB_URL ausente. A assertion foi pulada nesta run."
             exit 0
@@ -121,9 +114,43 @@ jobs:
           echo "Conectividade OK — rodando a assertion ACL em modo bloqueante."
           node scripts/check-mcp-exec-acl.mjs
 
-      - name: Regenerar schema-catalog.json do live DB (somente quando regen=true)
-        if: github.event.inputs.regen == 'true' && env.META_URL != '' && env.META_TOKEN != ''
+      - name: Publicar catálogo vivo
+        if: always() && env.META_URL != '' && env.META_TOKEN != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: schema-catalog-live
+          path: reports/schema-catalog.live.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  catalog-regen:
+    name: Regen schema-catalog.json (somente workflow_dispatch com regen=true)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.regen == 'true'
+    runs-on: [Linux, X64, vps-zapp]
+    needs: catalog-fresh
+    permissions:
+      contents: write
+    env:
+      SCHEMA_CATALOG_SCHEMAS: public,zapp,evo
+      META_URL: ${{ secrets.ZAPP_META_URL }}
+      META_TOKEN: ${{ secrets.ZAPP_META_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Regenerar e commitar schema-catalog.json
         run: |
+          if [ -z "${META_URL:-}" ] || [ -z "${META_TOKEN:-}" ]; then
+            echo "::error::ZAPP_META_URL ou ZAPP_META_TOKEN ausentes — regen impossível."
+            exit 1
+          fi
           node scripts/generate-schema-catalog.mjs --from-meta --schemas "$SCHEMA_CATALOG_SCHEMAS" --out supabase/schema-catalog.json
           git config user.email "ci-bot@atomicabr.com.br"
           git config user.name "CI Bot [catalog-regen]"
@@ -135,12 +162,3 @@ jobs:
             git push
             echo "schema-catalog.json regenerado e commitado."
           fi
-
-      - name: Publicar catálogo vivo
-        if: always() && env.META_URL != '' && env.META_TOKEN != ''
-        uses: actions/upload-artifact@v7
-        with:
-          name: schema-catalog-live
-          path: reports/schema-catalog.live.json
-          if-no-files-found: ignore
-          retention-days: 14

@@ -7,7 +7,7 @@ import { QueueMembersDialog } from './queues/QueueMembersDialog';
 // FILAS-04: routing rules de fila (zapp.queue_routing_rules) ainda não têm
 // consumidor front/edge — a feature só existe no nível canal
 // (ChannelRoutingRules/useChannelRoutingRules → channel_routing_rules).
-// TODO: criar seção "Regras de Roteamento" por fila aqui na AdminQueuesPage
+// FILAS-04-PENDENTE: criar seção "Regras de Roteamento" por fila aqui na AdminQueuesPage
 // quando existir consumidor (edge/backend) para queue_routing_rules.
 
 /** Admin Queues Page. */

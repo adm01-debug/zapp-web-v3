@@ -50,10 +50,20 @@ export function createZappAdminClient(): SupabaseClient<any, "zapp"> {
 // deno-lint-ignore no-explicit-any
 export function createZappClient(req: Request): SupabaseClient<any, "zapp"> {
   const authHeader = req.headers.get("Authorization") ?? "";
+  // Dim-10: propaga W3C traceparent do request de entrada para rastreabilidade distribuída
+  const traceparent = req.headers.get("traceparent") ?? generateTraceparent();
   // deno-lint-ignore no-explicit-any
   return createClient<any, "zapp">(SUPABASE_URL(), ANON_KEY(), {
-    global: { headers: { Authorization: authHeader } },
+    global: { headers: { Authorization: authHeader, traceparent } },
     auth: { persistSession: false, autoRefreshToken: false },
     db: { schema: "zapp" },
   });
+}
+
+/** Gera W3C traceparent: `00-{32hex}-{16hex}-01`. */
+export function generateTraceparent(): string {
+  const traceId = crypto.randomUUID().replace(/-/g, '');
+  const randBytes = crypto.getRandomValues(new Uint8Array(8));
+  const spanId = Array.from(randBytes).map((b: number) => b.toString(16).padStart(2, '0')).join('');
+  return `00-${traceId}-${spanId}-01`;
 }

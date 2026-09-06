@@ -2,6 +2,7 @@
  * SendProductDialog — utility functions and message builders
  */
 import { ExternalProduct, ExternalProductVariant } from '@/hooks/useExternalApiManagement';
+import { formatBRL } from '@/utils/currency';
 
 /** Message tone template for product send messages. */
 export type MessageTemplate = 'formal' | 'informal' | 'promo';
@@ -58,7 +59,7 @@ export function buildMessage(
   template: MessageTemplate,
   selectedVariant?: VariantGroup | null
 ): string {
-  const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.sale_price);
+  const price = formatBRL(product.sale_price);
 
   const variantInfo = selectedVariant
     ? `Cor: ${selectedVariant.colorName}`

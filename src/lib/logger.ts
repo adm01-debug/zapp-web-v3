@@ -39,11 +39,15 @@ export function getSessionId(): string {
   return sessionId;
 }
 
+type StructuredContext = Record<string, unknown>;
+
 class Logger {
   private module: string;
+  private baseCtx: StructuredContext;
 
-  constructor(module: string) {
+  constructor(module: string, baseCtx: StructuredContext = {}) {
     this.module = module;
+    this.baseCtx = baseCtx;
   }
 
   private formatMessage(level: LogLevel, message: string, args: unknown[]): string {
@@ -55,10 +59,12 @@ class Logger {
         module: this.module,
         sid: sessionId.slice(0, 8),
         msg: message,
+        ...this.baseCtx,
         ...(args.length > 0 ? { ctx: args } : {}),
       });
     }
-    return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] [sid:${sessionId.slice(0, 8)}] ${message}`;
+    const ctxStr = Object.keys(this.baseCtx).length > 0 ? ` ${JSON.stringify(this.baseCtx)}` : '';
+    return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] [sid:${sessionId.slice(0, 8)}]${ctxStr} ${message}`;
   }
 
   private addToSentryBreadcrumb(level: LogLevel, message: string, ...args: unknown[]): void {
@@ -67,7 +73,7 @@ class Logger {
       category: 'log',
       message: `${this.module}: ${message}`,
       level: level === 'error' ? 'error' : level === 'warn' ? 'warning' : 'info',
-      data: args.length > 0 ? { args: JSON.stringify(args) } : undefined,
+      data: { ...this.baseCtx, ...(args.length > 0 ? { args: JSON.stringify(args) } : {}) },
     });
   }
 
@@ -109,18 +115,20 @@ class Logger {
     }
     this.addToSentryBreadcrumb('error', message, ...args);
     if (import.meta.env.PROD) {
-      Sentry.captureException(new Error(`${this.module}: ${message}`), { extra: { args } });
+      Sentry.captureException(new Error(`${this.module}: ${message}`), {
+        extra: { ...this.baseCtx, args },
+      });
     }
   }
 
-  /** Log with explicit correlation ID for request tracing */
-  withCorrelation(correlationId: string) {
-    return {
-      debug: (msg: string, ...a: unknown[]) => this.debug(`[cid:${correlationId}] ${msg}`, ...a),
-      info: (msg: string, ...a: unknown[]) => this.info(`[cid:${correlationId}] ${msg}`, ...a),
-      warn: (msg: string, ...a: unknown[]) => this.warn(`[cid:${correlationId}] ${msg}`, ...a),
-      error: (msg: string, ...a: unknown[]) => this.error(`[cid:${correlationId}] ${msg}`, ...a),
-    };
+  /** Retorna logger filho com cid como campo JSON estruturado (não prefixo de string). */
+  withCorrelation(correlationId: string): Logger {
+    return new Logger(this.module, { ...this.baseCtx, cid: correlationId });
+  }
+
+  /** Retorna logger filho com contexto estruturado adicional (requestId, userId, etc.). */
+  child(ctx: StructuredContext): Logger {
+    return new Logger(this.module, { ...this.baseCtx, ...ctx });
   }
 
 }
