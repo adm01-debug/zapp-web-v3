@@ -1,9 +1,13 @@
+import { getLogger } from '../_shared/logger.ts';
 import { requireUser } from '../_shared/auth.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { getCorsHeaders } from '../_shared/cors.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { EmailImapBridgeV1Schema } from '../_shared/contract-schemas.ts';
+
+const log = getLogger('email-imap-bridge');
+
 /**
  * email-imap-bridge — Suporte a provedores IMAP/SMTP genéricos (Outlook, Yahoo, etc.)
  *
@@ -142,7 +146,7 @@ Deno.serve(async (req) => {
       // IMAP_ENCRYPTION_KEY must be a base64-encoded 32-byte random key set in Supabase secrets.
       const encKeyB64 = Deno.env.get('IMAP_ENCRYPTION_KEY');
       if (!encKeyB64 || typeof encKeyB64 !== 'string' || encKeyB64.length === 0) {
-        console.error('[email-imap-bridge] IMAP_ENCRYPTION_KEY not configured — refusing to store credentials in plaintext');
+        log.error('IMAP_ENCRYPTION_KEY not configured — refusing to store credentials in plaintext');
         return json({ error: 'Encryption key not configured' }, 500);
       }
 
@@ -158,7 +162,7 @@ Deno.serve(async (req) => {
         combined.set(new Uint8Array(cipherBuf), 12);
         passwordEncrypted = btoa(String.fromCharCode(...combined));
       } catch (encErr) {
-        console.error('[email-imap-bridge] password encryption failed', encErr instanceof Error ? encErr.message : String(encErr));
+        log.error('password encryption failed', { error: encErr instanceof Error ? encErr.message : String(encErr) });
         return json({ error: 'Internal server error' }, 500);
       }
 
@@ -209,7 +213,7 @@ Deno.serve(async (req) => {
         const errMsg = typeof error === 'object' && error !== null && 'message' in error && typeof (error as unknown as Record<string, unknown>).message === 'string'
           ? (error as unknown as Record<string, unknown>).message
           : 'Internal server error';
-        console.error('[email-imap-bridge] upsert error', errMsg);
+        log.error('upsert error', { error: errMsg });
         return json({ error: 'Internal server error' }, 500);
       }
 
@@ -297,7 +301,7 @@ Deno.serve(async (req) => {
     return json({ error: `Ação desconhecida: ${action}. Ações válidas: getProviderConfig, saveCredentials, testConnection, listProviders` }, 400);
 
   } catch (err) {
-    console.error('[email-imap-bridge]', err instanceof Error ? err.message : String(err));
+    log.error('unexpected error', { error: err instanceof Error ? err.message : String(err) });
     return json({ error: 'Internal server error' }, 500);
   }
 });

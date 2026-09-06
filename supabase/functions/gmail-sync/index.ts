@@ -3,12 +3,15 @@ import { requireUser } from '../_shared/auth.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { GmailSyncV1Schema } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
 // 20 MB in bytes — Storage bucket `email-attachments` enforces this as its hard limit.
 const MAX_ATTACHMENT_BYTES = 20_971_520;
+
+const log = getLogger('gmail-sync');
 
 /**
  * Edge Function: Gmail Sync — OAuth Token Refresh & Thread List Retrieval
@@ -122,7 +125,7 @@ Deno.serve(async (req) => {
       });
 
       if (!listRes.ok) {
-        console.error('[gmail-sync] list threads HTTP error', listRes.status);
+        log.error('list threads HTTP error', { status: listRes.status });
         return json({ error: 'Failed to list Gmail threads' }, listRes.status >= 500 ? 502 : 400);
       }
 
@@ -139,7 +142,7 @@ Deno.serve(async (req) => {
 
       const listDataObj = listData as Record<string, unknown>;
       if (typeof listDataObj.error === 'object' && listDataObj.error !== null) {
-        console.error('[gmail-sync] list threads error', listDataObj.error);
+        log.error('list threads error', { error: listDataObj.error });
         return json({ error: 'Failed to list Gmail threads' }, 400);
       }
 
@@ -216,7 +219,7 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (threadErr) {
-            console.error(`[gmail-sync] thread upsert failed for ${t.id}:`, threadErr.message);
+            log.error(`thread upsert failed for ${t.id}`, { error: threadErr.message });
           }
 
           return { id: t.id, subject, snippet, fromHeader: fromH, lastActivity: dateH, unread: unread > 0, dbId: thread?.id };
@@ -255,7 +258,7 @@ Deno.serve(async (req) => {
       });
 
       if (!listRes.ok) {
-        console.error('[gmail-sync] syncFull list HTTP error', listRes.status);
+        log.error('syncFull list HTTP error', { status: listRes.status });
         return json({ error: 'Failed to list Gmail messages' }, 502);
       }
 
@@ -272,7 +275,7 @@ Deno.serve(async (req) => {
 
       const listData = listDataRaw as Record<string, unknown>;
       if (typeof listData.error === 'object' && listData.error !== null) {
-        console.error('[gmail-sync] syncFull list error', listData.error);
+        log.error('syncFull list error', { error: listData.error });
         return json({ error: 'Failed to list Gmail messages' }, 502);
       }
 
@@ -290,7 +293,7 @@ Deno.serve(async (req) => {
       );
       const syncedCount = settled.filter(r => r.status === 'fulfilled').length;
       const failedCount = settled.filter(r => r.status === 'rejected').length;
-      if (failedCount > 0) console.error(`[gmail-sync] syncFull: ${failedCount} messages failed to persist`);
+      if (failedCount > 0) log.error(`syncFull: ${failedCount} messages failed to persist`, { failedCount });
 
       const nextPageToken = typeof listData.nextPageToken === 'string' ? listData.nextPageToken : null;
       return json({ synced: syncedCount, failed: failedCount, nextPageToken });
@@ -304,7 +307,7 @@ Deno.serve(async (req) => {
       });
 
       if (!lblRes.ok) {
-        console.error('[gmail-sync] syncLabels HTTP error', lblRes.status);
+        log.error('syncLabels HTTP error', { status: lblRes.status });
         return json({ error: 'Failed to fetch Gmail labels' }, lblRes.status >= 500 ? 502 : 400);
       }
 
@@ -321,7 +324,7 @@ Deno.serve(async (req) => {
 
       const lblData = lblDataRaw as Record<string, unknown>;
       if (typeof lblData.error === 'object' && lblData.error !== null) {
-        console.error('[gmail-sync] syncLabels Gmail API error', lblData.error);
+        log.error('syncLabels Gmail API error', { error: lblData.error });
         return json({ error: 'Failed to fetch Gmail labels' }, 400);
       }
       const labels = Array.isArray(lblData.labels) ? lblData.labels : [];
@@ -341,7 +344,7 @@ Deno.serve(async (req) => {
             name:       lblName,
             type:       lblType,
           }, { onConflict: 'account_id,label_id' });
-          if (lblUpsertErr) console.warn('[gmail-sync] label upsert failed', lblUpsertErr.message);
+          if (lblUpsertErr) log.warn('label upsert failed', { error: lblUpsertErr.message });
         }
       }
 
@@ -364,7 +367,7 @@ Deno.serve(async (req) => {
         signal: AbortSignal.timeout(10_000),
       });
       if (!createRes.ok) {
-        console.error('[gmail-sync] createLabel HTTP error', createRes.status);
+        log.error('createLabel HTTP error', { status: createRes.status });
         return json({ error: 'Failed to create Gmail label' }, createRes.status >= 500 ? 502 : 400);
       }
       let created: unknown;
@@ -372,7 +375,7 @@ Deno.serve(async (req) => {
       if (typeof created !== 'object' || created === null || Array.isArray(created)) return json({ error: 'Invalid Gmail API response format' }, 500);
       const createdObj = created as Record<string, unknown>;
       if (typeof createdObj.error === 'object' && createdObj.error !== null) {
-        console.error('[gmail-sync] createLabel Gmail API error', createdObj.error);
+        log.error('createLabel Gmail API error', { error: createdObj.error });
         return json({ error: 'Gmail API error creating label' }, 400);
       }
       if (typeof createdObj.id === 'string' && createdObj.id) {
@@ -380,7 +383,7 @@ Deno.serve(async (req) => {
           account_id: accountId, label_id: createdObj.id,
           name: typeof createdObj.name === 'string' ? createdObj.name : name, type: 'user',
         }, { onConflict: 'account_id,label_id' });
-        if (lblUpsertErr) console.warn('[gmail-sync] createLabel upsert failed', lblUpsertErr.message);
+        if (lblUpsertErr) log.warn('createLabel upsert failed', { error: lblUpsertErr.message });
       }
       return json({ label: createdObj });
     }
@@ -401,7 +404,7 @@ Deno.serve(async (req) => {
         signal: AbortSignal.timeout(10_000),
       });
       if (!patchRes.ok) {
-        console.error('[gmail-sync] updateLabel HTTP error', patchRes.status);
+        log.error('updateLabel HTTP error', { status: patchRes.status });
         return json({ error: 'Failed to update Gmail label' }, patchRes.status >= 500 ? 502 : 400);
       }
       let updated: unknown;
@@ -409,13 +412,13 @@ Deno.serve(async (req) => {
       if (typeof updated !== 'object' || updated === null || Array.isArray(updated)) return json({ error: 'Invalid Gmail API response format' }, 500);
       const updatedObj = updated as Record<string, unknown>;
       if (typeof updatedObj.error === 'object' && updatedObj.error !== null) {
-        console.error('[gmail-sync] updateLabel Gmail API error', updatedObj.error);
+        log.error('updateLabel Gmail API error', { error: updatedObj.error });
         return json({ error: 'Gmail API error updating label' }, 400);
       }
       if (typeof patchPayload.name === 'string') {
         const { error: lblUpdateErr } = await supabase.from('gmail_labels').update({ name: patchPayload.name })
           .eq('account_id', accountId).eq('label_id', labelId);
-        if (lblUpdateErr) console.warn('[gmail-sync] updateLabel db update failed', lblUpdateErr.message);
+        if (lblUpdateErr) log.warn('updateLabel db update failed', { error: lblUpdateErr.message });
       }
       return json({ label: updatedObj });
     }
@@ -431,18 +434,18 @@ Deno.serve(async (req) => {
       });
       // 204 = success; 404 = already gone (treat as success); other errors → fail
       if (!deleteRes.ok && deleteRes.status !== 404) {
-        console.error('[gmail-sync] deleteLabel HTTP error', deleteRes.status);
+        log.error('deleteLabel HTTP error', { status: deleteRes.status });
         return json({ error: 'Failed to delete Gmail label' }, deleteRes.status >= 500 ? 502 : 400);
       }
       const { error: lblDelErr } = await supabase.from('gmail_labels').delete().eq('account_id', accountId).eq('label_id', labelId);
-      if (lblDelErr) console.warn('[gmail-sync] deleteLabel db delete failed', lblDelErr.message);
+      if (lblDelErr) log.warn('deleteLabel db delete failed', { error: lblDelErr.message });
       return json({ deleted: true, labelId });
     }
 
     return json({ error: `Ação desconhecida: ${action}` }, 400);
 
   } catch (err) {
-    console.error('[gmail-sync]', err instanceof Error ? err.message : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return json({ error: 'Internal server error' }, 500);
   }
 });
@@ -525,9 +528,9 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
   const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
   if (!googleClientId || !googleClientSecret) {
-    console.error('[gmail-sync] Missing Google OAuth credentials');
+    log.error('Missing Google OAuth credentials');
     const { error: deactivateErr1 } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-    if (deactivateErr1) console.warn('[gmail-sync] deactivate account failed (missing creds)', deactivateErr1.message);
+    if (deactivateErr1) log.warn('deactivate account failed (missing creds)', { error: deactivateErr1.message });
     return null;
   }
 
@@ -546,7 +549,7 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
 
   if (!tokenRes.ok) {
     const errText = await tokenRes.text().catch(() => '');
-    console.warn(`[gmail-sync] token refresh HTTP ${tokenRes.status} for ${accountId}`, errText.slice(0, 200));
+    log.warn(`token refresh HTTP ${tokenRes.status} for ${accountId}`, { detail: errText.slice(0, 200) });
     return null;
   }
 
@@ -554,20 +557,20 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   try {
     tokensRaw = await tokenRes.json();
   } catch {
-    console.warn(`[gmail-sync] token refresh non-JSON response for ${accountId}`);
+    log.warn(`token refresh non-JSON response for ${accountId}`);
     return null;
   }
 
   if (typeof tokensRaw !== 'object' || tokensRaw === null || Array.isArray(tokensRaw)) {
     const { error: deactivateErr2 } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-    if (deactivateErr2) console.warn('[gmail-sync] deactivate account failed (non-object token response)', deactivateErr2.message);
+    if (deactivateErr2) log.warn('deactivate account failed (non-object token response)', { error: deactivateErr2.message });
     return null;
   }
 
   const tokens = tokensRaw as Record<string, unknown>;
   if (typeof tokens.error === 'object' && tokens.error !== null) {
     const { error: deactivateErr3 } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-    if (deactivateErr3) console.warn('[gmail-sync] deactivate account failed (token error field)', deactivateErr3.message);
+    if (deactivateErr3) log.warn('deactivate account failed (token error field)', { error: deactivateErr3.message });
     return null;
   }
 
@@ -576,13 +579,13 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
 
   if (!newAccessToken) {
     const { error: deactivateErr4 } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-    if (deactivateErr4) console.warn('[gmail-sync] deactivate account failed (empty access_token)', deactivateErr4.message);
+    if (deactivateErr4) log.warn('deactivate account failed (empty access_token)', { error: deactivateErr4.message });
     return null;
   }
 
   const newExpiry = new Date(Date.now() + expiresIn * 1000).toISOString();
   const { error: tokenUpdateErr } = await supabase.from('gmail_accounts').update({ access_token: newAccessToken, token_expiry: newExpiry }).eq('id', accountId);
-  if (tokenUpdateErr) console.warn('[gmail-sync] token refresh persist failed', tokenUpdateErr.message);
+  if (tokenUpdateErr) log.warn('token refresh persist failed', { error: tokenUpdateErr.message });
   return newAccessToken;
 }
 
@@ -729,7 +732,7 @@ async function fetchAndPersistMessage(
   }, { onConflict: 'account_id,thread_id' }).select('id').maybeSingle();
 
   if (threadErr2) {
-    console.error(`[gmail-sync] thread upsert failed for ${threadId}:`, threadErr2.message);
+    log.error(`thread upsert failed for ${threadId}`, { error: threadErr2.message });
   }
 
   if (!thread) return;
@@ -756,7 +759,7 @@ async function fetchAndPersistMessage(
   }, { onConflict: 'account_id,message_id' }).select('id').maybeSingle();
 
   if (msgErr) {
-    console.error(`[gmail-sync] message upsert failed for ${messageId}:`, msgErr.message);
+    log.error(`message upsert failed for ${messageId}`, { error: msgErr.message });
   }
 
   // Download and store attachments when the message row is available and attachments exist.
@@ -830,8 +833,8 @@ async function processAttachments(
   for (const att of collected) {
     // Guard: skip attachments that exceed the Storage bucket's 20 MB hard limit.
     if (att.sizeBytes > MAX_ATTACHMENT_BYTES) {
-      console.warn(
-        `[gmail-sync] processAttachments: skipping "${att.filename}" — ` +
+      log.warn(
+        `processAttachments: skipping "${att.filename}" — ` +
         `${att.sizeBytes} bytes exceeds ${MAX_ATTACHMENT_BYTES} byte limit`,
       );
       continue;
@@ -849,8 +852,8 @@ async function processAttachments(
       );
 
       if (!attRes.ok) {
-        console.error(
-          `[gmail-sync] processAttachments: Gmail API HTTP ${attRes.status} ` +
+        log.error(
+          `processAttachments: Gmail API HTTP ${attRes.status} ` +
           `for attachment "${att.filename}" (msg=${gmailMessageId})`,
         );
         continue;
@@ -860,7 +863,7 @@ async function processAttachments(
       try {
         attDataRaw = await attRes.json();
       } catch {
-        console.error(`[gmail-sync] processAttachments: non-JSON response for "${att.filename}"`);
+        log.error(`processAttachments: non-JSON response for "${att.filename}"`);
         continue;
       }
 
@@ -870,7 +873,7 @@ async function processAttachments(
       // Step 2 — Decode base64url → Uint8Array.
       const base64url = typeof attData.data === 'string' ? attData.data : '';
       if (!base64url) {
-        console.warn(`[gmail-sync] processAttachments: empty data for "${att.filename}"`);
+        log.warn(`processAttachments: empty data for "${att.filename}"`);
         continue;
       }
       const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -892,9 +895,9 @@ async function processAttachments(
         });
 
       if (uploadErr) {
-        console.error(
-          `[gmail-sync] processAttachments: Storage upload failed for "${att.filename}":`,
-          uploadErr.message,
+        log.error(
+          `processAttachments: Storage upload failed for "${att.filename}"`,
+          { error: uploadErr.message },
         );
         continue;
       }
@@ -910,15 +913,15 @@ async function processAttachments(
       }, { onConflict: 'email_message_id,gmail_attachment_id' });
 
       if (dbErr) {
-        console.error(
-          `[gmail-sync] processAttachments: email_attachments upsert failed for "${att.filename}":`,
-          dbErr.message,
+        log.error(
+          `processAttachments: email_attachments upsert failed for "${att.filename}"`,
+          { error: dbErr.message },
         );
       }
     } catch (err) {
-      console.error(
-        `[gmail-sync] processAttachments: unexpected error for "${att.filename}":`,
-        err instanceof Error ? err.message : String(err),
+      log.error(
+        `processAttachments: unexpected error for "${att.filename}"`,
+        { error: err instanceof Error ? err.message : String(err) },
       );
     }
   }

@@ -10,6 +10,9 @@ import {
   extractEvolutionMessageId,
 } from './send-idempotency.ts';
 import { logIdempotencyMiss } from './log-idempotency-miss.ts';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-api-proxy');
 
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 2;
@@ -96,7 +99,7 @@ export async function proxyToEvolution(
   if (idempotencyEnabled) {
     const cached = await lookupSendCache(idemKey!);
     if (cached) {
-      console.log(`[Evolution API] idempotency HIT for ${idemKey} (${path})`);
+      log.info(`[Evolution API] idempotency HIT for ${idemKey} (${path})`);
       return new Response(JSON.stringify(cached.response), {
         status: 200,
         headers: {
@@ -152,11 +155,11 @@ export async function proxyToEvolution(
         // Avoids thundering herd when many clients retry simultaneously.
         const exp = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
         const delay = Math.floor(Math.random() * exp);
-        console.log(`[Evolution API] Retry ${attempt}/${MAX_RETRIES} after ${delay}ms (jittered, base=${exp}ms) for ${method} ${fullUrl}`);
+        log.info(`[Evolution API] Retry ${attempt}/${MAX_RETRIES} after ${delay}ms (jittered, base=${exp}ms) for ${method} ${fullUrl}`);
         await sleep(delay);
       }
 
-      console.log(`[Evolution API] ${method} ${fullUrl} (attempt ${attempt + 1})`);
+      log.info(`[Evolution API] ${method} ${fullUrl} (attempt ${attempt + 1})`);
 
       const controller = new AbortController();
       const onExternalAbort = () => controller.abort();
@@ -175,7 +178,7 @@ export async function proxyToEvolution(
       lastHttpStatus = response.status;
 
       if (RETRYABLE_STATUSES.has(response.status) && attempt < maxAttempts - 1) {
-        console.warn(`[Evolution API] Got ${response.status}, will retry...`);
+        log.warn(`[Evolution API] Got ${response.status}, will retry...`);
         lastError = new Error(`HTTP ${response.status}`);
         retryReasons.push({ attempt: attempt + 1, status: response.status, reason: `http_${response.status}` });
         await response.body?.cancel().catch(() => {});
@@ -337,7 +340,7 @@ export async function resolvePrivateBucketUrl(supabase: SupabaseClient<any, any>
       if (storagePath) {
         const { data: signedData } = await supabase.storage.from(bucket).createSignedUrl(storagePath, 300);
         if (signedData?.signedUrl) {
-          console.log(`[Evolution API] Using signed URL for private bucket ${bucket}`);
+          log.info(`[Evolution API] Using signed URL for private bucket ${bucket}`);
           return signedData.signedUrl;
         }
       }

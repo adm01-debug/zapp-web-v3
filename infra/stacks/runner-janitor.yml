@@ -1,7 +1,7 @@
 version: "3.8"
 
 # =============================================================================
-# RUNNER-JANITOR v1.0.2 — AtomicaBR — 2026-09-05 (AUD-22D) — Portainer stack "runner-janitor"
+# RUNNER-JANITOR v1.0.3 — AtomicaBR — 2026-09-06 (AUD-22D) — Portainer stack "runner-janitor"
 # Causa raiz do disco a 98% em 2026-09-05: a camada gravavel dos containers
 # github-actions-runner_* cresce a cada job (/root/.cache ~1,8 GB de browsers
 # Playwright + /root/.bun ~1,2 GB de cache + externals do runner) e NAO e coberta
@@ -19,8 +19,15 @@ version: "3.8"
 # (restart_policy on-failure reinicia o servico) em vez de tratar lista vazia como
 # saudavel; `inspect` sem SizeRw pula o container em vez de assumir 0; o
 # `service update` roda com --detach=false para so contar como reiniciado depois
-# de o Swarm convergir. Janela conhecida (aceita): entre o `pgrep` e o update um
-# job pode ser atribuido ao runner — drenar via API do GitHub exigiria PAT no stack.
+# de o Swarm convergir.
+# v1.0.3 (AUD-22D followup 2026-09-06): fecha janela de race pgrep→update via
+# drain pela API do GitHub. Antes do `service update`, deregistra o runner na org
+# (DELETE /orgs/{org}/actions/runners/{id}) — GitHub para de atribuir jobs a ele
+# imediatamente. Runner re-registra automaticamente ao reiniciar. Requer env var
+# GITHUB_DRAIN_PAT (PAT scope: actions:read + actions:write, org adm01-debug);
+# se ausente, comportamento identico ao v1.0.2 (degradacao graceful).
+# Para ativar: definir GITHUB_DRAIN_PAT em Portainer > stack runner-janitor >
+# Edit > Environment variables (NAO commitar o valor no YAML).
 # =============================================================================
 
 services:
@@ -35,10 +42,12 @@ services:
       MAX_RW_GB: "2.5"
       RUNNER_FILTER: "github-actions-runner_"
       ALERT_WEBHOOK_URL: "https://n8n.atomicabr.com.br/webhook/warroom-alert"
+      GITHUB_ORG: "adm01-debug"
+      GITHUB_DRAIN_PAT: ""
     entrypoint: ["sh", "-c"]
     command:
       - |
-        echo "=== RUNNER-JANITOR v1.0.2 boot $$(date -u +%FT%TZ) max_rw=$${MAX_RW_GB}GB interval=$${INTERVAL_S}s ==="
+        echo "=== RUNNER-JANITOR v1.0.3 boot $$(date -u +%FT%TZ) max_rw=$${MAX_RW_GB}GB interval=$${INTERVAL_S}s ==="
         alert() {
           _MSG="$$1"; _TS=$$(date -u +%FT%TZ)
           echo "[ALERT] $$_MSG"
@@ -48,6 +57,41 @@ services:
         # Comparacao em MB: busybox awk trunca printf "%d" acima de 2^31 (2,5 GB em bytes
         # virava negativo e TODO runner era reiniciado — bug do v1.0.0, corrigido no v1.0.1).
         MAX_MB=$$(awk -v g="$$MAX_RW_GB" 'BEGIN { printf "%d", g * 1024 }')
+        # v1.0.3: drain via API. Instala jq so se GITHUB_DRAIN_PAT estiver preenchido.
+        DRAIN_ENABLED=0
+        if [ -n "$$GITHUB_DRAIN_PAT" ]; then
+          if apk add --no-cache jq >/dev/null 2>&1; then
+            DRAIN_ENABLED=1
+            echo "=== drain via API habilitado (org: $${GITHUB_ORG}) ==="
+          else
+            echo "[WARN] jq nao instalado — drain via API desabilitado"
+          fi
+        fi
+        # Deregistra o runner na org GitHub para impedir atribuicao de novo job
+        # entre o pgrep e o service update. No-op se DRAIN_ENABLED=0.
+        drain_runner() {
+          _CID="$$1" _RNAME="$$2"
+          [ "$$DRAIN_ENABLED" -eq 0 ] && return 0
+          _HOST=$$(docker inspect --format '{{.Config.Hostname}}' "$$_CID" 2>/dev/null)
+          [ -z "$$_HOST" ] && return 0
+          _JSON=$$(wget -qO- \
+            --header="Authorization: token $$GITHUB_DRAIN_PAT" \
+            --header="Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/orgs/$${GITHUB_ORG}/actions/runners?per_page=100" 2>/dev/null)
+          _RID=$$(printf '%s' "$$_JSON" | jq -r --arg h "$$_HOST" \
+            '.runners[]? | select(.name == $$h) | .id' 2>/dev/null | head -1)
+          if [ -n "$$_RID" ] && [ "$$_RID" != "null" ]; then
+            wget -q --method=DELETE \
+              --header="Authorization: token $$GITHUB_DRAIN_PAT" \
+              --header="Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/orgs/$${GITHUB_ORG}/actions/runners/$$_RID" \
+              -O /dev/null 2>/dev/null \
+              && echo "[$$(date -u +%FT%TZ)] $$_RNAME — runner $$_RID deregistrado (janela de race fechada)" \
+              || echo "[$$(date -u +%FT%TZ)] $$_RNAME — falha ao deregistrar $$_RID (continuando)"
+          else
+            echo "[$$(date -u +%FT%TZ)] $$_RNAME — runner '$${_HOST}' nao encontrado na org"
+          fi
+        }
         CYCLE=0
         while true; do
           CYCLE=$$((CYCLE+1)); TS=$$(date -u +%FT%TZ)
@@ -74,6 +118,7 @@ services:
                 echo "[$$TS] $$NAME rw=$${RW_GB}GB > max — OCUPADO (Runner.Worker), pula"
                 SKIPPED=$$((SKIPPED+1))
               elif [ -n "$$SVC" ]; then
+                drain_runner "$$CID" "$$NAME"
                 if timeout 180 docker service update --force --detach=false "$$SVC" >/dev/null 2>&1; then
                   echo "[$$TS] $$NAME rw=$${RW_GB}GB > max — ocioso, service update --force em $$SVC"
                   RESTARTED="$$RESTARTED $$SVC($${RW_GB}GB)"
@@ -94,7 +139,7 @@ services:
             alert "runner-janitor: disco $${DISK}% — runners reiniciados (camada gravavel > $${MAX_RW_GB}GB):$$RESTARTED"
           fi
           if [ "$$CYCLE" -eq 1 ]; then
-            alert "runner-janitor v1.0.2 online: disco $${DISK}%, runners rw total $${TOTAL_GB}GB, max $${MAX_RW_GB}GB/runner"
+            alert "runner-janitor v1.0.3 online: disco $${DISK}%, runners rw total $${TOTAL_GB}GB, max $${MAX_RW_GB}GB/runner, drain=$${DRAIN_ENABLED}"
           fi
           sleep "$$INTERVAL_S"
         done
@@ -118,6 +163,6 @@ services:
       labels:
         - traefik.enable=false
         - com.centurylinklabs.watchtower.enable=false
-        - com.atomicabr.audit=runner-janitor-v1.0.2-aud22d-2026-09-05
+        - com.atomicabr.audit=runner-janitor-v1.0.3-aud22d-2026-09-06
         - com.atomicabr.requires-docker-sock=true
         - com.atomicabr.tier=critical

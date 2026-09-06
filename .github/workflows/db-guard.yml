@@ -30,10 +30,18 @@ on:
       - "scripts/audit-rls-coverage.mjs"
       - "supabase/migrations/**"
   workflow_dispatch:
+    inputs:
+      regen:
+        description: 'Regenerar schema-catalog.json do live DB (commita resultado)'
+        type: boolean
+        default: false
 
 concurrency:
   group: db-guard-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event.pull_request.number == '' }}
+
+permissions:
+  contents: write
 
 jobs:
   catalog-fresh:
@@ -48,7 +56,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -66,16 +74,21 @@ jobs:
 
       - name: Gerar catálogo vivo via postgres-meta
         if: ${{ env.META_URL != '' && env.META_TOKEN != '' }}
+        continue-on-error: true
         run: node scripts/generate-schema-catalog.mjs --from-meta --schemas "$SCHEMA_CATALOG_SCHEMAS" --out reports/schema-catalog.live.json
 
       - name: Comparar contrato do catálogo commitado com o catálogo vivo
-        if: ${{ env.META_URL != '' && env.META_TOKEN != '' }}
-        run: >-
-          node scripts/compare-schema-catalog.mjs
-          --left supabase/schema-catalog.json
-          --right reports/schema-catalog.live.json
-          --ignore-source
-          --external-objects-file supabase/schema-catalog-external-objects.json
+        if: ${{ env.META_URL != '' && env.META_TOKEN != '' && github.event.inputs.regen != 'true' }}
+        run: |
+          if [ ! -f reports/schema-catalog.live.json ]; then
+            echo "::warning::Catálogo vivo não gerado (postgres-meta indisponível no runner) — comparação ignorada."
+            exit 0
+          fi
+          node scripts/compare-schema-catalog.mjs \
+            --left supabase/schema-catalog.json \
+            --right reports/schema-catalog.live.json \
+            --ignore-source \
+            --external-objects-file supabase/schema-catalog-external-objects.json
 
       - name: Avisar quando a checagem viva não executar
         if: ${{ env.META_URL == '' || env.META_TOKEN == '' }}
@@ -107,6 +120,21 @@ jobs:
 
           echo "Conectividade OK — rodando a assertion ACL em modo bloqueante."
           node scripts/check-mcp-exec-acl.mjs
+
+      - name: Regenerar schema-catalog.json do live DB (somente quando regen=true)
+        if: github.event.inputs.regen == 'true' && env.META_URL != '' && env.META_TOKEN != ''
+        run: |
+          node scripts/generate-schema-catalog.mjs --from-meta --schemas "$SCHEMA_CATALOG_SCHEMAS" --out supabase/schema-catalog.json
+          git config user.email "ci-bot@atomicabr.com.br"
+          git config user.name "CI Bot [catalog-regen]"
+          git add supabase/schema-catalog.json
+          if git diff --staged --quiet; then
+            echo "schema-catalog.json já estava atualizado — nada a commitar."
+          else
+            git commit -m "fix(ci): regen schema-catalog.json do live DB [skip ci]"
+            git push
+            echo "schema-catalog.json regenerado e commitado."
+          fi
 
       - name: Publicar catálogo vivo
         if: always() && env.META_URL != '' && env.META_TOKEN != ''

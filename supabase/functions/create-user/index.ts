@@ -3,6 +3,9 @@ import { requireAdminOrSupervisor } from "../_shared/auth.ts";
 import { createZappAdminClient } from "../_shared/db-client.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('create-user');
 
 Deno.serve(async (req) => {
   const cors = handleCors(req);
@@ -71,7 +74,7 @@ Deno.serve(async (req) => {
           .from("profiles")
           .update(profileUpdate)
           .eq("user_id", newUser.user.id);
-        if (profileUpdateErr) console.warn("[create-user] Failed to update profile fields:", profileUpdateErr.message);
+        if (profileUpdateErr) log.warn("[create-user] Failed to update profile fields:", profileUpdateErr.message);
       }
     }
 
