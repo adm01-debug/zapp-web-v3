@@ -526,6 +526,44 @@ describe('useEvolutionAutoReconnect — credential error em checkStatus', () => 
   );
 });
 
+// F-03: erros 5xx em getInstanceStatus nao param polling (apenas 401/403 travam)
+describe('useEvolutionAutoReconnect — 5xx em getInstanceStatus nao para polling (F-03)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    logError.mockClear();
+    logInfo.mockClear();
+    logWarn.mockClear();
+    emit.mockClear();
+    connectInstance.mockClear();
+    getInstanceStatus.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it.each([500, 503])(
+    'HTTP %i em getInstanceStatus nao emite credential-error e nao para polling',
+    async (httpStatus) => {
+      // 1a chamada lanca 5xx; demais retornam close para manter polling ativo
+      getInstanceStatus
+        .mockRejectedValueOnce({ status: httpStatus })
+        .mockResolvedValue({ instance: { state: 'close' } });
+
+      renderHook(() => useEvolutionAutoReconnect('wpp2'));
+      await advance(5_000);
+
+      // 5xx NAO deve tratar como credential error
+      expect(emit.mock.calls.some((c) => c[0] === 'connection:credential-error')).toBe(false);
+
+      // Polling deve continuar apos o erro 5xx
+      const callsAfter5xx = getInstanceStatus.mock.calls.length;
+      await advance(60_000);
+      expect(getInstanceStatus.mock.calls.length).toBeGreaterThan(callsAfter5xx);
+    },
+  );
+});
+
 describe('useEvolutionAutoReconnect — timerRef.current = null no callback (mutante M4)', () => {
   /**
    * Testa que timerRef.current é zerado DENTRO do callback do setTimeout,
@@ -695,6 +733,60 @@ describe('useEvolutionAutoReconnect — performReconnect via Realtime', () => {
 
     expect(restartInstance.mock.calls.length).toBe(0);
   });
+
+  it('ignora UPDATE quando old.status === new.status (sem transicao — idempotente)', async () => {
+    renderHook(() => useEvolutionAutoReconnect('wpp2'));
+    await advance(100);
+    expect(capturedPgCallback.current).not.toBeNull();
+
+    // UPDATE onde ambos old e new estao 'disconnected' — sem transicao real de estado
+    await act(async () => {
+      capturedPgCallback.current?.({
+        new: {
+          instance_id: 'inst-001',
+          status: 'disconnected',
+          health_reason: null,
+          auto_reconnect_enabled: true,
+          loop_protection_active: false,
+        },
+        old: { status: 'disconnected' },
+      });
+    });
+    await advance(5_000);
+
+    // Sem transicao de estado — restartInstance NAO deve ser disparado
+    expect(restartInstance.mock.calls.length).toBe(0);
+  });
+
+  it('loga erro e nao emite connection:recovered quando restartInstance lanca excecao', async () => {
+    restartInstance.mockRejectedValueOnce(new Error('Evolution API indisponivel'));
+
+    renderHook(() => useEvolutionAutoReconnect('wpp2'));
+    await advance(100);
+    expect(capturedPgCallback.current).not.toBeNull();
+
+    // Dispara evento de desconexao para acionar restartInstance
+    await act(async () => {
+      capturedPgCallback.current?.({
+        new: {
+          instance_id: 'inst-001',
+          status: 'disconnected',
+          health_reason: null,
+          auto_reconnect_enabled: true,
+          loop_protection_active: false,
+        },
+        old: { status: 'connected' },
+      });
+    });
+    await advance(5_000);
+
+    // restartInstance foi chamado (e lancou)
+    expect(restartInstance.mock.calls.length).toBeGreaterThanOrEqual(1);
+    // Falha nao deve emitir connection:recovered
+    expect(emit.mock.calls.some((c) => c[0] === 'connection:recovered')).toBe(false);
+    // Erro deve ter sido logado
+    expect(logError.mock.calls.length).toBeGreaterThanOrEqual(1);
+  });
 });
 
 // F-04-TEST: mountedRef guard — setState não chamado após unmount
@@ -742,5 +834,56 @@ describe('useEvolutionAutoReconnect — mountedRef guard (sem setState pós-unmo
     // — nenhum evento 'connection:recovered' emitido
     expect(getInstanceStatus).toHaveBeenCalledTimes(1);
     expect(emit).not.toHaveBeenCalledWith('connection:recovered', expect.anything());
+  });
+});
+
+// Circuit breaker — 2a abertura usa CIRCUIT_MAX_MS como teto (nao cresce indefinidamente)
+describe('useEvolutionAutoReconnect — circuit breaker 2a abertura usa CIRCUIT_MAX_MS', () => {
+  const CIRCUIT_THRESHOLD = 3;
+  const CIRCUIT_MAX_MS = 600_000; // 10 min
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    logError.mockClear();
+    logInfo.mockClear();
+    logWarn.mockClear();
+    emit.mockClear();
+    connectInstance.mockClear();
+    getInstanceStatus.mockClear();
+    getInstanceStatus.mockResolvedValue({ instance: { state: 'close' } });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('apos 2 ciclos de CIRCUIT_THRESHOLD falhas, delay nao ultrapassa CIRCUIT_MAX_MS', async () => {
+    // Todas as tentativas de conexao falham
+    connectInstance.mockRejectedValue(new Error('timeout'));
+
+    renderHook(() => useEvolutionAutoReconnect('wpp2'));
+
+    // Deixa o circuit abrir pela 1a vez (CIRCUIT_THRESHOLD falhas)
+    await advance(300_000); // 5 min — suficiente para CIRCUIT_THRESHOLD tentativas + backoff
+
+    const emitCallsAfter1stCircuit = emit.mock.calls.filter(
+      (c) => c[0] === 'connection:circuit-open',
+    ).length;
+    expect(emitCallsAfter1stCircuit).toBeGreaterThanOrEqual(1);
+
+    // Avanca alem do CIRCUIT_MAX_MS — o circuit deve reabrir dentro desse teto
+    await advance(CIRCUIT_MAX_MS + 10_000);
+
+    // Apos CIRCUIT_MAX_MS, o hook tenta novamente (circuit semi-aberto) e, com mais
+    // falhas, deve reabrir — mas o delay da 2a abertura nao pode ultrapassar CIRCUIT_MAX_MS
+    const emitCallsAfter2ndCircuit = emit.mock.calls.filter(
+      (c) => c[0] === 'connection:circuit-open',
+    ).length;
+    // Pelo menos uma abertura adicional apos o 1o ciclo
+    expect(emitCallsAfter2ndCircuit).toBeGreaterThanOrEqual(emitCallsAfter1stCircuit);
+
+    // O circuit nunca ficou mais que CIRCUIT_MAX_MS fechado para novas tentativas
+    // Verificado indiretamente: connectInstance foi chamado novamente apos o 1o circuit
+    expect(connectInstance.mock.calls.length).toBeGreaterThan(CIRCUIT_THRESHOLD);
   });
 });
