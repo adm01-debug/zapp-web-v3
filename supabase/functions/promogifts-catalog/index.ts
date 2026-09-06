@@ -126,6 +126,16 @@ function checkRateLimit(userId: string): boolean {
 
 const REQUIRED_SECRETS = ["PROMOGIFTS_SUPABASE_URL", "PROMOGIFTS_SUPABASE_ANON_KEY"] as const;
 
+/**
+ * Retorna 403 quando o banco externo retorna insufficient_privilege (42501).
+ * Evita expor 500 genérico para falha de permissão conhecida.
+ */
+function isForbiddenError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const o = err as Record<string, unknown>;
+  return o.code === "42501" || o.code === "PGRST301";
+}
+
 function buildMisconfigPayload(missing: string[]) {
   return {
     status: "error",
@@ -260,7 +270,11 @@ Deno.serve(async (req) => {
       log.error("Missing PromoGifts external DB secrets", { missing });
       return jsonRes(buildMisconfigPayload(missing), 503, req);
     }
-    const extClient = createClient(extUrl, extKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    // Usa service_role key quando disponível (acesso completo sem RLS do anon).
+    // Se ausente, cai no anon key — queries que exigem permissão extra retornam
+    // 403 EXTERNAL_DB_FORBIDDEN em vez de 500 (mapeado no catch abaixo).
+    const extEffectiveKey = Deno.env.get("PROMOGIFTS_SUPABASE_SERVICE_ROLE_KEY") ?? extKey;
+    const extClient = createClient(extUrl, extEffectiveKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
     const parsed = parseOrReject('promogifts-catalog', CONTRACT_SCHEMAS['promogifts-catalog'], req, rawBody, { extraHeaders: getCorsHeaders(req) });
     if (parsed.ok === false) return parsed.response;
@@ -324,6 +338,11 @@ Deno.serve(async (req) => {
 
     return jsonRes({ error: "Invalid action" }, 400, req);
   } catch (err) {
+    if (isForbiddenError(err)) {
+      log.warn("Permissão negada no banco externo PromoGifts (42501)", { table: "suppliers/categories/products" });
+      return jsonRes({ error: "EXTERNAL_DB_FORBIDDEN", code: "EXTERNAL_DB_FORBIDDEN",
+        hint: "Configure PROMOGIFTS_SUPABASE_SERVICE_ROLE_KEY para acesso completo." }, 403, req);
+    }
     log.error("Error", { error: errMessage(err) });
     return jsonRes({ error: 'Internal server error' }, 500, req);
   }

@@ -2,12 +2,15 @@
 // Message-specific handlers moved to evolution-webhook-msg-handlers.ts
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getLogger } from "./logger.ts";
 import {
   isRecord, normalizePhone, toEventRecords, instanceOrFilter,
   getConnectionByInstance, getContactByPhone, persistProfilePicture, generatePhoneVariants,
   resolveLidToPhone, redactJid,
 } from "./evolution-helpers.ts";
 import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-webhook-handlers');
 
 const log = getLogger('evolution-webhook-handlers');
 

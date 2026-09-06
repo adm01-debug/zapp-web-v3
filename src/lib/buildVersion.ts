@@ -360,16 +360,15 @@ const BUNDLE_VERIFY_TIMEOUT_MS = 5_000;
  */
 async function isBundleReachable(remoteBuildId: string, entry?: string): Promise<boolean> {
   if (!remoteBuildId || typeof window === 'undefined') return true;
+  // Sem entry real do version.json o buildId é timestamp, não hash Vite.
+  // Um HEAD em `/assets/index-<timestamp>.js` sempre retorna 404 — não bloquear o reload.
+  if (!entry) return true;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), BUNDLE_VERIFY_TIMEOUT_MS);
     try {
-      // GAP-1 (QA-06): o BUILD_ID (timestamp) NÃO é o nome do asset — o Vite
-      // gera index-<hash>.js. Sem o entry (vindo do version.json), o HEAD 404
-      // abortava o reload automático SEMPRE. Fallback para compatibilidade.
-      // O entry do Rollup vem como 'assets/index-<hash>.js' — normaliza.
-      const normalized = entry?.startsWith('assets/') ? entry.slice('assets/'.length) : entry;
-      const assetPath = normalized ? `/assets/${normalized}` : `/assets/index-${remoteBuildId}.js`;
+      const normalized = entry.startsWith('assets/') ? entry.slice('assets/'.length) : entry;
+      const assetPath = `/assets/${normalized}`;
       const res = await fetch(assetPath, {
         method: 'HEAD',
         cache: 'no-store',
@@ -397,13 +396,13 @@ async function isBundleReachable(remoteBuildId: string, entry?: string): Promise
  */
 function prefetchNewBundle(remoteBuildId: string, entry?: string): void {
   if (!remoteBuildId || typeof window === 'undefined') return;
+  // Sem entry real do version.json, não prefetchar — evita GET garantido-404 no console.
+  if (!entry) return;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), PREFETCH_TIMEOUT_MS);
-    // GAP-1 (QA-06): com o entry real (version.json), prefetcha o asset correto.
-    // Fallback antigo para compatibilidade (deploys sem entry no version.json).
-    const normalized = entry?.startsWith('assets/') ? entry.slice('assets/'.length) : entry;
-    const jsPath = normalized ? `/assets/${normalized}` : `/assets/index-${remoteBuildId}.js`;
+    const normalized = entry.startsWith('assets/') ? entry.slice('assets/'.length) : entry;
+    const jsPath = `/assets/${normalized}`;
     // O CSS só é pré-carregado quando o version.json publica o nome real
     // (entryCss). Derivar do nome do JS dava 404 em 100% dos deploys — ver
     // o comentário de `remoteEntryCss`.

@@ -87,6 +87,15 @@ export function makeLogger(ctx: LogContext = {}): Logger {
 export const rootLogger = createLogger({ service: 'edge-function' });
 
 /**
+ * Retorna um logger nomeado por serviço — alias conveniente para `makeLogger`.
+ * Usado por edge functions que importam `getLogger` diretamente.
+ *
+ * @example
+ * const log = getLogger('promogifts-catalog');
+ */
+export function getLogger(service: string, ctx: LogContext = {}): Logger {
+  return createLogger({ service, ...ctx });
+=======
  * Compat: `getLogger(service)` era a API anterior a este arquivo (rewrite em
  * 20260906 via PR #1533) — 77 arquivos em supabase/functions/_shared ainda
  * chamam `getLogger('nome-do-servico')` no top-level do módulo. Sem este

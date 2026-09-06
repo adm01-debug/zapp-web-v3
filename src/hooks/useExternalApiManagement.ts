@@ -1251,6 +1251,7 @@ import type {
   ExternalTableName,
 } from '@/types/externalDB';
 import { validateEntityAccess, validateRpcAccess } from '@/integrations/datasource/sentinel';
+import { isExternalTableUnavailable } from '@/integrations/datasource/externalTableRegistry';
 
 // This hook is intentionally generic — it works with arbitrary table/rpc names
 // supplied at runtime, so we use an untyped client to avoid requiring compile-time
@@ -1267,6 +1268,16 @@ async function queryExternal<T = unknown>(params: {
   countMode?: 'exact' | 'planned' | 'estimated';
 }): Promise<ExternalDBQueryResult<T>> {
   validateEntityAccess(params.table, 'external');
+
+  // Fail-fast sem request ao PostgREST para tabelas catalogadas como inexistentes.
+  // Evita PGRST205 (Bug A — onda console 2026-09-06).
+  if (isExternalTableUnavailable(params.table)) {
+    return {
+      data: [],
+      meta: { record_count: null, duration_ms: 0, severity: 'ok', unavailable: true },
+    };
+  }
+
   const start = performance.now();
 
   let query = getDynamicClient()
