@@ -3822,40 +3822,8 @@ END; $$;
 
 CREATE OR REPLACE FUNCTION zapp.fn_auto_resolve_alerts() RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'zapp', 'public', 'pg_catalog'
-    AS $$
-BEGIN
-  -- Auto-resolver alertas de saturação de conexão se abaixou
-  UPDATE zapp.evolution_alerts
-  SET resolved_at = now(), resolved_by = 'auto_resolve_cron'
-  WHERE alert_type = 'connection_saturation'
-    AND resolved IS NOT TRUE
-    AND NOT EXISTS (
-      SELECT 1 FROM pg_stat_activity 
-      WHERE backend_type='client backend' 
-      HAVING count(*) > 0.8 * current_setting('max_connections')::int
-    );
-
-  -- Auto-resolver alertas de 401 se taxa caiu
-  UPDATE zapp.evolution_alerts
-  SET resolved_at = now(), resolved_by = 'auto_resolve_cron'
-  WHERE alert_type = 'high_401_rate'
-    AND resolved IS NOT TRUE
-    AND created_at < now() - interval '1 hour'
-    AND NOT EXISTS (
-      SELECT 1 FROM public.evo_traefik_401_stats
-      WHERE collected_at > now()-interval '1 hour'
-      HAVING sum("count") > 500
-    );
-
-  -- Auto-resolver alertas de DDL churn se passou 2h sem novo
-  UPDATE zapp.evolution_alerts
-  SET resolved_at = now(), resolved_by = 'auto_resolve_cron'
-  WHERE alert_type = 'ddl_policy_churn'
-    AND resolved IS NOT TRUE
-    AND created_at < now() - interval '2 hours';
-END;
-$$;
+    SET search_path TO 'zapp', 'ops', 'public', 'pg_catalog'
+    AS $$ BEGIN UPDATE zapp.evolution_alerts SET resolved_at = now(), resolved_by = 'auto_resolve_cron:connection_saturation_cleared' WHERE alert_type = 'connection_saturation' AND resolved IS NOT TRUE AND NOT EXISTS (SELECT 1 FROM pg_stat_activity WHERE backend_type = 'client backend' HAVING count(*) > 0.8 * current_setting('max_connections')::int); UPDATE zapp.evolution_alerts SET resolved_at = now(), resolved_by = 'auto_resolve_cron:high_401_rate_cleared' WHERE alert_type = 'high_401_rate' AND resolved IS NOT TRUE AND created_at < now() - interval '1 hour' AND NOT EXISTS (SELECT 1 FROM public.evo_traefik_401_stats WHERE collected_at > now() - interval '1 hour' HAVING sum("count") > 500); IF to_regclass('ops.ddl_audit') IS NOT NULL THEN UPDATE zapp.evolution_alerts SET resolved_at = now(), resolved_by = 'auto_resolve_cron:ddl_condition_cleared' WHERE alert_type = 'ddl_policy_churn' AND resolved IS NOT TRUE AND NOT EXISTS (SELECT 1 FROM ops.ddl_audit WHERE "at" > now() - interval '2 hours'); END IF; END; $$;
 
 
 
@@ -7880,6 +7848,14 @@ BEGIN
   );
 END;
 $$;
+
+
+
+
+CREATE OR REPLACE FUNCTION zapp.fn_dispatch_critical_alert_emails() RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'zapp', 'net', 'vault', 'public', 'pg_catalog'
+    AS $$ DECLARE v_service_key text; v_edge_url text := 'https://supabase.atomicabr.com.br/functions/v1/alert-email-notify'; v_alerts jsonb; v_alert_count int; v_request_id bigint; BEGIN SELECT decrypted_secret INTO v_service_key FROM vault.decrypted_secrets WHERE name = 'supabase_service_role_key' LIMIT 1; IF v_service_key IS NULL THEN RAISE WARNING 'E063: supabase_service_role_key nao encontrada no vault'; RETURN jsonb_build_object('ok', false, 'error', 'vault_secret_missing'); END IF; SELECT jsonb_agg(jsonb_build_object('id', id::text, 'alert_type', alert_type, 'severity', severity, 'title', title, 'message', message, 'created_at', created_at) ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 ELSE 2 END, created_at DESC) INTO v_alerts FROM zapp.evolution_alerts WHERE severity IN ('critical', 'high') AND resolved_at IS NULL AND (notified_at IS NULL OR notified_at < now() - interval '1 hour'); v_alert_count := coalesce(jsonb_array_length(v_alerts), 0); IF v_alert_count = 0 THEN RETURN jsonb_build_object('ok', true, 'dispatched', 0, 'message', 'Nenhum alerta pendente'); END IF; UPDATE zapp.evolution_alerts SET notified_at = now() WHERE severity IN ('critical', 'high') AND resolved_at IS NULL AND (notified_at IS NULL OR notified_at < now() - interval '1 hour'); SELECT net.http_post(url := v_edge_url, headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || v_service_key), body := jsonb_build_object('alerts', v_alerts)::text) INTO v_request_id; RAISE NOTICE 'E063: % alerta(s) despachado(s) request_id=%', v_alert_count, v_request_id; RETURN jsonb_build_object('ok', true, 'dispatched', v_alert_count, 'request_id', v_request_id); EXCEPTION WHEN OTHERS THEN RAISE WARNING 'E063: erro: %', SQLERRM; RETURN jsonb_build_object('ok', false, 'error', SQLERRM); END; $$;
 
 
 
@@ -12038,8 +12014,89 @@ COMMENT ON FUNCTION zapp.fn_pipeline_health_probe() IS 'Sonda a saúde do pipeli
 
 CREATE OR REPLACE FUNCTION zapp.fn_pipeline_watchdog() RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'zapp'
-    AS $$ DECLARE v_last_event timestamptz; v_hours_silent numeric; v_pending_wh int; v_result jsonb; v_alerts jsonb := '[]'::jsonb; v_recent_alert bigint; BEGIN SELECT MAX(created_at) INTO v_last_event FROM zapp.webhook_audit_log WHERE status='processed'; v_hours_silent := round( EXTRACT(EPOCH FROM (now() - COALESCE(v_last_event, now() - interval '9999 hours'))) / 3600, 1 ); SELECT count(*) INTO v_pending_wh FROM zapp.webhook_audit_log WHERE status='pending'; IF v_hours_silent > 4 THEN v_alerts := v_alerts || jsonb_build_object( 'level', 'CRITICAL', 'code', 'PIPELINE_SILENT', 'msg', 'Sem webhooks processados ha ' || v_hours_silent || 'h -- ultimo em ' || COALESCE(v_last_event::text,'nunca') ); SELECT COUNT(*) INTO v_recent_alert FROM zapp.evolution_alerts WHERE alert_type = 'pipeline_silent' AND resolved_at IS NULL AND created_at > now() - INTERVAL '4 hours'; IF v_recent_alert = 0 THEN INSERT INTO zapp.evolution_alerts (id, alert_type, severity, title, message, payload, acknowledged, created_at) VALUES (gen_random_uuid(), 'pipeline_silent', 'critical', 'Pipeline silencioso ha ' || v_hours_silent || 'h', 'Pipeline sem webhooks processados ha ' || v_hours_silent || ' horas', jsonb_build_object('last_event', v_last_event, 'hours_silent', v_hours_silent, 'source_table', 'zapp.webhook_audit_log'), false, now()); END IF; ELSE UPDATE zapp.evolution_alerts SET resolved_at = now(), resolved_by = 'fn_pipeline_watchdog:auto' WHERE alert_type = 'pipeline_silent' AND resolved_at IS NULL; END IF; IF v_pending_wh > 100 THEN v_alerts := v_alerts || jsonb_build_object('level', 'WARNING', 'code', 'WEBHOOK_BACKLOG', 'msg', v_pending_wh::text || ' webhooks pendentes'); END IF; RETURN jsonb_build_object('checked_at', now(), 'last_event', v_last_event, 'hours_silent', v_hours_silent, 'pending_wh', v_pending_wh, 'alerts', v_alerts, 'alert_count', jsonb_array_length(v_alerts), 'status', CASE WHEN jsonb_array_length(v_alerts) = 0 THEN 'ok' ELSE 'degraded' END, 'source_table', 'zapp.webhook_audit_log'); END; $$;
+    SET search_path TO 'zapp', 'public'
+    AS $$
+DECLARE
+  v_last_event   timestamptz;
+  v_hours_silent numeric;
+  v_label_silent text;
+  v_pending_wh   int;
+  v_alerts       jsonb := '[]'::jsonb;
+  v_recent_alert bigint;
+BEGIN
+  SELECT MAX(created_at) INTO v_last_event
+    FROM zapp.webhook_audit_log
+   WHERE status = 'processed';
+  IF v_last_event IS NULL THEN
+    v_hours_silent := NULL;
+    v_label_silent := 'nunca';
+  ELSE
+    v_hours_silent := round(EXTRACT(EPOCH FROM (now() - v_last_event)) / 3600, 1);
+    v_label_silent := CASE
+      WHEN v_hours_silent > 720 THEN '>720h'
+      ELSE v_hours_silent::text || 'h'
+    END;
+  END IF;
+  SELECT count(*) INTO v_pending_wh
+    FROM zapp.webhook_audit_log
+   WHERE status = 'pending';
+  IF v_hours_silent IS NULL OR v_hours_silent > 4 THEN
+    v_alerts := v_alerts || jsonb_build_object(
+      'level', 'CRITICAL',
+      'code',  'PIPELINE_SILENT',
+      'msg',   'Sem webhooks processados ha ' || v_label_silent ||
+               ' -- ultimo em ' || COALESCE(v_last_event::text, 'nunca')
+    );
+    SELECT COUNT(*) INTO v_recent_alert
+      FROM zapp.evolution_alerts
+     WHERE alert_type  = 'pipeline_silent'
+       AND resolved_at IS NULL
+       AND created_at  > now() - INTERVAL '4 hours';
+    IF v_recent_alert = 0 THEN
+      INSERT INTO zapp.evolution_alerts
+        (id, alert_type, severity, title, message, payload, acknowledged, created_at)
+      VALUES (
+        gen_random_uuid(),
+        'pipeline_silent',
+        'critical',
+        'Pipeline silencioso ha ' || v_label_silent,
+        'Pipeline sem webhooks processados ha ' || v_label_silent,
+        jsonb_build_object(
+          'last_event',   v_last_event,
+          'hours_silent', v_hours_silent,
+          'source_table', 'zapp.webhook_audit_log'
+        ),
+        false,
+        now()
+      );
+    END IF;
+  ELSE
+    UPDATE zapp.evolution_alerts
+       SET resolved_at = now(),
+           resolved_by = 'fn_pipeline_watchdog:auto'
+     WHERE alert_type   = 'pipeline_silent'
+       AND resolved_at IS NULL;
+  END IF;
+  IF v_pending_wh > 100 THEN
+    v_alerts := v_alerts || jsonb_build_object(
+      'level', 'WARNING',
+      'code',  'WEBHOOK_BACKLOG',
+      'msg',   v_pending_wh::text || ' webhooks pendentes'
+    );
+  END IF;
+  RETURN jsonb_build_object(
+    'checked_at',   now(),
+    'last_event',   v_last_event,
+    'hours_silent', v_hours_silent,
+    'label_silent', v_label_silent,
+    'pending_wh',   v_pending_wh,
+    'alerts',       v_alerts,
+    'alert_count',  jsonb_array_length(v_alerts),
+    'status',       CASE WHEN jsonb_array_length(v_alerts) = 0 THEN 'ok' ELSE 'degraded' END,
+    'source_table', 'zapp.webhook_audit_log'
+  );
+END;
+$$;
 
 
 
@@ -14647,6 +14704,14 @@ CREATE OR REPLACE FUNCTION zapp.fn_segments_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'zapp', 'public', 'pg_catalog'
     AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
+
+
+
+
+CREATE OR REPLACE FUNCTION zapp.fn_send_alert_heartbeat() RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'zapp', 'net', 'vault', 'public', 'pg_catalog'
+    AS $$ DECLARE v_service_key text; v_edge_url text := 'https://supabase.atomicabr.com.br/functions/v1/alert-email-notify'; v_open_count int; v_request_id bigint; BEGIN SELECT decrypted_secret INTO v_service_key FROM vault.decrypted_secrets WHERE name = 'supabase_service_role_key' LIMIT 1; IF v_service_key IS NULL THEN RAISE WARNING 'E063-heartbeat: supabase_service_role_key nao encontrada no vault'; RETURN jsonb_build_object('ok', false, 'error', 'vault_secret_missing'); END IF; SELECT count(*) INTO v_open_count FROM zapp.evolution_alerts WHERE resolved_at IS NULL; SELECT net.http_post(url := v_edge_url, headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || v_service_key), body := jsonb_build_object('alerts', jsonb_build_array(jsonb_build_object('id', gen_random_uuid()::text, 'alert_type', 'heartbeat', 'severity', 'medium', 'title', 'Sistema ZAPP operacional heartbeat semanal', 'message', 'Canal de notificacao de alertas ativo. Alertas abertos: ' || v_open_count::text, 'created_at', now()::text)))::text) INTO v_request_id; RAISE NOTICE 'E063-heartbeat: enviado (open_alerts=%) request_id=%', v_open_count, v_request_id; RETURN jsonb_build_object('ok', true, 'open_alerts', v_open_count, 'request_id', v_request_id); EXCEPTION WHEN OTHERS THEN RAISE WARNING 'E063-heartbeat: erro: %', SQLERRM; RETURN jsonb_build_object('ok', false, 'error', SQLERRM); END; $$;
 
 
 
