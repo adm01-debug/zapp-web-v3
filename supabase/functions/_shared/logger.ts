@@ -17,11 +17,30 @@ export interface LogContext {
 }
 
 export interface Logger {
-  debug(message: string, ctx?: LogContext): void;
-  info(message: string, ctx?: LogContext): void;
-  warn(message: string, ctx?: LogContext): void;
-  error(message: string, ctx?: LogContext): void;
+  debug(message: string, ctx?: unknown): void;
+  info(message: string, ctx?: unknown): void;
+  warn(message: string, ctx?: unknown): void;
+  error(message: string, ctx?: unknown): void;
   child(ctx: LogContext): Logger;
+}
+
+/**
+ * Normaliza o 2º argumento de debug/info/warn/error para um `LogContext`
+ * espalhável. API anterior a este arquivo (rewrite 20260906, PR #1533)
+ * aceitava qualquer valor ali (padrão comum: `log.error('msg', err)` com
+ * `err: unknown` de um catch) — 382 call-sites em supabase/functions ainda
+ * fazem isso. Sem esta normalização, `unknown`/`Error` passado direto
+ * quebra o Parse gate (`deno check`): TS2345 (unknown não é LogContext).
+ */
+function normalizeCtx(ctx: unknown): LogContext {
+  if (ctx === undefined || ctx === null) return {};
+  if (ctx instanceof Error) {
+    return { error: ctx.message, stack: ctx.stack };
+  }
+  if (typeof ctx === 'object') {
+    return ctx as LogContext;
+  }
+  return { error: String(ctx) };
 }
 
 function emit(level: LogLevel, message: string, ctx: LogContext): void {
@@ -44,10 +63,10 @@ function emit(level: LogLevel, message: string, ctx: LogContext): void {
 
 function createLogger(baseCtx: LogContext = {}): Logger {
   return {
-    debug: (msg, ctx) => emit('debug', msg, { ...baseCtx, ...ctx }),
-    info:  (msg, ctx) => emit('info',  msg, { ...baseCtx, ...ctx }),
-    warn:  (msg, ctx) => emit('warn',  msg, { ...baseCtx, ...ctx }),
-    error: (msg, ctx) => emit('error', msg, { ...baseCtx, ...ctx }),
+    debug: (msg, ctx) => emit('debug', msg, { ...baseCtx, ...normalizeCtx(ctx) }),
+    info:  (msg, ctx) => emit('info',  msg, { ...baseCtx, ...normalizeCtx(ctx) }),
+    warn:  (msg, ctx) => emit('warn',  msg, { ...baseCtx, ...normalizeCtx(ctx) }),
+    error: (msg, ctx) => emit('error', msg, { ...baseCtx, ...normalizeCtx(ctx) }),
     child: (ctx) => createLogger({ ...baseCtx, ...ctx }),
   };
 }
@@ -66,3 +85,15 @@ export function makeLogger(ctx: LogContext = {}): Logger {
 
 /** Logger singleton para uso em módulos sem contexto de request. */
 export const rootLogger = createLogger({ service: 'edge-function' });
+
+/**
+ * Compat: `getLogger(service)` era a API anterior a este arquivo (rewrite em
+ * 20260906 via PR #1533) — 77 arquivos em supabase/functions/_shared ainda
+ * chamam `getLogger('nome-do-servico')` no top-level do módulo. Sem este
+ * export, o import falha com SyntaxError no boot do main worker das edge
+ * functions (achado do Gate 6 — todo módulo com `import { getLogger }`
+ * quebra o boot inteiro, não só o próprio módulo).
+ */
+export function getLogger(service: string): Logger {
+  return makeLogger({ service });
+}
