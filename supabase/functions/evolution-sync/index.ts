@@ -7,6 +7,9 @@ import {
   syncContacts, syncMessages, syncAllMessages,
   setupWebhook, cleanupMock, fullSync,
 } from "../_shared/evolution-sync-actions.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('evolution-sync');
 
 
 

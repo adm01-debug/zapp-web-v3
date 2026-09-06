@@ -1,6 +1,9 @@
 import { getCorsHeaders, handleCors, readJsonBodyOrEmpty } from "../_shared/validation.ts";
 import { requireServiceRoleOrCron } from "../_shared/auth.ts";
 import { createZappAdminClient } from "../_shared/db-client.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('evolution-group-sync');
 import { getBaseUrl } from "../_shared/providers/evolution/index.ts";
 import { getSecret } from "../_shared/vault.ts";
 import { parseOrReject, buildContractErrorBody } from "../_shared/contract-kit.ts";
@@ -324,12 +327,10 @@ export async function handleIsonwa(
           p_raw: item,
         });
         if (lidErr) {
-          console.warn("[evolution-group-sync] fn_upsert_lid_identity", {
-            lid_jid: item.jid, pn_jid: pn, message: lidErr.message,
-          });
+          log.warn('fn_upsert_lid_identity', { lid_jid: item.jid, pn_jid: pn, message: lidErr.message });
         }
       } catch (e) {
-        console.warn("[evolution-group-sync] fn_upsert_lid_identity exceção", errMsg(e));
+        log.warn('fn_upsert_lid_identity exceção', { error: errMsg(e) });
       }
     }
   }
@@ -455,10 +456,7 @@ Deno.serve(async (req) => {
     (params) => supabase.rpc("zapp_upsert_group_participants", params),
   );
 
-  console.log("[evolution-group-sync] groups sync concluído", {
-    instance: instanceName, fetched: stats.fetched, upserted: stats.upserted,
-    errors: stats.errors, primeiro_erro: stats.primeiro_erro,
-  });
+  log.info('groups sync concluído', { instance: instanceName, fetched: stats.fetched, upserted: stats.upserted, errors: stats.errors, primeiro_erro: stats.primeiro_erro });
 
   return jsonResponse({
     ok: true,

@@ -9,6 +9,9 @@ import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('contacts-import');
 
 const VALID_DDDS = new Set([11,12,13,14,15,16,17,18,19,21,22,24,27,28,31,32,33,34,35,37,38,41,42,43,44,45,46,47,48,49,51,53,54,55,61,62,63,64,65,66,67,68,69,71,73,74,75,77,79,81,82,83,84,85,86,87,88,89,91,92,93,94,95,96,97,98,99]);
 
@@ -81,11 +84,7 @@ Deno.serve(async (req) => {
     // matches the requested instanceName to prevent RLS bypass via admin client upsert.
     // This mitigates risk if RLS policies on evolution_contacts are weaker than expected.
     if (ownedConn.instance_name !== instanceName) {
-      console.error('[contacts-import] instance_name mismatch after RLS check', {
-        user_id: user.id,
-        requested: instanceName,
-        verified: ownedConn.instance_name,
-      });
+      log.error('instance_name mismatch after RLS check', { user_id: user.id, requested: instanceName, verified: ownedConn.instance_name });
       return new Response(
         JSON.stringify({ error: 'Instance name mismatch — authorization revoked' }),
         { status: 403, headers: JSON_CORS }
@@ -134,7 +133,7 @@ Deno.serve(async (req) => {
       export_format: 'csv_import',
       filters_used: { rows_total: rows.length, inserted, errors: errors.length },
     });
-    if (exportLogErr) console.warn('[contacts-import] contact_export_log insert failed:', exportLogErr.message);
+    if (exportLogErr) log.warn('contact_export_log insert failed', { error: exportLogErr.message });
 
     return new Response(
       JSON.stringify({ inserted, updated: 0, skipped, errors: errors.slice(0, 50), total_processed: rows.length, duration_ms: Date.now() - startTime }),
@@ -142,7 +141,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (err) {
-    console.error('[contacts-import] unexpected error', err instanceof Error ? err.message : String(err));
+    log.error('unexpected error', { error: err instanceof Error ? err.message : String(err) });
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } });
   }
 });

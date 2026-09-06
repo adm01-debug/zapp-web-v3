@@ -1,6 +1,9 @@
 import { createZappAdminClient, createZappClient } from '../_shared/db-client.ts';
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('sla-alert-log-failure');
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 interface FailurePayload {
@@ -69,7 +72,7 @@ Deno.serve(async (req) => {
   if (profile) {
     performedBy = profile.id;
   } else {
-    console.warn('[sla-alert-log-failure] no profile found for user', user.id);
+    log.warn('no profile found for user', { user_id: user.id });
   }
 
   const metadata = {
@@ -95,12 +98,7 @@ Deno.serve(async (req) => {
 
   if (insertError) {
     // Last resort: surface to function logs so operators can grep.
-    console.error("[sla-alert-log-failure] failed to record failure", {
-      code: insertError.code,
-      message: insertError.message,
-      user_id: user.id,
-      contact_id: body.contact_id,
-    });
+    log.error('failed to record failure', { code: insertError.code, message: insertError.message, user_id: user.id, contact_id: body.contact_id });
     return new Response(
       JSON.stringify({ ok: false, error: "Failed to log failure" }),
       {

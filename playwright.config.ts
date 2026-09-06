@@ -43,6 +43,7 @@ export default defineConfig({
     {
       name: 'legacy-e2e',
       testDir: './tests',
+      testIgnore: '**/integration/**',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

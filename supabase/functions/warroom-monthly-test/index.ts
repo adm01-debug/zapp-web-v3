@@ -15,9 +15,11 @@
  *       502 {"ok":false,"error":"webhook_fetch_failed","status":0}
  *       401 {"error":"Unauthorized"} / 405 {"error":"Method not allowed"}
  *
- * Self-contained: zero imports de _shared/ ou externos.
  * Sem logs de segredos: nunca loga token/header/payload de resposta.
  */
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('warroom-monthly-test');
 const WEBHOOK_URL = "https://n8n.atomicabr.com.br/webhook/warroom-alert";
 const WEBHOOK_TIMEOUT_MS = 15_000;
 
@@ -73,10 +75,10 @@ Deno.serve(async (req) => {
       signal: controller.signal,
     });
     await res.arrayBuffer().catch(() => {});
-    console.log(`[warroom-monthly-test] webhook_status=${res.status}`);
+    log.info('webhook_status', { status: res.status });
     return json(200, { ok: true, status: res.status });
   } catch {
-    console.log("[warroom-monthly-test] fetch_failed");
+    log.info('fetch_failed');
     return json(502, { ok: false, error: "webhook_fetch_failed", status: 0 });
   } finally {
     clearTimeout(timer);
