@@ -11,12 +11,15 @@
  * - Telemetria de fallback
  * - API Key lida de um único ponto
  * - Envelope versionado de request/response
+ * - Circuit breaker (Dim-13): protege contra cascata de falhas
+ * - W3C traceparent (Dim-10): rastreabilidade distribuída
  */
 
 export interface EvolutionClientConfig {
   maxRetries?: number;
   timeoutMs?: number;
   instance?: string;
+  traceparent?: string;
 }
 
 export interface EvolutionResponse<T = unknown> {
@@ -25,6 +28,50 @@ export interface EvolutionResponse<T = unknown> {
   data?: T;
   error?: string;
   retries?: number;
+  circuitOpen?: boolean;
+}
+
+// ─── Circuit Breaker (Dim-13) ─────────────────────────────────────────────────
+// Estado de módulo: persiste durante o warm do isolate Deno.
+// Protege chamadas múltiplas dentro de uma invocação e entre invocações quentes.
+
+const CIRCUIT_OPEN_THRESHOLD = 5;
+const CIRCUIT_RECOVERY_MS = 30_000;
+
+const _cb = {
+  failures: 0,
+  lastFailureAt: 0,
+  isOpen: false,
+};
+
+function circuitIsOpen(): boolean {
+  if (!_cb.isOpen) return false;
+  if (Date.now() - _cb.lastFailureAt >= CIRCUIT_RECOVERY_MS) {
+    _cb.isOpen = false;
+    _cb.failures = 0;
+    return false;
+  }
+  return true;
+}
+
+function circuitRecordFailure(): void {
+  _cb.failures += 1;
+  _cb.lastFailureAt = Date.now();
+  if (_cb.failures >= CIRCUIT_OPEN_THRESHOLD) _cb.isOpen = true;
+}
+
+function circuitRecordSuccess(): void {
+  _cb.failures = 0;
+  _cb.isOpen = false;
+}
+
+// ─── W3C Traceparent (Dim-10) ─────────────────────────────────────────────────
+
+function generateTraceparent(): string {
+  const traceId = crypto.randomUUID().replace(/-/g, '');
+  const randBytes = crypto.getRandomValues(new Uint8Array(8));
+  const spanId = Array.from(randBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `00-${traceId}-${spanId}-01`;
 }
 
 export function getBaseUrl(): string {
@@ -44,13 +91,25 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Realiza uma chamada HTTP para a Evolution API com retry automático.
+ * Realiza uma chamada HTTP para a Evolution API com retry automático,
+ * circuit breaker e W3C traceparent.
  */
 export async function evolutionFetch<T = unknown>(
   path: string,
   options: RequestInit & EvolutionClientConfig = {},
 ): Promise<EvolutionResponse<T>> {
-  const { maxRetries = 2, timeoutMs = 30_000, instance, ...fetchOpts } = options;
+  // Circuit breaker: rejeita imediatamente se circuito estiver aberto
+  if (circuitIsOpen()) {
+    return {
+      ok: false,
+      status: 0,
+      error: 'circuit-open: Evolution API temporariamente indisponível',
+      retries: 0,
+      circuitOpen: true,
+    };
+  }
+
+  const { maxRetries = 2, timeoutMs = 30_000, instance, traceparent, ...fetchOpts } = options;
   const baseUrl = getBaseUrl();
   const apiKey = getApiKey();
 
@@ -61,6 +120,8 @@ export async function evolutionFetch<T = unknown>(
   const headers = new Headers(fetchOpts.headers);
   headers.set('apikey', apiKey);
   headers.set('Content-Type', 'application/json');
+  // W3C Trace Context (Dim-10): propaga ou gera novo traceparent
+  headers.set('traceparent', traceparent ?? generateTraceparent());
 
   let lastError: string = '';
   let lastStatus = 0; // 0 = falha de rede/timeout (sem resposta HTTP)
@@ -78,6 +139,7 @@ export async function evolutionFetch<T = unknown>(
 
       if (res.ok) {
         const data = await res.json().catch(() => null) as T;
+        circuitRecordSuccess();
         return { ok: true, status: res.status, data, retries: attempt };
       }
 
@@ -92,6 +154,7 @@ export async function evolutionFetch<T = unknown>(
     }
   }
 
+  circuitRecordFailure();
   return { ok: false, status: lastStatus, error: lastError, retries: maxRetries };
 }
 
