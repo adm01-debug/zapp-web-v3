@@ -119,6 +119,9 @@ Deno.serve(async (req) => {
   // Tenta extrair instância do header (alguns webhooks Evolution mandam) p/ contar falhas
   // antes mesmo de parsear o body. Cai em 'unknown' se não houver.
   const headerInstance = req.headers.get('x-evolution-instance') || req.headers.get('x-instance') || null;
+  // [E061 2026-09-06] Detecta probe do stack supabase-functions-liveness (stack 265).
+  // Probes não devem contar como falha de segurança nem poluir invalid_signature KPI.
+  const isLivenessProbe = req.headers.get('x-probe') === 'liveness';
 
   // [C-9 2026-08-06] Auth padronizada: HMAC-SHA256 (x-webhook-signature) é o esquema PRIMÁRIO.
   // O validador rejeita qualquer request com assinatura presente porém INVÁLIDA — mesmo que um
@@ -130,13 +133,16 @@ Deno.serve(async (req) => {
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
-      console.warn(redactSecrets(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`));
-      // Auto-pause: conta invalid_signature na janela e persiste o evento
-      recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
+      console.warn(redactSecrets(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound} isLivenessProbe=${isLivenessProbe}`));
+      // Auto-pause: conta invalid_signature na janela — ignorado para liveness probe (stack 265).
+      if (!isLivenessProbe) {
+        recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
+      }
       await auditWebhookEvent(supabase, {
         request_id: requestId, status: 'rejected', status_code: 401,
         error_message: result.error ?? 'invalid_signature',
         duration_ms: Date.now() - startedAt,
+        webhook_source: isLivenessProbe ? 'liveness-probe' : 'external',
       });
       // [PATCH 23] Rejeições de AUTH (401) NÃO gravam no ingest_ledger de propósito:
       // o cron ingest-loss-alert (job 338) conta outcome='rejected' como perda e
