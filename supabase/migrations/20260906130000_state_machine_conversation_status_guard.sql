@@ -16,9 +16,12 @@
 --   resolved  : open, pending, waiting, resolved (no-op)
 --   waiting   : open, pending, resolved, waiting (no-op)
 --
--- Transições BLOQUEADAS (exemplos):
---   resolved → pending  (✗ — deve reabrir para open primeiro, caso aplicável)
---   Qualquer → valor inválido (coberto pelo CHECK constraint existente)
+-- Transições BLOQUEADAS:
+--   qualquer → NULL   (status não pode ser removido — ERRCODE check_violation)
+-- Observação: a máquina é simétrica — qualquer estado pode ir a qualquer outro
+-- estado válido diretamente (sem rota obrigatória via 'open'). Isso inclui
+-- resolved → pending sem passar por open. Valores fora do enum são permitidos
+-- com aviso para não bloquear deploys com novos status futuros.
 --
 -- NOTA: A tabela evo.evolution_conversations é particionada. O trigger
 -- DEVE ser criado na tabela ROOT (evo.evolution_conversations), não nas
