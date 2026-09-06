@@ -5,6 +5,10 @@ import { SendEmailV1Schema } from '../_shared/contract-schemas.ts';
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { fetchWithRetry } from '../_shared/retry-with-backoff.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('send-email');
+
 /**
  * send-email — Endpoint unificado legado (mantido para compatibilidade)
  *
@@ -72,7 +76,7 @@ Deno.serve(async (req) => {
           return json(resData, res.status >= 500 ? 502 : res.status);
         }
       } catch (fetchErr) {
-        console.error('[send-email] gmail-send fetch error:', fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+        log.error('gmail-send fetch error', { error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
         return json({ error: 'Failed to delegate to gmail-send' }, 502);
       }
 
@@ -136,12 +140,12 @@ Deno.serve(async (req) => {
 
       return json({ messageId, provider: 'resend' }, 200);
     } catch (resendErr) {
-      console.error('[send-email] Resend error:', resendErr instanceof Error ? resendErr.message : String(resendErr));
+      log.error('Resend error', { error: resendErr instanceof Error ? resendErr.message : String(resendErr) });
       return json({ error: 'Failed to send email via Resend' }, 502);
     }
 
   } catch (err) {
-    console.error('[send-email]', err instanceof Error ? err.message : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return json({ error: 'Internal server error' }, 500);
   }
 });

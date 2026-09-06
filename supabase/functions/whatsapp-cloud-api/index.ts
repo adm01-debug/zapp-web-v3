@@ -11,6 +11,10 @@ import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('whatsapp-cloud-api');
+
 interface Credentials {
   connection_id: string;
   phone_number_id: string;
@@ -112,7 +116,7 @@ async function persistOutbound(
       p_metadata: metadata ?? { source: 'whatsapp_cloud_api' },
     } as Record<string, unknown>);
   } catch (e) {
-    console.error('[whatsapp-cloud-api] rpc_insert_message failed', e instanceof Error ? e.message : String(e));
+    log.error('rpc_insert_message failed', { error: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -123,10 +127,7 @@ Deno.serve(async (req) => {
   const supabaseAnonKey = Deno.env.get('SELFHOSTED_SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY');
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('[whatsapp-cloud-api] missing environment configuration', {
-      url_present: !!supabaseUrl,
-      key_present: !!supabaseAnonKey,
-    });
+    log.error('missing environment configuration', { url_present: !!supabaseUrl, key_present: !!supabaseAnonKey });
     return errorEnvelope('supabase_config_missing', 'Supabase configuration missing. Contact administrator.', 500, req);
   }
 
@@ -321,7 +322,7 @@ Deno.serve(async (req) => {
   }, 200, req);
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("[whatsapp-cloud-api] Global Error:", errorMsg);
+    log.error('Global Error', { error: errorMsg });
     if (error instanceof Error && 'status' in error && typeof (error as Record<string, unknown>).status === 'number') {
       return errorResponse(errorMsg, (error as Record<string, unknown>).status as number, req);
     }

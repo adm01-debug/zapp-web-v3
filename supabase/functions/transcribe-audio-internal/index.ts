@@ -9,6 +9,9 @@
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { getCorsHeaders } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('transcribe-audio-internal');
 
 Deno.serve(async (req) => {
   const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY') || '';
@@ -114,7 +117,7 @@ Deno.serve(async (req) => {
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'unknown';
-    console.error('[v6] unhandled error for', messageId, ':', err);
+    log.error('unhandled error', { messageId, error: err instanceof Error ? err.message : String(err) });
     await updateTranscription(SUPABASE_URL, SERVICE_ROLE_KEY, messageId, null, 'failed', 'internal_error', msg).catch(() => {});
     return Response.json({ error: 'Internal error', detail: msg, messageId }, { status: 500 });
   }
@@ -177,8 +180,8 @@ async function updateTranscription(
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + serviceKey, 'apikey': serviceKey },
       body: JSON.stringify(body),
     });
-    if (!res.ok) console.error('[updateTranscription] HTTP', res.status, 'for', messageId);
+    if (!res.ok) log.error('HTTP error in updateTranscription', { status: res.status, messageId });
   } catch (err: unknown) {
-    console.error('[updateTranscription] error for', messageId, ':', err instanceof Error ? err.message : err);
+    log.error('error in updateTranscription', { messageId, error: err instanceof Error ? err.message : String(err) });
   }
 }

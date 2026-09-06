@@ -30,7 +30,7 @@ function emit(level: LogLevel, fn: string, msg: string, ctx?: Record<string, unk
   if (level === 'error' || level === 'warn') {
     console.error(line);
   } else {
-    console.log(line);
+    Deno.stdout.writeSync(new TextEncoder().encode(line + '\n'));
   }
 }
 

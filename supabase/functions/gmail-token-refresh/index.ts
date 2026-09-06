@@ -5,6 +5,10 @@ import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('gmail-token-refresh');
+
 /**
  * Edge Function: Gmail OAuth Token Refresh Manager
  *
@@ -123,7 +127,7 @@ Deno.serve(async (req) => {
         .lt('token_expiry', new Date(Date.now() + 10 * 60_000).toISOString());
 
       if (dbErr) {
-        console.error('[gmail-token-refresh] DB error fetching accounts:', dbErr.message);
+        log.error('DB error fetching accounts', { error: dbErr.message });
         return json({ error: 'Internal server error' }, 500);
       }
       if (!accounts || accounts.length === 0) {
@@ -152,7 +156,7 @@ Deno.serve(async (req) => {
           else if (v.status === 'failed' || v.status === 'error') failed++;
         } else {
           failed++;
-          console.error('[gmail-token-refresh] unexpected rejection:', r.reason);
+          log.error('unexpected rejection', { reason: r.reason });
           results.push({ email: 'unknown', status: 'error' });
         }
       }
@@ -166,7 +170,7 @@ Deno.serve(async (req) => {
           acknowledged: true,
           acknowledged_at: new Date().toISOString(),
         });
-        if (alertErr) console.warn('[gmail-token-refresh] evolution_alerts insert failed:', alertErr.message);
+        if (alertErr) log.warn('evolution_alerts insert failed', { error: alertErr.message });
       }
 
       return json({
@@ -255,7 +259,7 @@ Deno.serve(async (req) => {
     return json({ error: `Ação desconhecida: ${action}` }, 400);
 
   } catch (err) {
-    console.error('[gmail-token-refresh]', err instanceof Error ? (err.stack ?? err.message) : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? (err.stack ?? err.message) : String(err) });
     return json({ error: 'Internal server error' }, 500);
   }
 });
@@ -316,7 +320,7 @@ async function refreshOneAccount(
           is_active:  false,
           updated_at: new Date().toISOString(),
         }).eq('id', account.id);
-        if (deactivateErr) console.error('[gmail-token-refresh] failed to deactivate account:', deactivateErr.message);
+        if (deactivateErr) log.error('failed to deactivate account', { error: deactivateErr.message });
       }
       return { email: account.email, status: 'failed', error: `Token refresh failed: ${errText.substring(0, 200)}` };
     }
@@ -346,7 +350,7 @@ async function refreshOneAccount(
             watch_expiry: new Date(Number(watchData.expiration)).toISOString(),
             history_id:   watchData.historyId,
           }).eq('id', account.id);
-          if (watchErr) console.warn('[gmail-token-refresh] watch_expiry update failed:', watchErr.message);
+          if (watchErr) log.warn('watch_expiry update failed', { error: watchErr.message });
         }
       } catch { /* best-effort */ }
     }
