@@ -3,6 +3,9 @@ import { requireUser } from "../_shared/auth.ts";
 import { createZappClient } from "../_shared/db-client.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('mcp-server');
 
 /**
  * MCP Server for Claude / AI Agents — implementação REAL (R2, 2026-08-18).
@@ -130,7 +133,7 @@ Deno.serve(async (req) => {
 
     return jsonRpcError(-32601, `Método não encontrado: ${method}`);
   } catch (error) {
-    console.error("[mcp-server] unhandled error:", error);
+    log.error("[mcp-server] unhandled error:", error);
     return new Response(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32603, message: "Internal server error" } }), {
       status: 500,
       headers: corsHeaders,

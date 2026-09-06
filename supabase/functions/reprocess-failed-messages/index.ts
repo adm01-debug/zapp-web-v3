@@ -10,6 +10,8 @@ import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
 import { evolutionFetch } from '../_shared/providers/evolution/index.ts';
+import { getLogger } from '../_shared/logger.ts';
+const log = getLogger('reprocess-failed-messages');
 const MAX_BATCH = 25;
 
 Deno.serve(async (req) => {
@@ -47,7 +49,7 @@ Deno.serve(async (req) => {
       .limit(MAX_BATCH);
 
     if (error) {
-      console.error('[reprocess-failed-messages] fetch error', error.message);
+      log.error('fetch error', { error: error.message });
       return json(req, { error: true, message: 'Failed to fetch messages' }, 500);
     }
     if (!rows || rows.length === 0) {
@@ -80,7 +82,7 @@ Deno.serve(async (req) => {
           instance === '.' ||
           instance === '..'
         ) {
-          console.error('[dlq-reprocess] unsafe path or instance, abandoning row', { id: row.id });
+          log.error('unsafe path or instance, abandoning row', { id: row.id });
           const { error: ssrfAbandonErr } = await supabase
             .from('failed_messages')
             .update({
@@ -90,7 +92,7 @@ Deno.serve(async (req) => {
               error_message: 'unsafe path or instance_name rejected',
             })
             .eq('id', row.id);
-          if (ssrfAbandonErr) console.error('[dlq-reprocess] failed to mark ssrf row abandoned', ssrfAbandonErr.message);
+          if (ssrfAbandonErr) log.error('failed to mark ssrf row abandoned', { error: ssrfAbandonErr.message });
           abandoned++;
           continue;
         }
@@ -102,18 +104,15 @@ Deno.serve(async (req) => {
         const isCloudRow =
           row.provider === 'cloud' || instance === 'cloud' || /^\d{8,}$/.test(instance);
 
-        console.info(
-          '[dlq-reprocess]',
-          JSON.stringify({
-            id: row.id,
-            instance,
-            path,
-            attempt,
-            max: row.max_retries,
-            hasIdem: !!idemKey,
-            provider: isCloudRow ? 'cloud' : 'evolution',
-          })
-        );
+        log.info('processing row', {
+          id: row.id,
+          instance,
+          path,
+          attempt,
+          max: row.max_retries,
+          hasIdem: !!idemKey,
+          provider: isCloudRow ? 'cloud' : 'evolution',
+        });
 
         // Mesmo envelope ({ok,status,error}) para os dois providers → bookkeeping
         // comum abaixo (succeeded/retrying/abandoned) permanece intacto.
@@ -171,7 +170,7 @@ Deno.serve(async (req) => {
               succeeded_at: new Date().toISOString(),
             })
             .eq('id', row.id);
-          if (succeedErr) console.error('[dlq-reprocess] failed to mark succeeded', { id: row.id, error: succeedErr.message });
+          if (succeedErr) log.error('failed to mark succeeded', { id: row.id, error: succeedErr.message });
           succeeded++;
         } else if (attempt >= row.max_retries) {
           const reason = classifyRetryReason(statusCode, respText);
@@ -186,7 +185,7 @@ Deno.serve(async (req) => {
               last_retry_reason: reason,
             })
             .eq('id', row.id);
-          if (abandonErr) console.error('[dlq-reprocess] failed to mark abandoned', { id: row.id, error: abandonErr.message });
+          if (abandonErr) log.error('failed to mark abandoned', { id: row.id, error: abandonErr.message });
           abandoned++;
         } else {
           const reason = classifyRetryReason(statusCode, respText);
@@ -203,7 +202,7 @@ Deno.serve(async (req) => {
               last_retry_reason: reason,
             })
             .eq('id', row.id);
-          if (retryErr) console.error('[dlq-reprocess] failed to mark retrying', { id: row.id, error: retryErr.message });
+          if (retryErr) log.error('failed to mark retrying', { id: row.id, error: retryErr.message });
           failed++;
         }
       } catch (e) {
@@ -223,7 +222,7 @@ Deno.serve(async (req) => {
             last_retry_reason: reason,
           })
           .eq('id', row.id);
-        if (catchErr) console.error('[dlq-reprocess] failed to update status after catch', { id: row.id, error: catchErr.message });
+        if (catchErr) log.error('failed to update status after catch', { id: row.id, error: catchErr.message });
         if (next === 'abandoned') abandoned++;
         else failed++;
       }
@@ -231,10 +230,7 @@ Deno.serve(async (req) => {
 
     return json(req, { processed: rows.length, succeeded, failed, abandoned });
   } catch (err) {
-    console.error(
-      '[reprocess-failed-messages] unhandled error:',
-      err instanceof Error ? err.message : String(err)
-    );
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return json(req, { error: true, message: 'Internal server error' }, 500);
   }
 });

@@ -27,6 +27,9 @@
  */
 import { getClientIP } from "./validation.ts";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('security-gate');
 
 /** Client admin (service role) do schema zapp — tipado como o db-client.ts. */
 // deno-lint-ignore no-explicit-any
@@ -104,7 +107,7 @@ export async function checkLoginSecurityGate(
       .eq("ip_address", ip)
       .limit(1);
     if (error) {
-      console.error(`[security-gate] blocked_ips query failed (fail-open): ${error.message}`);
+      log.error(`[security-gate] blocked_ips query failed (fail-open): ${error.message}`);
     } else {
       const row = data?.[0] ?? null;
       if (row) {
@@ -117,14 +120,14 @@ export async function checkLoginSecurityGate(
       }
     }
   } catch (e) {
-    console.error(`[security-gate] blocked_ips check threw (fail-open): ${String(e)}`);
+    log.error(`[security-gate] blocked_ips check threw (fail-open): ${String(e)}`);
   }
 
   // ── 2) ip_whitelist: whitelist NÃO vazia ⇒ somente IPs listados passam ──
   try {
     const { data, error } = await admin.from("ip_whitelist").select("ip_address");
     if (error) {
-      console.error(`[security-gate] ip_whitelist query failed (fail-open): ${error.message}`);
+      log.error(`[security-gate] ip_whitelist query failed (fail-open): ${error.message}`);
     } else if (data && data.length > 0) {
       const isListed = data.some((row) => row.ip_address != null && sameIp(row.ip_address, ip));
       if (!isListed) {
@@ -136,7 +139,7 @@ export async function checkLoginSecurityGate(
       }
     }
   } catch (e) {
-    console.error(`[security-gate] ip_whitelist check threw (fail-open): ${String(e)}`);
+    log.error(`[security-gate] ip_whitelist check threw (fail-open): ${String(e)}`);
   }
 
   // ── 3) geo-blocking: settings.mode = disabled | whitelist | blacklist ──
@@ -146,7 +149,7 @@ export async function checkLoginSecurityGate(
       .select("mode")
       .limit(1);
     if (error) {
-      console.error(`[security-gate] geo_blocking_settings query failed (fail-open): ${error.message}`);
+      log.error(`[security-gate] geo_blocking_settings query failed (fail-open): ${error.message}`);
       return result;
     }
     const mode = data?.[0]?.mode ?? "disabled";
@@ -157,7 +160,7 @@ export async function checkLoginSecurityGate(
       // Sinalização (SEGURANCA-05): sem header de país, a política geográfica
       // não pode operar. Não bloqueia (fail-open), mas avisa em log.
       result.geoUnavailable = true;
-      console.warn(
+      log.warn(
         `[security-gate] geo mode=${mode} ativo mas sem header de país (CF-IPCountry ausente) — login liberado com geoUnavailable`,
       );
       return result;
@@ -168,7 +171,7 @@ export async function checkLoginSecurityGate(
         .from("allowed_countries")
         .select("country_code");
       if (allowedError) {
-        console.error(`[security-gate] allowed_countries query failed (fail-open): ${allowedError.message}`);
+        log.error(`[security-gate] allowed_countries query failed (fail-open): ${allowedError.message}`);
         return result;
       }
       const isAllowed = (allowed ?? []).some(
@@ -185,7 +188,7 @@ export async function checkLoginSecurityGate(
         .from("blocked_countries")
         .select("country_code");
       if (blockedError) {
-        console.error(`[security-gate] blocked_countries query failed (fail-open): ${blockedError.message}`);
+        log.error(`[security-gate] blocked_countries query failed (fail-open): ${blockedError.message}`);
         return result;
       }
       const isBlocked = (blocked ?? []).some(
@@ -198,7 +201,7 @@ export async function checkLoginSecurityGate(
       }
     }
   } catch (e) {
-    console.error(`[security-gate] geo check threw (fail-open): ${String(e)}`);
+    log.error(`[security-gate] geo check threw (fail-open): ${String(e)}`);
   }
 
   return result;

@@ -10,6 +10,9 @@ import {
 import { persistMediaToStorage, persistMediaViaApi, parseMessageContent, isSafeMediaCdnUrl } from "./evolution-media.ts";
 import { getStoragePublicUrl } from "./storage-url.ts";
 import { ingestMessage } from "./ingest-port.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-webhook-messages');
 
 /** evolution-webhook-messages utilities and exports. */
 
@@ -54,7 +57,7 @@ export async function handleOutgoingWhatsAppMessage(
   const bestJid = resolveEventJid(key, payloadKey, data);
   const phone = normalizePhone(bestJid ?? undefined);
   if (!phone || bestJid?.includes('@g.us')) {
-    console.log(`[FROM_ME] Ignored message ${externalId}: unresolved recipient`, { bestJid });
+    log.info(`[FROM_ME] Ignored message ${externalId}: unresolved recipient`, { bestJid });
     return;
   }
 
@@ -108,7 +111,7 @@ export async function handleOutgoingWhatsAppMessage(
     const claimResult = await supabase.rpc('rpc_claim_outbound_message', {
       p_row_id: pendingMessage.id, p_message_id: externalId,
     });
-    if (claimResult.error) { console.error('[FROM_ME] Error claiming placeholder:', claimResult.error); return; }
+    if (claimResult.error) { log.error('[FROM_ME] Error claiming placeholder:', claimResult.error); return; }
     if (claimResult.data?.claimed) return; // race winner claimed the row
   }
 
@@ -136,10 +139,10 @@ export async function handleOutgoingWhatsAppMessage(
     caption: outCaption ?? undefined,
     status: 'sent', statusAt: new Date().toISOString(),
   });
-  if (!outResult.ok) { console.error('[FROM_ME] Error inserting outgoing message:', outResult.error); return; }
+  if (!outResult.ok) { log.error('[FROM_ME] Error inserting outgoing message:', outResult.error); return; }
   if (!outResult.rowId) return; // ON CONFLICT DO NOTHING: concurrent writer already persisted this message
   const { error: outContactUpdateErr } = await supabase.from('contacts').update({ updated_at: new Date().toISOString() }).eq('id', contact.id);
-  if (outContactUpdateErr) console.warn(`[FROM_ME] failed to update contact updated_at: ${outContactUpdateErr.message}`);
+  if (outContactUpdateErr) log.warn(`[FROM_ME] failed to update contact updated_at: ${outContactUpdateErr.message}`);
 }
 
 /** [FIX 2026-08-12] Avatar em background: nunca bloquear o insert da mensagem
@@ -161,10 +164,10 @@ function persistAvatarInBackground(
       const avatarUrl = await persistProfilePicture(supabase, phone, picUrl);
       if (avatarUrl) {
         const { error: avatarUpdateErr } = await supabase.from('contacts').update({ avatar_url: avatarUrl }).eq('id', contactId);
-        if (avatarUpdateErr) console.warn(`[AVATAR-BG] failed to update avatar_url: ${avatarUpdateErr.message}`);
+        if (avatarUpdateErr) log.warn(`[AVATAR-BG] failed to update avatar_url: ${avatarUpdateErr.message}`);
       }
     } catch (e) {
-      console.warn('[AVATAR-BG] failed:', e instanceof Error ? e.message : String(e));
+      log.warn('[AVATAR-BG] failed:', e instanceof Error ? e.message : String(e));
     }
   })();
   const rt = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
@@ -186,7 +189,7 @@ export async function handleIncomingMessage(
   const bestJid = resolveEventJid(key, payloadKey, data);
   const phone = normalizePhone(bestJid ?? undefined);
   if (!phone || bestJid?.includes('@g.us')) {
-    console.log(`[INCOMING] Ignored message ${key.id}: unresolved sender`, { bestJid });
+    log.info(`[INCOMING] Ignored message ${key.id}: unresolved sender`, { bestJid });
     // [PATCH 23] Descarte explícito + ledger rejected (antes: return silencioso).
     logLedgerRejection(supabase, {
       instanceName: instance, eventType: 'messages.upsert', messageId: key.id,
@@ -244,14 +247,14 @@ export async function handleIncomingMessage(
       if (existing) {
         contact = existing;
         const { error: recoveryUpdateErr } = await supabase.from('contacts').update({ updated_at: new Date().toISOString() }).eq('id', existing.id);
-        if (recoveryUpdateErr) console.warn(`[CONTACT] failed to update recovered contact updated_at: ${recoveryUpdateErr.message}`);
-        console.log(`[CONTACT] Recovered existing contact ${existing.id} after duplicate insert conflict (instance: ${instance})`);
+        if (recoveryUpdateErr) log.warn(`[CONTACT] failed to update recovered contact updated_at: ${recoveryUpdateErr.message}`);
+        log.info(`[CONTACT] Recovered existing contact ${existing.id} after duplicate insert conflict (instance: ${instance})`);
         if (!existing.avatar_url) persistAvatarInBackground(supabase, instance, phone, existing.id);
       } else {
         // [OBS 2026-08-12] 23505 sem recovery = unique em phone/remote_jid aponta para linha
         // que o getContactByPhone/recover não encontra (ex.: soft-deleted ou variant não coberta).
         // Sem este log, a mensagem seria descartada silenciosamente em `if (!contact) return`.
-        console.warn('[CONTACT] Duplicate insert conflict (23505) but NO existing contact found for recovery', {
+        log.warn('[CONTACT] Duplicate insert conflict (23505) but NO existing contact found for recovery', {
           messageId: key.id, phone, instance, remoteJid: bestJid, variants: phonesVariants,
         });
       }
@@ -260,12 +263,12 @@ export async function handleIncomingMessage(
         // [OBS 2026-08-12] Causa do incidente de perda de inbound (chk_lead_status_vocab):
         // erro ≠ 23505 era engolido silenciosamente -> contact=null -> mensagem descartada.
         // Agora logado para diagnóstico imediato de qualquer nova violação.
-        console.error('[CONTACT] Insert FAILED (non-23505) — message WILL NOT be mirrored', {
+        log.error('[CONTACT] Insert FAILED (non-23505) — message WILL NOT be mirrored', {
           messageId: key.id, phone: redactJid(phone), instance, remoteJid: redactJid(bestJid),
           code: insertErr.code, message: insertErr.message, details: insertErr.details, hint: insertErr.hint,
         });
       } else if (!newContact) {
-        console.warn('[CONTACT] Insert returned no row without error (0 rows? unexpected)', {
+        log.warn('[CONTACT] Insert returned no row without error (0 rows? unexpected)', {
           messageId: key.id, phone: redactJid(phone), instance, remoteJid: redactJid(bestJid),
         });
       }
@@ -304,7 +307,7 @@ export async function handleIncomingMessage(
       p_ingest_meta: ingestMeta ?? null,
       p_quoted_message_id: quotedMessageId ?? null,
     });
-    if (updResult.error) console.error('[INCOMING] Error updating existing message:', { error: updResult.error, messageId: existingMessage.id });
+    if (updResult.error) log.error('[INCOMING] Error updating existing message:', { error: updResult.error, messageId: existingMessage.id });
     if (messageType === 'audio' && mediaUrl) await handleAudioTranscription(supabase, contact.id, existingMessage.id, mediaUrl, supabaseUrl, supabaseServiceKey);
     return;
   }
@@ -328,7 +331,7 @@ export async function handleIncomingMessage(
     caption: captionText ?? undefined,
   });
   if (!inResult.ok) {
-    console.error('Error inserting message:', {
+    log.error('Error inserting message:', {
       error: inResult.error, externalId: key.id, bestJid: redactJid(bestJid), phone: redactJid(phone),
       messageType, contentLength: typeof content === 'string' ? content.length : undefined,
     });
@@ -336,7 +339,7 @@ export async function handleIncomingMessage(
   }
   if (!inResult.rowId) return; // ON CONFLICT DO NOTHING: concurrent writer won the race
   const { error: inContactUpdateErr } = await supabase.from('contacts').update({ updated_at: new Date().toISOString() }).eq('id', contact.id);
-  if (inContactUpdateErr) console.warn(`[INBOUND] failed to update contact updated_at: ${inContactUpdateErr.message}`);
+  if (inContactUpdateErr) log.warn(`[INBOUND] failed to update contact updated_at: ${inContactUpdateErr.message}`);
   if (messageType === 'audio' && mediaUrl && inResult.rowId) await handleAudioTranscription(supabase, contact.id, inResult.rowId, mediaUrl, supabaseUrl, supabaseServiceKey);
 }
 
@@ -382,7 +385,7 @@ export async function handleStickerMedia(
             if (!uploadErr) { mediaUrl = getStoragePublicUrl('whatsapp-media', `stickers/${fileName}`); }
           }
         }
-      } catch (dlErr) { console.error('[STICKER] mediaUrl download error:', dlErr); }
+      } catch (dlErr) { log.error('[STICKER] mediaUrl download error:', dlErr); }
     }
   }
 
@@ -400,7 +403,7 @@ export async function handleStickerMedia(
           if (b64) mediaUrl = await uploadBase64Sticker(b64);
         }
       }
-    } catch (apiErr) { console.error('[STICKER] API fetch error:', apiErr); }
+    } catch (apiErr) { log.error('[STICKER] API fetch error:', apiErr); }
   }
 
   if (mediaUrl) {
@@ -416,7 +419,7 @@ export async function handleStickerMedia(
           if (classifyResp.ok) { const classifyResult = await classifyResp.json(); category = classifyResult.category || 'recebidas'; }
         } catch { /* classification failed, use default */ }
         const { error: stickerInsertErr } = await supabase.from('stickers').insert({ name: `Recebida ${new Date().toLocaleDateString('pt-BR')}`, image_url: mediaUrl, category, is_favorite: false, use_count: 0 });
-        if (stickerInsertErr) console.warn(`[STICKER] failed to insert sticker: ${stickerInsertErr.message}`);
+        if (stickerInsertErr) log.warn(`[STICKER] failed to insert sticker: ${stickerInsertErr.message}`);
       }
     } catch { /* save error */ }
   }
@@ -432,7 +435,7 @@ export async function handleAudioTranscription(supabase: SupabaseClient<any, any
 
   // F4: transcription status via RPC
   const { error: transcriptProcessingErr } = await supabase.rpc('rpc_update_message_transcription', { p_message_uuid: messageId, p_status: 'processing' });
-  if (transcriptProcessingErr) console.warn(`[TRANSCRIPTION] failed to set processing status: ${transcriptProcessingErr.message}`);
+  if (transcriptProcessingErr) log.warn(`[TRANSCRIPTION] failed to set processing status: ${transcriptProcessingErr.message}`);
 
   try {
     const response = await fetch(`${supabaseUrl}/functions/v1/ai-transcribe-audio`, {
@@ -444,13 +447,13 @@ export async function handleAudioTranscription(supabase: SupabaseClient<any, any
     if (response.ok) {
       const result = await response.json();
       const { error: transcriptCompletedErr } = await supabase.rpc('rpc_update_message_transcription', { p_message_uuid: messageId, p_status: 'completed', p_transcription: result.text });
-      if (transcriptCompletedErr) console.warn(`[TRANSCRIPTION] failed to set completed status: ${transcriptCompletedErr.message}`);
+      if (transcriptCompletedErr) log.warn(`[TRANSCRIPTION] failed to set completed status: ${transcriptCompletedErr.message}`);
     } else {
       const { error: transcriptFailedErr } = await supabase.rpc('rpc_update_message_transcription', { p_message_uuid: messageId, p_status: 'failed' });
-      if (transcriptFailedErr) console.warn(`[TRANSCRIPTION] failed to set failed status (HTTP err): ${transcriptFailedErr.message}`);
+      if (transcriptFailedErr) log.warn(`[TRANSCRIPTION] failed to set failed status (HTTP err): ${transcriptFailedErr.message}`);
     }
   } catch {
     const { error: transcriptCatchErr } = await supabase.rpc('rpc_update_message_transcription', { p_message_uuid: messageId, p_status: 'failed' });
-    if (transcriptCatchErr) console.warn(`[TRANSCRIPTION] failed to set failed status (catch): ${transcriptCatchErr.message}`);
+    if (transcriptCatchErr) log.warn(`[TRANSCRIPTION] failed to set failed status (catch): ${transcriptCatchErr.message}`);
   }
 }

@@ -2,6 +2,9 @@
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-webhook-msg-handlers');
   isRecord, normalizePhone, resolveEventJid, toEventRecords, shouldUpdateStatus,
   getConnectionByInstance, getContactByPhone,
 } from "./evolution-helpers.ts";
@@ -27,7 +30,7 @@ export async function handleSendMessage(supabase: SupabaseClient<any, any>, inst
         const { error: sentUpdateErr } = await supabase.from('messages')
           .update({ status: 'sent', external_id: externalId, status_updated_at: now })
           .eq('id', existingMessage.id);
-        if (sentUpdateErr) console.warn(`[msg-handlers] failed to update message sent status: ${sentUpdateErr.message}`);
+        if (sentUpdateErr) log.warn(`[msg-handlers] failed to update message sent status: ${sentUpdateErr.message}`);
       }
       updatedMessageId = existingMessage.id;
     }
@@ -64,14 +67,14 @@ export async function handleSendMessage(supabase: SupabaseClient<any, any>, inst
               .eq('id', pendingMessage.id)
               .is('external_id', null)
               .select('id');
-            if (claimError) { console.error('[SEND] Error claiming placeholder:', claimError); }
+            if (claimError) { log.error('[SEND] Error claiming placeholder:', claimError); }
             else if (claimed?.length) updatedMessageId = pendingMessage.id;
           }
         }
       }
     }
 
-    console.log(`Outgoing message confirmed: ${externalId}${updatedMessageId ? ` (message ${updatedMessageId})` : ' (no local match found)'}`);
+    log.info(`Outgoing message confirmed: ${externalId}${updatedMessageId ? ` (message ${updatedMessageId})` : ' (no local match found)'}`);
   }
 }
 
@@ -108,8 +111,8 @@ export async function handleMessagesUpdate(supabase: SupabaseClient<any, any>, i
       if (currentMessage?.id) {
         if (shouldUpdateStatus(currentMessage.status, newStatus)) {
           const { error: statusUpdateErr } = await supabase.from('messages').update({ status: newStatus, status_updated_at: now }).eq('id', currentMessage.id);
-          if (statusUpdateErr) console.warn(`[msg-handlers] failed to update message status: ${statusUpdateErr.message}`);
-          console.log(`Message ${key.id} status: ${currentMessage.status} → ${newStatus}`);
+          if (statusUpdateErr) log.warn(`[msg-handlers] failed to update message status: ${statusUpdateErr.message}`);
+          log.info(`Message ${key.id} status: ${currentMessage.status} → ${newStatus}`);
         }
       } else {
         // [M-4 FIX 2026-07-12] Do NOT fabricate a placeholder inbound message from an
@@ -120,7 +123,7 @@ export async function handleMessagesUpdate(supabase: SupabaseClient<any, any>, i
         // A status update for a message we never stored is meaningless on its own — just
         // record the anomaly so the pipeline monitors can see it, and let the real upsert
         // (now no longer preceded by a poisoning row) persist the true content.
-        console.warn(`[UPDATE] orphan ACK for unknown message external_id=${key.id} status=${newStatus} — skipping placeholder (awaiting real upsert)`);
+        log.warn(`[UPDATE] orphan ACK for unknown message external_id=${key.id} status=${newStatus} — skipping placeholder (awaiting real upsert)`);
       }
     }
   }
@@ -155,7 +158,7 @@ export async function handleMessagesDelete(supabase: SupabaseClient<any, any>, i
       // in the logs (and fails to persist the deleted-message tombstone row).
       // When the JID cannot be resolved we warn and skip instead.
       if (!contactId) {
-        console.warn(`[DELETE] Cannot persist deleted-message tombstone for ${key.id}: contact JID not resolved for instance ${instance}`);
+        log.warn(`[DELETE] Cannot persist deleted-message tombstone for ${key.id}: contact JID not resolved for instance ${instance}`);
         continue;
       }
 
@@ -164,9 +167,9 @@ export async function handleMessagesDelete(supabase: SupabaseClient<any, any>, i
         external_id: key.id, status: 'deleted', is_deleted: true, status_updated_at: now,
         created_at: now, contact_id: contactId, whatsapp_connection_id: connection.id,
       }, { onConflict: 'external_id,whatsapp_connection_id', ignoreDuplicates: true });
-      if (fallbackErr) console.error(`[DELETE] Fallback insert error for ${key.id}:`, fallbackErr);
+      if (fallbackErr) log.error(`[DELETE] Fallback insert error for ${key.id}:`, fallbackErr);
     }
-    console.log(`Message deleted: ${key.id}`);
+    log.info(`Message deleted: ${key.id}`);
   }
 }
 
@@ -214,11 +217,11 @@ export async function handleMessagesSet(supabase: SupabaseClient<any, any>, inst
       status: key.fromMe ? 'sent' : 'received', is_read: !!key.fromMe, created_at: ts,
       status_updated_at: ts,
     }, { onConflict: 'external_id,whatsapp_connection_id', ignoreDuplicates: true }).select('id').maybeSingle();
-    if (syncErr) { console.error('[SET] Insert error:', syncErr); skipped++; continue; }
+    if (syncErr) { log.error('[SET] Insert error:', syncErr); skipped++; continue; }
     if (!syncedMsg) { skipped++; continue; } // ON CONFLICT DO NOTHING: already exists
     synced++;
   }
-  console.log(`messages.set: synced ${synced}, skipped ${skipped} for ${instance}`);
+  log.info(`messages.set: synced ${synced}, skipped ${skipped} for ${instance}`);
 }
 
 /** handle Messages Edited function. */
@@ -243,8 +246,8 @@ export async function handleMessagesEdited(supabase: SupabaseClient<any, any>, i
       const { error: editErr } = await supabase.from('messages')
         .update({ content: editedContent, is_edited: true, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
-      if (editErr) console.error(`[EDITED] Update error for ${key.id}:`, editErr);
-      console.log(`Message edited: ${key.id}`);
+      if (editErr) log.error(`[EDITED] Update error for ${key.id}:`, editErr);
+      log.info(`Message edited: ${key.id}`);
     }
   }
 }

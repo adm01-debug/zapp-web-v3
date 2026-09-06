@@ -25,6 +25,9 @@ import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { evolutionClient } from "../_shared/providers/evolution/index.ts";
 import { readJsonBodyOrEmpty } from "../_shared/validation.ts";
 import { redactJid } from "../_shared/evolution-helpers.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('csat-dispatch');
 
 const DEFAULT_LIMIT = 50;
 
@@ -71,7 +74,7 @@ Deno.serve(async (req: Request) => {
     });
 
     if (claimErr) {
-      console.error("[csat-dispatch] rpc_claim_csat_due error:", claimErr.message);
+      log.error('rpc_claim_csat_due error', { error: claimErr.message });
       return json(req, { error: "claim_failed" }, 500);
     }
 
@@ -104,14 +107,14 @@ Deno.serve(async (req: Request) => {
 
       try {
         if (dryRun) {
-          console.info(`[csat-dispatch][dry-run] survey=${survey.survey_id} instance=${survey.instance_name} phone=${redactJid(survey.phone)}`);
+          log.info('dry-run', { survey: survey.survey_id, instance: survey.instance_name, phone: redactJid(survey.phone) });
           // Devolve o survey ao estado 'scheduled' (não foi enviado)
           const { error: resetErr } = await supabase
             .from("csat_surveys")
             .update({ status: "scheduled", updated_at: new Date().toISOString() })
             .eq("id", survey.survey_id);
           if (resetErr) {
-            console.error(`[csat-dispatch][dry-run] reset error survey=${survey.survey_id}:`, resetErr.message);
+            log.error('dry-run reset error', { survey: survey.survey_id, error: resetErr.message });
           }
           sent++;
           continue;
@@ -135,14 +138,12 @@ Deno.serve(async (req: Request) => {
           .eq("id", survey.survey_id);
 
         if (updErr) {
-          console.error(`[csat-dispatch] mark-sent error survey=${survey.survey_id}:`, updErr.message);
+          log.error('mark-sent error', { survey: survey.survey_id, error: updErr.message });
           // Mensagem enviada mas status não persistiu — conta como enviado
           // (o re-claim poderia duplicar envio; melhor manter 'sending' p/ auditoria)
         }
         sent++;
-        console.log(
-          `[csat-dispatch] sent — survey=${survey.survey_id} contact=${survey.contact_id} instance=${survey.instance_name}`,
-        );
+        log.info('sent', { survey: survey.survey_id, contact: survey.contact_id, instance: survey.instance_name });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         await markFailed(supabase, survey, "CSAT_SEND_EXCEPTION", msg.slice(0, 500));
@@ -153,7 +154,7 @@ Deno.serve(async (req: Request) => {
     return json(req, { claimed: surveys.length, sent, failed, dryRun: dryRun ?? false });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error("[csat-dispatch] unhandled error:", msg);
+    log.error('unhandled error', { error: msg });
     return json(req, { error: "internal_error" }, 500);
   }
 });
@@ -177,7 +178,7 @@ async function markFailed(
     .eq("id", survey.survey_id);
 
   if (updErr) {
-    console.error(`[csat-dispatch] mark-failed error survey=${survey.survey_id}:`, updErr.message);
+    log.error('mark-failed error', { survey: survey.survey_id, error: updErr.message });
   }
 
   const { error: fmErr } = await supabase.from("failed_messages").insert({
@@ -196,7 +197,7 @@ async function markFailed(
   });
 
   if (fmErr) {
-    console.error(`[csat-dispatch] failed_messages insert error survey=${survey.survey_id}:`, fmErr.message);
+    log.error('failed_messages insert error', { survey: survey.survey_id, error: fmErr.message });
   }
 }
 

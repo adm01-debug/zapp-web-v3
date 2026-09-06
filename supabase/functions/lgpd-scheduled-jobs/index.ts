@@ -4,6 +4,9 @@ import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { getCorsHeaders } from '../_shared/cors.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('lgpd-scheduled-jobs');
 
 Deno.serve(async (req: Request) => {
   const authError = requireServiceRoleOrCron(req);
@@ -32,7 +35,7 @@ Deno.serve(async (req: Request) => {
   const errors = [activityError, anonError, msgError].filter(Boolean);
 
   if (errors.length > 0) {
-    console.error('LGPD job errors:', errors);
+    log.error('LGPD job errors:', errors);
     return new Response(
       JSON.stringify({ success: false, errors: errors.map(e => e?.message) }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

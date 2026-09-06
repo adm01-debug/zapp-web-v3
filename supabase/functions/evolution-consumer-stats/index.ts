@@ -8,6 +8,9 @@ import { verifyHmacSignature } from "../_shared/hmac-validation.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { getCorsHeaders } from "../_shared/validation.ts";
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('evolution-consumer-stats');
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -58,7 +61,7 @@ Deno.serve(async (req: Request) => {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("[evolution-consumer-stats] persist error:", JSON.stringify(e));
+    log.error("[evolution-consumer-stats] persist error:", JSON.stringify(e));
     return new Response(JSON.stringify({ error: "persist_failed" }), {
       status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
