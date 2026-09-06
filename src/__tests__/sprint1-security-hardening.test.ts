@@ -245,7 +245,9 @@ describe('Sprint 1 · HIGH-3 · notify_sicoob_on_reply sem service_role_key na G
 });
 
 describe('Rodada 5 · modelo de posse (admin/supervisor ou dono do registro) nas RPCs de CRM', () => {
-  // Decisao do dono (20260906120000_harden_ownership_crm_rpcs.sql): as 9 RPCs
+  // Decisao do dono (20260906121500_harden_ownership_crm_rpcs.sql, renomeada de
+  // 20260906120000 por colisao de timestamp com 20260906120000_rls_explicit_
+  // policies_invites_xp_license.sql, ja mergeada antes via PR #1533): as 9 RPCs
   // abaixo ja exigiam fn_require_app_user() mas nenhuma checava se o
   // registro-alvo pertencia ao chamador. Regressao a prevenir: alguem
   // reescrever uma delas sem a checagem de posse (is_admin_or_supervisor()
