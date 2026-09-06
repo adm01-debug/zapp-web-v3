@@ -1,0 +1,173 @@
+# migration-drift-guard.yml
+# Detecta drift entre arquivos de migration do repo e a tabela
+# supabase_migrations.schema_migrations no banco de produção.
+#
+# Casos detectados:
+#   DB_ONLY        — migration aplicada no banco sem arquivo no repo (shadow migration)
+#   REPO_ONLY      — arquivo no repo sem entrada no banco (migration não aplicada)
+#   PREFIX_COLLISION — dois arquivos com mesmo timestamp (silently ignored)
+#   NAME_MISMATCH  — mesmo version, nomes diferentes (renaming drift)
+#
+# Modo atual: WARN-ONLY (exit 0) — posta comentário no PR mas não bloqueia merge.
+# Para enforcer estrito: alterar exit code da step "Run drift check" de 0 para $DRIFT.
+#
+# Requer runner VPS (acesso ao Postgres de produção via DATABASE_URL secret).
+# Ref: scripts/check-migration-version-bank-drift.mjs
+
+name: Migration Drift Guard
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**.sql'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**.sql'
+  schedule:
+    # Diário às 06:00 UTC — detecta drift que aconteceu fora de PRs
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      fail_on_drift:
+        description: 'Falhar (exit 1) se houver drift?'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migration-drift-check:
+    name: Drift repo ↔ banco
+    runs-on: [Linux, X64, vps-zapp]
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pg driver
+        run: npm install --no-save pg
+
+      - name: Run drift check
+        id: drift
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_SSL_REJECT_UNAUTHORIZED: 'false'
+        run: |
+          set +e
+          node scripts/check-migration-version-bank-drift.mjs 2>&1 | tee drift-output.txt
+          DRIFT_EXIT=$?
+          set -e
+
+          # Captura contagens para o summary
+          DB_ONLY=$(grep -c "DB_ONLY\|\[?\]" drift-output.txt 2>/dev/null || grep -c "SEM arquivo no repo" drift-output.txt 2>/dev/null || echo 0)
+          REPO_ONLY=$(grep -c "REPO_ONLY\|\[ \]" drift-output.txt 2>/dev/null || grep -c "AUSENTE do banco" drift-output.txt 2>/dev/null || echo 0)
+          COLLISION=$(grep -c "PREFIX_COLLISION" drift-output.txt 2>/dev/null || echo 0)
+
+          echo "drift_exit=$DRIFT_EXIT"        >> "$GITHUB_OUTPUT"
+          echo "db_only=$DB_ONLY"              >> "$GITHUB_OUTPUT"
+          echo "repo_only=$REPO_ONLY"          >> "$GITHUB_OUTPUT"
+          echo "collision=$COLLISION"          >> "$GITHUB_OUTPUT"
+
+          # Step Summary
+          echo "## Migration Drift Guard" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DRIFT_EXIT" -eq 0 ]; then
+            echo "✅ **Sem drift**: repo e banco em perfeita paridade." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ **Drift detectado** — verifique os detalhes abaixo." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Tipo | Contagem |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|------|---------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 🗄️ No banco, sem arquivo (shadow) | $DB_ONLY |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 📁 No repo, sem entrada no banco | $REPO_ONLY |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| 💥 Colisão de prefixo | $COLLISION |" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "<details><summary>Saída completa</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            head -100 drift-output.txt >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # WARN-ONLY: sempre exit 0 (não bloqueia merge)
+          # Para modo strict: substituir por "exit $DRIFT_EXIT"
+          FAIL_ON_DRIFT="${{ github.event.inputs.fail_on_drift }}"
+          if [ "$FAIL_ON_DRIFT" = "true" ] && [ "$DRIFT_EXIT" -ne 0 ]; then
+            echo "🚫 fail_on_drift=true — falhando com exit 1" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          exit 0
+
+      - name: Comment on PR (drift detected)
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.drift.outputs.drift_exit != '0'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('drift-output.txt', 'utf8');
+            const dbOnly   = '${{ steps.drift.outputs.db_only }}';
+            const repoOnly = '${{ steps.drift.outputs.repo_only }}';
+
+            const body = `## ⚠️ Migration Drift Guard — drift detectado
+
+            | Tipo | Qtd |
+            |------|-----|
+            | 🗄️ No banco, sem arquivo no repo (shadow migration) | **${dbOnly}** |
+            | 📁 No repo, sem entrada no banco (não aplicada) | **${repoOnly}** |
+
+            **Shadow migrations** (DB_ONLY) são o risco principal: foram aplicadas manualmente
+            sem passar pelo versionamento do repo. Cada uma deve ser materializada em
+            \`supabase/migrations/<timestamp>_<nome>.sql\` ou documentada como exceção em
+            \`docs/ops/MIGRATIONS_CLEANUP_DECISIONS.md\`.
+
+            <details>
+            <summary>Saída completa do check</summary>
+
+            \`\`\`
+            ${output.slice(0, 4000)}
+            \`\`\`
+            </details>
+
+            > **Modo atual: WARN-ONLY** — este PR pode ser mergeado, mas o drift deve ser
+            > resolvido. Runbook: \`docs/ops/RUNBOOK-MIGRATION-DRIFT.md\``;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Comment on PR (clean)
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.drift.outputs.drift_exit == '0'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## ✅ Migration Drift Guard\n\nRepo e banco em perfeita paridade — sem shadow migrations.'
+            });
