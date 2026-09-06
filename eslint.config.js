@@ -72,7 +72,7 @@ export default tseslint.config(
       "no-console": ["error", { allow: ["warn", "error"] }],
       // Tailwind specific rules removed due to environment constraints
       // Estratégia gradual de strict typing
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-non-null-assertion": "warn",
       "@typescript-eslint/ban-ts-comment": [
         "error",

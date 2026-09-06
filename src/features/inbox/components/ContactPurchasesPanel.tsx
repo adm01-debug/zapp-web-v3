@@ -84,7 +84,7 @@ export function ContactPurchasesPanel({ contactId, profileId }: ContactPurchases
     const { error } = await createContactPurchase({
       contact_id: contactId,
       title: title.trim(),
-      amount: amount ? parseFloat(amount) : 0,
+      amount: amount ? Math.round(parseFloat(amount) * 100) / 100 : 0,
       purchase_type: type,
       created_by: profileId as string,
     });

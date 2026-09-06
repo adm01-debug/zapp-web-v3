@@ -46,8 +46,18 @@ class Logger {
     this.module = module;
   }
 
-  private formatMessage(level: LogLevel, message: string): string {
+  private formatMessage(level: LogLevel, message: string, args: unknown[]): string {
     const timestamp = new Date().toISOString();
+    if (import.meta.env.PROD) {
+      return JSON.stringify({
+        ts: timestamp,
+        level,
+        module: this.module,
+        sid: sessionId.slice(0, 8),
+        msg: message,
+        ...(args.length > 0 ? { ctx: args } : {}),
+      });
+    }
     return `[${timestamp}] [${level.toUpperCase()}] [${this.module}] [sid:${sessionId.slice(0, 8)}] ${message}`;
   }
 
@@ -69,22 +79,34 @@ class Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('debug')) console.debug(this.formatMessage('debug', message), ...args);
+    if (this.shouldLog('debug')) {
+      const msg = this.formatMessage('debug', message, args);
+      if (import.meta.env.PROD) console.debug(msg); else console.debug(msg, ...args);
+    }
     this.addToSentryBreadcrumb('debug', message, ...args);
   }
 
   info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('info')) console.info(this.formatMessage('info', message), ...args);
+    if (this.shouldLog('info')) {
+      const msg = this.formatMessage('info', message, args);
+      if (import.meta.env.PROD) console.info(msg); else console.info(msg, ...args);
+    }
     this.addToSentryBreadcrumb('info', message, ...args);
   }
 
   warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('warn')) console.warn(this.formatMessage('warn', message), ...args);
+    if (this.shouldLog('warn')) {
+      const msg = this.formatMessage('warn', message, args);
+      if (import.meta.env.PROD) console.warn(msg); else console.warn(msg, ...args);
+    }
     this.addToSentryBreadcrumb('warn', message, ...args);
   }
 
   error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('error')) console.error(this.formatMessage('error', message), ...args);
+    if (this.shouldLog('error')) {
+      const msg = this.formatMessage('error', message, args);
+      if (import.meta.env.PROD) console.error(msg); else console.error(msg, ...args);
+    }
     this.addToSentryBreadcrumb('error', message, ...args);
     if (import.meta.env.PROD) {
       Sentry.captureException(new Error(`${this.module}: ${message}`), { extra: { args } });
