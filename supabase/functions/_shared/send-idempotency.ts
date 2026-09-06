@@ -14,6 +14,9 @@
 // Scope: ONLY `/message/*` POSTs. Other proxied endpoints bypass the cache.
 
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('send-idempotency');
 
 const TTL_HOURS = 24;
 const KEY_MIN = 8;
@@ -70,7 +73,7 @@ export async function lookupSendCache(idemKey: string): Promise<CachedSend | nul
       created_at: data.created_at as string,
     };
   } catch (e) {
-    console.warn('[send-idem] lookup failed:', e instanceof Error ? e.message : String(e));
+    log.warn('[send-idem] lookup failed:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
@@ -104,10 +107,10 @@ export async function storeSendCache(input: StoreSendCacheInput): Promise<void> 
       expires_at,
     });
     if (error && error.code !== '23505') {
-      console.warn('[send-idem] insert failed:', error.message);
+      log.warn('[send-idem] insert failed:', error.message);
     }
   } catch (e) {
-    console.warn('[send-idem] store threw:', e instanceof Error ? e.message : String(e));
+    log.warn('[send-idem] store threw:', e instanceof Error ? e.message : String(e));
   }
 }
 

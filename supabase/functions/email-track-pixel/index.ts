@@ -2,6 +2,9 @@ import { createZappAdminClient } from '../_shared/db-client.ts';
 import { getCorsHeaders } from '../_shared/cors.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('email-track-pixel');
 
 /**
  * email-track-pixel — Rastreio de abertura de email via pixel 1x1
@@ -122,10 +125,10 @@ Deno.serve(async (req) => {
       p_os:           parsed.os,
       p_is_self_open: false, // Client-side detection
     });
-    if (rpcErr) console.warn('[email-track-pixel] rpc_email_register_open failed (non-fatal):', rpcErr.message);
+    if (rpcErr) log.warn('[email-track-pixel] rpc_email_register_open failed (non-fatal):', rpcErr.message);
 
   } catch (err) {
-    console.error('[email-track-pixel] Error:', err);
+    log.error('[email-track-pixel] Error:', err);
     // Não falha — retorna pixel mesmo com erro de tracking
   }
 

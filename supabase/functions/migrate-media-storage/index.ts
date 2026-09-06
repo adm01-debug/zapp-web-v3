@@ -7,6 +7,9 @@ import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { evolutionClient } from "../_shared/providers/evolution/index.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('migrate-media-storage');
 
 /**
  * Client do schema `zapp` (createZappAdminClient usa db.schema='zapp').
@@ -299,7 +302,7 @@ async function uploadToStorage(
     .upload(fileName, bytes, { contentType, cacheControl: '31536000', upsert: true });
 
   if (uploadErr) {
-    console.error(`[MIGRATE] Upload error:`, uploadErr);
+    log.error(`[MIGRATE] Upload error:`, uploadErr);
     return null;
   }
 

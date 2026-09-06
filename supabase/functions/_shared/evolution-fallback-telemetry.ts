@@ -1,3 +1,7 @@
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-fallback-telemetry');
+
 /**
  * Telemetria de fallback Evolution DB — registra quando uma resposta da Evolution
  * API v2.3.7 indicaria a necessidade de acionar o fallback documentado em
@@ -172,7 +176,7 @@ export function logFallbackEvent(event: Omit<EvolutionFallbackEvent, 'tag' | 'ts
   try {
     // Linha única JSON, prefixada para grep — preserva o objeto pra Supabase
     // structured logs também conseguirem indexar campos.
-    console.log(`[evolution-fallback] ${JSON.stringify(full)}`);
+    log.info(`[evolution-fallback] ${JSON.stringify(full)}`);
   } catch {
     // Ignora — telemetria não pode quebrar fluxo principal.
   }

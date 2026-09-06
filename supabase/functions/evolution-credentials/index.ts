@@ -30,6 +30,9 @@ import { checkRateLimit } from '../_shared/validation.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('evolution-credentials');
 
 /** UUID canônico (v1-v8) — validação simples do id em action 'delete'. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -106,7 +109,7 @@ async function handleWrite(req: Request): Promise<Response> {
 
     if (error) {
       // Nunca logar a api_key; a mensagem de erro RPC é segura (permission/config).
-      console.error('[evolution-credentials] upsert RPC falhou:', error.message);
+      log.error('[evolution-credentials] upsert RPC falhou:', error.message);
       return json(500, { ok: false, error: 'Failed to save credential' });
     }
 
@@ -122,7 +125,7 @@ async function handleWrite(req: Request): Promise<Response> {
     const { data, error } = await admin.rpc('fn_edge_delete_evolution_credentials', { p_id: id });
 
     if (error) {
-      console.error('[evolution-credentials] delete RPC falhou:', error.message);
+      log.error('[evolution-credentials] delete RPC falhou:', error.message);
       return json(500, { ok: false, error: 'Failed to delete credential' });
     }
 

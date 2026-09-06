@@ -3,6 +3,9 @@ import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { evolutionClient } from "./providers/evolution/index.ts";
 import { isRecord } from "./evolution-helpers.ts";
 import { getStoragePublicUrl } from "./storage-url.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-media');
 
 /** evolution-media utilities and exports. */
 export function isValidMediaBytes(bytes: Uint8Array, messageType: string): boolean {
@@ -64,19 +67,19 @@ export async function persistMediaToStorage(
   messageId: string,
 ): Promise<string | null> {
   if (!isSafeMediaCdnUrl(cdnUrl)) {
-    console.error(`[MEDIA] Rejected unsafe CDN URL for ${messageType}`);
+    log.error(`[MEDIA] Rejected unsafe CDN URL for ${messageType}`);
     return null;
   }
   try {
     const resp = await fetch(cdnUrl, { signal: AbortSignal.timeout(30000), redirect: 'error' });
-    if (!resp.ok) { console.error(`[MEDIA] Download failed (${resp.status}) for ${messageType}`); return null; }
+    if (!resp.ok) { log.error(`[MEDIA] Download failed (${resp.status}) for ${messageType}`); return null; }
 
     const arrayBuf = await resp.arrayBuffer();
     const bytes = new Uint8Array(arrayBuf);
-    if (bytes.length < 100) { console.error(`[MEDIA] File too small (${bytes.length} bytes)`); return null; }
+    if (bytes.length < 100) { log.error(`[MEDIA] File too small (${bytes.length} bytes)`); return null; }
 
     if (!isValidMediaBytes(bytes, messageType)) {
-      console.warn(`[MEDIA] Downloaded ${messageType} file (${bytes.length} bytes) appears encrypted or corrupted — magic bytes: ${Array.from(bytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' ')}. Falling back to API.`);
+      log.warn(`[MEDIA] Downloaded ${messageType} file (${bytes.length} bytes) appears encrypted or corrupted — magic bytes: ${Array.from(bytes.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' ')}. Falling back to API.`);
       return null;
     }
 
@@ -101,12 +104,12 @@ export async function persistMediaToStorage(
       if (!uploadErr) break;
       if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     }
-    if (uploadErr) { console.error(`[MEDIA] Upload error for ${messageType}:`, uploadErr); return null; }
+    if (uploadErr) { log.error(`[MEDIA] Upload error for ${messageType}:`, uploadErr); return null; }
 
     const publicUrl = getStoragePublicUrl(bucket, fileName);
-    console.log(`[MEDIA] Persisted ${messageType} (${(bytes.length / 1024).toFixed(1)}KB) → ${publicUrl}`);
+    log.info(`[MEDIA] Persisted ${messageType} (${(bytes.length / 1024).toFixed(1)}KB) → ${publicUrl}`);
     return publicUrl;
-  } catch (err) { console.error(`[MEDIA] persistMediaToStorage error:`, err); return null; }
+  } catch (err) { log.error(`[MEDIA] persistMediaToStorage error:`, err); return null; }
 }
 
 /** persist Media Via Api function. */
@@ -139,14 +142,14 @@ export async function persistMediaViaApi(
     );
 
     if (!resp.ok) {
-      console.error(`[MEDIA] getBase64 API error for ${messageType} ${messageId}: ${resp.error ?? ''}`);
+      log.error(`[MEDIA] getBase64 API error for ${messageType} ${messageId}: ${resp.error ?? ''}`);
       return null;
     }
 
     const result = resp.data as Record<string, unknown>;
     const b64 = (result.base64 as string) || (result.data as string) || (result.media as string);
     if (!b64) {
-      console.warn(`[MEDIA] API returned 200 but no base64 for ${messageType} ${messageId}. Response keys: ${Object.keys(result).join(',')}`);
+      log.warn(`[MEDIA] API returned 200 but no base64 for ${messageType} ${messageId}. Response keys: ${Object.keys(result).join(',')}`);
       return null;
     }
 
@@ -155,7 +158,7 @@ export async function persistMediaViaApi(
     // o que pode exceder o limite de memória do Edge Runtime (~128MB por isolate)
     const MAX_BASE64_BYTES = 50_000_000; // 50MB
     if (raw.length > MAX_BASE64_BYTES) {
-      console.warn(`[MEDIA] Base64 too large (${(raw.length/1_000_000).toFixed(1)}MB) for ${messageType} ${messageId} — skipping to avoid isolate crash`);
+      log.warn(`[MEDIA] Base64 too large (${(raw.length/1_000_000).toFixed(1)}MB) for ${messageType} ${messageId} — skipping to avoid isolate crash`);
       return null;
     }
     const binaryStr = atob(raw);
@@ -195,12 +198,12 @@ export async function persistMediaViaApi(
         await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))); // 1s, 2s
       }
     }
-    if (uploadErr) { console.error(`[MEDIA] base64 upload error after retries:`, uploadErr); return null; }
+    if (uploadErr) { log.error(`[MEDIA] base64 upload error after retries:`, uploadErr); return null; }
 
     const publicUrl = getStoragePublicUrl(bucket, fileName);
-    console.log(`[MEDIA] Persisted ${messageType} via API (${(bytes.length / 1024).toFixed(1)}KB)`);
+    log.info(`[MEDIA] Persisted ${messageType} via API (${(bytes.length / 1024).toFixed(1)}KB)`);
     return publicUrl;
-  } catch (err) { console.error(`[MEDIA] persistMediaViaApi error:`, err); return null; }
+  } catch (err) { log.error(`[MEDIA] persistMediaViaApi error:`, err); return null; }
 }
 
 /** Parsed Message interface definition. */

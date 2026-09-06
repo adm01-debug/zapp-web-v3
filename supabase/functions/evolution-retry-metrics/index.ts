@@ -4,6 +4,9 @@ import { createZappAdminClient, createZappClient } from '../_shared/db-client.ts
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { EvolutionRetryMetricsV1Schema } from '../_shared/contract-schemas.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('evolution-retry-metrics');
 
 interface RetryRow {
   id: string;
@@ -158,7 +161,7 @@ Deno.serve(async (req) => {
       headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[evolution-retry-metrics] error:', e instanceof Error ? e.message : String(e));
+    log.error('[evolution-retry-metrics] error:', e instanceof Error ? e.message : String(e));
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },

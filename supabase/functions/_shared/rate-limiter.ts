@@ -15,6 +15,9 @@
 // Migration: 20260712000006_fix_window_boundary_race_s8.sql
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('rate-limiter');
 
 /** rate-limiter utilities and exports. */
 export async function checkRateLimit(supabase: SupabaseClient<any, any>, {
@@ -67,7 +70,7 @@ export async function checkRateLimit(supabase: SupabaseClient<any, any>, {
           }
         }
         // Permanent errors or max retries exceeded: fail open
-        console.warn(`[rate-limiter] rpc error after ${attempt} retries: ${error.message}`);
+        log.warn(`[rate-limiter] rpc error after ${attempt} retries: ${error.message}`);
         return { allowed: true, currentCount: 0, limit }; // Fail open (FIX-05)
       }
 
@@ -80,7 +83,7 @@ export async function checkRateLimit(supabase: SupabaseClient<any, any>, {
 
       // Log window boundary crossings for observability (FIX-01 atomic detection)
       if (windowExpired) {
-        console.log(`[rate-limiter] window reset: ${instanceId}/${eventType} at bucket ${bucket}`);
+        log.info(`[rate-limiter] window reset: ${instanceId}/${eventType} at bucket ${bucket}`);
       }
 
       return { allowed, currentCount, limit };
@@ -90,7 +93,7 @@ export async function checkRateLimit(supabase: SupabaseClient<any, any>, {
       if ((e as Error).message === 'RPC_TIMEOUT' || (e as Error).message?.includes('timeout')) {
         if (attempt < RETRY_DELAYS_MS.length) {
           const delayMs = RETRY_DELAYS_MS[attempt];
-          console.warn(`[rate-limiter] RPC timeout on attempt ${attempt + 1}, retrying in ${delayMs}ms`);
+          log.warn(`[rate-limiter] RPC timeout on attempt ${attempt + 1}, retrying in ${delayMs}ms`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
           continue;
         }
@@ -99,6 +102,6 @@ export async function checkRateLimit(supabase: SupabaseClient<any, any>, {
   }
 
   // All retries exhausted: fail open to prevent cascade failures
-  console.warn(`[rate-limiter] all retries exhausted for ${instanceId}/${eventType}: ${lastError?.message}`);
+  log.warn(`[rate-limiter] all retries exhausted for ${instanceId}/${eventType}: ${lastError?.message}`);
   return { allowed: true, currentCount: 0, limit }; // Fail open (FIX-05)
 }

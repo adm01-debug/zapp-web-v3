@@ -3,6 +3,9 @@
  * Logs token consumption per user to ai_usage_logs table.
  */
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('ai-usage');
 
 interface AiUsageEntry {
   functionName: string;
@@ -90,10 +93,10 @@ export async function logAiUsage(entry: AiUsageEntry): Promise<void> {
       error_message: entry.errorMessage || null,
       metadata: entry.metadata || null,
     });
-    if (insertErr) console.warn(`[ai-usage] Failed to log: ${insertErr.message}`);
+    if (insertErr) log.warn(`[ai-usage] Failed to log: ${insertErr.message}`);
   } catch (e) {
     // Never throw — logging failures must not break the main flow
-    console.warn(`[ai-usage] Exception during log: ${e instanceof Error ? e.message : String(e)}`);
+    log.warn(`[ai-usage] Exception during log: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 

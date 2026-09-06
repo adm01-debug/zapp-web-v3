@@ -24,6 +24,9 @@
  */
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getStoragePublicUrl } from "../../storage-url.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('cloud-media');
 
 /** Base + versão da Graph API da Meta (fixa por contrato W4). */
 export const CLOUD_GRAPH_API_BASE = "https://graph.facebook.com";
@@ -307,7 +310,7 @@ export async function downloadMedia(
     // quando o declarado diverge (ex.: content-type jpeg com bytes PNG).
     const detected = detectMediaType(bytes);
     if (detected && detected !== mime) {
-      console.warn(`[CLOUD-MEDIA] Content-Type '${mime}' diverge dos bytes (detectado '${detected}') — usando o detectado`);
+      log.warn(`[CLOUD-MEDIA] Content-Type '${mime}' diverge dos bytes (detectado '${detected}') — usando o detectado`);
       mime = detected;
     } else if (!detected && (mime === "application/octet-stream" || mime.startsWith("text/"))) {
       return {
@@ -362,11 +365,11 @@ export async function persistMediaToStorage(
     const mediaType = type && type !== "unknown" ? type : typeFromMime(mimeType);
 
     if (bytes.length < 100) {
-      console.warn(`[CLOUD-MEDIA] File too small (${bytes.length} bytes) for ${mediaType}`);
+      log.warn(`[CLOUD-MEDIA] File too small (${bytes.length} bytes) for ${mediaType}`);
       return null;
     }
     if (!isValidCloudMediaBytes(bytes, mediaType)) {
-      console.warn(
+      log.warn(
         `[CLOUD-MEDIA] Rejected ${mediaType} file (${bytes.length} bytes) — magic bytes mismatch (possible encryption/corruption)`,
       );
       return null;
@@ -374,7 +377,7 @@ export async function persistMediaToStorage(
 
     const cleanId = safeId.replace(/[^a-zA-Z0-9]/g, "");
     if (!cleanId) {
-      console.warn("[CLOUD-MEDIA] Empty safeId after sanitization — skipping upload");
+      log.warn("[CLOUD-MEDIA] Empty safeId after sanitization — skipping upload");
       return null;
     }
 
@@ -397,15 +400,15 @@ export async function persistMediaToStorage(
       }
     }
     if (uploadErr) {
-      console.error(`[CLOUD-MEDIA] Upload error after retries for ${mediaType}:`, uploadErr);
+      log.error(`[CLOUD-MEDIA] Upload error after retries for ${mediaType}:`, uploadErr);
       return null;
     }
 
     const publicUrl = getStoragePublicUrl(bucket, fileName);
-    console.log(`[CLOUD-MEDIA] Persisted ${mediaType} (${(bytes.length / 1024).toFixed(1)}KB) → ${publicUrl}`);
+    log.info(`[CLOUD-MEDIA] Persisted ${mediaType} (${(bytes.length / 1024).toFixed(1)}KB) → ${publicUrl}`);
     return publicUrl;
   } catch (err) {
-    console.error("[CLOUD-MEDIA] persistMediaToStorage error:", err);
+    log.error("[CLOUD-MEDIA] persistMediaToStorage error:", err);
     return null;
   }
 }
@@ -434,7 +437,7 @@ export async function processCloudMedia(
 
   const downloaded = await downloadMedia(mediaId, token, type);
   if (!downloaded.ok || !downloaded.bytes || !downloaded.mime) {
-    console.error(
+    log.error(
       `[CLOUD-MEDIA] Download failed for ${type} ${mediaId}: ${downloaded.error?.code ?? "UNKNOWN"} (${downloaded.error?.status ?? 0})`,
     );
     return { media_url: null, media_bucket: null, media_path: null, media_status: "failed" };

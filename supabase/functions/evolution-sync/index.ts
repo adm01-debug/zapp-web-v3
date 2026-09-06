@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   try {
     authed = await requireAdminOrSupervisor(req);
   } catch (err: unknown) {
-    console.error('[Sync] Auth error:', err instanceof Error ? err.message : String(err));
+    log.error('Auth error', { error: err instanceof Error ? err.message : String(err) });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
 
     return contractViolation422('action', 'Unknown action', req, corsHeaders);
   } catch (error: unknown) {
-    console.error('[Sync] Error:', error);
+    log.error('Unhandled error', { error: error instanceof Error ? error.message : String(error) });
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -63,6 +63,9 @@ import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { parseOrReject, buildContractErrorBody } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('provider-router');
 
 
 /**
@@ -250,7 +253,7 @@ Deno.serve(async (req) => {
   const body = parsed.data as RouteRequest;
 
   if (!body.action || typeof body.action !== "string") {
-    console.warn('[provider-router] missing or invalid action', { action: body.action });
+    log.warn('[provider-router] missing or invalid action', { action: body.action });
     return new Response(JSON.stringify({ error: "action_required" }), {
       status: 400, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });

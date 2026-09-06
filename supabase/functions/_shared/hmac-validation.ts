@@ -6,6 +6,9 @@
  * constant-time comparison to prevent timing attacks.
  */
 import { timingSafeStringEqual } from "./auth.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('hmac-validation');
 
 /**
  * Validates HMAC-SHA256 signature of a webhook payload.
@@ -52,7 +55,7 @@ export async function verifyHmacSignature(
     // Constant-time comparison
     return timingSafeEqual(expectedSignature, normalizedSignature);
   } catch (error) {
-    console.error('[HMAC] Signature verification error:', error);
+    log.error('[HMAC] Signature verification error:', error);
     return false;
   }
 }
@@ -287,7 +290,7 @@ export class WebhookSecurityService {
     // enforce HMAC-only once all producers sign.
     if (!signatureFound && sharedSecretFound) {
       if (this.secrets.length > 0 && this.sharedSecretMatches(sharedSecret!)) {
-        console.warn(
+        log.warn(
           '[HMAC][DEPRECATED] Authenticated via plaintext shared-secret bearer (x-webhook-secret). ' +
           'HMAC (x-webhook-signature) is the primary scheme — migrate this producer and set ' +
           'EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false to enforce HMAC-only.',
@@ -300,7 +303,7 @@ export class WebhookSecurityService {
           sharedSecretValid: true,
         };
       }
-      console.warn('[HMAC] Invalid shared secret received');
+      log.warn('[HMAC] Invalid shared secret received');
       return {
         valid: false,
         payload,
@@ -313,7 +316,7 @@ export class WebhookSecurityService {
 
     // If no signature (and no shared secret) and strict mode, reject
     if (!signatureFound && this.strictMode) {
-      console.warn('[HMAC] Strict mode: rejecting request without signature');
+      log.warn('[HMAC] Strict mode: rejecting request without signature');
       return {
         valid: false,
         payload,
@@ -325,7 +328,7 @@ export class WebhookSecurityService {
 
     // If no signature and not strict mode, allow (for backwards compatibility)
     if (!signatureFound) {
-      console.info('[HMAC] No signature found, allowing request (non-strict mode)');
+      log.info('[HMAC] No signature found, allowing request (non-strict mode)');
       return {
         valid: true,
         payload,
@@ -349,7 +352,7 @@ export class WebhookSecurityService {
     }
 
     if (!signatureValid) {
-      console.warn('[HMAC] Invalid signature received');
+      log.warn('[HMAC] Invalid signature received');
       return {
         valid: false,
         payload,
@@ -362,9 +365,9 @@ export class WebhookSecurityService {
     if (this.secrets.length > 1) {
       // Slot 0 is the primary; >0 means a rotation-tail secret was used. Log
       // so ops can monitor when it's safe to drop the old secret.
-      console.info(`[HMAC] Signature validated successfully (slot=${matchedSlot}${matchedSlot === 0 ? ' primary' : ' rotation-tail'})`);
+      log.info(`[HMAC] Signature validated successfully (slot=${matchedSlot}${matchedSlot === 0 ? ' primary' : ' rotation-tail'})`);
     } else {
-      console.info('[HMAC] Signature validated successfully');
+      log.info('[HMAC] Signature validated successfully');
     }
     return {
       valid: true,

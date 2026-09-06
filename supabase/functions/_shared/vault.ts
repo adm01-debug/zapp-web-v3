@@ -1,4 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('vault');
 
 interface CacheEntry { value: string; ts: number; }
 const vaultCache = new Map<string, CacheEntry>();
@@ -21,13 +24,13 @@ export async function getSecret(name: string, opts: { skipEnv?: boolean } = {}):
     const { data, error } = await admin.rpc('fn_get_vault_secret', { p_name: name });
     if (error || !data) return null;
     if (typeof data === 'string' && data.startsWith('PLACEHOLDER_')) {
-      console.warn(`[vault] ${name} returned PLACEHOLDER value — substituir antes de uso em produção`);
+      log.warn(`[vault] ${name} returned PLACEHOLDER value — substituir antes de uso em produção`);
       return null;
     }
     vaultCache.set(name, { value: data, ts: Date.now() });
     return data;
   } catch (e) {
-    console.error(`[vault] error reading ${name}:`, e);
+    log.error(`[vault] error reading ${name}:`, e);
     return null;
   }
 }

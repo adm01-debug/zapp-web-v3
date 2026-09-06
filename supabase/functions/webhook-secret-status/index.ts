@@ -6,6 +6,9 @@ import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('webhook-secret-status');
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return handleCorsPreflight(req);
 
@@ -45,7 +48,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('[webhook-secret-status] error:', error);
+    log.error('[webhook-secret-status] error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } }

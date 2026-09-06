@@ -1,6 +1,9 @@
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { parseOrReject, buildContractErrorBody } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('email-track-link');
 
 /**
  * email-track-link — Rastreio de cliques em links de emails
@@ -78,7 +81,7 @@ Deno.serve(async (req) => {
 
     if (error || data?.error) {
       // Se link não existe, redirecionar para fallback
-      console.error('[email-track-link] Error:', error?.message ?? data?.error);
+      log.error('[email-track-link] Error:', error?.message ?? data?.error);
       return new Response(null, {
         status: 302,
         headers: { Location: 'https://zappweb.app.br' },
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (err) {
-    console.error('[email-track-link] Fatal:', err);
+    log.error('[email-track-link] Fatal:', err);
     return new Response(null, {
       status: 302,
       headers: { Location: 'https://zappweb.app.br' },

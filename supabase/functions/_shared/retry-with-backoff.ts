@@ -1,3 +1,7 @@
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('retry-with-backoff');
+
 /**
  * _shared/retry-with-backoff.ts — Retry com backoff + jitter para chamadas
  * externas (fetch) com falha transiente (408/429/5xx/timeout/rede).
@@ -108,7 +112,7 @@ export async function fetchWithRetry(
       lastError = err instanceof Error ? err : new Error(String(err));
       if (attempt < maxRetries && isRetryableNetworkError(err, opts.signal)) {
         const delayMs = retryDelayMs(attempt + 1, baseDelayMs, maxDelayMs);
-        console.warn(`[${label}] erro de rede/timeout (${lastError.message}), retry ${attempt + 1}/${maxRetries} em ${delayMs}ms`);
+        log.warn(`[${label}] erro de rede/timeout (${lastError.message}), retry ${attempt + 1}/${maxRetries} em ${delayMs}ms`);
         opts.onRetry?.({ attempt: attempt + 1, delayMs, status: null, error: lastError.message });
         await sleep(delayMs);
         continue;
@@ -121,7 +125,7 @@ export async function fetchWithRetry(
 
     if (isRetryableHttpStatus(response.status) && attempt < maxRetries) {
       const delayMs = retryDelayMs(attempt + 1, baseDelayMs, maxDelayMs);
-      console.warn(`[${label}] HTTP ${response.status}, retry ${attempt + 1}/${maxRetries} em ${delayMs}ms`);
+      log.warn(`[${label}] HTTP ${response.status}, retry ${attempt + 1}/${maxRetries} em ${delayMs}ms`);
       opts.onRetry?.({ attempt: attempt + 1, delayMs, status: response.status, error: null });
       await response.body?.cancel().catch(() => {});
       await sleep(delayMs);

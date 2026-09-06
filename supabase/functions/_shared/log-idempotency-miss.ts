@@ -13,6 +13,9 @@
 // Best-effort: any failure here is swallowed — never break the send path.
 
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('log-idempotency-miss');
 
 let cached: SupabaseClient<Record<string, unknown>, "zapp"> | null | false = null;
 
@@ -57,6 +60,6 @@ export async function logIdempotencyMiss(input: IdempotencyMissInput): Promise<v
     });
   } catch (e) {
     // Swallow — observability must never break the send pipeline.
-    console.warn('[idempotency-miss] log failed:', e instanceof Error ? e.message : String(e));
+    log.warn('[idempotency-miss] log failed:', e instanceof Error ? e.message : String(e));
   }
 }

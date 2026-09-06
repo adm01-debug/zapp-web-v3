@@ -1,3 +1,7 @@
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('sentry');
+
 /**
  * Sentry SDK for Edge Functions (Deno)
  *
@@ -57,7 +61,7 @@ async function sendEvent(event: SentryEvent): Promise<void> {
       // Silently fail if Sentry is unreachable (don't break function)
     });
   } catch (err) {
-    console.error('[sentry] failed to send event:', err);
+    log.error('[sentry] failed to send event:', err);
   }
 }
 
@@ -69,7 +73,7 @@ export function initSentry(functionName: string): boolean {
 
   if (!DSN || DSN.trim() === '') {
     if (Deno.env.get('DEBUG_SENTRY')) {
-      console.info(
+      log.info(
         '[sentry] DSN not configured — Sentry disabled (set SENTRY_DSN in Supabase secrets to enable)'
       );
     }
@@ -77,13 +81,13 @@ export function initSentry(functionName: string): boolean {
   }
 
   try {
-    console.info(
+    log.info(
       `[sentry] initialized — env=${ENV} release=${RELEASE} function=${functionName}`
     );
     initialized = true;
     return true;
   } catch (err) {
-    console.error('[sentry] init failed:', err);
+    log.error('[sentry] init failed:', err);
     return false;
   }
 }

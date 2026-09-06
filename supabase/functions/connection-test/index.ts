@@ -10,6 +10,9 @@ import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { evolutionClient, getBaseUrl } from "../_shared/providers/evolution/index.ts";
 import { getProviderClient } from "../_shared/providers/registry.ts";
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('connection-test');
 
 type Mode = "official" | "unofficial";
 type Status = "pass" | "warn" | "fail" | "skip";
@@ -75,7 +78,7 @@ export function resolveConnectionStateClient(): Pick<typeof evolutionClient, "ge
   try {
     return getProviderClient() as unknown as Pick<typeof evolutionClient, "getConnectionState">;
   } catch (err) {
-    console.error(
+    log.error(
       `[connection-test] registry.getProviderClient() falhou (${err instanceof Error ? err.message : String(err)}); fallback evolutionClient`,
     );
     return evolutionClient;
