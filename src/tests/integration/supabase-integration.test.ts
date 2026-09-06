@@ -22,6 +22,9 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => mockSupabase,
 }));
 
+type MockQueryResult = { error?: { message?: string }; data: unknown };
+type MockSessionResult = { data: { session?: { user?: { id?: string } } }; error: null };
+
 describe('Auth & Data Integration', () => {
   it('should handle database connection failures gracefully', async () => {
     mockSupabase.from.mockImplementationOnce(() => ({
@@ -33,15 +36,16 @@ describe('Auth & Data Integration', () => {
       })
     }));
 
-    const result = await mockSupabase.from('profiles').select('*').eq('id', '1');
-    expect((result as any).error?.message).toBe('Connection Timeout');
+    const result = mockSupabase.from('profiles').select('*').eq('id', '1') as unknown as MockQueryResult;
+    expect(result.error?.message).toBe('Connection Timeout');
   });
 
   it('should mock successful auth session', async () => {
     const session = { user: { id: '123' } };
     mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session }, error: null });
 
-    const { data } = await mockSupabase.auth.getSession() as any;
+    const authResult = await mockSupabase.auth.getSession() as unknown as MockSessionResult;
+    const { data } = authResult;
     expect(data.session?.user.id).toBe('123');
   });
 });
