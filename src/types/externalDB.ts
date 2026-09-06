@@ -447,6 +447,8 @@ export interface ExternalDBQueryResult<T = unknown> {
     record_count: number | null;
     duration_ms: number;
     severity: string;
+    /** true quando a tabela não existe no schema — sem request ao banco */
+    unavailable?: boolean;
   };
 }
 

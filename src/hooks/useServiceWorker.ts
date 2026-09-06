@@ -341,12 +341,15 @@ export function useServiceWorker() {
             // novos que ainda não existiam → "Failed to fetch dynamically imported
             // module". Com a janela de 60s o CDN tem tempo de propagar.
             void import('@/lib/buildVersion')
-              .then(({ requestGracefulRefresh, getCurrentBuildId }) => {
+              .then(async ({ requestGracefulRefresh, getCurrentBuildId }) => {
                 // Verifica disposed após import dinâmico assíncrono para evitar
                 // chamar requestGracefulRefresh após o hook ter sido desmontado.
                 if (disposed) return;
                 const swBuildId =
                   typeof event.data.buildId === 'string' ? event.data.buildId : undefined;
+                // Alguns SWs novos repassam o entry diretamente no payload.
+                const swEntry: string | undefined =
+                  typeof event.data.entry === 'string' ? event.data.entry : undefined;
                 const currentBuildId = getCurrentBuildId();
                 if (!swBuildId || swBuildId === 'unknown' || swBuildId === currentBuildId) {
                   log.debug('[ServiceWorker] SW_UPDATED for the running build — no reload needed', {
@@ -359,7 +362,25 @@ export function useServiceWorker() {
                   '[ServiceWorker] SW_UPDATED for a newer build — scheduling graceful refresh',
                   { swBuildId, currentBuildId }
                 );
-                requestGracefulRefresh(`sw-updated:${swBuildId}`, swBuildId);
+                // Resolve o entry real do asset: do payload do SW (novo) ou do version.json.
+                // Sem entry, isBundleReachable retorna true e prefetchNewBundle é no-op —
+                // o reload ocorre mas sem prefetch.
+                let resolvedEntry = swEntry;
+                if (!resolvedEntry) {
+                  try {
+                    const vr = await fetch('/version.json', {
+                      cache: 'no-store',
+                      credentials: 'omit',
+                    });
+                    if (vr.ok) {
+                      const vp = (await vr.json()) as { entry?: string } | null;
+                      resolvedEntry = typeof vp?.entry === 'string' ? vp.entry : undefined;
+                    }
+                  } catch {
+                    /* entry indisponível — reload ocorre sem prefetch */
+                  }
+                }
+                requestGracefulRefresh(`sw-updated:${swBuildId}`, swBuildId, resolvedEntry);
               })
               .catch((err: unknown) => {
                 // import() dinâmico pode rejeitar (chunk removido em redeploy) —

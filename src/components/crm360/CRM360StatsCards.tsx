@@ -34,6 +34,7 @@ function StatCardItem({ stat }: { stat: StatCard }) {
   });
 
   const Icon = stat.icon;
+  const unavailable = data?.meta?.unavailable === true;
   const count = data?.meta?.record_count ?? 0;
 
   return (
@@ -45,6 +46,13 @@ function StatCardItem({ stat }: { stat: StatCard }) {
         <div>
           {isLoading ? (
             <Skeleton className="h-5 w-12" />
+          ) : unavailable ? (
+            <p
+              className="text-lg font-bold leading-none text-muted-foreground"
+              title="Métrica indisponível neste ambiente"
+            >
+              —
+            </p>
           ) : (
             <p className="text-lg font-bold leading-none">
               {count > 1000 ? `${(count / 1000).toFixed(1)}k` : count.toLocaleString('pt-BR')}

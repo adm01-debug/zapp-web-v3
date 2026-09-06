@@ -66,3 +66,14 @@ export function makeLogger(ctx: LogContext = {}): Logger {
 
 /** Logger singleton para uso em módulos sem contexto de request. */
 export const rootLogger = createLogger({ service: 'edge-function' });
+
+/**
+ * Retorna um logger nomeado por serviço — alias conveniente para `makeLogger`.
+ * Usado por edge functions que importam `getLogger` diretamente.
+ *
+ * @example
+ * const log = getLogger('promogifts-catalog');
+ */
+export function getLogger(service: string, ctx: LogContext = {}): Logger {
+  return createLogger({ service, ...ctx });
+}
