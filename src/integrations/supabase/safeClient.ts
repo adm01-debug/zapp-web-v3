@@ -98,6 +98,8 @@ const telemetry: ClientTelemetry = {
   stats: { totalCalls: 0, failedCalls: 0, cacheHits: 0 },
 };
 
+const abortCountByTable = new Map<string, number>();
+
 const resourceCache = new Map<string, { exists: boolean; expires: number }>();
 const _validationInFlight = new Map<string, Promise<boolean>>();
 
@@ -167,7 +169,8 @@ export const safeClient = {
     } catch (err) {
       // Aborts (unmount, cancelRefetch, page unload) são ruído esperado — rebaixar a WARN.
       const level = isClientSideTransientError(err) ? 'warn' : 'error';
-      this.log(requestId, level, `Erro crítico ao consultar tabela ${table}`, err);
+      if (level === 'warn') abortCountByTable.set(table, (abortCountByTable.get(table) ?? 0) + 1);
+      this.log(requestId, level, level === 'warn' ? `Query cancelada (abort) — ${table}` : `Erro crítico ao consultar tabela ${table}`, err);
       if (level === 'error') {
         await this.recordFailure(
           requestId,
@@ -464,3 +467,11 @@ export const safeClient = {
     return new Error(String(error));
   },
 };
+
+/** Retorna métricas acumuladas da fila do safeClient, incluindo contagem de aborts por tabela. */
+export function getSupabaseQueueStats() {
+  return {
+    ...telemetry.stats,
+    abortsByTable: Object.fromEntries(abortCountByTable),
+  };
+}
