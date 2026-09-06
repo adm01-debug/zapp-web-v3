@@ -1,13 +1,13 @@
 // Message-related webhook handlers: send, update, delete, set, edited
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import {
 import { getLogger } from "./logger.ts";
-
-const log = getLogger('evolution-webhook-msg-handlers');
+import {
   isRecord, normalizePhone, resolveEventJid, toEventRecords, shouldUpdateStatus,
   getConnectionByInstance, getContactByPhone,
 } from "./evolution-helpers.ts";
+
+const log = getLogger('evolution-webhook-msg-handlers');
 
 /** evolution-webhook-msg-handlers utilities and exports. */
 export async function handleSendMessage(supabase: SupabaseClient<any, any>, instance: string, data: unknown, baseData: Record<string, unknown>) {
