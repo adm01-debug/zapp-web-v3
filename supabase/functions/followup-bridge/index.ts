@@ -15,6 +15,9 @@ import { requireUser } from '../_shared/auth.ts';
 import { handleCorsPreflight, jsonResponse, errorResponse } from '../_shared/cors.ts';
 import { parseOrReject, z } from '../_shared/contract-kit.ts';
 import { FollowupBridgeV1Schema } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('followup-bridge');
 
 // Re-use a single admin client instance per isolate lifetime
 const admin = createZappAdminClient();
@@ -75,7 +78,7 @@ Deno.serve(async (req: Request) => {
       .order('sequence_order', { ascending: true });
 
     if (rulesErr) {
-      console.error('[followup-bridge] rules fetch error:', rulesErr.message);
+      log.error('rules fetch error', { error: rulesErr.message });
       return errorResponse(req, `DB error fetching rules: ${rulesErr.message}`, 500);
     }
 
@@ -91,7 +94,7 @@ Deno.serve(async (req: Request) => {
         .eq('is_active', true)
         .order('sequence_order', { ascending: true });
       if (byId.error) {
-        console.error('[followup-bridge] rules by-id fetch error:', byId.error.message);
+        log.error('rules by-id fetch error', { error: byId.error.message });
         return errorResponse(req, `DB error fetching rules: ${byId.error.message}`, 500);
       }
       rules = byId.data;
@@ -121,10 +124,7 @@ Deno.serve(async (req: Request) => {
 
     const resolvedContactId: string | null = contact?.id ?? null;
     if (!resolvedContactId) {
-      console.warn(
-        `[followup-bridge] contact not found for jid=${contact_jid}; ` +
-        `inserting with contact_id=null (processor will handle)`,
-      );
+      log.warn('contact not found, inserting with contact_id=null', { jid: contact_jid });
     }
 
     // ── 3. Build followup inserts from rules (delay_hours por passo) ────────
@@ -169,7 +169,7 @@ Deno.serve(async (req: Request) => {
       .insert(inserts);
 
     if (insertErr) {
-      console.error('[followup-bridge] insert error:', insertErr.message, { inserts });
+      log.error('insert error', { error: insertErr.message, inserts_count: inserts.length });
       return errorResponse(
         req,
         `Failed to queue followup steps: ${insertErr.message}`,
@@ -177,10 +177,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log(
-      `[followup-bridge] queued ${inserts.length} step(s) for sequence ` +
-      `"${sequenceName}" (${sequence_id}), contact_jid=${contact_jid}`,
-    );
+    log.info('queued steps', { steps: inserts.length, sequence_name: sequenceName, sequence_id, contact_jid });
 
     return jsonResponse(req, {
       success: true,
@@ -190,7 +187,7 @@ Deno.serve(async (req: Request) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
-    console.error('[followup-bridge] unhandled error:', e);
+    log.error('unhandled error', { error: e instanceof Error ? e.message : String(e) });
     return errorResponse(req, `Internal server error: ${msg}`, 500);
   }
 });

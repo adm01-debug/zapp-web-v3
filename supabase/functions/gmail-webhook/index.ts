@@ -9,6 +9,8 @@ import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+const log = getLogger('gmail-webhook');
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const PUBSUB_TOPIC = (() => {
   const v = Deno.env.get('GMAIL_PUBSUB_TOPIC');
@@ -42,7 +44,7 @@ async function verifyPubSubOidcToken(authHeader: string | null, expectedAudience
   } catch (err) {
     // console.warn (não .error): endpoint é público e sem auth de rede — um
     // atacante mandando Bearer arbitrário não deve inflar alertas de erro.
-    console.warn('[gmail-webhook] OIDC verification failed', err instanceof Error ? err.message : String(err));
+    log.warn('OIDC verification failed', { error: err instanceof Error ? err.message : String(err) });
     return false;
   }
 }
@@ -170,7 +172,7 @@ Deno.serve(async (req) => {
         }
         const watchData = await watchRes.json();
         if (watchData.error) {
-          console.error('[gmail-webhook] watch setup error', watchData.error);
+          log.error('watch setup error', { error: watchData.error });
           return json({ error: 'Failed to setup Gmail watch' }, 400);
         }
 
@@ -219,7 +221,7 @@ Deno.serve(async (req) => {
         account_id: account.id, history_id: historyId,
         status: 'active',
       }, { onConflict: 'account_id' });
-      if (histUpsertErr) console.error('[gmail-webhook] watch history upsert failed:', histUpsertErr.message);
+      if (histUpsertErr) log.error('watch history upsert failed', { error: histUpsertErr.message });
 
       return respondWithContract(parsed, { ok: true }, { status: 200, headers: getCorsHeaders(req) });
     }
@@ -231,7 +233,7 @@ Deno.serve(async (req) => {
 
     return json({ error: 'Method not allowed' }, 405);
   } catch (err) {
-    console.error('[gmail-webhook]', err instanceof Error ? (err.stack ?? err.message) : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? (err.stack ?? err.message) : String(err) });
     await captureException(err, {
       functionName: 'gmail-webhook',
       requestUrl: req.url.split('?')[0],
@@ -290,7 +292,7 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   const { error: tokenErr } = await supabase.from('email_accounts').update({
     access_token: newToken, token_expires_at: newExpiry,
   }).eq('id', accountId);
-  if (tokenErr) { console.error('[gmail-webhook] token update failed:', tokenErr.message); return null; }
+  if (tokenErr) { log.error('token update failed', { error: tokenErr.message }); return null; }
 
   return newToken;
 }
@@ -309,7 +311,7 @@ async function processHistory(
     // 5xx → transient: throw so Pub/Sub retries and history_id is held in place.
     // 4xx → permanent API error: log and return so history_id can advance and the account is not stalled.
     if (histRes.status >= 500) throw new Error(`Gmail history API transient error: ${histRes.status}`);
-    console.error('[gmail-webhook] processHistory non-retryable HTTP error', histRes.status);
+    log.error('processHistory non-retryable HTTP error', { status: histRes.status });
     return;
   }
   const histData = await histRes.json();
@@ -335,10 +337,11 @@ async function processHistory(
   for (const r of results) {
     if (r.status === 'rejected') {
       const isPoison = r.reason instanceof NonRetryableMessageError;
-      (isPoison ? console.warn : console.error)(
-        '[gmail-webhook] processHistory message failed:',
-        r.reason instanceof Error ? r.reason.message : String(r.reason),
-      );
+      if (isPoison) {
+        log.warn('processHistory message failed', { reason: r.reason instanceof Error ? r.reason.message : String(r.reason) });
+      } else {
+        log.error('processHistory message failed', { reason: r.reason instanceof Error ? r.reason.message : String(r.reason) });
+      }
     }
   }
   // Transient failures: hold history_id so Pub/Sub can retry and recover the missed messages.
@@ -511,6 +514,6 @@ async function fetchAndPersistMessage(
     const { error: unreadErr } = await supabase.from('gmail_threads')
       .update({ unread_count: unreadCount })
       .eq('id', thread.id);
-    if (unreadErr) console.warn('[gmail-webhook] unread_count update failed:', unreadErr.message);
+    if (unreadErr) log.warn('unread_count update failed', { error: unreadErr.message });
   }
 }

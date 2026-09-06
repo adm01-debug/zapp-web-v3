@@ -26,6 +26,7 @@
  *   - URL validada http(s) e normalizada (sem barra final).
  */
 
+import { getLogger } from '../_shared/logger.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { requireAdminOrSupervisor } from '../_shared/auth.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
@@ -33,6 +34,8 @@ import { createZappAdminClient } from '../_shared/db-client.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { isSafeHttpsUrl } from '../_shared/schemas.ts';
+
+const log = getLogger('zapp-n8n-sync');
 
 /** Config row retornada pelas RPCs (webhook_secret NUNCA vem aqui). */
 export interface N8nConfigRow {
@@ -89,12 +92,12 @@ export async function fetchN8nConfig(admin: ReturnType<typeof createZappAdminCli
   try {
     const { data, error } = await admin.rpc('fn_edge_get_n8n_config');
     if (error) {
-      console.warn('[zapp-n8n-sync] fn_edge_get_n8n_config falhou:', error.message);
+      log.warn('fn_edge_get_n8n_config falhou', { error: error.message });
       return null;
     }
     return (data && typeof data === 'object' ? data : null) as N8nConfigRow | null;
   } catch (e) {
-    console.warn('[zapp-n8n-sync] fn_edge_get_n8n_config lançou:', e instanceof Error ? e.message : String(e));
+    log.warn('fn_edge_get_n8n_config lançou', { error: e instanceof Error ? e.message : String(e) });
     return null;
   }
 }
@@ -126,7 +129,7 @@ async function handleConfigure(
   });
 
   if (error) {
-    console.error('[zapp-n8n-sync] upsert RPC falhou:', error.message);
+    log.error('upsert RPC falhou', { error: error.message });
     return json(cors, 500, { ok: false, error: 'Failed to save n8n config' });
   }
 

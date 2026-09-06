@@ -48,6 +48,7 @@
 // Contrato: zapp-notifications-dispatch@v1 (registrado em contract-schemas.ts,
 // contract-versions.ts e edge-contract-schemas.ts).
 
+import { getLogger } from '../_shared/logger.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { requireServiceRoleOrCron } from '../_shared/auth.ts';
 import { getCorsHeaders } from '../_shared/cors.ts';
@@ -57,6 +58,8 @@ import { getSecret } from '../_shared/vault.ts';
 import { sha256Hex, markEventProcessed } from '../_shared/evolution-helpers.ts';
 import { fetchWithRetry } from '../_shared/retry-with-backoff.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+
+const log = getLogger('zapp-notifications-dispatch');
 
 const FETCH_TIMEOUT_MS = 15_000;
 
@@ -124,14 +127,12 @@ export async function fetchActiveChannels(
       .select('*')
       .eq('enabled', true);
     if (error) {
-      console.warn(`[zapp-notifications-dispatch] leitura de canais falhou: ${error.message}`);
+      log.warn('leitura de canais falhou', { error: error.message });
       return [];
     }
     return (Array.isArray(data) ? data : []) as ChannelRow[];
   } catch (e) {
-    console.warn(
-      `[zapp-notifications-dispatch] leitura de canais (exception): ${e instanceof Error ? e.message : String(e)}`,
-    );
+    log.warn('leitura de canais (exception)', { error: e instanceof Error ? e.message : String(e) });
     return [];
   }
 }
@@ -155,17 +156,15 @@ export async function claimDelivery(
       status: 'sending',
     });
     if (error && error.code === '23505') {
-      console.warn(`[zapp-notifications-dispatch] dedup: evento ${key} já entregue p/ canal ${channelId}`);
+      log.warn('dedup: evento já entregue p/ canal', { key, channelId });
       return false;
     }
     if (error) {
-      console.warn(`[zapp-notifications-dispatch] delivery_log indisponível (fail-open): ${error.message}`);
+      log.warn('delivery_log indisponível (fail-open)', { error: error.message });
     }
     return true;
   } catch (e) {
-    console.warn(
-      `[zapp-notifications-dispatch] delivery_log exception (fail-open): ${e instanceof Error ? e.message : String(e)}`,
-    );
+    log.warn('delivery_log exception (fail-open)', { error: e instanceof Error ? e.message : String(e) });
     return true;
   }
 }
@@ -183,7 +182,7 @@ export async function markDelivery(
     .update({ status, error: errorMsg })
     .eq('event_key', key)
     .eq('channel_id', channelId);
-  if (error) console.warn(`[zapp-notifications-dispatch] markDelivery falhou: ${error.message}`);
+  if (error) log.warn('markDelivery falhou', { error: error.message });
 }
 
 /** Persiste o estado do canal (last_sent_at/error — Etapa 68.3) — best-effort. */
@@ -197,11 +196,9 @@ export async function updateChannelState(
     const payload: Record<string, unknown> = { last_sent_at: nowIso };
     if (errorMsg !== null) payload.error = errorMsg;
     const { error: updateErr } = await supabase.from('notification_channels_config').update(payload).eq('id', channelId);
-    if (updateErr) console.warn(`[zapp-notifications-dispatch] updateChannelState db update failed: ${updateErr.message}`);
+    if (updateErr) log.warn('updateChannelState db update failed', { error: updateErr.message });
   } catch (e) {
-    console.warn(
-      `[zapp-notifications-dispatch] updateChannelState falhou: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    log.warn('updateChannelState falhou', { error: e instanceof Error ? e.message : String(e) });
   }
 }
 
@@ -417,7 +414,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     // Erro inesperado do pipeline NUNCA vira 5xx — registra e responde 200.
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[zapp-notifications-dispatch] erro interno (registrado, sem crash): ${msg}`);
+    log.error('erro interno (registrado, sem crash)', { error: msg });
     failed++;
     errors.push(`internal: ${msg}`);
   }

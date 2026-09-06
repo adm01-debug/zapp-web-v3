@@ -42,6 +42,9 @@ import {
   handleCors, errorResponse, errorEnvelope, jsonResponse,
   sanitizeString, isValidUUID, checkRateLimit, getClientIP, requireEnv, Logger, getCorsHeaders,
 } from "../_shared/validation.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('ai-router');
 import { timingSafeStringEqual } from "../_shared/auth.ts";
 import {
   AiAutoTagSchema, AiConversationSummarySchema, AiEnhanceMessageSchema,
@@ -478,7 +481,7 @@ async function logAiMetrics(params: {
       p_error_message: params.errorMessage,
       p_metadata: params.metadata,
     });
-    if (metricsErr) console.warn(`[ai-router] record_ai_metrics failed: ${metricsErr.message}`);
+    if (metricsErr) log.warn('record_ai_metrics failed', { error: metricsErr.message });
   } catch {
     // Metrics logging is non-critical, do not propagate errors
   }
@@ -1349,7 +1352,7 @@ Responda APENAS em JSON:
           p_error_message: errorMessage,
           p_metadata: metricsMetadata,
         });
-        if (autoTagMetricsErr) console.warn(`[ai-router/auto-tag] record_ai_metrics failed: ${autoTagMetricsErr.message}`);
+        if (autoTagMetricsErr) log.warn('record_ai_metrics failed', { error: autoTagMetricsErr.message });
       } catch {
         // Metrics not critical
       }
@@ -1370,7 +1373,7 @@ Responda APENAS em JSON:
         if (ctx.requestId) {
           try {
             const { error: dedupeDeleteErr } = await supabase.from('webhook_events_processed').delete().eq('event_id', ctx.requestId);
-            if (dedupeDeleteErr) console.warn(`[ai-router] failed to delete dedup record on 429: ${dedupeDeleteErr.message}`);
+            if (dedupeDeleteErr) log.warn('failed to delete dedup record on 429', { error: dedupeDeleteErr.message });
           } catch {
             // Graceful degradation
           }
@@ -2049,7 +2052,7 @@ Foque em:
         p_error_message: errMsg,
         p_metadata: { requestId: ctx.requestId },
       });
-      if (summaryMetricsErr) console.warn(`[ai-router/summary] record_ai_metrics failed: ${summaryMetricsErr.message}`);
+      if (summaryMetricsErr) log.warn('record_ai_metrics failed', { error: summaryMetricsErr.message });
     } catch {
       // Metrics not critical
     }
@@ -2364,7 +2367,7 @@ async function handleClassifyEmoji(
           p_error_message: errorMessage,
           p_metadata: metricsMetadata,
         });
-        if (emojiMetricsErr) console.warn(`[ai-router/emoji] record_ai_metrics failed: ${emojiMetricsErr.message}`);
+        if (emojiMetricsErr) log.warn('record_ai_metrics failed', { error: emojiMetricsErr.message });
       } catch {
         // Metrics not critical
       }
@@ -3370,7 +3373,7 @@ Analise a conversa de forma profunda e forneça análise técnica das interaçõ
         p_error_message: errMsg,
         p_metadata: { requestId: ctx.requestId },
       });
-      if (analysisMetricsErr) console.warn(`[ai-router/analysis] record_ai_metrics failed: ${analysisMetricsErr.message}`);
+      if (analysisMetricsErr) log.warn('record_ai_metrics failed', { error: analysisMetricsErr.message });
     } catch {
       // Metrics not critical
     }

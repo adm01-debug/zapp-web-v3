@@ -4,6 +4,7 @@
 // Evolution (`version` + `key.{id,remoteJid,fromMe}` / `{error:true,status,message,details}`),
 // e envios outbound persistem no mesmo ledger (`evolution_send_idempotency`) e na
 // mesma fila (DLQ `failed_messages`) que o proxy Evolution.
+import { getLogger } from '../_shared/logger.ts';
 import { createZappClient, createZappAdminClient } from '../_shared/db-client.ts';
 import { getCorsHeaders, checkRateLimit } from "../_shared/validation.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
@@ -12,6 +13,8 @@ import { EVOLUTION_ENVELOPE_VERSION } from "../_shared/evolution-api-proxy.ts";
 import { enqueueFailedMessage } from "../_shared/enqueue-failed-message.ts";
 import { fetchWithRetry } from "../_shared/retry-with-backoff.ts";
 import { isValidIdemKey, lookupSendCache, storeSendCache } from "../_shared/send-idempotency.ts";
+
+const log = getLogger('whatsapp-cloud-send');
 
 const corsHeaders = getCorsHeaders();
 
@@ -168,7 +171,7 @@ Deno.serve(async (req) => {
         });
         results.push({ id: mid, ok: r.ok, status: r.status });
       } catch (e) {
-        console.error("[whatsapp-cloud-send] read mark failed", mid, e instanceof Error ? e.message : String(e));
+        log.error('read mark failed', { mid, error: e instanceof Error ? e.message : String(e) });
         results.push({ id: mid, ok: false, status: 0 });
       }
     }
@@ -259,7 +262,7 @@ Deno.serve(async (req) => {
   if (ledgerEnabled) {
     const cached = await lookupSendCache(idemKey!);
     if (cached) {
-      console.log(`[whatsapp-cloud-send] idempotency HIT for ${idemKey}`);
+      log.info('idempotency HIT', { idemKey });
       return jsonResponse(cached.response);
     }
   }
@@ -268,11 +271,7 @@ Deno.serve(async (req) => {
     const r = await callGraph("messages", payload);
     if (!r.ok) {
       const dataStr = typeof r.data === 'object' && r.data !== null ? JSON.stringify(r.data).slice(0, 500) : '';
-      console.error(
-        "[whatsapp-cloud-send] graph error",
-        r.status,
-        dataStr
-      );
+      log.error('graph error', { status: r.status, data: dataStr });
       // Mesma fila do caminho Evolution (DLQ `failed_messages`), fire-and-forget.
       enqueueFailedMessage({
         instance_name: PHONE_NUMBER_ID || "cloud",
@@ -331,7 +330,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse(envelope);
   } catch (e) {
-    console.error("[whatsapp-cloud-send] fetch error", e instanceof Error ? e.message : String(e));
+    log.error('fetch error', { error: e instanceof Error ? e.message : String(e) });
     // Timeout/network → mesmo enqueue transitório do proxy Evolution (DLQ).
     enqueueFailedMessage({
       instance_name: PHONE_NUMBER_ID || "cloud",

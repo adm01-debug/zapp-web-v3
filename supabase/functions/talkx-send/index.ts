@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
       const newStatus = action === "pause" ? "paused" : "cancelled";
       const { error: statusErr } = await supabase.from("talkx_campaigns").update({ status: newStatus }).eq("id", campaignId);
       if (statusErr) {
-        console.error(`[talkx-send] failed to set campaign status to ${newStatus}:`, statusErr.message);
+        log.error(`failed to set campaign status to ${newStatus}`, { error: statusErr.message });
         return new Response(JSON.stringify({ error: `Failed to ${action} campaign` }), { status: 500, headers });
       }
       return new Response(JSON.stringify({ success: true, status: newStatus }), { headers });
@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
     // Mark as sending
     const { error: markSendingErr } = await supabase.from("talkx_campaigns")
       .update({ status: "sending", started_at: new Date().toISOString() }).eq("id", campaignObj.id);
-    if (markSendingErr) console.warn('[talkx-send] failed to mark campaign as sending:', markSendingErr.message);
+    if (markSendingErr) log.warn('failed to mark campaign as sending', { error: markSendingErr.message });
 
     // Get pending recipients with contact info
     const { data: recipients } = await supabase
@@ -253,13 +253,13 @@ Deno.serve(async (req) => {
       const { error: blacklistUpdateErr } = await supabase.from("talkx_recipients")
         .update({ status: "skipped", error_message: "Contato na lista negra (opt-out)" })
         .in("id", blacklistedRecipientIds);
-      if (blacklistUpdateErr) console.warn('[talkx-send] failed to update blacklisted recipients:', blacklistUpdateErr.message);
+      if (blacklistUpdateErr) log.warn('failed to update blacklisted recipients', { error: blacklistUpdateErr.message });
     }
 
     if (eligibleRecipients.length === 0) {
       const { error: completedErr } = await supabase.from("talkx_campaigns")
         .update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", campaignObj.id);
-      if (completedErr) console.warn('[talkx-send] failed to mark campaign as completed:', completedErr.message);
+      if (completedErr) log.warn('failed to mark campaign as completed', { error: completedErr.message });
       return new Response(JSON.stringify({ success: true, message: "No eligible recipients to send" }), { headers });
     }
 
@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
         if (recipId) {
           const { error: skipInvalidErr } = await supabase.from("talkx_recipients")
             .update({ status: "skipped", error_message: "Contato inválido" }).eq("id", recipId);
-          if (skipInvalidErr) console.warn('[talkx-send] failed to skip invalid contact:', skipInvalidErr.message);
+          if (skipInvalidErr) log.warn('failed to skip invalid contact', { error: skipInvalidErr.message });
         }
         continue;
       }
@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
         if (recipId) {
           const { error: skipNoPhoneErr } = await supabase.from("talkx_recipients")
             .update({ status: "skipped", error_message: "Sem número de telefone" }).eq("id", recipId);
-          if (skipNoPhoneErr) console.warn('[talkx-send] failed to skip no-phone contact:', skipNoPhoneErr.message);
+          if (skipNoPhoneErr) log.warn('failed to skip no-phone contact', { error: skipNoPhoneErr.message });
         }
         continue;
       }
@@ -311,7 +311,7 @@ Deno.serve(async (req) => {
       if (recipId) {
         const { error: sendingStatusErr } = await supabase.from("talkx_recipients")
           .update({ personalized_message: personalizedMsg, status: "sending", request_id: requestId }).eq("id", recipId);
-        if (sendingStatusErr) console.warn('[talkx-send] failed to set sending status:', sendingStatusErr.message);
+        if (sendingStatusErr) log.warn('failed to set sending status', { error: sendingStatusErr.message });
       }
 
       try {
@@ -356,7 +356,7 @@ Deno.serve(async (req) => {
           if (recipId) {
             const { error: sentStatusErr } = await supabase.from("talkx_recipients")
               .update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", recipId);
-            if (sentStatusErr) console.warn('[talkx-send] failed to set sent status:', sentStatusErr.message);
+            if (sentStatusErr) log.warn('failed to set sent status', { error: sentStatusErr.message });
           }
         } else {
           failedCount++;
@@ -369,7 +369,7 @@ Deno.serve(async (req) => {
           if (recipId) {
             const { error: failedStatusErr } = await supabase.from("talkx_recipients")
               .update({ status: "failed", error_message: errorMsg }).eq("id", recipId);
-            if (failedStatusErr) console.warn('[talkx-send] failed to set failed status:', failedStatusErr.message);
+            if (failedStatusErr) log.warn('failed to set failed status', { error: failedStatusErr.message });
           }
         }
       } catch (err) {
@@ -378,13 +378,13 @@ Deno.serve(async (req) => {
         if (recipId) {
           const { error: catchStatusErr } = await supabase.from("talkx_recipients")
             .update({ status: "failed", error_message: errorMsg }).eq("id", recipId);
-          if (catchStatusErr) console.warn('[talkx-send] failed to set failed status (catch):', catchStatusErr.message);
+          if (catchStatusErr) log.warn('failed to set failed status (catch)', { error: catchStatusErr.message });
         }
       }
 
       const { error: campaignCountErr } = await supabase.from("talkx_campaigns")
         .update({ sent_count: sentCount, failed_count: failedCount }).eq("id", campaignObj.id);
-      if (campaignCountErr) console.warn('[talkx-send] failed to update campaign counts:', campaignCountErr.message);
+      if (campaignCountErr) log.warn('failed to update campaign counts', { error: campaignCountErr.message });
 
       const sendIntervalMin = typeof campaignObj.send_interval_min === 'number' ? campaignObj.send_interval_min : 1000;
       const sendIntervalMax = typeof campaignObj.send_interval_max === 'number' ? campaignObj.send_interval_max : 3000;
@@ -402,7 +402,7 @@ Deno.serve(async (req) => {
         const { error: finalErr } = await supabase.from("talkx_campaigns")
           .update({ status: "completed", completed_at: new Date().toISOString(), sent_count: sentCount, failed_count: failedCount })
           .eq("id", campaignObj.id);
-        if (finalErr) console.warn('[talkx-send] failed to mark campaign as completed at end:', finalErr.message);
+        if (finalErr) log.warn('failed to mark campaign as completed at end', { error: finalErr.message });
       }
     }
 

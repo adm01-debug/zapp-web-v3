@@ -11,13 +11,15 @@ import { parseOrReject } from '../_shared/contract-kit.ts'
 import { readJsonBodyOrEmpty, errorEnvelope } from '../_shared/validation.ts'
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts'
 import { getCorsHeaders } from '../_shared/cors.ts'
+import { getLogger } from '../_shared/logger.ts'
+const log = getLogger('main')
 
 // Inicializa Sentry UMA vez por container — cobre 100% das Edge Functions
 // sem precisar alterar cada uma individualmente
 let sentryReady = false
 try {
   sentryReady = initSentry('edge-runtime-main')
-  if (sentryReady) console.error('[main] Sentry initialized for global error tracking')
+  if (sentryReady) log.info('Sentry initialized for global error tracking')
 } catch (_) { /* noop — Sentry não deve derrubar o entrypoint */ }
 
 // Cold-start indicator — logs once per container lifecycle. Remove in production if verbose logging is undesired.
@@ -79,7 +81,7 @@ if (jwtSecretFile) {
   } catch (e) {
     // Arquivo ausente/ilegível NUNCA pode derrubar o entrypoint compartilhado:
     // loga e continua (o fallback JWT_SECRET abaixo cobre o caso normal).
-    console.error('[main] aviso: JWT_SECRET_FILE ilegível — usando JWT_SECRET', e)
+    log.warn('aviso: JWT_SECRET_FILE ilegível — usando JWT_SECRET', { error: e instanceof Error ? e.message : String(e) })
   }
 }
 const rawSecret = (fileSecret || Deno.env.get('JWT_SECRET') || '').trim()
@@ -88,7 +90,7 @@ const JWT_SECRET = rawSecret.startsWith('MISSING__') ? '' : rawSecret
 // Fail-fast on startup: se VERIFY_JWT=true sem segredo resolvido, cada request
 // seria validado contra chave indefinida — derruba o container no boot.
 if (VERIFY_JWT && !JWT_SECRET) {
-  console.error('[main] FATAL: VERIFY_JWT=true but JWT_SECRET/JWT_SECRET_FILE is not set — refusing to start')
+  log.error('FATAL: VERIFY_JWT=true but JWT_SECRET/JWT_SECRET_FILE is not set — refusing to start')
   throw new Error('JWT_SECRET required when VERIFY_JWT is enabled')
 }
 
@@ -110,7 +112,7 @@ async function verifyJWT(jwt: string): Promise<boolean> {
   try {
     await jose.jwtVerify(jwt, secretKey)
   } catch (err) {
-    console.error(err)
+    log.error('JWT verification failed', { error: err instanceof Error ? err.message : String(err) })
     return false
   }
   return true
@@ -161,7 +163,7 @@ Deno.serve(async (req: Request) => {
         return errorEnvelope('invalid_jwt', 'Invalid JWT', 401, req)
       }
     } catch (e) {
-      console.error(e)
+      log.error('authorization failed', { error: e instanceof Error ? e.message : String(e) })
       if (sentryReady) captureException(e, { functionName: 'edge-runtime-main', requestUrl: req.url })
       return errorEnvelope('authorization_failed', 'Authorization failed', 401, req)
     }
@@ -179,7 +181,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const servicePath = `/home/deno/functions/${service_name}`
-  console.error(`serving the request with ${servicePath}`)
+  log.info(`serving the request with ${servicePath}`)
 
   // Função inexistente → 404 JSON estruturado (em vez do 500 genérico do catch
   // abaixo): o create() do worker lança erro genérico quando o diretório da
@@ -195,7 +197,7 @@ Deno.serve(async (req: Request) => {
       return functionNotFoundResponse(service_name, req)
     }
     // Permissão/outro erro de FS: loga e segue — o catch do worker decide (500 atual).
-    console.error('worker stat error:', e)
+    log.error('worker stat error', { error: e instanceof Error ? e.message : String(e) })
   }
 
   // Increased from 150 MB to handle heavier functions (e.g. evolution-api with many imports)
@@ -218,7 +220,7 @@ Deno.serve(async (req: Request) => {
     })
     return await worker.fetch(req)
   } catch (e) {
-    console.error('worker error:', e)
+    log.error('worker error', { error: e instanceof Error ? e.message : String(e) })
     if (sentryReady) captureException(e, { functionName: service_name, requestUrl: req.url })
     return errorEnvelope('internal_error', 'Internal server error', 500, req)
   }

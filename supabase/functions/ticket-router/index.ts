@@ -2,6 +2,7 @@
 // Resolve o agente para um contato em um canal usando sticky agent + round-robin com skills.
 // Opcionalmente persiste o sticky e atribui o contato (assigned_to + queue_id).
 
+import { getLogger } from '../_shared/logger.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { requireAdminOrSupervisor } from "../_shared/auth.ts";
 import { checkRateLimit } from "../_shared/validation.ts";
@@ -9,6 +10,9 @@ import { checkRateLimit } from "../_shared/validation.ts";
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+
+const log = getLogger('ticket-router');
+
 interface RouteRequest {
   contact_id: string;
   channel_connection_id?: string | null;
@@ -87,12 +91,12 @@ Deno.serve(async (req) => {
     );
 
     if (resolveErr) {
-      console.error("[ticket-router] resolve error", resolveErr);
+      log.error('resolve error', { error: resolveErr });
       return err500("resolve_failed");
     }
 
     if (typeof resolved !== 'object' || resolved === null || Array.isArray(resolved)) {
-      console.error("[ticket-router] invalid rpc response type");
+      log.error('invalid rpc response type');
       return err500("resolve_invalid");
     }
 
@@ -122,7 +126,7 @@ Deno.serve(async (req) => {
         .eq("id", contactId);
 
       if (updErr) {
-        console.error("[ticket-router] update contact error", updErr);
+        log.error('update contact error', { error: updErr });
         return err500("update_failed");
       }
 
@@ -137,7 +141,7 @@ Deno.serve(async (req) => {
       );
 
       if (stickyErr) {
-        console.warn("[ticket-router] sticky write failed", stickyErr);
+        log.warn('sticky write failed', { error: stickyErr });
       }
 
       result.applied = true;
@@ -150,7 +154,7 @@ Deno.serve(async (req) => {
       headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("[ticket-router] unhandled error:", err instanceof Error ? err.message : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return err500("internal_server_error");
   }
 });

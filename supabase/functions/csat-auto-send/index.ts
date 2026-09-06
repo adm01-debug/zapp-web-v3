@@ -24,6 +24,7 @@ import {
 import { errorEnvelope, checkRateLimit, getClientIP } from "../_shared/validation.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CsatAutoSendV1Schema } from "../_shared/contract-schemas.ts";
+import { getLogger } from '../_shared/logger.ts';
 
 // deno-lint-ignore no-explicit-any
 const admin = createZappAdminClient();
@@ -79,6 +80,8 @@ function getAuthUserId(req: Request): string | null {
   }
 }
 
+const log = getLogger('csat-auto-send');
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return handleCorsPreflight(req);
 
@@ -121,7 +124,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (configErr) {
-      console.error("[csat-auto-send] csat_auto_config query error:", configErr.message);
+      log.error('csat_auto_config query error', { error: configErr.message });
       return errorResponse(req, "Failed to fetch CSAT config", 500);
     }
 
@@ -137,17 +140,17 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (contactErr) {
-      console.error("[csat-auto-send] contact fetch error:", contactErr.message);
+      log.error('contact fetch error', { error: contactErr.message });
       return errorResponse(req, "Failed to fetch contact", 500);
     }
     if (!contact?.phone) {
-      console.error("[csat-auto-send] contact not found or missing phone, contact_id:", contact_id);
+      log.error('contact not found or missing phone', { contact_id });
       return jsonResponse(req, { success: false, reason: "contact_without_phone" }, 404);
     }
 
     // ── 3. LGPD guard (G7/F12): nunca enviar pesquisa para contato opt-out ────
     if (contact.consent_status === "opt_out") {
-      console.log(`[csat-auto-send] LGPD opt-out — survey skipped contact=${contact_id}`);
+      log.info('LGPD opt-out — survey skipped', { contact_id });
       return jsonResponse(req, { success: false, reason: "lgpd_opt_out" });
     }
 
@@ -172,14 +175,12 @@ Deno.serve(async (req: Request) => {
     const { data: existingSurveys, error: dedupErr } = await existingQuery;
 
     if (dedupErr) {
-      console.error("[csat-auto-send] dedup query error:", dedupErr.message);
+      log.error('dedup query error', { error: dedupErr.message });
       return errorResponse(req, "Failed to check existing surveys", 500);
     }
 
     if (existingSurveys && existingSurveys.length > 0) {
-      console.log(
-        `[csat-auto-send] dedup hit — contact=${contact_id} conversation=${conversation_id ?? "-"} survey=${existingSurveys[0].id}`,
-      );
+      log.info('dedup hit', { contact_id, conversation_id: conversation_id ?? '-', survey_id: existingSurveys[0].id });
       return jsonResponse(req, {
         success: false,
         reason: "already_surveyed",
@@ -195,11 +196,11 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (connErr) {
-      console.error("[csat-auto-send] whatsapp_connections fetch error:", connErr.message);
+      log.error('whatsapp_connections fetch error', { error: connErr.message });
       return errorResponse(req, "Failed to fetch WhatsApp connection", 500);
     }
     if (!conn?.instance_name) {
-      console.error("[csat-auto-send] connection not found, connection_id:", connection_id);
+      log.error('connection not found', { connection_id });
       return jsonResponse(req, { success: false, reason: "connection_not_found" }, 404);
     }
 
@@ -210,7 +211,7 @@ Deno.serve(async (req: Request) => {
     );
 
     if (!renderedMessage) {
-      console.error("[csat-auto-send] message_template is empty after rendering, connection_id:", connection_id);
+      log.error('message_template empty after rendering', { connection_id });
       return jsonResponse(req, { success: false, reason: "empty_template" }, 400);
     }
 
@@ -242,17 +243,18 @@ Deno.serve(async (req: Request) => {
       // 23505 = unique_violation (uq_csat_surveys_conversation) — corrida de
       // double-fire da UI: responde idempotente em vez de 500.
       if (surveyErr?.code === "23505") {
-        console.warn(`[csat-auto-send] unique_violation on insert — dedup race, contact=${contact_id}`);
+        log.warn('unique_violation on insert — dedup race', { contact_id });
         return jsonResponse(req, { success: false, reason: "already_surveyed" });
       }
-      console.error("[csat-auto-send] survey insert error:", surveyErr?.message);
+      log.error('survey insert error', { error: surveyErr?.message });
       return errorResponse(req, "Failed to create survey", 500);
     }
 
-    console.log(
-      `[csat-auto-send] survey scheduled — contact=${contact_id} survey=${newSurvey.id} ` +
-      `instance=${conn.instance_name} send_at=${sendAt} (direct send via csat-dispatch, NOT queue)`,
-    );
+    log.info('survey scheduled', {
+      contact_id, survey_id: newSurvey.id,
+      instance: conn.instance_name, send_at: sendAt,
+      note: 'direct send via csat-dispatch, NOT queue',
+    });
 
     return jsonResponse(req, {
       success: true,
@@ -262,7 +264,7 @@ Deno.serve(async (req: Request) => {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error("[csat-auto-send] unhandled error:", msg);
+    log.error('unhandled error', { error: msg });
     return errorEnvelope("internal_error", "Internal server error", 500, req, undefined, getCorsHeaders(req));
   }
 });

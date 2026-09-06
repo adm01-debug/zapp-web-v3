@@ -5,6 +5,8 @@ import { checkRateLimit, isValidUUID } from '../_shared/validation.ts';
 import { timingSafeStringEqual } from '../_shared/auth.ts';
 import { parseOrReject, buildContractErrorBody } from '../_shared/contract-kit.ts';
 import { GmailOauthV1Schema } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+const log = getLogger('gmail-oauth');
 
 /**
  * Signs an OAuth state token binding it to userId.
@@ -130,7 +132,7 @@ Deno.serve(async (req) => {
       const profile = await profileRes.json();
       const expiresAt = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000).toISOString();
       const { data: account, error: upsertErr } = await supabase.from('gmail_accounts').upsert({ user_id: authenticatedUserId, email: profile.email, display_name: profile.name, picture_url: profile.picture, access_token: tokens.access_token, refresh_token: tokens.refresh_token, token_expiry: expiresAt, scope: tokens.scope, is_active: true }, { onConflict: 'user_id,email' }).select('id, email').single();
-      if (upsertErr) { console.error('[gmail-oauth] account upsert failed', upsertErr.message); return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500, headers: jsonHeaders }); }
+      if (upsertErr) { log.error('account upsert failed', { error: upsertErr.message }); return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500, headers: jsonHeaders }); }
       return new Response(JSON.stringify({ success: true, accountId: account.id, email: account.email }), { headers: jsonHeaders });
     }
     if (action === 'refresh') {
@@ -148,14 +150,14 @@ Deno.serve(async (req) => {
         const isPermanent = typeof tokens.error === 'string' && PERMANENT_ERRORS.includes(tokens.error);
         if (isPermanent) {
           const { error: deactivateErr } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-          if (deactivateErr) console.warn('[gmail-oauth] deactivate account failed', deactivateErr.message);
+          if (deactivateErr) log.warn('deactivate account failed', { error: deactivateErr.message });
         }
         const msg = isPermanent ? 'refresh_token inv\u00e1lido \u2014 reconecte a conta' : `Google token error: ${tokens.error}`;
         return new Response(JSON.stringify({ error: msg }), { status: isPermanent ? 401 : 502, headers: jsonHeaders });
       }
       const expiresAt = new Date(Date.now() + (tokens.expires_in ?? 3600) * 1000).toISOString();
       const { error: tokenUpdateErr } = await supabase.from('gmail_accounts').update({ access_token: tokens.access_token, token_expiry: expiresAt, ...(tokens.refresh_token ? { refresh_token: tokens.refresh_token } : {}) }).eq('id', accountId);
-      if (tokenUpdateErr) console.warn('[gmail-oauth] token update failed', tokenUpdateErr.message);
+      if (tokenUpdateErr) log.warn('token update failed', { error: tokenUpdateErr.message });
       return new Response(JSON.stringify({ access_token: tokens.access_token, token_expiry: expiresAt }), { headers: jsonHeaders });
     }
     if (action === 'revoke') {
@@ -166,15 +168,15 @@ Deno.serve(async (req) => {
       if (!account || account.user_id !== authenticatedUserId) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: jsonHeaders });
       if (account.access_token) {
         try { await fetch(GOOGLE_REVOKE, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ token: account.access_token }), signal: AbortSignal.timeout(10_000) }); }
-        catch (revokeErr) { console.warn('[gmail-oauth] Google revoke failed (continuing with DB deletion)', revokeErr instanceof Error ? revokeErr.message : String(revokeErr)); }
+        catch (revokeErr) { log.warn('Google revoke failed (continuing with DB deletion)', { error: revokeErr instanceof Error ? revokeErr.message : String(revokeErr) }); }
       }
       const { error: deleteAccErr } = await supabase.from('gmail_accounts').delete().eq('id', accountId);
-      if (deleteAccErr) console.warn('[gmail-oauth] account delete failed', deleteAccErr.message);
+      if (deleteAccErr) log.warn('account delete failed', { error: deleteAccErr.message });
       return new Response(JSON.stringify({ success: true }), { headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ error: 'A\u00e7\u00e3o desconhecida' }), { status: 400, headers: jsonHeaders });
   } catch (err) {
-    console.error('[gmail-oauth]', err instanceof Error ? err.message : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: jsonHeaders });
   }
 });

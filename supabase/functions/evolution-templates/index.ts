@@ -13,6 +13,7 @@
 // mesmo padrão de connection-test / nps-scheduler.
 // Evolution Templates v5.1
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { getLogger } from '../_shared/logger.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { requireAdminOrSupervisor, requireUser } from "../_shared/auth.ts";
 import { parseOrReject, buildContractErrorBody } from "../_shared/contract-kit.ts";
@@ -22,6 +23,7 @@ import type { EvolutionResponse } from "../_shared/providers/evolution/index.ts"
 
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 
+const log = getLogger('evolution-templates');
 
 /**
  * Falha de validação pós-gate → envelope 422 ÚNICO (contract-kit).
@@ -95,7 +97,7 @@ Deno.serve(async (req: Request) => {
       if (cat) q = q.eq("category", cat);
       const { data, error } = await q;
       if (error) {
-        console.error("[evolution-templates] GET templates error:", error.message);
+        log.error('GET templates error', { error: error.message });
         return new Response(JSON.stringify({ success: false, error: "Failed to fetch templates" }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
       }
       return new Response(JSON.stringify({ success: true, templates: data ?? [] }), { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
@@ -145,7 +147,7 @@ Deno.serve(async (req: Request) => {
         } catch (e) {
           // getBaseUrl()/getApiKey() lançam se EVOLUTION_API_URL/KEY ausentes
           // (drift repo×Swarm) → 500 com detalhe, não 502 (não é falha da Evolution).
-          console.error("[evolution-templates] gateway env error:", e);
+          log.error('gateway env error', { error: (e as Error).message });
           return new Response(JSON.stringify({ template_name, sent: false, error: (e as Error).message, http_status: 0 }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
         }
 
@@ -154,13 +156,13 @@ Deno.serve(async (req: Request) => {
           status: result.ok ? "sent" : "failed", error_message: result.ok ? null : (result.error ?? `HTTP ${result.status}`),
           source: "evolution-templates-gateway", attempts: 1, max_attempts: 1, sent_at: result.ok ? new Date().toISOString() : null
         });
-        if (insertErr) console.error("[evolution-templates] queue insert error:", insertErr.message);
+        if (insertErr) log.error('queue insert error', { error: insertErr.message });
         if (result.ok) {
           // Best-effort; bug latente conhecido: call com 3 params × assinatura DB
           // zapp.fn_use_template(p_template_id uuid) com 1 param (migration
           // 20260804190316) — fix separado, NÃO bloqueia o envio (SIM §(f)-5).
           const { error: rpcErr } = await supabase.rpc("fn_use_template", { p_template_id: tpl.id, p_remote_jid: remote_jid, p_variables: variables });
-          if (rpcErr) console.error("[evolution-templates] fn_use_template error:", rpcErr.message);
+          if (rpcErr) log.error('fn_use_template error', { error: rpcErr.message });
         }
         return new Response(JSON.stringify({ success: result.ok, template_id: tpl.id, message_sent: message, sent: result.ok, http_status: result.status }), { status: result.ok ? 200 : 502, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
       }
@@ -175,7 +177,7 @@ Deno.serve(async (req: Request) => {
     }
     return new Response(JSON.stringify({ error: "Endpoint não encontrado" }), { status: 404, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
   } catch (e) {
-    console.error("[evolution-templates] unhandled error:", e);
+    log.error('unhandled error', { error: e instanceof Error ? e.message : String(e) });
     return new Response(JSON.stringify({ error: "Internal server error" }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
   }
 });

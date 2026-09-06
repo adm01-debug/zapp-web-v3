@@ -25,6 +25,7 @@
  * Contrato: zapp-email-inbound-webhook@v1 (permissivo — campo novo do provider
  * nunca derruba a ingestão).
  */
+import { getLogger } from '../_shared/logger.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { timingSafeStringEqual } from '../_shared/auth.ts';
 import { verifySvixWebhookSignature } from '../_shared/hmac-validation.ts';
@@ -33,6 +34,8 @@ import { createZappAdminClient } from '../_shared/db-client.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { getSecret } from '../_shared/vault.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+
+const log = getLogger('zapp-email-inbound-webhook');
 
 const ATTACHMENT_BUCKET = 'email-attachments';
 const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024; // limite do bucket
@@ -169,9 +172,7 @@ Deno.serve(async (req) => {
     for (const att of attachments) {
       const bytes = decodeBase64(att.content);
       if (!bytes || bytes.byteLength === 0 || bytes.byteLength > MAX_ATTACHMENT_BYTES) {
-        console.warn(
-          `[zapp-email-inbound-webhook] anexo inválido/oversize ignorado: "${att.filename}"`
-        );
+        log.warn('anexo inválido/oversize ignorado', { filename: att.filename });
         continue;
       }
       const filename = sanitizeFilename(att.filename);
@@ -183,10 +184,7 @@ Deno.serve(async (req) => {
           upsert: true,
         });
       if (uploadErr) {
-        console.error(
-          `[zapp-email-inbound-webhook] storage upload failed for "${att.filename}":`,
-          uploadErr.message
-        );
+        log.error('storage upload failed', { filename: att.filename, error: uploadErr.message });
         continue;
       }
       attachmentMeta.push({
@@ -236,23 +234,20 @@ Deno.serve(async (req) => {
           .maybeSingle();
         return json({ ok: true, duplicate: true, emailId: raced?.id ?? null }, 200, req);
       }
-      console.error('[zapp-email-inbound-webhook] insert zapp.emails failed:', insertErr.message);
+      log.error('insert zapp.emails failed', { error: insertErr.message });
       return json({ error: 'Falha ao registrar email' }, 502, req);
     }
 
     if (!emailRow) {
       // Defensivo: INSERT sem erro não deveria retornar sem row (PostgREST
       // sempre devolve a linha com return=representation). Evita crash de tipo.
-      console.error('[zapp-email-inbound-webhook] insert zapp.emails returned no row');
+      log.error('insert zapp.emails returned no row');
       return json({ error: 'Falha ao registrar email' }, 502, req);
     }
 
     return json({ ok: true, emailId: emailRow.id }, 200, req);
   } catch (err) {
-    console.error(
-      '[zapp-email-inbound-webhook] unexpected error:',
-      err instanceof Error ? (err.stack ?? err.message) : String(err)
-    );
+    log.error('unexpected error', { error: err instanceof Error ? (err.stack ?? err.message) : String(err) });
     return json({ error: 'Internal error' }, 500, req);
   }
 });
