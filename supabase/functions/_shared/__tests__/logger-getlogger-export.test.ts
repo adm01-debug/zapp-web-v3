@@ -29,3 +29,13 @@ Deno.test("getLogger: não lança ao logar (nunca deve quebrar o hot path)", () 
   log.info("mensagem de teste", { foo: "bar" });
   log.error("erro de teste");
 });
+
+Deno.test("log.error aceita unknown/Error direto como 2º argumento (padrão dos 382 call-sites existentes)", () => {
+  const log = getLogger("logger-getlogger-export-test");
+  // Sem a normalização em normalizeCtx(), qualquer um destes falha o Parse
+  // gate (`deno check`) com TS2345 — unknown não é atribuível a LogContext.
+  log.error("erro de teste", new Error("boom"));
+  log.error("erro de teste", "string crua");
+  log.error("erro de teste", { code: 42 });
+  log.error("erro de teste", undefined);
+});
