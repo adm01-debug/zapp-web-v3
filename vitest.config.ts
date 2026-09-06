@@ -29,7 +29,8 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       'e2e/**',
-      'tests/**',
+      'tests/e2e/**',
+      'tests/visual-*.spec.ts',
       'src/tests/e2e/**',
       'scripts/**',
       // QUARENTENA — testes com falhas conhecidas aguardando reescrita.
