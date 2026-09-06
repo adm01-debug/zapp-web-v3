@@ -61,7 +61,7 @@ async function sendEvent(event: SentryEvent): Promise<void> {
       // Silently fail if Sentry is unreachable (don't break function)
     });
   } catch (err) {
-    log.error('[sentry] failed to send event:', err);
+    log.error('[sentry] failed to send event: ' + String(err));
   }
 }
 
@@ -87,7 +87,7 @@ export function initSentry(functionName: string): boolean {
     initialized = true;
     return true;
   } catch (err) {
-    log.error('[sentry] init failed:', err);
+    log.error('[sentry] init failed: ' + String(err));
     return false;
   }
 }

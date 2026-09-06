@@ -55,7 +55,7 @@ export async function verifyHmacSignature(
     // Constant-time comparison
     return timingSafeEqual(expectedSignature, normalizedSignature);
   } catch (error) {
-    log.error('[HMAC] Signature verification error:', error);
+    log.error('[HMAC] Signature verification error: ' + String(error));
     return false;
   }
 }
