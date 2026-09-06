@@ -110,7 +110,7 @@ jobs:
       - name: Type Check (blocking)
         run: bunx tsc --noEmit -p tsconfig.app.json
 
-      - name: Cluster typecheck ratchet — blocking (crm-sales, queues, observability)
+      - name: Cluster typecheck ratchet — blocking (crm-sales, queues, observability, inbox-core)
         run: |
           set +e
           node scripts/check-cluster-typecheck.mjs --cluster crm-sales
@@ -119,14 +119,12 @@ jobs:
           status_queues=$?
           node scripts/check-cluster-typecheck.mjs --cluster observability
           status_obs=$?
-          if [ "$status_sales" -ne 0 ] || [ "$status_queues" -ne 0 ] || [ "$status_obs" -ne 0 ]; then
+          node scripts/check-cluster-typecheck.mjs --cluster inbox-core
+          status_inbox=$?
+          if [ "$status_sales" -ne 0 ] || [ "$status_queues" -ne 0 ] || [ "$status_obs" -ne 0 ] || [ "$status_inbox" -ne 0 ]; then
             echo "::error title=Cluster typecheck::One or more cluster ratchets failed — check output above."
             exit 1
           fi
-
-      - name: Cluster typecheck ratchet — advisory (inbox-core)
-        run: node scripts/check-cluster-typecheck.mjs --cluster inbox-core
-        continue-on-error: true
 
       - name: TypeScript Ratchet (blocking)
         run: node scripts/check-tsc-ratchet.mjs
