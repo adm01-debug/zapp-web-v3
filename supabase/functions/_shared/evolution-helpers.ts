@@ -261,6 +261,8 @@ export interface WebhookAuditRow {
   status_code?: number | null;
   duration_ms?: number | null;
   error_message?: string | null;
+  /** Origem da requisição: 'external' (produção), 'liveness-probe' (stack 265), 'test' (sintético). */
+  webhook_source?: string | null;
 }
 
 // deno-lint-ignore no-explicit-any
