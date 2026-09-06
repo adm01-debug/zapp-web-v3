@@ -10,10 +10,11 @@
 import { evolutionClient } from '../_shared/providers/evolution/index.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getCorsHeaders } from '../_shared/validation.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization,content-type' } });
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   const SUPABASE_URL = Deno.env.get('SELFHOSTED_SUPABASE_URL') || Deno.env.get('SUPABASE_URL') || '';

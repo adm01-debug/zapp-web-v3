@@ -8,6 +8,7 @@
  */
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getCorsHeaders } from '../_shared/validation.ts';
 
 Deno.serve(async (req) => {
   const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY') || '';
@@ -16,10 +17,7 @@ Deno.serve(async (req) => {
   const SERVICE_ROLE_KEY   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SELFHOSTED_SUPABASE_SERVICE_ROLE_KEY') || '';
 
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization,content-type,x-internal-secret'
-    }});
+    return new Response(null, { headers: getCorsHeaders(req) });
   }
 
   const internalSecret = req.headers.get('x-internal-secret') || '';

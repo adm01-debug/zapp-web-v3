@@ -42,7 +42,7 @@ export default defineConfig({
     },
     {
       name: 'legacy-e2e',
-      testDir: './tests/e2e',
+      testDir: './tests',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

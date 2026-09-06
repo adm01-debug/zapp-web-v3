@@ -11,13 +11,17 @@
 
 ### Cobertura de testes
 - `vitest.config.ts`: `tests/integration/**` adicionado ao `include` — `regression-suite.test.ts` e `supabase-integration.test.ts` passam a ser executados pelo `bun run test`
-- `playwright.config.ts`: projeto `legacy-e2e` adicionado para cobrir `tests/e2e/` (8 specs anteriormente órfãos)
+- `playwright.config.ts`: projeto `legacy-e2e` com `testDir: './tests'` — cobre `tests/e2e/` (13 specs) + `tests/visual-*.spec.ts` (2 specs visuais anteriormente órfãos)
 
 ### Integridade de dados
 - `ContactPurchasesPanel.tsx`: `parseFloat` substituído por `Math.round(parseFloat * 100) / 100` para evitar float64 sujo no NUMERIC do banco
 
+### Segurança
+- `transcribe-audio-internal` e `download-wa-status-media`: CORS migrado de `*` hardcoded para `getCorsHeaders(req)` do `_shared/validation.ts` (origin-validated)
+
 ### Operações
 - Branch protection `main`: `required_pull_request_reviews` adicionado (`required_approving_review_count: 1`, `dismiss_stale_reviews: true`) — eliminando gap de auditoria dim. 20
+- `notify-ci-failure.yml`: curl com `--retry 3 --retry-delay 5 --retry-all-errors` — elimina falha silenciosa por timeout transitório do N8N
 
 ## [2.5.0] - 2026-09-05 — Auditoria 22D e hardening pós-auditoria
 
