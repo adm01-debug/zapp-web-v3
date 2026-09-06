@@ -43,7 +43,7 @@ export function parseBRL(s: string | null | undefined): number {
   }
 
   // Fallback: remover tudo que não é dígito, vírgula ou ponto
-  const fallback = cleaned.replace(/[^\d,\.]/g, '').replace(',', '.');
+  const fallback = cleaned.replace(/[^\d,.]/g, '').replace(',', '.');
   const cents = Math.round(parseFloat(fallback) * 100);
   return Number.isFinite(cents) ? cents / 100 : 0;
 }
