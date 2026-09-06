@@ -1,70 +1,68 @@
 /**
- * Logger estruturado JSON para edge functions.
- * Todos os campos emitidos para stdout são parseable por Loki/Prometheus.
- * Uso: import { getLogger } from '../_shared/logger.ts'
- *      const log = getLogger('nome-da-function')
- *      log.info('mensagem', { chave: 'valor' })
+ * Logger estruturado para Edge Functions.
+ *
+ * Saída: JSON newline-delimited (compatível com Loki/CloudWatch/Datadog).
+ * Nunca lança erro — log falho não deve quebrar o hot path.
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogEntry {
-  ts: string;
-  level: LogLevel;
-  fn: string;
-  msg: string;
+export interface LogContext {
   requestId?: string;
+  service?: string;
+  action?: string;
+  instanceName?: string;
+  durationMs?: number;
   [key: string]: unknown;
 }
 
-function emit(level: LogLevel, fn: string, msg: string, ctx?: Record<string, unknown>, requestId?: string): void {
-  const entry: LogEntry = {
-    ts: new Date().toISOString(),
-    level,
-    fn,
-    msg,
-    ...(requestId ? { requestId } : {}),
-    ...ctx,
-  };
-  const line = JSON.stringify(entry);
-  if (level === 'error' || level === 'warn') {
-    console.error(line);
-  } else {
-    Deno.stdout.writeSync(new TextEncoder().encode(line + '\n'));
-  }
+export interface Logger {
+  debug(message: string, ctx?: LogContext): void;
+  info(message: string, ctx?: LogContext): void;
+  warn(message: string, ctx?: LogContext): void;
+  error(message: string, ctx?: LogContext): void;
+  child(ctx: LogContext): Logger;
 }
 
-export class EdgeLogger {
-  constructor(private readonly fn: string, private readonly requestId?: string) {}
-
-  debug(msg: string, ctx?: Record<string, unknown>): void {
-    if (Deno.env.get('LOG_LEVEL') === 'debug') {
-      emit('debug', this.fn, msg, ctx, this.requestId);
+function emit(level: LogLevel, message: string, ctx: LogContext): void {
+  try {
+    const entry = {
+      ts: new Date().toISOString(),
+      level,
+      message,
+      ...ctx,
+    };
+    if (level === 'error' || level === 'warn') {
+      console.error(JSON.stringify(entry));
+    } else {
+      console.info(JSON.stringify(entry));
     }
-  }
-
-  info(msg: string, ctx?: Record<string, unknown>): void {
-    emit('info', this.fn, msg, ctx, this.requestId);
-  }
-
-  warn(msg: string, ctx?: Record<string, unknown>): void {
-    emit('warn', this.fn, msg, ctx, this.requestId);
-  }
-
-  error(msg: string, ctx?: Record<string, unknown>): void {
-    emit('error', this.fn, msg, ctx, this.requestId);
-  }
-
-  withRequestId(requestId: string): EdgeLogger {
-    return new EdgeLogger(this.fn, requestId);
+  } catch {
+    // silencioso — log nunca deve quebrar o caller
   }
 }
 
-const loggers = new Map<string, EdgeLogger>();
-
-export function getLogger(fnName: string): EdgeLogger {
-  if (!loggers.has(fnName)) {
-    loggers.set(fnName, new EdgeLogger(fnName));
-  }
-  return loggers.get(fnName)!;
+function createLogger(baseCtx: LogContext = {}): Logger {
+  return {
+    debug: (msg, ctx) => emit('debug', msg, { ...baseCtx, ...ctx }),
+    info:  (msg, ctx) => emit('info',  msg, { ...baseCtx, ...ctx }),
+    warn:  (msg, ctx) => emit('warn',  msg, { ...baseCtx, ...ctx }),
+    error: (msg, ctx) => emit('error', msg, { ...baseCtx, ...ctx }),
+    child: (ctx) => createLogger({ ...baseCtx, ...ctx }),
+  };
 }
+
+/**
+ * Cria um logger raiz para uma edge function.
+ *
+ * @example
+ * const log = makeLogger({ service: 'send-message', requestId: req.headers.get('x-request-id') ?? crypto.randomUUID() });
+ * log.info('Iniciando envio', { instanceName });
+ * log.error('Falha ao enviar', { error: err.message, durationMs: Date.now() - t0 });
+ */
+export function makeLogger(ctx: LogContext = {}): Logger {
+  return createLogger(ctx);
+}
+
+/** Logger singleton para uso em módulos sem contexto de request. */
+export const rootLogger = createLogger({ service: 'edge-function' });

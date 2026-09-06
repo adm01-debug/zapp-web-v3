@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Building, User } from 'lucide-react';
+import { formatBRL } from '@/utils/currency';
 
 interface CrmBadgesProps {
   crmCompany: { nome_fantasia?: string | null; nome_crm?: string | null } | null;
@@ -37,8 +38,6 @@ const rfmSegmentColors: Record<string, string> = {
   Promising: 'bg-secondary/15 text-secondary border-secondary/30',
 };
 
-const formatCurrency = (v: number | null) =>
-  v != null ? `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—';
 
 /** Crm Badges component for the chat section. */
 export function CrmBadges({ crmCompany, crmCustomer, crmRfm }: CrmBadgesProps) {
@@ -66,8 +65,8 @@ export function CrmBadges({ crmCompany, crmCustomer, crmRfm }: CrmBadgesProps) {
           <TooltipContent side="bottom" className="text-xs">
             <div className="space-y-1">
               <p>Pedidos: {crmCustomer?.total_pedidos ?? 0}</p>
-              <p>Ticket médio: {formatCurrency(crmCustomer?.ticket_medio ?? null)}</p>
-              <p>Total compras: {formatCurrency(crmCustomer?.valor_total_compras ?? null)}</p>
+              <p>Ticket médio: {formatBRL(crmCustomer?.ticket_medio ?? null)}</p>
+              <p>Total compras: {formatBRL(crmCustomer?.valor_total_compras ?? null)}</p>
             </div>
           </TooltipContent>
         </Tooltip>

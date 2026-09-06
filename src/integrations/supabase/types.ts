@@ -2130,16 +2130,20 @@ export type Database = {
           collected_at: string | null
           drop: number | null
           drop_by: Json | null
+          drop_count: number | null
           err: number | null
+          filas_ok: string | null
           id: number | null
           instance: string | null
           ok: number | null
+          ok_count: number | null
           pg_log_err: number | null
           pg_log_ok: number | null
           replica: string | null
           resub: number | null
           retry: number | null
           retry_by: Json | null
+          retry_count: number | null
           sentry_sent: number | null
           shadow: number | null
         }
@@ -2147,16 +2151,20 @@ export type Database = {
           collected_at?: string | null
           drop?: number | null
           drop_by?: Json | null
+          drop_count?: number | null
           err?: number | null
+          filas_ok?: string | null
           id?: number | null
           instance?: string | null
           ok?: number | null
+          ok_count?: number | null
           pg_log_err?: number | null
           pg_log_ok?: number | null
           replica?: string | null
           resub?: number | null
           retry?: number | null
           retry_by?: Json | null
+          retry_count?: number | null
           sentry_sent?: number | null
           shadow?: number | null
         }
@@ -2164,16 +2172,20 @@ export type Database = {
           collected_at?: string | null
           drop?: number | null
           drop_by?: Json | null
+          drop_count?: number | null
           err?: number | null
+          filas_ok?: string | null
           id?: number | null
           instance?: string | null
           ok?: number | null
+          ok_count?: number | null
           pg_log_err?: number | null
           pg_log_ok?: number | null
           replica?: string | null
           resub?: number | null
           retry?: number | null
           retry_by?: Json | null
+          retry_count?: number | null
           sentry_sent?: number | null
           shadow?: number | null
         }
@@ -2315,60 +2327,6 @@ export type Database = {
         Relationships: []
       }
       evolution_webhook_events_v2: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          event_type: string
-          from_me: boolean | null
-          id: string
-          instance_name: string
-          message_type: string | null
-          payload: Json
-          processed: boolean | null
-          processed_at: string | null
-          push_name: string | null
-          remote_jid: string | null
-          retry_count: number
-          source: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          event_type: string
-          from_me?: boolean | null
-          id?: string
-          instance_name: string
-          message_type?: string | null
-          payload: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number
-          source?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          event_type?: string
-          from_me?: boolean | null
-          id?: string
-          instance_name?: string
-          message_type?: string | null
-          payload?: Json
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number
-          source?: string | null
-          status?: string
-        }
-        Relationships: []
-      }
-      evolution_webhook_events_v2_2026_07: {
         Row: {
           created_at: string
           error_message: string | null
@@ -4039,6 +3997,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rabbitmq_orphan_queue_dumps: {
+        Row: {
+          dumped_at: string
+          id: number
+          message_count: number
+          note: string | null
+          payload: Json
+          queue_name: string
+        }
+        Insert: {
+          dumped_at?: string
+          id?: number
+          message_count: number
+          note?: string | null
+          payload: Json
+          queue_name: string
+        }
+        Update: {
+          dumped_at?: string
+          id?: number
+          message_count?: number
+          note?: string | null
+          payload?: Json
+          queue_name?: string
+        }
+        Relationships: []
+      }
       recon_coverage_daily: {
         Row: {
           captured_at: string | null
@@ -5403,6 +5388,12 @@ export type Database = {
       fn_process_pending_scans: {
         Args: { p_batch_size?: number }
         Returns: Json
+      }
+      fn_purge_old_webhook_event_partitions: {
+        Args: { retention_days?: number }
+        Returns: {
+          dropped: string
+        }[]
       }
       fn_purge_recon_temp_tables: { Args: never; Returns: number }
       fn_purge_storage_cache: { Args: { p_days?: number }; Returns: Json }
@@ -18193,57 +18184,6 @@ export type Database = {
         Relationships: []
       }
       evolution_webhook_events_v2: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          event_type: string | null
-          from_me: boolean | null
-          id: string | null
-          instance_name: string | null
-          message_type: string | null
-          payload: Json | null
-          processed: boolean | null
-          processed_at: string | null
-          push_name: string | null
-          remote_jid: string | null
-          retry_count: number | null
-          status: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type?: string | null
-          from_me?: boolean | null
-          id?: string | null
-          instance_name?: string | null
-          message_type?: string | null
-          payload?: Json | null
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number | null
-          status?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type?: string | null
-          from_me?: boolean | null
-          id?: string | null
-          instance_name?: string | null
-          message_type?: string | null
-          payload?: Json | null
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number | null
-          status?: string | null
-        }
-        Relationships: []
-      }
-      evolution_webhook_events_v2_2026_07: {
         Row: {
           created_at: string | null
           error_message: string | null
@@ -52527,57 +52467,6 @@ export type Database = {
         Relationships: []
       }
       evolution_webhook_events_v2: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          event_type: string | null
-          from_me: boolean | null
-          id: string | null
-          instance_name: string | null
-          message_type: string | null
-          payload: Json | null
-          processed: boolean | null
-          processed_at: string | null
-          push_name: string | null
-          remote_jid: string | null
-          retry_count: number | null
-          status: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type?: string | null
-          from_me?: boolean | null
-          id?: string | null
-          instance_name?: string | null
-          message_type?: string | null
-          payload?: Json | null
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number | null
-          status?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          event_type?: string | null
-          from_me?: boolean | null
-          id?: string | null
-          instance_name?: string | null
-          message_type?: string | null
-          payload?: Json | null
-          processed?: boolean | null
-          processed_at?: string | null
-          push_name?: string | null
-          remote_jid?: string | null
-          retry_count?: number | null
-          status?: string | null
-        }
-        Relationships: []
-      }
-      evolution_webhook_events_v2_2026_07: {
         Row: {
           created_at: string | null
           error_message: string | null

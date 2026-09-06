@@ -405,6 +405,11 @@
           "overload_count": 0,
           "overloads": []
         },
+        "fn_purge_old_webhook_event_partitions": {
+          "definition_sha1": "a69d7b144ac139636f5b7fc07bc69e963a7f2b36",
+          "overload_count": 0,
+          "overloads": []
+        },
         "fn_purge_recon_temp_tables": {
           "definition_sha1": "f068aaa95020bc9b97c38d03bdeabf7a401272ad",
           "overload_count": 1,
@@ -8716,7 +8721,7 @@
           ]
         },
         "evolution_rabbit_consumer_stats_fdw": {
-          "definition_sha1": "9242099699cff9b0b1d01e28ec7734eb49dd2076",
+          "definition_sha1": "7962a436ed0a1e125edbf51d322db12fcb5ddd0e",
           "insert_columns": [
             {
               "name": "collected_at",
@@ -8731,8 +8736,16 @@
               "type": "Json | null"
             },
             {
+              "name": "drop_count",
+              "type": "number | null"
+            },
+            {
               "name": "err",
               "type": "number | null"
+            },
+            {
+              "name": "filas_ok",
+              "type": "string | null"
             },
             {
               "name": "id",
@@ -8744,6 +8757,10 @@
             },
             {
               "name": "ok",
+              "type": "number | null"
+            },
+            {
+              "name": "ok_count",
               "type": "number | null"
             },
             {
@@ -8769,6 +8786,10 @@
             {
               "name": "retry_by",
               "type": "Json | null"
+            },
+            {
+              "name": "retry_count",
+              "type": "number | null"
             },
             {
               "name": "sentry_sent",
@@ -8795,8 +8816,16 @@
               "type": "Json | null"
             },
             {
+              "name": "drop_count",
+              "type": "number | null"
+            },
+            {
               "name": "err",
               "type": "number | null"
+            },
+            {
+              "name": "filas_ok",
+              "type": "string | null"
             },
             {
               "name": "id",
@@ -8808,6 +8837,10 @@
             },
             {
               "name": "ok",
+              "type": "number | null"
+            },
+            {
+              "name": "ok_count",
               "type": "number | null"
             },
             {
@@ -8833,6 +8866,10 @@
             {
               "name": "retry_by",
               "type": "Json | null"
+            },
+            {
+              "name": "retry_count",
+              "type": "number | null"
             },
             {
               "name": "sentry_sent",
@@ -8857,8 +8894,16 @@
               "type": "Json | null"
             },
             {
+              "name": "drop_count",
+              "type": "number | null"
+            },
+            {
               "name": "err",
               "type": "number | null"
+            },
+            {
+              "name": "filas_ok",
+              "type": "string | null"
             },
             {
               "name": "id",
@@ -8870,6 +8915,10 @@
             },
             {
               "name": "ok",
+              "type": "number | null"
+            },
+            {
+              "name": "ok_count",
               "type": "number | null"
             },
             {
@@ -8895,6 +8944,10 @@
             {
               "name": "retry_by",
               "type": "Json | null"
+            },
+            {
+              "name": "retry_count",
+              "type": "number | null"
             },
             {
               "name": "sentry_sent",
@@ -9348,197 +9401,6 @@
         },
         "evolution_webhook_events_v2": {
           "definition_sha1": "aa8e45a6842de61e2ac56a1751af8de3ab6a112c",
-          "insert_columns": [
-            {
-              "name": "created_at",
-              "type": "string"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string"
-            },
-            {
-              "name": "instance_name",
-              "type": "string"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number"
-            },
-            {
-              "name": "source",
-              "type": "string | null"
-            },
-            {
-              "name": "status",
-              "type": "string"
-            }
-          ],
-          "kind": "table",
-          "relationship_count": 0,
-          "row_columns": [
-            {
-              "name": "created_at",
-              "type": "string"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string"
-            },
-            {
-              "name": "instance_name",
-              "type": "string"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number"
-            },
-            {
-              "name": "source",
-              "type": "string | null"
-            },
-            {
-              "name": "status",
-              "type": "string"
-            }
-          ],
-          "update_columns": [
-            {
-              "name": "created_at",
-              "type": "string"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string"
-            },
-            {
-              "name": "instance_name",
-              "type": "string"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number"
-            },
-            {
-              "name": "source",
-              "type": "string | null"
-            },
-            {
-              "name": "status",
-              "type": "string"
-            }
-          ]
-        },
-        "evolution_webhook_events_v2_2026_07": {
-          "definition_sha1": "099baa45e6404ac73c3af03183d6c43ec03659d7",
           "insert_columns": [
             {
               "name": "created_at",
@@ -15201,6 +15063,89 @@
             }
           ]
         },
+        "rabbitmq_orphan_queue_dumps": {
+          "definition_sha1": "f98cc0464f6af6d24bd45464b3023fc3e1dae596",
+          "insert_columns": [
+            {
+              "name": "dumped_at",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "message_count",
+              "type": "number"
+            },
+            {
+              "name": "note",
+              "type": "string | null"
+            },
+            {
+              "name": "payload",
+              "type": "Json"
+            },
+            {
+              "name": "queue_name",
+              "type": "string"
+            }
+          ],
+          "kind": "table",
+          "relationship_count": 0,
+          "row_columns": [
+            {
+              "name": "dumped_at",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "message_count",
+              "type": "number"
+            },
+            {
+              "name": "note",
+              "type": "string | null"
+            },
+            {
+              "name": "payload",
+              "type": "Json"
+            },
+            {
+              "name": "queue_name",
+              "type": "string"
+            }
+          ],
+          "update_columns": [
+            {
+              "name": "dumped_at",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "message_count",
+              "type": "number"
+            },
+            {
+              "name": "note",
+              "type": "string | null"
+            },
+            {
+              "name": "payload",
+              "type": "Json"
+            },
+            {
+              "name": "queue_name",
+              "type": "string"
+            }
+          ]
+        },
         "recon_coverage_daily": {
           "definition_sha1": "7114987acc9c0e1b73090b061c26000fc19b30e8",
           "insert_columns": [
@@ -19420,6 +19365,48 @@
           "overload_count": 0,
           "overloads": []
         },
+        "has_role": {
+          "definition_sha1": "222e07d03280f6b9507e3bbc5f54274a9a98da75",
+          "overload_count": 1,
+          "overloads": [
+            {
+              "args": [
+                {
+                  "name": "_role",
+                  "type": "Database[\"public\"][\"Enums\"][\"app_role\"]"
+                },
+                {
+                  "name": "_user_id",
+                  "type": "string"
+                }
+              ],
+              "returns": "boolean"
+            }
+          ]
+        },
+        "has_role_in_empresa": {
+          "definition_sha1": "c11d7523beac6331a018b9946742ae63b9928a31",
+          "overload_count": 1,
+          "overloads": [
+            {
+              "args": [
+                {
+                  "name": "_empresa",
+                  "type": "string"
+                },
+                {
+                  "name": "_role",
+                  "type": "Database[\"public\"][\"Enums\"][\"app_role\"]"
+                },
+                {
+                  "name": "_user",
+                  "type": "string"
+                }
+              ],
+              "returns": "boolean"
+            }
+          ]
+        },
         "increment_webhook_rate_limit": {
           "definition_sha1": "bcda8aaa4c147294163cfac63e34e63a96920826",
           "overload_count": 1,
@@ -19788,6 +19775,436 @@
             {
               "name": "table_schema",
               "type": "unknown"
+            }
+          ]
+        },
+        "empresas": {
+          "definition_sha1": "072d7b272db146c4fa3a8aeba3d779c0318a42cd",
+          "insert_columns": [
+            {
+              "name": "aliquota_rat",
+              "type": "number | null"
+            },
+            {
+              "name": "aliquota_terceiros",
+              "type": "number | null"
+            },
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "bairro",
+              "type": "string | null"
+            },
+            {
+              "name": "cep",
+              "type": "string | null"
+            },
+            {
+              "name": "cidade",
+              "type": "string | null"
+            },
+            {
+              "name": "cnae_principal",
+              "type": "string | null"
+            },
+            {
+              "name": "cnpj",
+              "type": "string | null"
+            },
+            {
+              "name": "codigo_fpas",
+              "type": "string | null"
+            },
+            {
+              "name": "cor_hex",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string | null"
+            },
+            {
+              "name": "endereco",
+              "type": "string | null"
+            },
+            {
+              "name": "estado",
+              "type": "string | null"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "inscricao_estadual",
+              "type": "string | null"
+            },
+            {
+              "name": "is_padrao",
+              "type": "boolean"
+            },
+            {
+              "name": "logo_url",
+              "type": "string | null"
+            },
+            {
+              "name": "nome_fantasia",
+              "type": "string | null"
+            },
+            {
+              "name": "razao_social",
+              "type": "string"
+            },
+            {
+              "name": "regime_tributario",
+              "type": "string | null"
+            },
+            {
+              "name": "sigla",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
+            }
+          ],
+          "kind": "table",
+          "relationship_count": 0,
+          "row_columns": [
+            {
+              "name": "aliquota_rat",
+              "type": "number | null"
+            },
+            {
+              "name": "aliquota_terceiros",
+              "type": "number | null"
+            },
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "bairro",
+              "type": "string | null"
+            },
+            {
+              "name": "cep",
+              "type": "string | null"
+            },
+            {
+              "name": "cidade",
+              "type": "string | null"
+            },
+            {
+              "name": "cnae_principal",
+              "type": "string | null"
+            },
+            {
+              "name": "cnpj",
+              "type": "string | null"
+            },
+            {
+              "name": "codigo_fpas",
+              "type": "string | null"
+            },
+            {
+              "name": "cor_hex",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string | null"
+            },
+            {
+              "name": "endereco",
+              "type": "string | null"
+            },
+            {
+              "name": "estado",
+              "type": "string | null"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "inscricao_estadual",
+              "type": "string | null"
+            },
+            {
+              "name": "is_padrao",
+              "type": "boolean"
+            },
+            {
+              "name": "logo_url",
+              "type": "string | null"
+            },
+            {
+              "name": "nome_fantasia",
+              "type": "string | null"
+            },
+            {
+              "name": "razao_social",
+              "type": "string"
+            },
+            {
+              "name": "regime_tributario",
+              "type": "string | null"
+            },
+            {
+              "name": "sigla",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
+            }
+          ],
+          "update_columns": [
+            {
+              "name": "aliquota_rat",
+              "type": "number | null"
+            },
+            {
+              "name": "aliquota_terceiros",
+              "type": "number | null"
+            },
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "bairro",
+              "type": "string | null"
+            },
+            {
+              "name": "cep",
+              "type": "string | null"
+            },
+            {
+              "name": "cidade",
+              "type": "string | null"
+            },
+            {
+              "name": "cnae_principal",
+              "type": "string | null"
+            },
+            {
+              "name": "cnpj",
+              "type": "string | null"
+            },
+            {
+              "name": "codigo_fpas",
+              "type": "string | null"
+            },
+            {
+              "name": "cor_hex",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string | null"
+            },
+            {
+              "name": "endereco",
+              "type": "string | null"
+            },
+            {
+              "name": "estado",
+              "type": "string | null"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "inscricao_estadual",
+              "type": "string | null"
+            },
+            {
+              "name": "is_padrao",
+              "type": "boolean"
+            },
+            {
+              "name": "logo_url",
+              "type": "string | null"
+            },
+            {
+              "name": "nome_fantasia",
+              "type": "string | null"
+            },
+            {
+              "name": "razao_social",
+              "type": "string"
+            },
+            {
+              "name": "regime_tributario",
+              "type": "string | null"
+            },
+            {
+              "name": "sigla",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
+            }
+          ]
+        },
+        "user_empresas": {
+          "definition_sha1": "d498b8b7fdfb0f140c7624e12a35ca7c0615cf71",
+          "insert_columns": [
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "empresa_id",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "is_default",
+              "type": "boolean"
+            },
+            {
+              "name": "provisioned_via",
+              "type": "string"
+            },
+            {
+              "name": "role",
+              "type": "Database[\"public\"][\"Enums\"][\"app_role\"]"
+            },
+            {
+              "name": "scim_external_id",
+              "type": "string | null"
+            },
+            {
+              "name": "updated_at",
+              "type": "string"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
+            }
+          ],
+          "kind": "table",
+          "relationship_count": 1,
+          "row_columns": [
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "empresa_id",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "is_default",
+              "type": "boolean"
+            },
+            {
+              "name": "provisioned_via",
+              "type": "string"
+            },
+            {
+              "name": "role",
+              "type": "Database[\"public\"][\"Enums\"][\"app_role\"]"
+            },
+            {
+              "name": "scim_external_id",
+              "type": "string | null"
+            },
+            {
+              "name": "updated_at",
+              "type": "string"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
+            }
+          ],
+          "update_columns": [
+            {
+              "name": "ativo",
+              "type": "boolean"
+            },
+            {
+              "name": "created_at",
+              "type": "string"
+            },
+            {
+              "name": "empresa_id",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "is_default",
+              "type": "boolean"
+            },
+            {
+              "name": "provisioned_via",
+              "type": "string"
+            },
+            {
+              "name": "role",
+              "type": "Database[\"public\"][\"Enums\"][\"app_role\"]"
+            },
+            {
+              "name": "scim_external_id",
+              "type": "string | null"
+            },
+            {
+              "name": "updated_at",
+              "type": "string"
+            },
+            {
+              "name": "user_id",
+              "type": "string"
             }
           ]
         }
@@ -39777,6 +40194,89 @@
             }
           ]
         },
+        "empresas_zapp_legacy": {
+          "definition_sha1": "192829066ee0fd928bb3e52ffc00d0728c061948",
+          "insert_columns": [
+            {
+              "name": "bitrix_empresa_id",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string | null"
+            },
+            {
+              "name": "email",
+              "type": "Json | null"
+            },
+            {
+              "name": "id",
+              "type": "number | null"
+            },
+            {
+              "name": "nome",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            }
+          ],
+          "kind": "view",
+          "relationship_count": 0,
+          "row_columns": [
+            {
+              "name": "bitrix_empresa_id",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string | null"
+            },
+            {
+              "name": "email",
+              "type": "Json | null"
+            },
+            {
+              "name": "id",
+              "type": "number | null"
+            },
+            {
+              "name": "nome",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            }
+          ],
+          "update_columns": [
+            {
+              "name": "bitrix_empresa_id",
+              "type": "string | null"
+            },
+            {
+              "name": "created_at",
+              "type": "string | null"
+            },
+            {
+              "name": "email",
+              "type": "Json | null"
+            },
+            {
+              "name": "id",
+              "type": "number | null"
+            },
+            {
+              "name": "nome",
+              "type": "string | null"
+            },
+            {
+              "name": "telefone",
+              "type": "string | null"
+            }
+          ]
+        },
         "entity_versions": {
           "definition_sha1": "762b5cc5814cf0d07e84654a98fc9d963398b23e",
           "insert_columns": [
@@ -59005,185 +59505,6 @@
         },
         "evolution_webhook_events_v2": {
           "definition_sha1": "31d2eb5aad8214bfc17ab3e382fe5d90dc99d4f3",
-          "insert_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ],
-          "kind": "view",
-          "relationship_count": 0,
-          "row_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ],
-          "update_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ]
-        },
-        "evolution_webhook_events_v2_2026_07": {
-          "definition_sha1": "55e92655da1bdc82fce5c3f59c6b477fd96b3f42",
           "insert_columns": [
             {
               "name": "created_at",
@@ -172527,185 +172848,6 @@
             }
           ]
         },
-        "evolution_webhook_events_v2_2026_07": {
-          "definition_sha1": "55e92655da1bdc82fce5c3f59c6b477fd96b3f42",
-          "insert_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ],
-          "kind": "view",
-          "relationship_count": 0,
-          "row_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ],
-          "update_columns": [
-            {
-              "name": "created_at",
-              "type": "string | null"
-            },
-            {
-              "name": "error_message",
-              "type": "string | null"
-            },
-            {
-              "name": "event_type",
-              "type": "string | null"
-            },
-            {
-              "name": "from_me",
-              "type": "boolean | null"
-            },
-            {
-              "name": "id",
-              "type": "string | null"
-            },
-            {
-              "name": "instance_name",
-              "type": "string | null"
-            },
-            {
-              "name": "message_type",
-              "type": "string | null"
-            },
-            {
-              "name": "payload",
-              "type": "Json | null"
-            },
-            {
-              "name": "processed",
-              "type": "boolean | null"
-            },
-            {
-              "name": "processed_at",
-              "type": "string | null"
-            },
-            {
-              "name": "push_name",
-              "type": "string | null"
-            },
-            {
-              "name": "remote_jid",
-              "type": "string | null"
-            },
-            {
-              "name": "retry_count",
-              "type": "number | null"
-            },
-            {
-              "name": "status",
-              "type": "string | null"
-            }
-          ]
-        },
         "evolution_webhook_events_v2_2026_08": {
           "definition_sha1": "51e444e72f152c20f467d689784b7e088198f6d9",
           "insert_columns": [
@@ -189198,16 +189340,21 @@
     }
   },
   "source": {
-    "kind": "types-file",
-    "path": "src/integrations/supabase/types.ts",
-    "types_sha1": "aee8381a85b1b272870c1200c3362e2bbdbe0972"
+    "kind": "postgres-meta",
+    "schemas_requested": [
+      "public",
+      "zapp",
+      "evo"
+    ],
+    "types_sha1": "91f4fd8d2bd93d5792ad219f75cb197ebd5fd5bd",
+    "url": "https://supabase.atomicabr.com.br/pg/generators/typescript?included_schemas=public%2Czapp%2Cevo&detect_one_to_one_relationships=true"
   },
   "summary": {
-    "schemas": 3,
-    "tables": 467,
-    "views": 737,
-    "functions": 915,
+    "composite_types": 0,
     "enums": 22,
-    "composite_types": 0
+    "functions": 918,
+    "schemas": 3,
+    "tables": 469,
+    "views": 736
   }
 }

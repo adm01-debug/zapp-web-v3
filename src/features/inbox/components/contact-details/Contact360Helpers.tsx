@@ -5,6 +5,7 @@
 import { Badge } from '@/components/ui/badge';
 import { motion } from '@/components/ui/motion';
 import { cn } from '@/lib/utils';
+import { formatBRL } from '@/utils/currency';
 import {
   Building,
   Globe,
@@ -161,16 +162,10 @@ export function RFMBadge({ rfm }: { rfm: Contact360RFM }) {
   );
 }
 
-// ─── Shared helpers ──────────────────────────────────────────
-function formatCurrencyBRL(v: number | null): string {
-  return v != null ? `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—';
-}
-
 // ─── Company Card ────────────────────────────────────────────
 /** Company Card function. */
 export function CompanyCard({ company }: { company: Contact360Company }) {
   const displayName = company.nome_fantasia || company.nome_crm || company.razao_social;
-
   return (
     <div className="to-primary/3 space-y-2 rounded-xl border border-primary/10 bg-gradient-to-br from-primary/5 via-transparent p-3">
       <div className="flex items-start gap-3">
@@ -227,7 +222,7 @@ export function CompanyCard({ company }: { company: Contact360Company }) {
         {company.capital_social != null && company.capital_social > 0 && (
           <div className="flex items-center gap-1.5 rounded-md bg-muted/20 p-1.5 text-muted-foreground">
             <DollarSign className="h-3 w-3 shrink-0" />
-            <span className="truncate">{formatCurrencyBRL(company.capital_social)}</span>
+            <span className="truncate">{formatBRL(company.capital_social)}</span>
           </div>
         )}
         {company.data_fundacao && (
@@ -303,12 +298,12 @@ export function CustomerProfile({ customer }: { customer: Contact360Customer }) 
         </div>
         <div className="rounded-lg bg-muted/20 p-2 text-center">
           <CircleDollarSign className="mx-auto mb-0.5 h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-sm font-medium">{formatCurrencyBRL(customer.ticket_medio)}</p>
+          <p className="text-sm font-medium">{formatBRL(customer.ticket_medio)}</p>
           <p className="text-[10px] text-muted-foreground">Ticket médio</p>
         </div>
         <div className="col-span-2 rounded-lg bg-muted/20 p-2 text-center">
           <TrendingUp className="mx-auto mb-0.5 h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-sm font-medium">{formatCurrencyBRL(customer.valor_total_compras)}</p>
+          <p className="text-sm font-medium">{formatBRL(customer.valor_total_compras)}</p>
           <p className="text-[10px] text-muted-foreground">Total compras</p>
         </div>
       </div>

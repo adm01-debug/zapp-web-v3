@@ -6,6 +6,7 @@
 //   Evolution → RabbitMQ → evolution-rabbit-consumer → POST nas rotas internas desta função
 //   (/messages-upsert, /contacts-update, …) → schema evo. Não remover do deploy.
 import { createZappAdminClient } from "../_shared/db-client.ts";
+import { makeLogger } from "../_shared/logger.ts";
 import { getCorsHeaders, handleCors, redactSecrets } from "../_shared/validation.ts";
 import { initSentry, captureException } from "../_shared/sentry.ts";
 import { parseOrReject, buildContractErrorBody, respondWithContract, type ParseOk } from "../_shared/contract-kit.ts";
@@ -32,7 +33,6 @@ import {
 import { createWebhookValidator, readWebhookSecretsFromEnv } from "../_shared/hmac-validation.ts";
 import { isInstancePaused, recordAuthFailureAndMaybePause } from "../_shared/instance-pause.ts";
 import { checkRateLimit } from "../_shared/rate-limiter.ts";
-import { getLogger } from '../_shared/logger.ts';
 
 // Multi-secret support enables zero-downtime rotation:
 //   - EVOLUTION_WEBHOOK_SECRETS=new,old  → validate both, sign with `new`
@@ -60,12 +60,12 @@ const validateWebhook = WEBHOOK_SECRETS.length > 0
 // NOTA: declarada POR REQUEST dentro do handler (estado module-level contaminaria a
 // proveniência entre requests do mesmo isolate).
 // [E7 2026-08-06] Log de sucesso HMAC rate-limited (1/60s): o hmac-validation.ts loga em TODA
-// validação (log.info pode ser filtrado) — este marcador garante um sinal estável e barato
+// validação (console.info pode ser filtrado) — este marcador garante um sinal estável e barato
 // no log do edge-runtime sem tocar em _shared (evita drift de hash nas 106 fns).
 let __lastHmacSuccessLogAt = 0;
 const __HMAC_LOG_INTERVAL_MS = 60_000;
 
-const _log = getLogger('evolution-webhook');
+const log = makeLogger({ service: 'evolution-webhook' });
 
 // [PATCH 2026-07-04 registry-guard] So processa eventos de instancias cadastradas em
 // instance_registry (existencia, nao is_active - evita perda de dados de instancia nova
@@ -81,12 +81,12 @@ async function isKnownInstance(supabase: any, instance: string): Promise<boolean
   try {
     const { data, error } = await supabase.from('instance_registry')
       .select('instance_name').eq('instance_name', instance).limit(1).maybeSingle();
-    if (error) { _log.error('lookup error', { error: error.message }); return null; }
+    if (error) { console.error(`[registry-guard] lookup error: ${error.message}`); return null; }
     const known = !!data;
     __registryCache.set(instance, { known, at: Date.now() });
     return known;
   } catch (e) {
-    _log.error('lookup exception', { error: e instanceof Error ? e.message : String(e) });
+    console.error(`[registry-guard] lookup exception: ${e instanceof Error ? e.message : String(e)}`);
     return null;
   }
 }
@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
   initSentry('evolution-webhook');
 
   const requestId = generateRequestId();
-  const log = _log.withRequestId(requestId);
   const startedAt = Date.now();
+  const reqLog = log.child({ requestId });
   // [E7 2026-08-06] Proveniência POR REQUEST — ver nota no escopo module-level.
   let webhookSource: 'consumer' | 'evolution-native' = 'evolution-native';
   const baseHeaders = { 'Content-Type': 'application/json', 'x-request-id': requestId };
@@ -129,12 +129,12 @@ Deno.serve(async (req) => {
   // x-webhook-secret válido acompanhe (precedência do HMAC: assinatura encontrada manda).
   // O shared-secret em texto puro (x-webhook-secret, usado pelo webhook nativo da Evolution
   // ≤2.3.x, que não assina payload) só é aceito como fallback DEPRECATED quando
-  // ALLOW_SHARED_SECRET=true, com log.warn de deprecação. Com
+  // ALLOW_SHARED_SECRET=true, com console.warn de deprecação. Com
   // EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false, exige HMAC puro.
   if (validateWebhook) {
     const result = await validateWebhook(req);
     if (!result.valid) {
-      log.warn('rejected', { error: result.error ?? 'unknown', signatureFound: result.signatureFound });
+      console.warn(redactSecrets(`[webhook][${requestId}] rejected: ${result.error ?? 'unknown'} signatureFound=${result.signatureFound}`));
       // Auto-pause: conta invalid_signature na janela e persiste o evento
       recordAuthFailureAndMaybePause(supabase, headerInstance ?? 'unknown', 'invalid_signature', 'webhook', { message: result.error ?? 'invalid_signature' });
       await auditWebhookEvent(supabase, {
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     }
     if (!result.signatureValid && result.sharedSecretValid) {
       // Fallback DEPRECATED em uso — loga para acompanhar migração p/ HMAC.
-      log.warn('DEPRECATED auth: x-webhook-secret (plaintext shared secret) accepted — HMAC x-webhook-signature é o padrão; migre o produtor e set EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false', { instance: headerInstance ?? 'unknown' });
+      console.warn(redactSecrets(`[webhook][${requestId}] DEPRECATED auth: x-webhook-secret (plaintext shared secret) accepted for instance=${headerInstance ?? 'unknown'} — HMAC x-webhook-signature é o padrão; migre o produtor e set EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false`));
     }
     if (result.signatureValid) {
       // [E7 2026-08-06] Proveniência + log de sucesso HMAC rate-limited (1/60s por isolate).
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
       const now = Date.now();
       if (now - __lastHmacSuccessLogAt >= __HMAC_LOG_INTERVAL_MS) {
         __lastHmacSuccessLogAt = now;
-        log.info('HMAC OK (x-webhook-signature) source=consumer — rate-limited log 1/60s', {});
+        reqLog.info('HMAC OK', { action: 'hmac_success', source: 'consumer', note: 'rate-limited 1/60s' });
       }
     }
     rawBody = result.payload ?? '';
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
     // deixava qualquer um injetar eventos/mensagens falsas, criar contatos e
     // disparar alertas. Em modo estrito (default), rejeitamos com 503 até que o
     // secret esteja presente — nunca aceitamos tráfego não autenticado.
-    log.error('NO webhook secret configured and STRICT_MODE=on — refusing (fail-closed)', {});
+    console.error(redactSecrets(`[webhook][${requestId}] NO webhook secret configured and STRICT_MODE=on — refusing (fail-closed)`));
     await auditWebhookEvent(supabase, {
       request_id: requestId, status: 'rejected', status_code: 503,
       error_message: 'webhook_secret_unconfigured',
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       { status: 503, headers: { ...corsHeaders, 'Retry-After': '120' } },
     );
   } else {
-    log.warn('WEBHOOK_SECRET not configured and STRICT_MODE=off — signature validation skipped', {});
+    console.warn(redactSecrets(`[webhook][${requestId}] WEBHOOK_SECRET not configured and STRICT_MODE=off — signature validation skipped`));
     rawBody = await req.text();
   }
 
@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       extraHeaders: corsHeaders,
     });
     if (parsed.ok === false) {
-      log.warn('contract_violation', { details: parsed.body.details });
+      console.warn(`[webhook][${requestId}] contract_violation:`, parsed.body.details);
       await auditWebhookEvent(supabase, {
         request_id: requestId, status: 'rejected', status_code: 422, error_message: parsed.body.code,
         duration_ms: Date.now() - startedAt,
@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
       rejectReason: 'instance_paused',
       latencyMs: Date.now() - startedAt,
     });
-    log.warn('instance is paused — skipping event', { instance, event });
+    console.warn(`[webhook][${requestId}] instance=${instance} is paused — skipping event ${event}`);
     // Hotfix (auditoria 2026-08-21, Bloco 5.1): faltava ...contractResponseHeaders
     // — único branch pós-gate do arquivo que montava headers sem ele.
     return new Response(
@@ -314,7 +314,7 @@ Deno.serve(async (req) => {
       rejectReason: 'unknown_instance',
       latencyMs: Date.now() - startedAt,
     });
-    log.warn('SECURITY unknown_instance — ignored', { instance, event });
+    console.warn(`[webhook][${requestId}] SECURITY unknown_instance='${instance}' event=${event} - ignored`);
     return respondWithContract(
       contractParsed,
       { success: true, ignored: true, reason: 'unknown_instance', requestId },
@@ -342,7 +342,7 @@ Deno.serve(async (req) => {
       request_id: requestId, instance, event_type: event, status: 'duplicate', status_code: 200,
       duration_ms: Date.now() - startedAt,
     });
-    log.info('duplicate event — skipped', { eventId: eventId.slice(0, 48) });
+    console.log(`[webhook][${requestId}] duplicate event_id=${eventId.slice(0, 48)}… skipped`);
     return respondWithContract(contractParsed, { success: true, duplicate: true, requestId }, { status: 200, headers: corsHeaders });
   }
 
@@ -391,9 +391,9 @@ Deno.serve(async (req) => {
       latencyMs: Date.now() - startedAt,
     });
     if (!rollbackOk) {
-      log.error('CRITICAL: idempotency rollback FAILED — event will be silently lost on re-delivery', { eventId: eventId.slice(0, 48) });
+      console.error(`[webhook][${requestId}] CRITICAL: idempotency rollback FAILED for event_id=${eventId.slice(0,48)}… — event will be silently lost on re-delivery`);
     } else {
-      log.warn('rate limit exceeded — idempotency rolled back', { instance, event, currentCount: rateLimit.currentCount, limit: rateLimit.limit, retryAfterSeconds });
+      console.warn(`[webhook][${requestId}] rate limit exceeded for ${instance}:${event} (${rateLimit.currentCount}/${rateLimit.limit}) — idempotency rolled back, retry after ${retryAfterSeconds}s`);
     }
     // Hotfix (auditoria 2026-08-21, Bloco 5.1): faltava ...contractResponseHeaders
     // — mesma omissao do branch instance_paused acima.
@@ -403,7 +403,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  log.info('received', { rawEvent: payload.event, event, instance });
+  reqLog.info('webhook received', { action: 'event_received', raw: payload.event, event, instance });
 
   try {
     if (event === 'connection.update') await handleConnectionUpdate(supabase, instance, baseData);
@@ -416,7 +416,7 @@ Deno.serve(async (req) => {
         const { error: qrErr } = await supabase.from('whatsapp_connections')
           .update({ qr_code: qrCode, status: 'qr_pending', updated_at: new Date().toISOString() })
           .or(instanceOrFilter(instance));
-        if (qrErr) log.error('qr_code update failed', { error: qrErr.message });
+        if (qrErr) console.error('[webhook] qr_code update failed:', qrErr.message);
       }
       // QR alert via n8n (fire-and-forget). Set QR_ALERT_WEBHOOK_URL env var to
       // enable; optional QR_ALERT_WEBHOOK_TOKEN for webhook auth. When the env
@@ -431,15 +431,15 @@ Deno.serve(async (req) => {
           headers: _qrHeaders,
           body: JSON.stringify({ event: 'qrcode.updated', instance, status: 'qr_pending', ts: new Date().toISOString() }),
           signal: AbortSignal.timeout(4000),
-        }).catch((e: unknown) => log.warn('n8n call failed', { error: e instanceof Error ? e.message : String(e) }));
+        }).catch((e: unknown) => console.warn('[qr-alert] n8n call failed:', e instanceof Error ? e.message : String(e)));
       } else {
-        log.warn('QR_ALERT_WEBHOOK_URL not set — skipping QR alert', { instance });
+        console.warn(`[qr-alert] QR_ALERT_WEBHOOK_URL not set — skipping QR alert for instance=${instance}`);
       }
     }
 
     if (event === 'messages.upsert') {
       const entries = toEventRecords(data, ['messages']);
-      log.info('messages.upsert entries', { entries: entries.length, instance });
+      reqLog.info('messages.upsert', { action: 'msg_upsert', entries: entries.length, instance });
       for (const entry of entries) {
         // Per-entry try/catch: a batch can carry several messages, and Baileys/Evolution
         // sometimes ships one malformed entry alongside otherwise-healthy ones. Without
@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
             null;
 
           if (!externalId) {
-            log.info('messages.upsert ignored: missing id', {});
+            console.log(`[webhook][${requestId}][msg.upsert] ignored: missing id`);
             logLedgerRejection(supabase, {
               instanceName: instance, eventType: event,
               rejectReason: 'missing_message_id',
@@ -493,7 +493,7 @@ Deno.serve(async (req) => {
 
           const hasReaction = !!(entry.message as Record<string,unknown>)?.reactionMessage
             || !!(baseData.message as Record<string,unknown>)?.reactionMessage;
-          log.info('messages.upsert processing message', { id: externalId, fromMe: key.fromMe, jid: redactJid(key.remoteJid), reaction: hasReaction });
+          console.log(`[webhook][${requestId}][msg.upsert] id=${externalId} fromMe=${key.fromMe} jid=${redactJid(key.remoteJid)} reaction=${hasReaction}`);
 
           const msg = (entry.message || baseData.message) as Record<string, unknown> | undefined;
           // [PATCH 23/28] Tipos protobuf sem conteúdo útil: filtrados ANTES do parse —
@@ -520,7 +520,7 @@ Deno.serve(async (req) => {
               remote_jid: key.remoteJid ?? null, message_type: 'reactionMessage',
               from_me: key.fromMe, outcome: 'processed_reaction',
               payload_sha256: bodyHash, latency_ms: Date.now() - startedAt,
-            }).then(() => {}, (e: unknown) => log.warn('ingest_ledger reaction err', { error: e instanceof Error ? e.message : String(e) }));
+            }).then(() => {}, (e: unknown) => console.warn('[ingest_ledger] reaction err:', e instanceof Error ? e.message : String(e)));
             continue;
           }
 
@@ -543,11 +543,11 @@ Deno.serve(async (req) => {
               remote_jid: key.remoteJid ?? null, message_type: mtype,
               from_me: key.fromMe, outcome: 'processed',
               payload_sha256: bodyHash, latency_ms: Date.now() - startedAt,
-            }).then(() => {}, (e: unknown) => log.warn('ingest_ledger msg err', { error: e instanceof Error ? e.message : String(e) }));
+            }).then(() => {}, (e: unknown) => console.warn('[ingest_ledger] msg err:', e instanceof Error ? e.message : String(e)));
           }
         } catch (entryError: unknown) {
           const entryDetail = entryError instanceof Error ? entryError.message : String(entryError);
-          log.error('messages.upsert entry_error', { instance, error: entryDetail });
+          console.error(redactSecrets(`[webhook][${requestId}][msg.upsert] entry_error instance=${instance}: ${entryDetail}`));
           await routeToDeadLetter(supabase, {
             event_type: event, instance, payload: entry,
             error_message: entryDetail, error_stack: entryError instanceof Error ? entryError.stack ?? null : null,
@@ -615,9 +615,9 @@ Deno.serve(async (req) => {
       delete rawJson.apikey; // LGPD: demais chaves preservadas (data/event/instance/date_time/server_url — URL pública).
       const { error: persistErr } = await supabase.from('webhook_events_processed').update({ payload: rawJson })
         .eq('event_id', eventId);
-      if (persistErr) log.warn('payload persist DB error', { error: persistErr.message });
+      if (persistErr) console.warn(`[webhook][${requestId}] payload persist DB error: ${persistErr.message}`);
     } catch (e) {
-      log.warn('payload persist failed', { error: e instanceof Error ? e.message : String(e) });
+      console.warn(`[webhook][${requestId}] payload persist failed: ${e instanceof Error ? e.message : String(e)}`);
     }
 
     return respondWithContract(contractParsed, { success: true, requestId }, { status: 200, headers: corsHeaders });
@@ -629,7 +629,7 @@ Deno.serve(async (req) => {
     // evolution-webhook/__tests__/contract.test.ts). Route to the DLQ before auditing so
     // the loss is recoverable even if the audit insert itself fails.
     const detail = error instanceof Error ? error.message : String(error);
-    log.error('handler_error', { event, instance, error: detail });
+    console.error(redactSecrets(`[webhook][${requestId}] handler_error event=${event} instance=${instance}: ${detail}`));
     await captureException(error, {
       functionName: 'evolution-webhook',
       requestUrl: req.url,
