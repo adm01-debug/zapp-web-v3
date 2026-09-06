@@ -279,10 +279,10 @@ function structuredLog(event: {
   reason?: string | null;
   meta?: Record<string, unknown>;
 }) {
-  const { level, ...ctx } = event;
-  if (level === 'error') log.error(ctx.phase, ctx);
-  else if (level === 'warn') log.warn(ctx.phase, ctx);
-  else log.info(ctx.phase, ctx);
+  const line = JSON.stringify({ ts: new Date().toISOString(), ...event });
+  if (event.level === 'error') log.error(line);
+  else if (event.level === 'warn') log.warn(line);
+  else log.info(line);
 }
 
 Deno.serve(async (req) => {
