@@ -243,3 +243,27 @@ describe('Sprint 1 · HIGH-3 · notify_sicoob_on_reply sem service_role_key na G
     expect(def).toMatch(/SET\s+search_path/);
   });
 });
+
+describe('Rodada 6 · fn_sicoob_bridge_ingest_message — serialização por advisory lock', () => {
+  // 20260906130000_fix_sicoob_bridge_concurrency_advisory_lock.sql: 2 chamadas
+  // concorrentes do MESMO remetente podiam passar pela checagem de idempotência
+  // e pelo lookup de sicoob_contact_mapping antes de qualquer uma inserir,
+  // causando contato duplicado ou falso idempotent=false. Regressão a prevenir:
+  // alguém remover o pg_advisory_xact_lock ao editar esta função no futuro.
+  const sql = allMigrationsSql();
+  const def = latestDefinition(sql, 'fn_sicoob_bridge_ingest_message');
+
+  it('existe e usa pg_advisory_xact_lock chaveado pela identidade do remetente', () => {
+    expect(def).not.toBe('');
+    expect(def).toMatch(/pg_advisory_xact_lock\(\s*hashtextextended\(/);
+    expect(def).toMatch(/v_sicoob_user_id\s*\|\|\s*'\|'\s*\|\|\s*coalesce\(p_singular_id/i);
+  });
+
+  it('o lock vem ANTES da checagem de idempotência (SELECT em evolution_messages)', () => {
+    const lockIdx = def.search(/pg_advisory_xact_lock/i);
+    const checkIdx = def.search(/FROM\s+evo\.evolution_messages/i);
+    expect(lockIdx).toBeGreaterThan(-1);
+    expect(checkIdx).toBeGreaterThan(-1);
+    expect(lockIdx).toBeLessThan(checkIdx);
+  });
+});
