@@ -6,15 +6,13 @@ import { Package, Send, Eye, Palette } from 'lucide-react';
 import { motion } from '@/components/ui/motion';
 import { ExternalProduct } from '@/hooks/useExternalApiManagement';
 import { ProductDetailDialog } from './ProductDetailDialog';
+import { formatBRL } from '@/utils/currency';
 
 interface ExternalProductCardProps {
   product: ExternalProduct;
   onSend?: (product: ExternalProduct) => void;
   compact?: boolean;
 }
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price);
 
 const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
   e.currentTarget.style.display = 'none';
@@ -67,7 +65,7 @@ export const ExternalProductCard: React.FC<ExternalProductCardProps> = React.mem
             <h4 className="truncate text-sm font-medium">{product.name}</h4>
             <div className="mt-0.5 flex items-center gap-2">
               <span className="text-sm font-semibold text-primary">
-                {formatPrice(product.sale_price)}
+                {formatBRL(product.sale_price)}
               </span>
               {product.brand && (
                 <Badge variant="outline" className="px-1 py-0 text-[10px]">
@@ -177,7 +175,7 @@ export const ExternalProductCard: React.FC<ExternalProductCardProps> = React.mem
               )}
               <div className="flex items-center justify-between">
                 <span className="text-base font-bold text-primary">
-                  {formatPrice(product.sale_price)}
+                  {formatBRL(product.sale_price)}
                 </span>
                 {!product.is_stockout && product.stock_quantity <= 10 && (
                   <Badge variant="outline" className="border-warning/50 text-[10px] text-warning">
