@@ -27,16 +27,14 @@ type MockSessionResult = { data: { session?: { user?: { id?: string } } }; error
 
 describe('Auth & Data Integration', () => {
   it('should handle database connection failures gracefully', async () => {
-    mockSupabase.from.mockImplementationOnce(() => ({
-      select: () => ({
-        eq: () => ({
-          error: { message: 'Connection Timeout' },
-          data: null
-        })
-      })
-    }));
+    const stubResult: MockQueryResult = { error: { message: 'Connection Timeout' }, data: null };
+    const stubChain = { eq: (_col: string, _val: string) => stubResult };
+    const stubSelect = { select: (_cols: string) => stubChain };
+    // @ts-expect-error — stub shape differs from Supabase's generic Mock<Procedure> return type
+    mockSupabase.from.mockImplementationOnce(() => stubSelect);
 
-    const result = mockSupabase.from('profiles').select('*').eq('id', '1') as unknown as MockQueryResult;
+    const chain = mockSupabase.from('profiles') as unknown as typeof stubSelect;
+    const result = chain.select('*').eq('id', '1');
     expect(result.error?.message).toBe('Connection Timeout');
   });
 
@@ -46,6 +44,6 @@ describe('Auth & Data Integration', () => {
 
     const authResult = await mockSupabase.auth.getSession() as unknown as MockSessionResult;
     const { data } = authResult;
-    expect(data.session?.user.id).toBe('123');
+    expect(data.session?.user?.id).toBe('123');
   });
 });
