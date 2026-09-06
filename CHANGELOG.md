@@ -18,6 +18,7 @@
 
 ### Segurança
 - `transcribe-audio-internal` e `download-wa-status-media`: CORS migrado de `*` hardcoded para `getCorsHeaders(req)` do `_shared/validation.ts` (origin-validated)
+- `secure-upload`: validação de magic bytes reais adicionada antes do VirusTotal — detecta MIME spoofing (ex.: `.exe` com `Content-Type: image/jpeg`); bloqueia com `INVALID_FILE_TYPE 422`; buffer lido uma vez e reusado para SHA-256
 
 ### Operações
 - Branch protection `main`: `required_pull_request_reviews` adicionado (`required_approving_review_count: 1`, `dismiss_stale_reviews: true`) — eliminando gap de auditoria dim. 20
