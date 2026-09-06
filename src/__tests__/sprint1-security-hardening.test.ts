@@ -243,3 +243,30 @@ describe('Sprint 1 · HIGH-3 · notify_sicoob_on_reply sem service_role_key na G
     expect(def).toMatch(/SET\s+search_path/);
   });
 });
+
+describe('Rodada 5 · modelo de posse (admin/supervisor ou dono do registro) nas RPCs de CRM', () => {
+  // Decisao do dono (20260906120000_harden_ownership_crm_rpcs.sql): as 9 RPCs
+  // abaixo ja exigiam fn_require_app_user() mas nenhuma checava se o
+  // registro-alvo pertencia ao chamador. Regressao a prevenir: alguem
+  // reescrever uma delas sem a checagem de posse (is_admin_or_supervisor()
+  // OU assigned_to = auth.uid()::text do registro-alvo, direto ou via o
+  // contato relacionado).
+  const sql = allMigrationsSql();
+
+  it.each([
+    'bulk_update_lead_status',
+    'grant_lgpd_consent',
+    'revoke_lgpd_consent',
+    'rpc_complete_task',
+    'rpc_delete_message',
+    'rpc_change_deal_stage',
+    'rpc_move_deal',
+    'rpc_upsert_deal',
+    'rpc_purge_contact_intelligence',
+  ])('a definição mais recente de %s contém o guard de posse (admin/supervisor OU dono)', (fn) => {
+    const def = latestDefinition(sql, fn);
+    expect(def, `função ${fn} não encontrada em migrations`).not.toBe('');
+    expect(def).toMatch(/is_admin_or_supervisor\(\)/);
+    expect(def).toMatch(/assigned_to\s*=\s*auth\.uid\(\)::text/);
+  });
+});
