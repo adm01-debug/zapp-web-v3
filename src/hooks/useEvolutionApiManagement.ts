@@ -361,7 +361,7 @@ function useEvolutionInstance(
     [withToast]
   );
 
-  // TODO(2026-08-14, poda-actions-mortas): action 'delete-instance' NÃO tem
+  // NOTE(2026-08-14, poda-actions-mortas): action 'delete-instance' NÃO tem
   // handler no router da evolution-api (supabase/functions/evolution-api/index.ts
   // → 404 'Unknown action'); a Evolution API expõe DELETE /instance/delete/{instance}.
   // NÃO removido: funcionalidade É usada de verdade — consumida por
@@ -370,7 +370,7 @@ function useEvolutionInstance(
   // 'delete-instance' no router (trabalho futuro na evolution-api); até lá o fluxo
   // cai no branch 4xx terminal (aborta delete no banco).
 
-  // TODO(2026-08-14, poda-actions-mortas): action 'set-presence' NÃO tem handler
+  // NOTE(2026-08-14, poda-actions-mortas): action 'set-presence' NÃO tem handler
   // no router da evolution-api (supabase/functions/evolution-api/index.ts → 404
   // 'Unknown action') e NÃO possui consumidor em produção (apenas testes) —
   // chamada morta removida. Presença de instância (POST /presence/set/{instance}

@@ -116,7 +116,7 @@ export async function fetchMessageBody(
 /**
  * Baixa um anexo Email.
  *
- * TODO(EMAIL-04): gmail-sync não persiste o payload dos anexos (só o flag
+ * EMAIL-04 (pendente): gmail-sync não persiste o payload dos anexos (só o flag
  * has_attachments), e não existe action downloadAttachment na edge (400).
  * Para baixar de verdade seria preciso adicionar a action na edge chamando
  * GET /gmail/v1/users/me/messages/{id}/attachments/{attachmentId} — fora do

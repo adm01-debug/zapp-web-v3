@@ -93,7 +93,7 @@ function cacheKey(instance: string, key: MessageKey): string {
  * `err.context` — o status HTTP fica em `context.status` e o body JSON do
  * envelope {version,error,status,code,message} em `context.data` (versões
  * novas) ou lido via `context.json()` (Response cru). Sem essa extração,
- * TODO erro HTTP viraria reason 'unknown'.
+ * NOTE: erro HTTP viraria reason 'unknown'.
  */
 async function extractErrorDetails(
   raw: unknown
