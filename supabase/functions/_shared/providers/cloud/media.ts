@@ -24,7 +24,7 @@
  */
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getStoragePublicUrl } from "../../storage-url.ts";
-import { getLogger } from "./logger.ts";
+import { getLogger } from "../../logger.ts";
 
 const log = getLogger('cloud-media');
 

@@ -42,8 +42,6 @@ export function parseBRL(s: string | null | undefined): number {
     return cents / 100;
   }
 
-  // Fallback: remover tudo que não é dígito, vírgula ou ponto
-  const fallback = cleaned.replace(/[^\d,.]/g, '').replace(',', '.');
-  const cents = Math.round(parseFloat(fallback) * 100);
-  return Number.isFinite(cents) ? cents / 100 : 0;
+  // Formato não reconhecido — retorna 0 para evitar perda de sinal (ex: "-10" → 0, não 10)
+  return 0;
 }

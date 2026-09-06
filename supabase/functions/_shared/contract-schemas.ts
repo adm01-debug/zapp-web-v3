@@ -158,13 +158,13 @@ export const WarroomMonthlyTestV1Schema = z.object({}).strict();
 export const RecheckWebhookSignatureV1Schema = z.object({
   event_id: z.string().min(1, "event_id é obrigatório").max(200),
   observed_signature: z.string().max(1000).nullish(),
-}).passthrough();
+}).strict();
 
 /** webhook-diagnostic@v1 — action default 'full-diagnostic'; instanceName opcional. */
 export const WebhookDiagnosticV1Schema = z.object({
   action: z.string().max(100).optional(),
   instanceName: z.string().min(1).max(100).optional(),
-}).passthrough();
+}).strict();
 
 /** instance-pause-control@v1 — action obrigatória; limit/instance/minutes por rota. */
 export const InstancePauseControlV1Schema = z.object({
@@ -172,7 +172,7 @@ export const InstancePauseControlV1Schema = z.object({
   limit: z.number().int().min(1).max(200).optional(),
   instance: z.string().min(1).max(100).optional(),
   minutes: z.number().int().min(1).max(1440).optional(),
-}).passthrough();
+}).strict();
 
 /**
  * contacts-import@v1 — rows[] obrigatório; workspace_id default 'wpp2'.
@@ -190,13 +190,13 @@ export const InstancePauseControlV1Schema = z.object({
 export const ContactsImportV1Schema = z.object({
   rows: z.array(z.record(z.unknown())).min(1, "rows vazio").max(50_000),
   workspace_id: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/, "workspace_id inválido").optional(),
-}).passthrough();
+}).strict();
 
 /** voice-copilot-action@v1 — { action, params }. */
 export const VoiceCopilotActionV1Schema = z.object({
   action: z.string().min(1, "action é obrigatória").max(100),
   params: z.record(z.unknown()).nullish(),
-}).passthrough();
+}).strict();
 
 /** gmail-send@v1 — roteado por action; campos por rota validados no handler. */
 export const GmailSendV1Schema = z.object({
@@ -224,7 +224,9 @@ export const EvolutionSyncV1Schema = z.object({
   page: z.number().int().min(1).max(100_000).optional(),
   offset: z.number().int().min(1).max(10_000).optional(),
   contactPhone: z.string().max(30).optional(),
-}).passthrough();
+  webhookUrl: z.string().max(2048).optional(),
+  messagesPerContact: z.number().int().min(1).max(1_000).optional(),
+}).strict();
 
 /**
  * evolution-group-sync@v1 — sync de grupos WhatsApp (Evolution fetchAllGroups
@@ -236,7 +238,7 @@ export const EvolutionGroupSyncV1Schema = z.object({
   action: z.enum(["groups", "isonwa"]).optional(),
   instanceName: z.string().min(1).max(100).optional(),
   limit: z.number().int().min(1).max(50).optional(),
-}).passthrough();
+}).strict();
 
 /**
  * webhook-hmac-selftest@v1 — self-test HMAC (service-role/cron). index.ts
@@ -248,16 +250,16 @@ export const WebhookHmacSelftestV1Schema = z.object({
   instance: z.string().max(100).nullish(),
   tolerance_seconds: z.number().int().positive().nullish(),
   include_negative: z.boolean().nullish(),
-}).passthrough();
+}).strict();
 
 /** webhook-secret-status@v1 — status admin (GET/POST); index.ts não lê corpo. */
-export const WebhookSecretStatusV1Schema = z.object({}).passthrough();
+export const WebhookSecretStatusV1Schema = z.object({}).strict();
 
 /** whatsapp-cloud-secrets-status@v1 — status admin (GET/POST); corpo não lido. */
-export const WhatsappCloudSecretsStatusV1Schema = z.object({}).passthrough();
+export const WhatsappCloudSecretsStatusV1Schema = z.object({}).strict();
 
 /** whatsapp-cloud-webhook-verify@v1 — diagnóstico interno; corpo não lido. */
-export const WhatsappCloudWebhookVerifyV1Schema = z.object({}).passthrough();
+export const WhatsappCloudWebhookVerifyV1Schema = z.object({}).strict();
 
 /**
  * whatsapp-cloud-api@v1 — espelho do evolution-api (staff JWT). index.ts
@@ -300,7 +302,7 @@ export const WhatsappCloudApiV1Schema = z.object({
 export const GmailTokenRefreshV1Schema = z.object({
   action: z.string().max(50).nullish(),
   accountId: z.string().max(200).nullish(),
-}).passthrough();
+}).strict();
 
 // ─── Business/infra endpoints (v1 — estritos, derivados do consumo real) ────
 

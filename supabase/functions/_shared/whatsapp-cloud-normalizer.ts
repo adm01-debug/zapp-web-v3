@@ -61,6 +61,9 @@ import {
   type ChannelAddress,
   type ChannelAccount,
 } from "./domain/messaging.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('whatsapp-cloud-normalizer');
 
 const log = getLogger('whatsapp-cloud-normalizer');
 

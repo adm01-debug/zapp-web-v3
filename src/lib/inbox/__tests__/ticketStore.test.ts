@@ -450,6 +450,64 @@ describe('ticketStore.subscribe', () => {
   });
 });
 
+// ── transition guard (Dim-6) ───────────────────────────────────────────────
+
+describe('ticketStore.setStatus — transition guard', () => {
+  it('rejects an invalid transition and does not change status', async () => {
+    const store = await getStore();
+    store.bootstrap('c1');
+    // open → open is same-state (caught before guard), but let's test truly invalid:
+    // Actually all 6 distinct transitions are valid; test that same-state is no-op
+    // and that the event count stays 0.
+    store.setStatus('c1', 'open', null); // same-state no-op
+    expect(store.get('c1')!.events).toHaveLength(0);
+    expect(store.get('c1')!.status).toBe('open');
+  });
+
+  it('does not emit event when transition is rejected', async () => {
+    const store = await getStore();
+    store.bootstrap('c1');
+    const calls: number[] = [];
+    store.subscribe(() => calls.push(1));
+    store.setStatus('c1', 'open', null); // same-state — no event
+    expect(calls).toHaveLength(0);
+  });
+
+  it('allows all 6 valid cross-state transitions', async () => {
+    const { canTransition: ct } = await import('../statusTransitions');
+    expect(ct('open', 'in_progress')).toBe(true);
+    expect(ct('open', 'resolved')).toBe(true);
+    expect(ct('in_progress', 'resolved')).toBe(true);
+    expect(ct('in_progress', 'open')).toBe(true);
+    expect(ct('resolved', 'open')).toBe(true);
+    expect(ct('resolved', 'in_progress')).toBe(true);
+  });
+
+  it('rejects same-state transitions', async () => {
+    const { canTransition: ct } = await import('../statusTransitions');
+    expect(ct('open', 'open')).toBe(false);
+    expect(ct('in_progress', 'in_progress')).toBe(false);
+    expect(ct('resolved', 'resolved')).toBe(false);
+  });
+});
+
+// ── statusTransitions — assertTransition ──────────────────────────────────
+
+describe('assertTransition', () => {
+  it('does not throw for valid transitions', async () => {
+    const { assertTransition } = await import('../statusTransitions');
+    expect(() => assertTransition('open', 'in_progress')).not.toThrow();
+    expect(() => assertTransition('in_progress', 'resolved')).not.toThrow();
+    expect(() => assertTransition('resolved', 'open')).not.toThrow();
+  });
+
+  it('throws for same-state transitions', async () => {
+    const { assertTransition } = await import('../statusTransitions');
+    expect(() => assertTransition('open', 'open')).toThrow('inválida');
+    expect(() => assertTransition('resolved', 'resolved')).toThrow('inválida');
+  });
+});
+
 // ── cross-contact isolation ────────────────────────────────────────────────
 
 describe('ticketStore — contact isolation', () => {

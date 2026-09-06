@@ -56,7 +56,7 @@ interface ChatDialogsProps {
   onSelectSearchResult?: (result: SearchResult) => void;
 }
 
-/* TODO(etapa-54): templatesWithVars — chave presente no DialogKey/estado inicial mas sem
+/* PENDENTE(etapa-54): templatesWithVars — chave presente no DialogKey/estado inicial mas sem
    bloco de render e sem opener; implementar quando o componente de templates-com-variáveis
    for criado. */
 
@@ -161,7 +161,7 @@ export const ChatDialogs = memo(function ChatDialogs({
         />
       )}
 
-      {/* TODO(etapa-54): realtimeTranscription — bloco de render presente mas sem opener wired;
+      {/* PENDENTE(etapa-54): realtimeTranscription — bloco de render presente mas sem opener wired;
            adicionar botão speech-to-text em InputExtraTools quando feature for habilitada. */}
       {dialogs.realtimeTranscription && (
         <Suspense fallback={null}>

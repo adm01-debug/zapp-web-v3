@@ -41,9 +41,9 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
     {
+      // Specs legados movidos de tests/e2e/ — rodar apenas via workflow_dispatch
       name: 'legacy-e2e',
-      testDir: './tests',
-      testIgnore: '**/integration/**',
+      testDir: './e2e/legacy',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

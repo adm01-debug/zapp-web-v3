@@ -6,6 +6,7 @@ import { ExternalProduct } from '@/hooks/useExternalApiManagement';
 import { whatsapp } from '@/lib/whatsappAdapter';
 import { dbFrom } from '@/integrations/datasource/db';
 import { isValidUUID } from '@/utils/uuid';
+import { formatBRL } from '@/utils/currency';
 
 interface UseProductHandlersOptions {
   contactId?: string;
@@ -23,9 +24,7 @@ export function useProductHandlers({
 }: UseProductHandlersOptions) {
   const handleSendProduct = useCallback(
     async (product: ExternalProduct) => {
-      const price = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-        product.sale_price
-      );
+      const price = formatBRL(product.sale_price);
       const lines = [
         `Produto: *${product.name}*`,
         product.brand ? `Marca: ${product.brand}` : '',

@@ -1,4 +1,4 @@
-import { getLogger } from "./logger.ts";
+import { getLogger } from "../../logger.ts";
 
 const log = getLogger('cloud-templates');
 

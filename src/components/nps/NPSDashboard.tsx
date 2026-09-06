@@ -9,7 +9,7 @@ import { CalendarClock } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus, Users, ThumbsUp, ThumbsDown, Meh, BarChart3 } from 'lucide-react';
 
 /**
- * TODO CAMPANHAS-14 (NPS agendado): o edge `nps-scheduler` está deployado e funcional
+ * CAMPANHAS-14 (NPS agendado): o edge `nps-scheduler` está deployado e funcional
  * (supabase/functions/nps-scheduler) mas NÃO possui trigger: sem pg_cron, sem invoke no front.
  *
  * POR QUE NÃO HÁ BOTÃO "DISPARAR AGORA" AQUI: `nps-scheduler` exige

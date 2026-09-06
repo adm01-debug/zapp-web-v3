@@ -3,11 +3,11 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-const mockFrom = vi.hoisted(() => vi.fn());
+const mockRpc = vi.hoisted(() => vi.fn());
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (...args: unknown[]) => mockFrom(...args),
+    rpc: (...args: unknown[]) => mockRpc(...args),
   },
 }));
 
@@ -22,44 +22,35 @@ function createWrapper() {
   );
 }
 
-const mockSLAData = [
-  {
-    id: 's1',
-    contact_id: 'c1',
-    first_response_breached: false,
-    resolution_breached: false,
-    first_response_at: '2024-01-01T10:05:00Z',
-    first_message_at: '2024-01-01T10:00:00Z',
-    resolved_at: '2024-01-01T11:00:00Z',
+const mockRPCResult = {
+  overall: {
+    firstResponse: { total: 2, onTime: 1, breached: 1, rate: 50 },
+    resolution: { total: 2, onTime: 1, breached: 1, rate: 50 },
+    totalConversations: 2,
+    overallRate: 50,
   },
-  {
-    id: 's2',
-    contact_id: 'c2',
-    first_response_breached: true,
-    resolution_breached: true,
-    first_response_at: null,
-    first_message_at: '2024-01-01T10:00:00Z',
-    resolved_at: null,
-  },
-];
+  byAgent: [
+    {
+      agentId: 'a1',
+      agentName: 'Agente 1',
+      avatarUrl: null,
+      firstResponse: { total: 1, onTime: 1, breached: 0, rate: 100 },
+      resolution: { total: 1, onTime: 1, breached: 0, rate: 100 },
+      overallRate: 100,
+    },
+  ],
+  startAt: '2026-09-06T00:00:00Z',
+  period: 'today',
+  computedAt: '2026-09-06T12:00:00Z',
+};
 
 describe('useSLAMetrics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: mockSLAData, error: null }),
-          lte: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({ data: mockSLAData, error: null }),
-          }),
-        }),
-        order: vi.fn().mockResolvedValue({ data: mockSLAData, error: null }),
-      }),
-    });
+    mockRpc.mockResolvedValue({ data: mockRPCResult, error: null });
   });
 
-  it('fetches SLA metrics', async () => {
+  it('fetches SLA metrics via rpc_sla_dashboard', async () => {
     const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
 
     await waitFor(() => {
@@ -67,118 +58,82 @@ describe('useSLAMetrics', () => {
     });
 
     expect(result.current.data).toBeDefined();
+    expect(mockRpc).toHaveBeenCalledWith('rpc_sla_dashboard', { p_period: 'today' });
+  });
+
+  it('passes the correct period to the RPC', async () => {
+    const { result } = renderHook(() => useSLAMetrics('month'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(mockRpc).toHaveBeenCalledWith('rpc_sla_dashboard', { p_period: 'month' });
   });
 
   it('handles loading state correctly', () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue(new Promise(() => {})),
-        }),
-        order: vi.fn().mockReturnValue(new Promise(() => {})),
-      }),
-    });
+    mockRpc.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
     expect(result.current.loading).toBe(true);
   });
 
-  it('handles empty SLA data', async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }),
-        order: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }),
-    });
-
-    const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-  });
-
-  it('handles fetch errors gracefully', async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
-        }),
-        order: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
-      }),
-    });
-
-    const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-  });
-
-  // ── E67.5: LEFT join — conversas SEM contato vinculado NÃO podem ser
-  // subreportadas (antes: `contacts!inner(assigned_to)` excluía a row inteira).
-  it('E67: inclui conversas sem contato no overall (não subreporta)', async () => {
-    const rowsWithUnassigned = [
-      {
-        id: 's1',
-        contact_id: 'c1',
-        contacts: { assigned_to: 'a1' },
-        first_response_at: '2024-01-01T10:05:00Z',
-        first_response_breached: false,
-        resolved_at: '2024-01-01T11:00:00Z',
-        resolution_breached: false,
+  it('handles empty byAgent gracefully', async () => {
+    mockRpc.mockResolvedValue({
+      data: {
+        ...mockRPCResult,
+        byAgent: [],
+        overall: {
+          firstResponse: { total: 0, onTime: 0, breached: 0, rate: 100 },
+          resolution: { total: 0, onTime: 0, breached: 0, rate: 100 },
+          totalConversations: 0,
+          overallRate: 100,
+        },
       },
-      {
-        id: 's2',
-        contact_id: 'c2',
-        contacts: null, // LEFT join: conversa sem contato vinculado
-        first_response_at: null,
-        first_response_breached: true,
-        resolved_at: null,
-        resolution_breached: true,
-      },
-    ];
-
-    // o hook para a cadeia no `.gte()` — o builder precisa resolver com {data, error}
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        gte: vi.fn().mockResolvedValue({ data: rowsWithUnassigned, error: null }),
-      }),
+      error: null,
     });
 
     const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // overall conta TODAS as conversas (2), incluindo a sem contato
-    expect(result.current.data?.overall.totalConversations).toBe(2);
-    expect(result.current.data?.overall.firstResponse.breached).toBe(1);
-    expect(result.current.data?.overall.resolution.breached).toBe(1);
+    expect(result.current.data?.overall.totalConversations).toBe(0);
+    expect(result.current.data?.byAgent).toHaveLength(0);
+  });
 
-    // byAgent agrega só conversas com agente atribuído (sem contato = sem agente)
+  it('handles RPC errors gracefully (data remains null)', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: new Error('RPC error') });
+
+    const { result } = renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.data).toBeNull();
+  });
+
+  it('returns overall metrics from RPC result', async () => {
+    const { result } = renderHook(() => useSLAMetrics('week'), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.data?.overall.firstResponse.total).toBe(2);
+    expect(result.current.data?.overall.firstResponse.onTime).toBe(1);
+    expect(result.current.data?.overall.firstResponse.breached).toBe(1);
     expect(result.current.data?.byAgent).toHaveLength(1);
     expect(result.current.data?.byAgent[0]?.agentId).toBe('a1');
   });
 
-  it('E67: usa embed LEFT (contacts(assigned_to)), nunca contacts!inner', async () => {
-    const selectSpy = vi.fn(() => ({
-      gte: vi.fn().mockResolvedValue({ data: [], error: null }),
-    }));
+  it('uses server-side period calculation — no browser new Date()', () => {
+    // The hook must NOT import date-fns or use new Date() for period → date.
+    // It delegates entirely to rpc_sla_dashboard(p_period).
+    // Verify: only one argument group passed to rpc (period string, no ISO date).
+    renderHook(() => useSLAMetrics('all'), { wrapper: createWrapper() });
 
-    mockFrom.mockReturnValue({
-      select: selectSpy,
-    });
-
-    renderHook(() => useSLAMetrics(), { wrapper: createWrapper() });
-    await waitFor(() => expect(selectSpy).toHaveBeenCalled());
-
-    const slaSelect = (selectSpy.mock.calls as unknown[][])
-      .map((c) => String(c[0] ?? ''))
-      .find((cols) => cols.includes('contacts'));
-    expect(slaSelect).toBeDefined();
-    expect(slaSelect).toContain('contacts(assigned_to)');
-    expect(slaSelect).not.toContain('!inner');
+    expect(mockRpc).toHaveBeenCalledWith('rpc_sla_dashboard', { p_period: 'all' });
+    // If a browser-side date were computed, a second argument with a date string would appear.
+    expect(mockRpc).not.toHaveBeenCalledWith(
+      'rpc_sla_dashboard',
+      expect.objectContaining({ start_at: expect.anything() })
+    );
   });
 });

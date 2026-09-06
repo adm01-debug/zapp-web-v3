@@ -17,9 +17,7 @@ import {
   Box,
 } from 'lucide-react';
 import { ExternalProduct, useExternalCatalog } from '@/hooks/useExternalApiManagement';
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price);
+import { formatBRL } from '@/utils/currency';
 
 const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
   e.currentTarget.style.display = 'none';
@@ -123,12 +121,12 @@ export function ProductDetailDialog({
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Preço de venda:</span>
-                    <p className="text-lg font-bold text-primary">{formatPrice(dp.sale_price)}</p>
+                    <p className="text-lg font-bold text-primary">{formatBRL(dp.sale_price)}</p>
                   </div>
                   {dp.suggested_price && dp.suggested_price !== dp.sale_price && (
                     <div>
                       <span className="text-muted-foreground">Preço sugerido:</span>
-                      <p className="font-semibold">{formatPrice(dp.suggested_price)}</p>
+                      <p className="font-semibold">{formatBRL(dp.suggested_price)}</p>
                     </div>
                   )}
                 </div>

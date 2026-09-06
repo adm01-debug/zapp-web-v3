@@ -16,7 +16,11 @@
  * chamada `externalClient.rpc(...)` — a API pública do hook não muda.
  */
 
+import { canTransition } from './statusTransitions';
+import { getLogger } from '@/lib/logger';
+
 const STORAGE_KEY = 'inbox.tickets.overlay.v1';
+const log = getLogger('ticketStore');
 const EVENT_NAME = 'ticket-overlay-changed';
 
 /** Possible statuses for a conversation ticket in the inbox overlay. */
@@ -145,6 +149,10 @@ export const ticketStore = {
       events: [],
     };
     if (base.status === nextStatus && existing) return;
+    if (!canTransition(base.status, nextStatus)) {
+      log.warn(`Transição inválida ignorada: ${base.status} → ${nextStatus}`, { contactId });
+      return;
+    }
     const ev: TicketEvent = {
       id: cryptoId(),
       type: 'status_change',
