@@ -3,13 +3,13 @@
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
-import { getLogger } from "./logger.ts";
-
-const log = getLogger('evolution-webhook-handlers');
   isRecord, normalizePhone, toEventRecords, instanceOrFilter,
   getConnectionByInstance, getContactByPhone, persistProfilePicture, generatePhoneVariants,
   resolveLidToPhone, redactJid,
 } from "./evolution-helpers.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-webhook-handlers');
 
 /** evolution-webhook-handlers utilities and exports. */
 export async function handleLogoutInstance(supabase: SupabaseClient<any, any>, instance: string, data: unknown) {

@@ -55,14 +55,14 @@
 import { z } from "https://esm.sh/zod@3.23.8";
 import { MetaWebhookPayloadSchema } from "./webhook-schemas.ts";
 import {
-import { getLogger } from "./logger.ts";
-
-const log = getLogger('whatsapp-cloud-normalizer');
   META_TO_CANONICAL,
   type CanonicalMessageType,
   type ChannelAddress,
   type ChannelAccount,
 } from "./domain/messaging.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('whatsapp-cloud-normalizer');
 
 // ─── Tipos normalizados (retrocompat com a v1 + campos canônicos) ──────────
 
