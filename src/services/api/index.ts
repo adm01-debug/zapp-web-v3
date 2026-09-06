@@ -29,3 +29,6 @@ export {
 
 /** Re-exported module members. */
 export type { SupabaseError } from './types';
+
+export { invokeEdge } from './edgeFunctions';
+export type { EdgeInvokeOptions } from './edgeFunctions';
