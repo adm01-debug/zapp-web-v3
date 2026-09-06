@@ -26,7 +26,9 @@ import { requireAdminOrSupervisor, requireServiceRoleOrCron, type AuthedUser } f
 import { createZappAdminClient } from "../_shared/db-client.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { ZappAutoExportV1Schema } from "../_shared/contract-schemas.ts";
+import { getLogger } from '../_shared/logger.ts';
 
+const log = getLogger('zapp-auto-export');
 const BUCKET = "zapp-exports";
 const MAX_EXPORT_ROWS = 50_000;
 const SIGNED_URL_TTL_SECONDS = 3600; // 1h
@@ -271,5 +273,5 @@ async function markFailed(jobId: string, message: string): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq("id", jobId);
-  if (error) console.warn("[zapp-auto-export] markFailed failed:", error.message);
+  if (error) log.warn('markFailed failed', { error: error.message });
 }

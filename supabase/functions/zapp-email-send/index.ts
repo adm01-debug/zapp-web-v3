@@ -12,6 +12,7 @@
  * Contrato: zapp-email-send@v1 (ver _shared/contract-schemas.ts).
  * Falha SEMPRE explícita (nunca silenciosa) — o chamador decide o retry.
  */
+import { getLogger } from '../_shared/logger.ts';
 import { requireUser } from '../_shared/auth.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
@@ -20,6 +21,8 @@ import { parseOrReject } from '../_shared/contract-kit.ts';
 import { resendFromAddress } from '../_shared/resend.ts';
 import { fetchWithRetry } from '../_shared/retry-with-backoff.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+
+const log = getLogger('zapp-email-send');
 
 const RESEND_API = 'https://api.resend.com/emails';
 const ATTACHMENT_BUCKET = 'email-attachments';
@@ -116,7 +119,7 @@ Deno.serve(async (req) => {
           upsert: true,
         });
       if (uploadErr) {
-        console.error('[zapp-email-send] storage upload failed:', uploadErr.message);
+        log.error('storage upload failed', { error: uploadErr.message });
         return json({ error: 'Falha ao armazenar anexo. Nada foi enviado.' }, 502, req);
       }
 
@@ -226,7 +229,7 @@ Deno.serve(async (req) => {
     if (insertErr) {
       // Email ENVIOU, mas o registro falhou — reportar com o messageId para
       // reconciliação manual (não inventar sucesso silencioso).
-      console.error('[zapp-email-send] insert zapp.emails failed:', insertErr.message);
+      log.error('insert zapp.emails failed', { error: insertErr.message });
       return json(
         {
           ok: true,
@@ -241,10 +244,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, messageId, emailId: emailRow.id }, 200, req);
   } catch (err) {
-    console.error(
-      '[zapp-email-send] unexpected error:',
-      err instanceof Error ? (err.stack ?? err.message) : String(err)
-    );
+    log.error('unexpected error', { error: err instanceof Error ? (err.stack ?? err.message) : String(err) });
     return json({ error: 'Internal error' }, 500, req);
   }
 });

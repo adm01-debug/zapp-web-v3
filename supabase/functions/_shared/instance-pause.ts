@@ -1,3 +1,7 @@
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('instance-pause');
+
 // Helpers compartilhados para verificar e disparar pausa de processamento por instância.
 //
 // - `isInstancePaused(supabase, instance)`: SELECT direto na DLQ de pausas
@@ -95,10 +99,10 @@ export function recordAuthFailureAndMaybePause(
   ).then(
     (res: unknown) => {
       const err = (res as { error?: { message: string } | null })?.error;
-      if (err) console.warn('[auth-events] insert failed:', err.message);
+      if (err) log.warn('[auth-events] insert failed:', err.message);
     },
     (e: unknown) => {
-      console.warn('[auth-events] insert threw:', e instanceof Error ? e.message : String(e));
+      log.warn('[auth-events] insert threw:', e instanceof Error ? e.message : String(e));
     },
   );
 
@@ -117,7 +121,7 @@ export function recordAuthFailureAndMaybePause(
   _authCounters.set(instance, { count: 0, windowStart: now, lastReason: reason });
   invalidateInstancePauseCache(instance);
 
-  console.warn(`[auto-pause] instance=${instance} reason=${reason} count>=${THRESHOLD} window=${WINDOW_SEC}s — pausing ${PAUSE_MIN}min`);
+  log.warn(`[auto-pause] instance=${instance} reason=${reason} count>=${THRESHOLD} window=${WINDOW_SEC}s — pausing ${PAUSE_MIN}min`);
 
   Promise.resolve(
     supabase.rpc('auto_pause_instance_on_auth_spike', {
@@ -129,10 +133,10 @@ export function recordAuthFailureAndMaybePause(
   ).then(
     (res: unknown) => {
       const err = (res as { error?: { message: string } | null })?.error;
-      if (err) console.warn('[auto-pause] rpc failed:', err.message);
+      if (err) log.warn('[auto-pause] rpc failed:', err.message);
     },
     (e: unknown) => {
-      console.warn('[auto-pause] rpc threw:', e instanceof Error ? e.message : String(e));
+      log.warn('[auto-pause] rpc threw:', e instanceof Error ? e.message : String(e));
     },
   );
 }

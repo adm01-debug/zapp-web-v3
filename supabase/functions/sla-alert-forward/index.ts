@@ -17,6 +17,9 @@ import { WebhookSecurityService } from '../_shared/hmac-validation.ts';
 import { checkRateLimit } from '../_shared/validation.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('sla-alert-forward');
 
 const PayloadSchema = z.object({
   contact_id: z.string().min(1),
@@ -65,7 +68,7 @@ Deno.serve(async (req) => {
       .in('key', ['sla_alert_webhook_url', 'sla_alert_webhook_method']);
 
     if (settingsErr) {
-      console.error('[sla-alert-forward] DB error reading settings:', settingsErr.message);
+      log.error('DB error reading settings', { error: settingsErr.message });
       return jsonResponse(req, { error: 'Internal server error' }, 500);
     }
 
@@ -116,13 +119,13 @@ Deno.serve(async (req) => {
       const text = await res.text().catch(() => '');
       return jsonResponse(req, { forwarded: ok, status: res.status, response: text.slice(0, 500) }, ok ? 200 : 502);
     } catch (err) {
-      console.error('[sla-alert-forward] fetch failed', err instanceof Error ? err.message : String(err));
+      log.error('fetch failed', { error: err instanceof Error ? err.message : String(err) });
       return jsonResponse(req, { forwarded: false, reason: 'fetch_failed', error: 'Network error forwarding alert' }, 502);
     } finally {
       clearTimeout(timer);
     }
   } catch (err) {
-    console.error('[sla-alert-forward]', err instanceof Error ? err.message : String(err));
+    log.error('unhandled error', { error: err instanceof Error ? err.message : String(err) });
     return jsonResponse(req, { error: 'Internal server error' }, 500);
   }
 });

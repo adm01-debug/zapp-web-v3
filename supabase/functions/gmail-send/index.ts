@@ -16,6 +16,8 @@ import { createZappAdminClient } from '../_shared/db-client.ts';
 import { fetchWithRetry } from '../_shared/retry-with-backoff.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+const log = getLogger('gmail-send');
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
 Deno.serve(async (req) => {
@@ -131,7 +133,7 @@ Deno.serve(async (req) => {
       if (!sendRes.ok) {
         let errBody = '';
         try { errBody = await sendRes.text(); } catch { /* ignore */ }
-        console.error('[gmail-send] send HTTP error', sendRes.status, errBody.slice(0, 200));
+        log.error('send HTTP error', { status: sendRes.status, body: errBody.slice(0, 200) });
         return json({ error: 'Failed to send message' }, sendRes.status >= 500 ? 502 : 400);
       }
 
@@ -139,7 +141,7 @@ Deno.serve(async (req) => {
       try {
         sendData = await sendRes.json();
       } catch {
-        console.error('[gmail-send] failed to parse send response');
+        log.error('failed to parse send response');
         return json({ error: 'Failed to send message' }, 502);
       }
 
@@ -148,7 +150,7 @@ Deno.serve(async (req) => {
       }
       const sendDataObj = sendData as Record<string, unknown>;
       if (sendDataObj.error) {
-        console.error('[gmail-send] send message error', sendDataObj.error);
+        log.error('send message error', { detail: sendDataObj.error });
         return json({ error: 'Failed to send message' }, 400);
       }
 
@@ -171,7 +173,7 @@ Deno.serve(async (req) => {
           open_count:        0,
           click_count:       0,
         }, { onConflict: 'tracking_id' });
-        if (trackUpsertErr) console.error('[gmail-send] tracking record upsert failed (best-effort)', trackUpsertErr.message);
+        if (trackUpsertErr) log.error('tracking record upsert failed (best-effort)', { detail: trackUpsertErr.message });
       }
 
       // Persiste mensagem enviada no Supabase
@@ -198,7 +200,7 @@ Deno.serve(async (req) => {
               is_sent:       true,
               internal_date: new Date().toISOString(),
             }, { onConflict: 'account_id,message_id' });
-            if (msgUpsertErr) console.warn('[gmail-send] sent message upsert failed', msgUpsertErr.message);
+            if (msgUpsertErr) log.warn('sent message upsert failed', { detail: msgUpsertErr.message });
           }
         }
       }
@@ -236,7 +238,7 @@ Deno.serve(async (req) => {
         });
         if (!gmailRes.ok) { failures.push(msgId); continue; }
         const { error: readUpdateErr } = await supabase.from('gmail_messages').update({ is_read: read }).eq('message_id', msgId).eq('account_id', accountId);
-        if (readUpdateErr) console.warn('[gmail-send] markRead db update failed', { msgId, error: readUpdateErr.message });
+        if (readUpdateErr) log.warn('markRead db update failed', { msgId, error: readUpdateErr.message });
       }
 
       return json({ success: true, ...(failures.length ? { failed: failures } : {}) });
@@ -261,12 +263,12 @@ Deno.serve(async (req) => {
         } catch {
           errorMsg = '';
         }
-        console.error('[gmail-send] trash failed', errorMsg);
+        log.error('trash failed', { detail: errorMsg });
         return json({ error: 'Failed to trash message in Gmail' }, 502);
       }
 
       const { error: trashDelErr } = await supabase.from('gmail_messages').delete().eq('message_id', messageId).eq('account_id', accountId);
-      if (trashDelErr) console.warn('[gmail-send] trash db delete failed', trashDelErr.message);
+      if (trashDelErr) log.warn('trash db delete failed', { detail: trashDelErr.message });
       return json({ success: true });
     }
 
@@ -296,7 +298,7 @@ Deno.serve(async (req) => {
 
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
-        console.error(`[gmail-send] modify labels HTTP ${res.status}`, errText.slice(0, 200));
+        log.error(`modify labels HTTP ${res.status}`, { body: errText.slice(0, 200) });
         return json({ error: `Gmail API error: ${res.status}` }, res.status >= 500 ? 502 : res.status);
       }
 
@@ -304,7 +306,7 @@ Deno.serve(async (req) => {
       try {
         data = await res.json();
       } catch {
-        console.error('[gmail-send] failed to parse modify labels response');
+        log.error('failed to parse modify labels response');
         return json({ error: 'Failed to modify labels' }, 400);
       }
 
@@ -314,7 +316,7 @@ Deno.serve(async (req) => {
       const dataObj = data as Record<string, unknown>;
       if (dataObj.error) {
         const errorMsg = typeof dataObj.error === 'string' ? dataObj.error : JSON.stringify(dataObj.error);
-        console.error('[gmail-send] modify labels error', errorMsg);
+        log.error('modify labels error', { detail: errorMsg });
         return json({ error: 'Failed to modify labels' }, 400);
       }
       const labelIds = Array.isArray(dataObj.labelIds) ? dataObj.labelIds : [];
@@ -367,7 +369,7 @@ Deno.serve(async (req) => {
 
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
-        console.error(`[gmail-send] save draft HTTP ${res.status}`, errText.slice(0, 200));
+        log.error(`save draft HTTP ${res.status}`, { body: errText.slice(0, 200) });
         return json({ error: `Gmail API error: ${res.status}` }, res.status >= 500 ? 502 : res.status);
       }
 
@@ -375,7 +377,7 @@ Deno.serve(async (req) => {
       try {
         data = await res.json();
       } catch {
-        console.error('[gmail-send] failed to parse save draft response');
+        log.error('failed to parse save draft response');
         return json({ error: 'Failed to save draft' }, 400);
       }
 
@@ -384,7 +386,7 @@ Deno.serve(async (req) => {
       }
       const dataObj = data as Record<string, unknown>;
       if (dataObj.error) {
-        console.error('[gmail-send] save draft error', dataObj.error);
+        log.error('save draft error', { detail: dataObj.error });
         return json({ error: 'Failed to save draft' }, 400);
       }
 
@@ -415,7 +417,7 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    console.error('[gmail-send]', errorMsg);
+    log.error('unhandled exception', { detail: errorMsg });
     return json({ error: 'Internal server error' }, 500);
   }
 });
@@ -440,11 +442,11 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
   const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
   if (!clientId || typeof clientId !== 'string' || clientId.length === 0) {
-    console.error('[gmail-send] GOOGLE_CLIENT_ID not configured');
+    log.error('GOOGLE_CLIENT_ID not configured');
     return null;
   }
   if (!clientSecret || typeof clientSecret !== 'string' || clientSecret.length === 0) {
-    console.error('[gmail-send] GOOGLE_CLIENT_SECRET not configured');
+    log.error('GOOGLE_CLIENT_SECRET not configured');
     return null;
   }
 
@@ -464,7 +466,7 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
       label: 'Gmail',
     });
   } catch (fetchErr) {
-    console.error('[gmail-send] token refresh fetch failed', fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+    log.error('token refresh fetch failed', { detail: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
     return null;
   }
 
@@ -472,7 +474,7 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   try {
     tokens = await tokenRes.json();
   } catch {
-    console.error('[gmail-send] failed to parse token response');
+    log.error('failed to parse token response');
     return null;
   }
 
@@ -485,10 +487,10 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
     const errorMsg = typeof tokensObj.error === 'string' ? tokensObj.error : JSON.stringify(tokensObj.error);
     const PERMANENT_ERRORS = ['invalid_grant', 'token_revoked'];
     const isPermanent = typeof tokensObj.error === 'string' && PERMANENT_ERRORS.includes(tokensObj.error);
-    console.error(`[gmail-send] token refresh error: ${errorMsg} (permanent=${isPermanent})`);
+    log.error(`token refresh error: ${errorMsg} (permanent=${isPermanent})`);
     if (isPermanent) {
       const { error: deactivateErr } = await supabase.from('gmail_accounts').update({ is_active: false }).eq('id', accountId);
-      if (deactivateErr) console.warn('[gmail-send] deactivate account failed', deactivateErr.message);
+      if (deactivateErr) log.warn('deactivate account failed', { detail: deactivateErr.message });
     }
     return null;
   }
@@ -496,13 +498,13 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   const newAccessToken = typeof tokensObj.access_token === 'string' ? tokensObj.access_token : '';
   const expiresIn = typeof tokensObj.expires_in === 'number' ? tokensObj.expires_in : 3600;
   if (!newAccessToken) {
-    console.error('[gmail-send] no access_token in refresh response');
+    log.error('no access_token in refresh response');
     return null;
   }
 
   const newExpiry = new Date(Date.now() + expiresIn * 1000).toISOString();
   const { error: tokenUpdateErr } = await supabase.from('gmail_accounts').update({ access_token: newAccessToken, token_expiry: newExpiry }).eq('id', accountId);
-  if (tokenUpdateErr) console.warn('[gmail-send] token persist failed', tokenUpdateErr.message);
+  if (tokenUpdateErr) log.warn('token persist failed', { detail: tokenUpdateErr.message });
   return newAccessToken;
 }
 
@@ -563,13 +565,13 @@ async function rewriteLinksForTracking(
         click_count:   0,
       }, { onConflict: 'link_id' });
       if (linkUpsertErr) {
-        console.error('[gmail-send] link tracking upsert failed (best-effort — links mantidos originais)', linkUpsertErr.message);
+        log.error('link tracking upsert failed (best-effort — links mantidos originais)', { detail: linkUpsertErr.message });
         return bodyHtml;
       }
     }
   } catch (err) {
-    console.error('[gmail-send] link tracking loop error (best-effort — links mantidos originais)',
-      err instanceof Error ? err.message : String(err));
+    log.error('link tracking loop error (best-effort — links mantidos originais)',
+      { detail: err instanceof Error ? err.message : String(err) });
     return bodyHtml;
   }
 

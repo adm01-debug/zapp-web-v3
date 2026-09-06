@@ -5,6 +5,9 @@ import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseRequestOrReject, buildContractErrorBody } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { evolutionClient } from '../_shared/providers/evolution/index.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('webhook-diagnostic');
 
 
 
@@ -113,7 +116,7 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify(results), { headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } });
   } catch (err) {
-    console.error('[webhook-diagnostic] error:', err instanceof Error ? err.message : String(err));
+    log.error('[webhook-diagnostic] error:', err instanceof Error ? err.message : String(err));
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' } });
   }
 });

@@ -17,7 +17,7 @@ export default defineConfig({
       VITE_SUPABASE_URL: 'http://localhost:54321',
       VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/integration/**/*.{test,spec}.{ts,tsx}'],
     // CONVENÇÃO DE DIRETÓRIOS (leia antes de criar novos test files):
     //   src/features/inbox/components/chat/__tests__/  → coberto por `bun run test:chat`
     //     Use para: componentes de chat E hooks de chat (useMention*, useChatInput*, etc.)

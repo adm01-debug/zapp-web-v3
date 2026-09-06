@@ -9,6 +9,9 @@ import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { evolutionClient } from '../_shared/providers/evolution/index.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('nps-scheduler');
 
 const COOLDOWN_DAYS = 30;
 const RESOLVED_AGE_DAYS = 3;
@@ -51,7 +54,7 @@ Deno.serve(async (req) => {
     .limit(MAX_PER_RUN * 4);
 
   if (candErr) {
-    console.error('[nps-scheduler] Failed to fetch candidates', candErr.message);
+    log.error('Failed to fetch candidates', { error: candErr.message });
     return json(req, { error: 'Failed to fetch candidates' }, 500);
   }
   if (!candidates || candidates.length === 0) {
@@ -67,7 +70,7 @@ Deno.serve(async (req) => {
     .gte('sent_at', cutoffCooldown);
 
   if (inviteErr) {
-    console.error('[nps-scheduler] Failed to fetch recent invites', inviteErr.message);
+    log.error('Failed to fetch recent invites', { error: inviteErr.message });
     return json(req, { error: 'Failed to check invite history' }, 500);
   }
 
@@ -108,7 +111,7 @@ Deno.serve(async (req) => {
             error_message: txt.slice(0, 500),
             error_code: 'NPS_INVITE_FAILED',
           });
-          if (failedMsgErr) console.warn('[nps-scheduler] failed_messages insert failed:', failedMsgErr.message);
+          if (failedMsgErr) log.warn('failed_messages insert failed', { error: failedMsgErr.message });
           failed++;
           continue;
         }
@@ -119,12 +122,12 @@ Deno.serve(async (req) => {
         channel: 'whatsapp',
         sent_at: new Date().toISOString(),
       });
-      if (inviteErr) console.warn('[nps-scheduler] nps_invitations insert failed (message was sent):', inviteErr.message);
+      if (inviteErr) log.warn('nps_invitations insert failed (message was sent)', { error: inviteErr.message });
       sent++;
     } catch (e) {
       failed++;
       const msg = e instanceof Error ? e.message : String(e);
-      console.error('[nps-scheduler] Exception sending to', contact.id, msg);
+      log.error('Exception sending to contact', { contact_id: contact.id, error: msg });
       const { error: exceptionMsgErr } = await supabase.from('failed_messages').insert({
         instance_name: instanceName,
         remote_jid: `${contact.phone}@s.whatsapp.net`,
@@ -132,7 +135,7 @@ Deno.serve(async (req) => {
         error_message: msg.slice(0, 500),
         error_code: 'NPS_INVITE_EXCEPTION',
       });
-      if (exceptionMsgErr) console.warn('[nps-scheduler] failed_messages insert (exception) failed:', exceptionMsgErr.message);
+      if (exceptionMsgErr) log.warn('failed_messages insert (exception) failed', { error: exceptionMsgErr.message });
     }
   }
 

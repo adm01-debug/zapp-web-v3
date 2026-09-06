@@ -1,0 +1,45 @@
+{
+  "snapshot_at": "2026-09-06T00:30:00Z",
+  "session": "https://claude.ai/code/session_01L31oCwaoHggWFgGE8u4vAS",
+  "wpp2": {
+    "state": "open",
+    "isHealthy": true,
+    "number": "551146375517",
+    "profile": "Promo Brindes",
+    "ownerJid": "551146375517@s.whatsapp.net",
+    "disconnectionReasonCode": 401,
+    "disconnectionAt": "2026-09-03T18:05:16.441Z",
+    "counts": {
+      "messages": 295912,
+      "chats": 6402,
+      "contacts": 8140
+    },
+    "evolution_version": "2.x",
+    "worker_version": "4.2.1"
+  },
+  "evolution_messages_wpp2_partition": {
+    "total": 322670,
+    "msgs_24h": 34,
+    "last_msg": "2026-09-05T19:18:39.000Z"
+  },
+  "consumer_stats_latest": {
+    "collected_at": "2026-09-06T00:28:36.000Z",
+    "replicas_active": 2,
+    "replica_ids": ["c0883c43d102", "ab1062974c76"],
+    "ok": 21460,
+    "retry": 6,
+    "drop": 0,
+    "err": 0,
+    "retry_by": {"5xx:500": 1, "5xx:502": 2},
+    "note": "colunas instance/ok_count/retry_count/drop_count/filas_ok = NULL — aguardando merge PR#113"
+  },
+  "watchdogs": {
+    "104_wpp2_disconnection_watchdog": {"active": false, "schedule": "7,17,27,37,47,57 6-23 * * *"},
+    "120_wpp2_session_expiry_watchdog": {"active": false, "schedule": "3,18,33,48 * * * *"},
+    "note": "REATIVADOS nesta sessão — ver E021-watchdog-reactivation.md"
+  },
+  "integrations": {
+    "webhook": {"enabled": false, "url": "https://supabase.atomicabr.com.br/functions/v1/evolution-webhook"},
+    "rabbitmq": "via stack 113 consumer — webhook direto permanentemente desativado (A13)"
+  }
+}

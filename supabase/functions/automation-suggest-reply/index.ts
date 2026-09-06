@@ -6,6 +6,9 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 import { isValidUUID } from "../_shared/validation.ts";
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('automation-suggest-reply');
 
 const MAX_MESSAGE_CONTENT_LEN = 2_000;
 const MAX_CONTACT_NAME_LEN = 200;
@@ -77,7 +80,7 @@ async function fetchKnowledgeContext(
       max_results: 4,
     });
     if (error) {
-      console.warn("[automation-suggest-reply] KB search error:", error.message);
+      log.warn('KB search error', { error: error.message });
       return { snippet: "", sources: [] };
     }
     const hitsArray = Array.isArray(data) ? data : [];
@@ -99,7 +102,7 @@ async function fetchKnowledgeContext(
       .join("\n---\n");
     return { snippet, sources: hits.map((h) => h.title) };
   } catch (e) {
-    console.warn("[automation-suggest-reply] KB fetch failed:", e);
+    log.warn('KB fetch failed', { error: e instanceof Error ? e.message : String(e) });
     return { snippet: "", sources: [] };
   }
 }
@@ -118,12 +121,12 @@ async function fetchExternalTags(): Promise<ExtTag[]> {
       .select("id, name, color, description")
       .limit(60);
     if (error) {
-      console.warn("[automation-suggest-reply] tags fetch error:", error.message);
+      log.warn('tags fetch error', { error: error.message });
       return [];
     }
     return (data ?? []) as ExtTag[];
   } catch (e) {
-    console.warn("[automation-suggest-reply] tags fetch failed:", e);
+    log.warn('tags fetch failed', { error: e instanceof Error ? e.message : String(e) });
     return [];
   }
 }
@@ -210,7 +213,7 @@ async function callAi(
           : null;
       return { reply, recommended_tag: tag };
     } catch (e) {
-      console.warn("[automation-suggest-reply] tool args parse failed", e);
+      log.warn('tool args parse failed', { error: e instanceof Error ? e.message : String(e) });
     }
   }
   // Fallback: usa o conteúdo direto
@@ -395,7 +398,7 @@ Gere a melhor próxima resposta do atendente e recomende a tag mais adequada.`;
         kb_sources: kbSources,
       })
       .eq("id", executionId);
-    if (updateExecErr) console.warn("[automation-suggest-reply] Failed to update execution:", updateExecErr.message);
+    if (updateExecErr) log.warn('Failed to update execution', { error: updateExecErr.message });
 
     return new Response(
       JSON.stringify({
@@ -406,7 +409,7 @@ Gere a melhor próxima resposta do atendente e recomende a tag mais adequada.`;
       { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } },
     );
   } catch (err) {
-    console.error("automation-suggest-reply error:", err);
+    log.error('erro fatal', { error: err instanceof Error ? err.message : String(err) });
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } },

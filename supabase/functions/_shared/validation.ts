@@ -221,9 +221,9 @@ export class Logger {
       ...(safeCtx ?? {}),
     };
     const serialized = redactSecrets(JSON.stringify(entry));
-    if (level === 'error') console.error(serialized);
-    else if (level === 'warn') console.warn(serialized);
-    else console.log(serialized);
+    if (level === 'error') log.error(serialized);
+    else if (level === 'warn') log.warn(serialized);
+    else log.info(serialized);
   }
 
   debug(msg: string, ctx?: Record<string, unknown>) { this.log('debug', msg, ctx); }
@@ -696,7 +696,7 @@ export async function authorizeRoles(
       p_status: 'denied',
       p_details: { user_id: user.id, required_roles: requiredRoles, current_roles: userRoles }
     });
-    if (secEventErr) console.warn(`[validation] log_security_event failed: ${secEventErr.message}`);
+    if (secEventErr) log.warn(`[validation] log_security_event failed: ${secEventErr.message}`);
     
     throw { message: "Acesso negado: permissão insuficiente", status: 403 };
   }
@@ -716,6 +716,9 @@ export async function authorizeRoles(
 /** Re-exported module members. */
 export { z } from './schemas.ts';
 import { z as _z } from './schemas.ts';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('validation');
 
 /** Common Schemas constant. */
 export const CommonSchemas = {

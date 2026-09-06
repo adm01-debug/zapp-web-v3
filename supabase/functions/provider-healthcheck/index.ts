@@ -9,6 +9,9 @@ import { checkRateLimit, readJsonBodyOrEmpty } from "../_shared/validation.ts";
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('provider-healthcheck');
 async function ping(baseUrl: string, authToken: string | null, providerType: string) {
   const url = baseUrl.replace(/\/$/, "") + (
     providerType === "evolution" ? "/" :
@@ -121,7 +124,7 @@ Deno.serve(async (req) => {
   const errors = settled
     .filter((r): r is PromiseRejectedResult => r.status === "rejected")
     .map(r => r.reason instanceof Error ? r.reason.message : String(r.reason));
-  if (errors.length > 0) console.error('[provider-healthcheck] rejected tasks:', errors);
+  if (errors.length > 0) log.error('[provider-healthcheck] rejected tasks:', errors);
 
   return new Response(JSON.stringify({
     checked: results.length,

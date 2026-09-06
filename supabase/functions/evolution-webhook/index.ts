@@ -6,6 +6,7 @@
 //   Evolution → RabbitMQ → evolution-rabbit-consumer → POST nas rotas internas desta função
 //   (/messages-upsert, /contacts-update, …) → schema evo. Não remover do deploy.
 import { createZappAdminClient } from "../_shared/db-client.ts";
+import { makeLogger } from "../_shared/logger.ts";
 import { getCorsHeaders, handleCors, redactSecrets } from "../_shared/validation.ts";
 import { initSentry, captureException } from "../_shared/sentry.ts";
 import { parseOrReject, buildContractErrorBody, respondWithContract, type ParseOk } from "../_shared/contract-kit.ts";
@@ -64,6 +65,8 @@ const validateWebhook = WEBHOOK_SECRETS.length > 0
 let __lastHmacSuccessLogAt = 0;
 const __HMAC_LOG_INTERVAL_MS = 60_000;
 
+const log = makeLogger({ service: 'evolution-webhook' });
+
 // [PATCH 2026-07-04 registry-guard] So processa eventos de instancias cadastradas em
 // instance_registry (existencia, nao is_active - evita perda de dados de instancia nova
 // ainda nao ativada). Cache em memoria TTL 60s. Fail-open (null) em erro de lookup para
@@ -93,6 +96,7 @@ Deno.serve(async (req) => {
 
   const requestId = generateRequestId();
   const startedAt = Date.now();
+  const reqLog = log.child({ requestId });
   // [E7 2026-08-06] Proveniência POR REQUEST — ver nota no escopo module-level.
   let webhookSource: 'consumer' | 'evolution-native' = 'evolution-native';
   const baseHeaders = { 'Content-Type': 'application/json', 'x-request-id': requestId };
@@ -157,7 +161,7 @@ Deno.serve(async (req) => {
       const now = Date.now();
       if (now - __lastHmacSuccessLogAt >= __HMAC_LOG_INTERVAL_MS) {
         __lastHmacSuccessLogAt = now;
-        console.log(`[webhook][${requestId}] HMAC OK (x-webhook-signature) source=consumer — rate-limited log 1/60s`);
+        reqLog.info('HMAC OK', { action: 'hmac_success', source: 'consumer', note: 'rate-limited 1/60s' });
       }
     }
     rawBody = result.payload ?? '';
@@ -399,7 +403,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  console.log(`[webhook][${requestId}] received raw=${payload.event} norm=${event} instance=${instance}`);
+  reqLog.info('webhook received', { action: 'event_received', raw: payload.event, event, instance });
 
   try {
     if (event === 'connection.update') await handleConnectionUpdate(supabase, instance, baseData);
@@ -435,7 +439,7 @@ Deno.serve(async (req) => {
 
     if (event === 'messages.upsert') {
       const entries = toEventRecords(data, ['messages']);
-      console.log(`[webhook][${requestId}][msg.upsert] entries=${entries.length} instance=${instance}`);
+      reqLog.info('messages.upsert', { action: 'msg_upsert', entries: entries.length, instance });
       for (const entry of entries) {
         // Per-entry try/catch: a batch can carry several messages, and Baileys/Evolution
         // sometimes ships one malformed entry alongside otherwise-healthy ones. Without

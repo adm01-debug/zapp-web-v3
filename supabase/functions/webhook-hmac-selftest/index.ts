@@ -22,6 +22,7 @@
 // `resolveValidator()` — assim, se a API mudar (renomear, virar default export,
 // virar classe, etc.) o deploy continua compilando e o self-test cai em
 // fallbacks bem definidos em vez de quebrar.
+import { getLogger } from '../_shared/logger.ts';
 import * as hmacModule from '../_shared/hmac-validation.ts';
 import { requireServiceRoleOrCron } from '../_shared/auth.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
@@ -175,6 +176,8 @@ function resolveValidator(secret: string, strict = false): ValidatorFn {
  * Origin-aware: retorna o header específico para origens na allowlist ou `*` como fallback.
  */
 
+const log = getLogger('webhook-hmac-selftest');
+
 const DEFAULT_TOLERANCE_SECONDS = 300; // 5 minutos
 const MAX_TOLERANCE_SECONDS = 3600;    // 1 hora (cap defensivo)
 
@@ -277,9 +280,9 @@ function structuredLog(event: {
   meta?: Record<string, unknown>;
 }) {
   const line = JSON.stringify({ ts: new Date().toISOString(), ...event });
-  if (event.level === 'error') console.error(line);
-  else if (event.level === 'warn') console.warn(line);
-  else console.log(line);
+  if (event.level === 'error') log.error(line);
+  else if (event.level === 'warn') log.warn(line);
+  else log.info(line);
 }
 
 Deno.serve(async (req) => {

@@ -16,6 +16,49 @@ import { createZappAdminClient } from "../_shared/db-client.ts";
  * Record<string, unknown>).
  */
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB — OOM guard (F5b)
+
+// Magic bytes for formats accepted in whatsapp-media / audio-messages buckets.
+// RIFF containers (WEBP, WAV) need both the RIFF header and the 4-byte subtype at offset 8.
+const MAGIC_SIGNATURES: Array<{
+  mime: string;
+  magic: number[];
+  offset?: number;
+  riffSubtype?: number[];
+}> = [
+  { mime: 'image/jpeg',      magic: [0xFF, 0xD8, 0xFF] },
+  { mime: 'image/png',       magic: [0x89, 0x50, 0x4E, 0x47] },
+  { mime: 'image/gif',       magic: [0x47, 0x49, 0x46] },
+  { mime: 'image/webp',      magic: [0x52, 0x49, 0x46, 0x46], riffSubtype: [0x57, 0x45, 0x42, 0x50] },
+  { mime: 'audio/ogg',       magic: [0x4F, 0x67, 0x67, 0x53] },
+  { mime: 'audio/mpeg',      magic: [0x49, 0x44, 0x33] },
+  { mime: 'audio/mpeg',      magic: [0xFF, 0xFB] },
+  { mime: 'audio/mpeg',      magic: [0xFF, 0xF3] },
+  { mime: 'audio/mpeg',      magic: [0xFF, 0xF2] },
+  { mime: 'audio/wav',       magic: [0x52, 0x49, 0x46, 0x46], riffSubtype: [0x57, 0x41, 0x56, 0x45] },
+  { mime: 'video/mp4',       magic: [0x66, 0x74, 0x79, 0x70], offset: 4 },
+  { mime: 'video/webm',      magic: [0x1A, 0x45, 0xDF, 0xA3] },
+  { mime: 'application/pdf', magic: [0x25, 0x50, 0x44, 0x46] },
+];
+
+function detectMimeMagic(buf: ArrayBuffer): string | null {
+  const view = new Uint8Array(buf, 0, Math.min(16, buf.byteLength));
+  for (const sig of MAGIC_SIGNATURES) {
+    const off = sig.offset ?? 0;
+    if (off + sig.magic.length > view.length) continue;
+    if (!sig.magic.every((b, i) => view[off + i] === b)) continue;
+    if (sig.riffSubtype) {
+      if (8 + sig.riffSubtype.length > view.length) continue;
+      if (!sig.riffSubtype.every((b, i) => view[8 + i] === b)) continue;
+    }
+    return sig.mime;
+  }
+  return null;
+}
+
+// Normalize MIME aliases that are equivalent for comparison purposes.
+function normalizeMime(m: string): string {
+  return m === 'audio/x-wav' ? 'audio/wav' : m;
+}
 const ALLOWED_BUCKETS = new Set(["whatsapp-media", "audio-messages"]);
 
 // Splits on '/', decodes percent-encoding, then drops empty / dot / dotdot segments.
@@ -111,14 +154,36 @@ Deno.serve(async (req) => {
       bucket,
     });
 
-    // 1. Hash + VirusTotal lookup (preventive, by hash to avoid full re-upload)
+    // 1. Magic bytes: detect real MIME type to catch MIME spoofing before VirusTotal.
+    // Read buffer once and reuse for SHA-256 hash below.
+    const buf = await file.arrayBuffer();
+    const detectedMime = detectMimeMagic(buf);
+    if (detectedMime !== null && normalizeMime(detectedMime) !== normalizeMime(file.type)) {
+      log.warn("Magic bytes mismatch — possível MIME spoofing bloqueado", {
+        declared: file.type,
+        detected: detectedMime,
+        fileName: file.name,
+      });
+      return securityErrorResponse(
+        {
+          code: "INVALID_FILE_TYPE",
+          message: "Tipo do arquivo não corresponde ao conteúdo real.",
+          verdict: "blocked",
+          scanId: null,
+          details: { declared: file.type, detected: detectedMime },
+        },
+        422,
+        req,
+        'secure-upload',
+      );
+    }
+
+    // 2. Hash + VirusTotal lookup (preventive, by hash to avoid full re-upload)
     const vtApiKey = Deno.env.get("VIRUSTOTAL_API_KEY");
     let scanId: string | null = null;
 
     if (vtApiKey && file.size > 0) {
       try {
-        // Stream-hash the file (sha256) to query VT without sending bytes twice.
-        const buf = await file.arrayBuffer();
         const hashBuf = await crypto.subtle.digest("SHA-256", buf);
         const sha256 = Array.from(new Uint8Array(hashBuf))
           .map((b) => b.toString(16).padStart(2, "0"))
