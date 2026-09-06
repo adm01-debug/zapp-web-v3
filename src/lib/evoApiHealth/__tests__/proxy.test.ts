@@ -160,8 +160,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   mockFetch.mockReset();
   mockGetSession.mockReset();
-  // Reset the cached session between tests by accessing internal state
-  (evoApi as unknown as { cachedSession: null }).cachedSession = null;
 });
 
 afterEach(() => {
@@ -201,7 +199,11 @@ describe('call() — happy path', () => {
     expect(result.data).toBeNull();
   });
 
-  it.skip('sends schema: evo_api in the request body', async () => {});
+  it.skip('sends schema: evo_api in the request body', async () => {
+    // SUPERSEDED: proxy consolidado (2026-08) — não usa mais edge function HTTP.
+    // O schema 'zapp' fica configurado no cliente Supabase (db.schema); 'evo_api'
+    // nunca foi campo do corpo da requisição na arquitetura atual.
+  });
 });
 
 // ── 2. Transient schema errors → retry ────────────────────────────────────────
@@ -351,6 +353,9 @@ describe('call() — catch block retries', () => {
 });
 
 // ── 6. getAuthHeader() — caching ──────────────────────────────────────────────
+// SKIP JUSTIFICATIVA: proxy.ts foi refatorado para usar o supabase client
+// diretamente (sem fetch HTTP). O conceito de getAuthHeader()/cachedSession
+// foi eliminado — a autenticação é gerenciada pelo SDK do Supabase.
 
 describe.skip('getAuthHeader() — session token caching', () => {
   it('uses Bearer token from session and caches it', async () => {
@@ -494,6 +499,9 @@ describe('update() wrapper', () => {
 });
 
 // ── 8. Request shape ───────────────────────────────────────────────────────────
+// SKIP JUSTIFICATIVA: mesma razão de 6 — proxy.ts não usa fetch HTTP nem
+// o edge function external-db-proxy. Testes de headers HTTP deixaram de
+// ser aplicáveis após a consolidação no Supabase client.
 
 describe.skip('call() — request headers', () => {
   it('sends apikey, Authorization, Content-Type, and correlation header', async () => {

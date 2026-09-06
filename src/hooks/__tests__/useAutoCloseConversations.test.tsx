@@ -12,10 +12,6 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 vi.mock('@/hooks/use-toast', () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
-vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
   useToast: () => ({ toast: vi.fn() }),
 }));
@@ -48,12 +44,10 @@ describe('useAutoCloseConversations', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: mockConfig, error: null }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: mockConfig, error: null }),
         }),
       }),
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     });
 
     const { result } = renderHook(() => useAutoCloseConversations(), { wrapper: createWrapper() });
@@ -69,7 +63,7 @@ describe('useAutoCloseConversations', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
         }),
       }),
     });
@@ -87,7 +81,7 @@ describe('useAutoCloseConversations', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockReturnValue(new Promise(() => {})),
+          maybeSingle: vi.fn().mockReturnValue(new Promise(() => {})),
         }),
       }),
     });
@@ -100,15 +94,13 @@ describe('useAutoCloseConversations', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         limit: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
+          maybeSingle: vi.fn().mockResolvedValue({
             data: { ...mockConfig, inactivity_hours: 0 },
             error: null,
           }),
         }),
       }),
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     });
 
     const { result } = renderHook(() => useAutoCloseConversations(), { wrapper: createWrapper() });
@@ -119,5 +111,59 @@ describe('useAutoCloseConversations', () => {
 
     // Config with 0 hours should still be returned (validation at UI level)
     expect(result.current.config?.inactivity_hours).toBe(0);
+  });
+
+  it('updateConfig.mutate() chama upsert com campos corretos e reporta sucesso', async () => {
+    const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: mockConfig, error: null }),
+        }),
+      }),
+      upsert: mockUpsert,
+    });
+
+    const { result } = renderHook(() => useAutoCloseConversations(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    result.current.updateConfig.mutate({ is_enabled: true });
+
+    await waitFor(() => {
+      expect(result.current.updateConfig.isSuccess).toBe(true);
+    });
+
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({ is_enabled: true, id: 'config-1', inactivity_hours: 24 }),
+      { onConflict: 'id' }
+    );
+  });
+
+  it('updateConfig.mutate() com erro de DB define isError=true', async () => {
+    const dbError = new Error('upsert failed');
+    const mockUpsert = vi.fn().mockResolvedValue({ error: dbError });
+    mockFrom.mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: mockConfig, error: null }),
+        }),
+      }),
+      upsert: mockUpsert,
+    });
+
+    const { result } = renderHook(() => useAutoCloseConversations(), { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    result.current.updateConfig.mutate({ is_enabled: false });
+
+    await waitFor(() => {
+      expect(result.current.updateConfig.isError).toBe(true);
+    });
   });
 });

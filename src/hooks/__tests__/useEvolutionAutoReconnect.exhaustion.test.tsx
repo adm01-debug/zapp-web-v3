@@ -25,6 +25,7 @@ const {
   getInstanceStatus: vi.fn(async () => ({ instance: { state: 'close' } })),
   restartInstance: vi.fn(async () => ({})),
   emit: vi.fn(),
+  mockQueryClient: { invalidateQueries: vi.fn() },
   capturedPgCallback: { current: null as ((payload: unknown) => void) | null },
 }));
 
@@ -44,13 +45,20 @@ vi.mock('@/hooks/useEvolutionApi', () => ({
 vi.mock('@/integrations/supabase/client', () => {
   const channel = {
     on: vi.fn((event: string, _filter: unknown, cb: (payload: unknown) => void) => {
+      // Captura o callback do postgres_changes para uso nos testes F-01
       if (event === 'postgres_changes') capturedPgCallback.current = cb;
       return channel;
     }),
     subscribe: vi.fn(() => channel),
     unsubscribe: vi.fn(),
   };
-  return { supabase: { channel: vi.fn(() => channel), removeChannel: vi.fn() } };
+  return {
+    supabase: {
+      channel: vi.fn(() => channel),
+      removeChannel: vi.fn(),
+      functions: { invoke: vi.fn(async () => ({ data: null, error: null })) },
+    },
+  };
 });
 
 vi.mock('@/integrations/supabase/safeClient', () => ({
@@ -68,6 +76,10 @@ vi.mock('@tanstack/react-query', () => {
 
 vi.mock('@/lib/eventBus', () => ({ eventBus: { emit } }));
 
+vi.mock('@/hooks/evolutionAutoReconnectState', () => ({
+  isConclusiveEvolutionDisconnect: vi.fn((s: string) => s === 'close'),
+}));
+
 import { useEvolutionAutoReconnect } from '@/hooks/useEvolutionAutoReconnect';
 
 /** Avanca timers fake drenando toda a cadeia de microtasks em um unico passo. */
@@ -82,6 +94,7 @@ describe('useEvolutionAutoReconnect — latch de esgotamento', () => {
     vi.useFakeTimers();
     logError.mockClear();
     logInfo.mockClear();
+    logWarn.mockClear();
     emit.mockClear();
     connectInstance.mockClear();
     getInstanceStatus.mockClear();
@@ -92,43 +105,74 @@ describe('useEvolutionAutoReconnect — latch de esgotamento', () => {
     vi.useRealTimers();
   });
 
-  it('para de tentar (e loga "Giving up" UMA vez) depois do limite de tentativas', { timeout: 60_000 }, async () => {
-    renderHook(() => useEvolutionAutoReconnect('wpp2'));
+  it(
+    'para de tentar (e loga "Giving up" UMA vez) depois do limite de tentativas',
+    { timeout: 60_000 },
+    async () => {
+      renderHook(() => useEvolutionAutoReconnect('wpp2'));
 
-    // ~22min: backoff cresce 4s→8s→16s→32s→60s (teto) + 5s de execucao por
-    // tentativa. As 20 tentativas levam ~19min; 22min garante margem.
-    await advance(22 * 60_000);
+      // ~22min: backoff cresce 4s→8s→16s→32s→60s (teto) + 5s de execucao por
+      // tentativa. As 20 tentativas levam ~17 min 40 s; 22min garante margem.
+      await advance(22 * 60_000);
 
-    const givingUp = logError.mock.calls.filter((c) => String(c[0]).includes('Giving up on wpp2'));
-    expect(givingUp).toHaveLength(1);
+      const givingUp = logError.mock.calls.filter((c) =>
+        String(c[0]).includes('Giving up on wpp2')
+      );
+      expect(givingUp).toHaveLength(1);
 
-    const exhausted = emit.mock.calls.filter((c) => c[0] === 'connection:reconnect-exhausted');
-    expect(exhausted).toHaveLength(1);
+      const exhausted = emit.mock.calls.filter((c) => c[0] === 'connection:reconnect-exhausted');
+      expect(exhausted).toHaveLength(1);
 
-    // Depois do latch, mais 10min de polling nao podem gerar novas tentativas.
-    const attemptsAfterLatch = connectInstance.mock.calls.length;
-    await advance(10 * 60_000);
-    expect(connectInstance.mock.calls.length).toBe(attemptsAfterLatch);
-  });
+      // Depois do latch, mais 10min de polling nao podem gerar novas tentativas.
+      const attemptsAfterLatch = connectInstance.mock.calls.length;
+      await advance(10 * 60_000);
+      expect(connectInstance.mock.calls.length).toBe(attemptsAfterLatch);
+    }
+  );
 
-  it('rearma o ciclo quando a instancia volta a um estado nao-desconectado', { timeout: 60_000 }, async () => {
-    renderHook(() => useEvolutionAutoReconnect('wpp2'));
-    await advance(22 * 60_000);
-    expect(
-      logError.mock.calls.filter((c) => String(c[0]).includes('Giving up on wpp2'))
-    ).toHaveLength(1);
+  it(
+    'checkStatus continua acionando tentativas apos o backoff timer disparar (regressao B-2)',
+    { timeout: 60_000 },
+    async () => {
+      // Garante que timerRef.current e zerado dentro do callback do setTimeout,
+      // evitando que o guard "isReconnectingRef || reconnectExhaustedRef" (sem
+      // timerRef) bloqueie o checkStatus de re-entrar apos cada backoff disparar.
+      renderHook(() => useEvolutionAutoReconnect('wpp2'));
 
-    // Instancia reconectada por fora (re-pareamento manual / recuperacao).
-    getInstanceStatus.mockImplementation(async () => ({ instance: { state: 'open' } }));
-    await advance(2 * 60_000);
-    expect(logInfo.mock.calls.some((c) => String(c[0]).includes('Reconnect re-armado'))).toBe(true);
+      // Avanca 90s: tempo suficiente para 1 tentativa inicial (checkStatus ~30s)
+      // + backoff inicial (5s) disparar + checkStatus acionar 2a tentativa.
+      await advance(90_000);
+      // Se B-2 regredisse, checkStatus ficaria mudo apos o 1o backoff timer
+      // e connectInstance seria chamado apenas 1x. A sequencia de backoff em 90s:
+      // t=0 (tentativa 1), t=9 (2), t=22 (3), t=43 (4), t=80 (5) → >= 4.
+      expect(connectInstance.mock.calls.length).toBeGreaterThanOrEqual(4);
+    }
+  );
 
-    // Cai de novo: o auto-reconnect precisa voltar a agir.
-    const before = connectInstance.mock.calls.length;
-    getInstanceStatus.mockImplementation(async () => ({ instance: { state: 'close' } }));
-    await advance(2 * 60_000);
-    expect(connectInstance.mock.calls.length).toBeGreaterThan(before);
-  });
+  it(
+    'rearma o ciclo quando a instancia volta a um estado nao-desconectado',
+    { timeout: 60_000 },
+    async () => {
+      renderHook(() => useEvolutionAutoReconnect('wpp2'));
+      await advance(22 * 60_000);
+      expect(
+        logError.mock.calls.filter((c) => String(c[0]).includes('Giving up on wpp2'))
+      ).toHaveLength(1);
+
+      // Instancia reconectada por fora (re-pareamento manual / recuperacao).
+      getInstanceStatus.mockImplementation(async () => ({ instance: { state: 'open' } }));
+      await advance(2 * 60_000);
+      expect(logInfo.mock.calls.some((c) => String(c[0]).includes('Reconnect re-armado'))).toBe(
+        true
+      );
+
+      // Cai de novo: o auto-reconnect precisa voltar a agir.
+      const before = connectInstance.mock.calls.length;
+      getInstanceStatus.mockImplementation(async () => ({ instance: { state: 'close' } }));
+      await advance(2 * 60_000);
+      expect(connectInstance.mock.calls.length).toBeGreaterThan(before);
+    }
+  );
 });
 
 describe('useEvolutionAutoReconnect — regressao timerRef no success path', () => {
@@ -172,7 +216,9 @@ describe('useEvolutionAutoReconnect — regressao timerRef no success path', () 
     // ~20s: checkStatus(t=0) + 1ª tentativa (t=0→5s, backoff 4s) + 2ª tentativa (t=9s→14s) → sucesso
     await advance(20_000);
     expect(connectInstance.mock.calls.length).toBeGreaterThanOrEqual(2);
-    expect(logInfo.mock.calls.some((c) => String(c[0]).includes('Successfully reconnected'))).toBe(true);
+    expect(logInfo.mock.calls.some((c) => String(c[0]).includes('Successfully reconnected'))).toBe(
+      true
+    );
 
     const afterFirstSuccess = connectInstance.mock.calls.length;
 
@@ -239,7 +285,7 @@ describe('useEvolutionAutoReconnect — staleness de geração A→B→A', () =>
     let resolveFirstConnect!: () => void;
     connectInstance.mockImplementationOnce(
       () =>
-        new Promise<Record<string, never>>((resolve) => {
+        new Promise<Record<string, unknown>>((resolve) => {
           resolveFirstConnect = () => resolve({});
         })
     );
@@ -278,9 +324,9 @@ describe('useEvolutionAutoReconnect — staleness de geração A→B→A', () =>
     expect(emit.mock.calls.filter((c) => c[0] === 'connection:recovered')).toHaveLength(0);
 
     // NÃO deve logar "Successfully reconnected" pela op antiga
-    expect(
-      logInfo.mock.calls.some((c) => String(c[0]).includes('Successfully reconnected'))
-    ).toBe(false);
+    expect(logInfo.mock.calls.some((c) => String(c[0]).includes('Successfully reconnected'))).toBe(
+      false
+    );
 
     // isReconnecting deve ser false (resetado pelos switches de instância)
     expect(result.current.isReconnecting).toBe(false);
@@ -302,6 +348,7 @@ describe('useEvolutionAutoReconnect — proteção de circuito', () => {
     vi.useFakeTimers();
     logError.mockClear();
     logInfo.mockClear();
+    logWarn.mockClear();
     emit.mockClear();
     connectInstance.mockClear();
     connectInstance.mockImplementation(async () => ({}));
@@ -342,7 +389,7 @@ describe('useEvolutionAutoReconnect — proteção de circuito', () => {
 
       // O halt é permanente: nenhum novo evento de credential-error fica enfileirado.
       expect(emit.mock.calls.filter((c) => c[0] === 'connection:credential-error')).toHaveLength(1);
-    },
+    }
   );
 
   it('abre o circuit breaker apos CIRCUIT_THRESHOLD falhas consecutivas no checkStatus', async () => {
@@ -358,16 +405,19 @@ describe('useEvolutionAutoReconnect — proteção de circuito', () => {
     // circuitOpenUntilRef = t + CIRCUIT_BASE_MS = 60_000 + 120_000 = 180_000.
     await advance(65_000);
     expect(getInstanceStatus.mock.calls.length).toBe(3);
+    expect(logWarn.mock.calls.some((c) => String(c[0]).includes('Circuit breaker opened'))).toBe(
+      true
+    );
 
     // Dentro da janela de cooldown: intervalo em t=90s bloqueado pelo Guard 2.
     await advance(30_000); // t=95s
     expect(getInstanceStatus.mock.calls.length).toBe(3);
 
     // Após o cooldown (circuito fecha em t=180s):
-    // intervalo em t=180s passa pelo Guard 2 → nova chamada a getInstanceStatus.
-    // Cobre t=120s (bloqueado), t=150s (bloqueado), t=180s (passa).
+    // intervalo em t=180s passa pelo Guard 2 → 4ª chamada a getInstanceStatus.
+    // Cobre t=120s (bloqueado), t=150s (bloqueado), t=180s (passa, Guard > strict).
     await advance(100_000); // t=195s
-    expect(getInstanceStatus.mock.calls.length).toBeGreaterThan(3);
+    expect(getInstanceStatus.mock.calls.length).toBe(4);
   });
 
   it('resetReconnect zera circuitOpenUntilRef e credentialErrorRef — retomada imediata', async () => {

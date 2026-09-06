@@ -1,3 +1,4 @@
+import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts';
 import { createZappAdminClient } from '../_shared/db-client.ts';
 import { getSecret } from '../_shared/mod.ts';
 import { requireUser } from '../_shared/auth.ts';
@@ -14,6 +15,37 @@ const PUBSUB_TOPIC = (() => {
   // Non-fatal: returns undefined if not set; handler will return 503
   return v;
 })();
+
+// Auditoria 22D (item #8, 2026-09-02): verificação do OIDC assinado pelo Google
+// que o Pub/Sub push subscription anexa em `Authorization: Bearer <jwt>` quando
+// "Enable authentication" está ligado na subscription. JWKS do Google, cache em
+// módulo (createRemoteJWKSet resolve lazy + cacheia por processo).
+const GOOGLE_OIDC_JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
+
+async function verifyPubSubOidcToken(authHeader: string | null, expectedAudience: string, expectedServiceAccount: string): Promise<boolean> {
+  // Esquema HTTP é case-insensitive (RFC 7235) e pode vir com espaçamento
+  // extra — match tolerante em vez de exigir "Bearer " literal.
+  const match = authHeader?.match(/^Bearer\s+(\S+)\s*$/i);
+  if (!match) return false;
+  const token = match[1];
+  try {
+    const { payload } = await jose.jwtVerify(token, GOOGLE_OIDC_JWKS, {
+      issuer: ['https://accounts.google.com', 'accounts.google.com'],
+      audience: expectedAudience,
+    });
+    // Review 22D/#1511 (cubic P1 + CodeRabbit): `aud` sozinho não autentica o
+    // chamador — é um valor arbitrário que QUALQUER service account do Google
+    // (de qualquer projeto GCP) pode pedir ao gerar um ID token. Quem prova a
+    // identidade é o claim `email` verificado, comparado contra a service
+    // account exata configurada na push subscription do Pub/Sub.
+    return payload.email === expectedServiceAccount && payload.email_verified === true;
+  } catch (err) {
+    // console.warn (não .error): endpoint é público e sem auth de rede — um
+    // atacante mandando Bearer arbitrário não deve inflar alertas de erro.
+    console.warn('[gmail-webhook] OIDC verification failed', err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}
 
 Deno.serve(async (req) => {
   initSentry('gmail-webhook');
@@ -64,14 +96,33 @@ Deno.serve(async (req) => {
       // push — ingesting arbitrary emailAddress/historyId with zero auth.
       // Whitelisting the one authenticated action closes that bypass.
       if (action !== 'registerWatch') {
-        // F2+vault: read token from vault first (gmail_pubsub_token), env fallback for legacy
-        const expectedToken = await getSecret('gmail_pubsub_token') ?? Deno.env.get('GMAIL_PUBSUB_TOKEN');
-        if (!expectedToken) {
-          return json({ error: 'Webhook authentication not configured' }, 401);
-        }
-        const receivedToken = new URL(req.url).searchParams.get('token');
-        if (!receivedToken || !timingSafeEqual(receivedToken, expectedToken)) {
-          return json({ error: 'Invalid or missing push token' }, 401);
+        // Item #8 da auditoria 22D: quando o audience OIDC está configurado
+        // (subscription Pub/Sub com "Enable authentication" ligado no GCP), ele
+        // vira a ÚNICA fonte de verdade — mais forte que o token em querystring,
+        // que pode vazar em logs de proxy/CDN. Sem o audience configurado ainda
+        // (secret não setado), cai no fallback legado de token — comportamento
+        // idêntico ao de antes desta mudança, zero risco de quebrar produção.
+        // getSecret() já lê o env (GMAIL_PUBSUB_OIDC_AUDIENCE/_SERVICE_ACCOUNT)
+        // antes do vault — sem fallback redundante aqui.
+        const expectedAudience = await getSecret('gmail_pubsub_oidc_audience');
+        const expectedServiceAccount = await getSecret('gmail_pubsub_oidc_service_account');
+
+        if (expectedAudience || expectedServiceAccount) {
+          // Os dois secrets sobem juntos ou não sobem — nunca tratar
+          // configuração parcial como legado (voltaria a aceitar qualquer
+          // identidade Google) nem como OIDC completo.
+          if (!expectedAudience || !expectedServiceAccount) {
+            return json({ error: 'OIDC auth misconfigured — audience and service account must both be set' }, 500);
+          }
+          const oidcOk = await verifyPubSubOidcToken(req.headers.get('authorization'), expectedAudience, expectedServiceAccount);
+          if (!oidcOk) return json({ error: 'Invalid or missing OIDC token' }, 401);
+        } else {
+          // F2+vault: getSecret() lê env (GMAIL_PUBSUB_TOKEN) antes do vault.
+          const expectedToken = await getSecret('gmail_pubsub_token');
+          const receivedToken = new URL(req.url).searchParams.get('token');
+          if (!expectedToken || !receivedToken || !timingSafeEqual(receivedToken, expectedToken)) {
+            return json({ error: 'Unauthorized' }, 401);
+          }
         }
       }
 
@@ -124,11 +175,12 @@ Deno.serve(async (req) => {
         }
 
         const expires = watchData.expiration ? new Date(parseInt(watchData.expiration)).toISOString() : null;
-        await supabase.from('email_watch_history').upsert({
+        const { error: watchHistErr } = await supabase.from('email_watch_history').upsert({
           account_id: accountId, history_id: watchData.historyId ?? null,
           expires_at: expires, watch_registered_at: new Date().toISOString(),
           status: 'active',
         }, { onConflict: 'account_id' });
+        if (watchHistErr) return json({ error: 'Failed to register watch' }, 500);
 
         // Etapa 54 (PLANO-100-CONTRATOS-EDGE): respostas de SUCESSO migram pra
         // respondWithContract — parsed.headers (x-contract-version/deprecated/
@@ -150,6 +202,7 @@ Deno.serve(async (req) => {
 
       const { emailAddress, historyId } = decoded;
       if (!emailAddress || !historyId) return respondWithContract(parsed, { ok: true, skipped: 'missing_fields' }, { status: 200, headers: getCorsHeaders(req) });
+      if (!/^\d{1,20}$/.test(historyId)) return respondWithContract(parsed, { ok: true, skipped: 'invalid_history_id' }, { status: 200, headers: getCorsHeaders(req) });
 
       const { data: account } = await supabase.from('email_accounts').select('id, access_token, refresh_token, token_expires_at').eq('email', emailAddress).maybeSingle();
       if (!account) return respondWithContract(parsed, { ok: true, skipped: 'account_not_found' }, { status: 200, headers: getCorsHeaders(req) });
@@ -162,18 +215,18 @@ Deno.serve(async (req) => {
 
       await processHistory(supabase, token, account.id, startHistoryId);
 
-      await supabase.from('email_watch_history').upsert({
+      const { error: histUpsertErr } = await supabase.from('email_watch_history').upsert({
         account_id: account.id, history_id: historyId,
         status: 'active',
       }, { onConflict: 'account_id' });
+      if (histUpsertErr) console.error('[gmail-webhook] watch history upsert failed:', histUpsertErr.message);
 
       return respondWithContract(parsed, { ok: true }, { status: 200, headers: getCorsHeaders(req) });
     }
 
     // ── GET: status endpoint ────────────────────────────────────────
     if (req.method === 'GET') {
-      const tokenConfigured = !!(await getSecret('gmail_pubsub_token') ?? Deno.env.get('GMAIL_PUBSUB_TOKEN'));
-      return json({ service: 'gmail-webhook', status: 'healthy', token_configured: tokenConfigured });
+      return json({ service: 'gmail-webhook', status: 'healthy' });
     }
 
     return json({ error: 'Method not allowed' }, 405);
@@ -181,7 +234,7 @@ Deno.serve(async (req) => {
     console.error('[gmail-webhook]', err instanceof Error ? (err.stack ?? err.message) : String(err));
     await captureException(err, {
       functionName: 'gmail-webhook',
-      requestUrl: req.url,
+      requestUrl: req.url.split('?')[0],
       metadata: {
         method: req.method,
       },
@@ -234,9 +287,10 @@ async function getValidToken(supabase: ReturnType<typeof createZappAdminClient>,
   const newToken = refreshData.access_token;
   const newExpiry = new Date(Date.now() + refreshData.expires_in * 1000).toISOString();
 
-  await supabase.from('email_accounts').update({
+  const { error: tokenErr } = await supabase.from('email_accounts').update({
     access_token: newToken, token_expires_at: newExpiry,
   }).eq('id', accountId);
+  if (tokenErr) { console.error('[gmail-webhook] token update failed:', tokenErr.message); return null; }
 
   return newToken;
 }
@@ -393,7 +447,7 @@ async function fetchAndPersistMessage(
   const hasAttach    = !!(msg.payload?.parts ?? []).some((p: Record<string, unknown>) => p.filename);
 
   // Step 1: insert the thread row if it doesn't exist yet (no-op on conflict).
-  await supabase.from('gmail_threads').upsert({
+  const { error: threadUpsertErr } = await supabase.from('gmail_threads').upsert({
     account_id:      accountId,
     thread_id:       threadId,
     subject,
@@ -401,16 +455,18 @@ async function fetchAndPersistMessage(
     label_ids:       labelIds,
     last_message_at: date,
   }, { onConflict: 'account_id,thread_id', ignoreDuplicates: true });
+  if (threadUpsertErr) throw new Error('gmail_threads upsert: ' + threadUpsertErr.message);
 
   // Step 2: update metadata only when this message is strictly more recent.
   // PostgreSQL row-level locking serialises concurrent writers; the WHERE
   // predicate guarantees the newest timestamp always wins, preventing an older
   // parallel message from clobbering subject / snippet / last_message_at.
-  await supabase.from('gmail_threads')
+  const { error: threadUpdateErr } = await supabase.from('gmail_threads')
     .update({ subject, snippet, label_ids: labelIds, last_message_at: date })
     .eq('account_id', accountId)
     .eq('thread_id', threadId)
     .lt('last_message_at', date);
+  if (threadUpdateErr) throw new Error('gmail_threads update: ' + threadUpdateErr.message);
 
   // Step 3: fetch the row id needed for the message upsert below.
   const { data: thread } = await supabase.from('gmail_threads')
@@ -422,7 +478,7 @@ async function fetchAndPersistMessage(
   if (!thread) return;
 
   // Upsert gmail_messages
-  await supabase.from('gmail_messages').upsert({
+  const { error: msgUpsertErr } = await supabase.from('gmail_messages').upsert({
     thread_id_ref:  thread.id,
     account_id:     accountId,
     message_id:     messageId,
@@ -441,6 +497,7 @@ async function fetchAndPersistMessage(
     has_attachments: hasAttach,
     internal_date:  date,
   }, { onConflict: 'account_id,message_id' });
+  if (msgUpsertErr) throw new Error('gmail_messages upsert: ' + msgUpsertErr.message);
 
   // Recompute unread_count from actual message records — avoids the literal
   // 0/1 last-write-wins race when concurrent messages share the same thread.
@@ -451,8 +508,9 @@ async function fetchAndPersistMessage(
     .eq('is_read', false);
 
   if (unreadCount !== null) {
-    await supabase.from('gmail_threads')
+    const { error: unreadErr } = await supabase.from('gmail_threads')
       .update({ unread_count: unreadCount })
       .eq('id', thread.id);
+    if (unreadErr) console.warn('[gmail-webhook] unread_count update failed:', unreadErr.message);
   }
 }

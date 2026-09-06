@@ -47,8 +47,8 @@ const STRICT_MODE = (Deno.env.get('EVOLUTION_WEBHOOK_STRICT') ?? 'true').toLower
 // [C-9 2026-08-06] HMAC (x-webhook-signature) é o esquema PRIMÁRIO. O shared-secret em texto
 // puro (x-webhook-secret) só é aceito como fallback DEPRECATED para produtores que não assinam
 // payload (webhook nativo da Evolution ≤2.3.x envia apenas headers estáticos). Gate para
-// enforcement HMAC-only: EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false (default true).
-const ALLOW_SHARED_SECRET = (Deno.env.get('EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET') ?? 'true').toLowerCase() !== 'false';
+// enforcement HMAC-only: EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false (default false; set to 'true' para opt-in).
+const ALLOW_SHARED_SECRET = Deno.env.get('EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET')?.trim().toLowerCase() === 'true'; // GAP-2 fix 2026-09-05: HMAC-only by default; set to 'true' to opt-in to shared-secret fallback
 const validateWebhook = WEBHOOK_SECRETS.length > 0
   ? createWebhookValidator(WEBHOOK_SECRETS, STRICT_MODE, ALLOW_SHARED_SECRET)
   : null;
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
   // x-webhook-secret válido acompanhe (precedência do HMAC: assinatura encontrada manda).
   // O shared-secret em texto puro (x-webhook-secret, usado pelo webhook nativo da Evolution
   // ≤2.3.x, que não assina payload) só é aceito como fallback DEPRECATED quando
-  // ALLOW_SHARED_SECRET=true (default), com console.warn de deprecação. Com
+  // ALLOW_SHARED_SECRET=true, com console.warn de deprecação. Com
   // EVOLUTION_WEBHOOK_ALLOW_SHARED_SECRET=false, exige HMAC puro.
   if (validateWebhook) {
     const result = await validateWebhook(req);
@@ -409,9 +409,10 @@ Deno.serve(async (req) => {
     if (event === 'qrcode.updated') {
       const qrCode = (baseData.qrcode as Record<string, string>)?.base64;
       if (qrCode) {
-        await supabase.from('whatsapp_connections')
+        const { error: qrErr } = await supabase.from('whatsapp_connections')
           .update({ qr_code: qrCode, status: 'qr_pending', updated_at: new Date().toISOString() })
           .or(instanceOrFilter(instance));
+        if (qrErr) console.error('[webhook] qr_code update failed:', qrErr.message);
       }
       // QR alert via n8n (fire-and-forget). Set QR_ALERT_WEBHOOK_URL env var to
       // enable; optional QR_ALERT_WEBHOOK_TOKEN for webhook auth. When the env
@@ -608,8 +609,9 @@ Deno.serve(async (req) => {
     try {
       const rawJson = JSON.parse(rawBody) as Record<string, unknown>;
       delete rawJson.apikey; // LGPD: demais chaves preservadas (data/event/instance/date_time/server_url — URL pública).
-      await supabase.from('webhook_events_processed').update({ payload: rawJson })
+      const { error: persistErr } = await supabase.from('webhook_events_processed').update({ payload: rawJson })
         .eq('event_id', eventId);
+      if (persistErr) console.warn(`[webhook][${requestId}] payload persist DB error: ${persistErr.message}`);
     } catch (e) {
       console.warn(`[webhook][${requestId}] payload persist failed: ${e instanceof Error ? e.message : String(e)}`);
     }
