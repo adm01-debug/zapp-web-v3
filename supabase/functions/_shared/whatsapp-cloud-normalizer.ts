@@ -55,6 +55,9 @@
 import { z } from "https://esm.sh/zod@3.23.8";
 import { MetaWebhookPayloadSchema } from "./webhook-schemas.ts";
 import {
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('whatsapp-cloud-normalizer');
   META_TO_CANONICAL,
   type CanonicalMessageType,
   type ChannelAddress,
@@ -514,7 +517,7 @@ export async function validateMetaSignature(
   appSecret: string,
 ): Promise<boolean> {
   if (!appSecret) {
-    console.error('[meta-webhook] WHATSAPP_APP_SECRET not configured — rejecting all requests');
+    log.error('[meta-webhook] WHATSAPP_APP_SECRET not configured — rejecting all requests');
     return false;
   }
   if (!signatureHeader) return false;

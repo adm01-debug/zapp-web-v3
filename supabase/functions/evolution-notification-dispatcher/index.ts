@@ -46,6 +46,9 @@ import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
 import { getSecret } from '../_shared/vault.ts';
 import { fetchWithRetry } from '../_shared/retry-with-backoff.ts';
 import { readJsonBodyOrEmpty } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('evolution-notification-dispatcher');
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -221,13 +224,13 @@ export async function getChannelConfig(
   try {
     const { data, error } = await supabase.rpc('zapp_notif_config_get', { p_channel: channel });
     if (error) {
-      console.warn(`[evolution-notification-dispatcher] zapp_notif_config_get falhou (${channel}): ${error.message}`);
+      log.warn('zapp_notif_config_get falhou', { channel, error: error.message });
       return null;
     }
     if (data === null || data === undefined) return null;
     return asRecord(data) as NotifChannelConfig;
   } catch (e) {
-    console.warn(`[evolution-notification-dispatcher] zapp_notif_config_get exception (${channel}): ${e instanceof Error ? e.message : String(e)}`);
+    log.warn('zapp_notif_config_get exception', { channel, error: e instanceof Error ? e.message : String(e) });
     return null;
   }
 }
@@ -405,7 +408,7 @@ Deno.serve(async (req) => {
     // 1. Claim atômico (UPDATE ... WHERE status='pending' RETURNING → 'sending').
     const { data: batch, error: claimErr } = await supabase.rpc('fn_evo_outbox_claim', { p_limit: limit });
     if (claimErr) {
-      console.error('[evolution-notification-dispatcher] claim falhou:', claimErr.message);
+      log.error('claim falhou', { error: claimErr.message });
       return json(req, { error: 'claim_failed', detail: claimErr.message }, 502);
     }
     const rows = Array.isArray(batch) ? (batch as OutboxRow[]) : [];
@@ -436,7 +439,7 @@ Deno.serve(async (req) => {
 
       if (dryRun) {
         const { error: dryReleaseErr } = await supabase.rpc('fn_evo_outbox_release', { p_id: row.id });
-        if (dryReleaseErr) console.warn('[evolution-notification-dispatcher] dryRun outbox release failed', dryReleaseErr.message);
+        if (dryReleaseErr) log.warn('dryRun outbox release failed', { error: dryReleaseErr.message });
         continue;
       }
 
@@ -444,10 +447,12 @@ Deno.serve(async (req) => {
       // lista → skip (log + mark failed descritivo; sai do ciclo sem loop).
       if (isExcludedByPriorityFilter(config, payload)) {
         const priority = firstString(asRecord(payload.metadata)?.priority, payload.priority);
-        console.warn(
-          `[evolution-notification-dispatcher] outbox ${row.id} (${channel}): skip por priority_filter ` +
-          `(payload.priority=${priority ?? '(ausente)'}, filtro=${JSON.stringify(config?.priority_filter)})`,
-        );
+        log.warn('skip por priority_filter', {
+          outbox_id: row.id,
+          channel,
+          priority: priority ?? '(ausente)',
+          filtro: JSON.stringify(config?.priority_filter),
+        });
         stats.skipped_priority++;
         const { error: markErr } = await supabase.rpc('fn_evo_outbox_mark', {
           p_id: row.id,
@@ -455,7 +460,7 @@ Deno.serve(async (req) => {
           p_last_error: 'skipped_by_priority_filter',
         });
         if (markErr) {
-          console.error(`[evolution-notification-dispatcher] mark skipped falhou para outbox ${row.id}:`, markErr.message);
+          log.error('mark skipped falhou', { outbox_id: row.id, error: markErr.message });
         }
         continue;
       }
@@ -482,7 +487,7 @@ Deno.serve(async (req) => {
       if (result.ok) {
         const { error: markErr } = await supabase.rpc('fn_evo_outbox_mark', { p_id: row.id, p_status: 'sent' });
         if (markErr) {
-          console.error(`[evolution-notification-dispatcher] mark sent falhou para outbox ${row.id}:`, markErr.message);
+          log.error('mark sent falhou', { outbox_id: row.id, error: markErr.message });
           stats.failed++;
         } else {
           stats.sent++;
@@ -494,7 +499,7 @@ Deno.serve(async (req) => {
           p_last_error: result.error ?? 'erro desconhecido',
         });
         if (markErr) {
-          console.error(`[evolution-notification-dispatcher] mark failed falhou para outbox ${row.id}:`, markErr.message);
+          log.error('mark failed falhou', { outbox_id: row.id, error: markErr.message });
         }
         stats.failed++;
       }
@@ -503,7 +508,7 @@ Deno.serve(async (req) => {
     return json(req, { ok: true, claimed: rows.length, ...stats, dryRun, limit });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[evolution-notification-dispatcher] erro fatal:', msg);
+    log.error('erro fatal', { error: msg });
     return json(req, { error: 'internal_error', detail: msg }, 500);
   }
 });

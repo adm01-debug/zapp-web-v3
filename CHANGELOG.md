@@ -1,5 +1,29 @@
 # 📜 Changelog — ZAPP WEB
 
+## [2.5.1] - 2026-09-06 — Execução auditoria 22D (continuação)
+
+### Qualidade e manutenibilidade
+- Logger frontend (`src/lib/logger.ts`): métodos `debug/info/warn/error` emitem JSON estruturado em PROD (`ts`, `level`, `module`, `sid`, `msg`, `ctx`) via `formatMessage` — compatível com Loki/OpenTelemetry
+- Logger edge functions (`supabase/functions/_shared/logger.ts`): `EdgeLogger` unificado para Deno, JSON stdout → Loki, sem `console.log` avulso
+- ESLint: `@typescript-eslint/no-explicit-any` promovido de `warn` para `error` (0 violations confirmadas)
+- `formatCurrency` duplicado em `Contact360Helpers.tsx` consolidado em `formatCurrencyBRL` a nível de módulo
+- `tsconfig.json` raiz: opções laxistas mortas (`noImplicitAny: false`, `strictFunctionTypes: false`, `strictNullChecks: false`) removidas — `tsconfig.app.json` já tem `strict: true`
+
+### Cobertura de testes
+- `vitest.config.ts`: `tests/integration/**` adicionado ao `include` — `regression-suite.test.ts` e `supabase-integration.test.ts` passam a ser executados pelo `bun run test`
+- `playwright.config.ts`: projeto `legacy-e2e` com `testDir: './tests'` — cobre `tests/e2e/` (13 specs) + `tests/visual-*.spec.ts` (2 specs visuais anteriormente órfãos)
+
+### Integridade de dados
+- `ContactPurchasesPanel.tsx`: `parseFloat` substituído por `Math.round(parseFloat * 100) / 100` para evitar float64 sujo no NUMERIC do banco
+
+### Segurança
+- `transcribe-audio-internal` e `download-wa-status-media`: CORS migrado de `*` hardcoded para `getCorsHeaders(req)` do `_shared/validation.ts` (origin-validated)
+- `secure-upload`: validação de magic bytes reais adicionada antes do VirusTotal — detecta MIME spoofing (ex.: `.exe` com `Content-Type: image/jpeg`); bloqueia com `INVALID_FILE_TYPE 422`; buffer lido uma vez e reusado para SHA-256
+
+### Operações
+- Branch protection `main`: `required_pull_request_reviews` adicionado (`required_approving_review_count: 1`, `dismiss_stale_reviews: true`) — eliminando gap de auditoria dim. 20
+- `notify-ci-failure.yml`: curl com `--retry 3 --retry-delay 5 --retry-all-errors` — elimina falha silenciosa por timeout transitório do N8N
+
 ## [2.5.0] - 2026-09-05 — Auditoria 22D e hardening pós-auditoria
 
 ### Auditoria técnica (22 dimensões)

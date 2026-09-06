@@ -3,6 +3,9 @@ declare const Deno: { env: { get(key: string): string | undefined } };
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { getStoragePublicUrl } from "./storage-url.ts";
 import { evolutionClient } from "./providers/evolution/index.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('evolution-helpers');
 
 
 /** Webhook Payload interface definition. */
@@ -102,9 +105,9 @@ export function logLedgerRejection(
       payload_sha256: opts.payloadSha256 ?? null,
       latency_ms: opts.latencyMs ?? 0,
     }).then(() => {}, (e: unknown) =>
-      console.warn('[ingest_ledger] rejected err:', e instanceof Error ? e.message : String(e)));
+      log.warn('[ingest_ledger] rejected err:', e instanceof Error ? e.message : String(e)));
   } catch (e) {
-    console.warn('[ingest_ledger] rejected exception:', e instanceof Error ? e.message : String(e));
+    log.warn('[ingest_ledger] rejected exception:', e instanceof Error ? e.message : String(e));
   }
 }
 
@@ -129,7 +132,7 @@ export async function markEventProcessed(
   // permanently drop a real customer message on every transient DB hiccup, which
   // is worse than the rare double-processing this risks. console.error (not warn)
   // so it is distinguishable in logs/alerts from ordinary duplicate-skip noise.
-  console.error('[idempotency] mark-processed insert failed (non-23505), processing as new — investigate DB health:', {
+  log.error('[idempotency] mark-processed insert failed (non-23505), processing as new — investigate DB health:', {
     eventId, instance, eventType, code: error.code, message: error.message,
   });
   return true;
@@ -148,7 +151,7 @@ export async function unmarkEventProcessed(supabase: any, eventId: string, insta
   try {
     const { error } = await supabase.from('webhook_events_processed').delete().eq('event_id', eventId);
     if (error) {
-      console.error(`[idempotency] rollback FAILED for ${eventId.slice(0, 48)}…: ${error.message ?? error.code}`);
+      log.error(`[idempotency] rollback FAILED for ${eventId.slice(0, 48)}…: ${error.message ?? error.code}`);
       // [FIX-08 2026-07-12 S11] Write audit entry using SECURITY DEFINER RPC to bypass RLS
       // so operators can detect this event is permanently deduplicated
       try {
@@ -160,16 +163,16 @@ export async function unmarkEventProcessed(supabase: any, eventId: string, insta
           p_error_message: error.message,
         });
         if (auditError) {
-          console.error(`[idempotency] audit RPC failed: ${auditError.message ?? auditError.code}`);
+          log.error(`[idempotency] audit RPC failed: ${auditError.message ?? auditError.code}`);
         }
       } catch (e) {
-        console.error(`[idempotency] failed to write audit row for rollback failure: ${e}`);
+        log.error(`[idempotency] failed to write audit row for rollback failure: ${e}`);
       }
       return false;
     }
     return true;
   } catch (e) {
-    console.error(`[idempotency] rollback exception for ${eventId.slice(0, 48)}…: ${e instanceof Error ? e.message : String(e)}`);
+    log.error(`[idempotency] rollback exception for ${eventId.slice(0, 48)}…: ${e instanceof Error ? e.message : String(e)}`);
     // [FIX-08 2026-07-12 S11] Write audit entry using SECURITY DEFINER RPC
     try {
       const { error: auditError } = await supabase.rpc('fn_insert_idempotency_failure_audit', {
@@ -180,10 +183,10 @@ export async function unmarkEventProcessed(supabase: any, eventId: string, insta
         p_error_message: e instanceof Error ? e.message : String(e),
       });
       if (auditError) {
-        console.error(`[idempotency] audit RPC failed: ${auditError.message ?? auditError.code}`);
+        log.error(`[idempotency] audit RPC failed: ${auditError.message ?? auditError.code}`);
       }
     } catch (ex) {
-      console.error(`[idempotency] failed to write audit row for exception: ${ex}`);
+      log.error(`[idempotency] failed to write audit row for exception: ${ex}`);
     }
     return false;
   }
@@ -265,9 +268,9 @@ export interface WebhookAuditRow {
 export async function auditWebhookEvent(supabase: any, row: WebhookAuditRow): Promise<void> {
   try {
     const { error: auditInsertErr } = await supabase.from('webhook_audit_log').insert(row);
-    if (auditInsertErr) console.warn('[audit] insert failed:', auditInsertErr.message);
+    if (auditInsertErr) log.warn('[audit] insert failed:', auditInsertErr.message);
   } catch (e) {
-    console.warn('[audit] insert exception:', (e as Error).message ?? String(e));
+    log.warn('[audit] insert exception:', (e as Error).message ?? String(e));
   }
 }
 
@@ -466,7 +469,7 @@ export async function getConnectionByInstance(supabase: any, instance: string): 
     .eq('instance_id', instance)
     .maybeSingle();
   if (byId) return byId;
-  console.error(`[conn-resolver] whatsapp_connections MISS instance='${instance}' - message will NOT be mirrored`);
+  log.error(`[conn-resolver] whatsapp_connections MISS instance='${instance}' - message will NOT be mirrored`);
   return null;
 }
 // deno-lint-ignore no-explicit-any
@@ -547,16 +550,16 @@ export async function persistProfilePicture(supabase: any, phone: string, profil
     const { data: oldFiles } = await supabase.storage.from('avatars').list('avatars', { search: phone });
     if (oldFiles?.length) {
       const { error: rmErr } = await supabase.storage.from('avatars').remove(oldFiles.map((f: { name: string }) => `avatars/${f.name}`));
-      if (rmErr) console.warn('[avatar] old avatar remove failed (best-effort):', rmErr);
+      if (rmErr) log.warn('[avatar] old avatar remove failed (best-effort):', rmErr);
     }
 
     const { error } = await supabase.storage.from('avatars').upload(storagePath, bytes, {
       contentType: 'image/jpeg', cacheControl: '604800', upsert: true,
     });
-    if (error) { console.error('Avatar upload error:', error); return null; }
+    if (error) { log.error('Avatar upload error:', error); return null; }
 
     return getStoragePublicUrl('avatars', storagePath);
-  } catch (err) { console.error('Avatar persist error:', err); return null; }
+  } catch (err) { log.error('Avatar persist error:', err); return null; }
 }
 
 // deno-lint-ignore no-explicit-any
@@ -613,8 +616,8 @@ export async function handleReactionEvent(
       status: 'received',
       created_at: reactedAt,   // aproximação (a reação é posterior à mensagem)
     }, { onConflict: 'message_id,instance_name', ignoreDuplicates: true });
-    if (phErr) console.warn(`[evolution_reactions] placeholder warn ${targetExternalId}: ${phErr.message}`);
-    else console.log(`[evolution_reactions] placeholder criado para mensagem ausente ${targetExternalId}`);
+    if (phErr) log.warn(`[evolution_reactions] placeholder warn ${targetExternalId}: ${phErr.message}`);
+    else log.info(`[evolution_reactions] placeholder criado para mensagem ausente ${targetExternalId}`);
   }
 
   // [RAW LOG] Always upsert to public.evolution_reactions (fire-and-forget).
@@ -633,37 +636,37 @@ export async function handleReactionEvent(
     { onConflict: 'message_id,instance_name,remote_jid,from_me' },
   )
     .then(({ error }: { error: { message: string } | null }) => {
-      if (error) console.warn(`[evolution_reactions] upsert warn ${targetExternalId}: ${error.message}`);
+      if (error) log.warn(`[evolution_reactions] upsert warn ${targetExternalId}: ${error.message}`);
     })
-    .catch((e: unknown) => console.warn('[evolution_reactions] upsert err:', e instanceof Error ? e.message : String(e)));
+    .catch((e: unknown) => log.warn('[evolution_reactions] upsert err:', e instanceof Error ? e.message : String(e)));
 
   // [CRM PATH] Link to normalized message_reactions quando target encontrado em evo.
   const connection = await getConnectionByInstance(supabase, instance);
-  if (!connection) { console.log(`Reaction: no connection for instance ${instance}`); return; }
+  if (!connection) { log.info(`Reaction: no connection for instance ${instance}`); return; }
   const { data: targetMessage } = await supabase
     .from('messages').select('id, contact_id').eq('external_id', targetExternalId)
     .eq('whatsapp_connection_id', connection.id).maybeSingle();
-  if (!targetMessage) { console.log(`Reaction target not found in CRM: ${targetExternalId} (raw log gravado em evo.evolution_reactions)`); return; }
+  if (!targetMessage) { log.info(`Reaction target not found in CRM: ${targetExternalId} (raw log gravado em evo.evolution_reactions)`); return; }
 
   if (emoji === '') {
     if (!actorFromMe) {
       const { error: reactionDeleteErr } = await supabase.from('message_reactions').delete()
         .eq('message_id', targetMessage.id).eq('contact_id', targetMessage.contact_id);
-      if (reactionDeleteErr) console.warn(`[REACTION] failed to delete reaction: ${reactionDeleteErr.message}`);
+      if (reactionDeleteErr) log.warn(`[REACTION] failed to delete reaction: ${reactionDeleteErr.message}`);
       const { error: msgTouchAfterDeleteErr } = await supabase.from('messages').update({ updated_at: new Date().toISOString() }).eq('id', targetMessage.id);
-      if (msgTouchAfterDeleteErr) console.warn(`[REACTION] failed to touch message after delete: ${msgTouchAfterDeleteErr.message}`);
-      console.log(`Reaction removed on message ${targetExternalId}`);
+      if (msgTouchAfterDeleteErr) log.warn(`[REACTION] failed to touch message after delete: ${msgTouchAfterDeleteErr.message}`);
+      log.info(`Reaction removed on message ${targetExternalId}`);
     }
   } else if (!actorFromMe) {
     const { error: upsertErr } = await supabase.from('message_reactions').upsert(
       { message_id: targetMessage.id, contact_id: targetMessage.contact_id, emoji },
       { onConflict: 'message_id,contact_id,emoji' }
     );
-    if (upsertErr) { console.error('Error upserting reaction:', upsertErr); }
+    if (upsertErr) { log.error('Error upserting reaction:', upsertErr); }
     else {
       const { error: msgTouchAfterUpsertErr } = await supabase.from('messages').update({ updated_at: new Date().toISOString() }).eq('id', targetMessage.id);
-      if (msgTouchAfterUpsertErr) console.warn(`[REACTION] failed to touch message after upsert: ${msgTouchAfterUpsertErr.message}`);
-      console.log(`Reaction synced: ${emoji} on message ${targetExternalId}`);
+      if (msgTouchAfterUpsertErr) log.warn(`[REACTION] failed to touch message after upsert: ${msgTouchAfterUpsertErr.message}`);
+      log.info(`Reaction synced: ${emoji} on message ${targetExternalId}`);
     }
   }
 }
@@ -714,9 +717,9 @@ export async function routeToDeadLetter(supabase: any, input: DeadLetterInput): 
       consumer_version: 'edge-webhook:v1',
     });
     if (error) {
-      console.error(`[dlq] insert failed (request_id=${input.request_id ?? '-'}): ${error.message}`);
+      log.error(`[dlq] insert failed (request_id=${input.request_id ?? '-'}): ${error.message}`);
     }
   } catch (e) {
-    console.error(`[dlq] insert exception (request_id=${input.request_id ?? '-'}): ${e instanceof Error ? e.message : String(e)}`);
+    log.error(`[dlq] insert exception (request_id=${input.request_id ?? '-'}): ${e instanceof Error ? e.message : String(e)}`);
   }
 }

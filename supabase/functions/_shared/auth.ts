@@ -17,6 +17,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { errorResponse, requireEnv, validateEnvironment } from "./validation.ts";
 import { createZappAdminClient } from "./db-client.ts";
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('auth');
 
 /** Authed User interface. */
 export interface AuthedUser {
@@ -122,7 +125,7 @@ export async function requireUser(req: Request): Promise<AuthedUser | Response> 
       });
       const { data, error } = await client.auth.getUser();
       if (!error && data?.user) {
-        console.log("[auth] token validated", { label: c.label, url: c.url, tried: tried.length + 1 });
+        log.info("[auth] token validated", { label: c.label, url: c.url, tried: tried.length + 1 });
         return { user: { id: data.user.id, email: data.user.email ?? null } };
       }
       lastErr = error?.message ?? "invalid token";
@@ -141,7 +144,7 @@ export async function requireUser(req: Request): Promise<AuthedUser | Response> 
     } catch { return null; }
   })();
 
-  console.error("[auth] 401 invalid token", {
+  log.error("[auth] 401 invalid token", {
     token_iss: tokenIss,
     token_sub: tokenPayload.sub,
     candidates_tried: tried,

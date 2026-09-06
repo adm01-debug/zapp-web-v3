@@ -40,5 +40,11 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
+    {
+      name: 'legacy-e2e',
+      testDir: './tests',
+      testIgnore: '**/integration/**',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 });

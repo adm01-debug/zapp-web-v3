@@ -1,3 +1,7 @@
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('cloud-templates');
+
 /**
  * providers/cloud/templates.ts — Janela 24h × Templates aprovados (WhatsApp Cloud API / Meta)
  *
@@ -147,7 +151,7 @@ function getEnv(name: string): string | undefined {
 }
 
 function logWarning(message: string): void {
-  console.warn(`[cloud/templates] ${message}`);
+  log.warn(`[cloud/templates] ${message}`);
 }
 
 /**

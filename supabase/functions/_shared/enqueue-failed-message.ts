@@ -8,6 +8,9 @@
 
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { buildIdempotencyKey, classifyRetryReason, computeBackoffMsByReason } from './dlq-backoff.ts';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('enqueue-failed-message');
 
 /** enqueue-failed-message utilities and exports. */
 export interface EnqueueFailedMessageInput {
@@ -60,7 +63,7 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
   if (!input.instance_name) return;
 
   try {
-    console.info('[dlq-enqueue]', JSON.stringify({
+    log.info('[dlq-enqueue]', JSON.stringify({
       instance: input.instance_name,
       path: input.path,
       remote_jid: input.remote_jid ?? null,
@@ -104,17 +107,17 @@ export function enqueueFailedMessage(input: EnqueueFailedMessageInput): void {
           if (res?.error) {
             // Conflito de chave idempotente (23505) é esperado: dedupe silencioso.
             if (res.error.code === '23505') {
-              console.info('[dlq-enqueue] dedupe: item já em fila para', input.path);
+              log.info('[dlq-enqueue] dedupe: item já em fila para', input.path);
             } else {
-              console.warn('[dlq-enqueue] insert failed:', res.error.message);
+              log.warn('[dlq-enqueue] insert failed:', res.error.message);
             }
           }
         },
         (e: unknown) => {
-          console.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
+          log.warn('[dlq-enqueue] insert threw:', e instanceof Error ? e.message : String(e));
         },
       );
   }, (e: unknown) => {
-    console.warn('[dlq-enqueue] key build failed:', e instanceof Error ? e.message : String(e));
+    log.warn('[dlq-enqueue] key build failed:', e instanceof Error ? e.message : String(e));
   });
 }

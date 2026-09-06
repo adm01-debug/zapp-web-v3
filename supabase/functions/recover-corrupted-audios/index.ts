@@ -5,6 +5,9 @@ import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { getStoragePublicUrl } from "../_shared/storage-url.ts";
 import { evolutionClient } from "../_shared/providers/evolution/index.ts";
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('recover-corrupted-audios');
 
 
 const supabase = createZappAdminClient();
@@ -30,7 +33,7 @@ async function getMediaBase64(instanceName: string, messageId: string): Promise<
     const data = resp.data as Record<string, unknown>;
     return (data?.base64 as string) || null;
   } catch (err) {
-    console.error(`Failed to fetch media for ${messageId}:`, err);
+    log.error(`Failed to fetch media for ${messageId}:`, err);
     return null;
   }
 }

@@ -14,6 +14,9 @@ import { createZappClient } from '../_shared/db-client.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('contact-media');
 interface CursorPayload {
   created_at: string;
   id: string;
@@ -168,7 +171,7 @@ Deno.serve(async (req) => {
 
   const { data, error } = await q;
   if (error) {
-    console.error("[contact-media] query error", error.message);
+    log.error("[contact-media] query error", error.message);
     return jsonResponse(
       req,
       { error: "Failed to load media" },

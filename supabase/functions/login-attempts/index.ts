@@ -11,6 +11,9 @@ import { createZappAdminClient, createZappClient } from "../_shared/db-client.ts
 import { parseOrReject } from "../_shared/contract-kit.ts";
 import { CONTRACT_SCHEMAS } from "../_shared/contract-schemas.ts";
 import { checkLoginSecurityGate } from "../_shared/security-gate.ts";
+import { getLogger } from "../_shared/logger.ts";
+
+const log = getLogger('login-attempts');
 
 type LoginAttemptAction = "check" | "record_failed" | "clear";
 
@@ -82,9 +85,7 @@ Deno.serve(async (req) => {
   const admin = createZappAdminClient();
   const gate = await checkLoginSecurityGate(req, admin);
   if (!gate.allowed) {
-    console.warn(
-      `[login-attempts] login blocked: reason=${gate.reason} ip=${gate.ip} country=${gate.country}`,
-    );
+    log.warn('login blocked', { reason: gate.reason, ip: gate.ip, country: gate.country });
     return errorResponse(
       "Acesso bloqueado pela política de segurança",
       403,
@@ -169,7 +170,7 @@ Deno.serve(async (req) => {
     });
 
     if (rpcError) {
-      console.error(`[login-attempts] record_failed rpc error: ${rpcError.message}`);
+      log.error('record_failed rpc error', { error: rpcError.message });
       return errorResponse("Não foi possível registrar tentativa", 500, req);
     }
 

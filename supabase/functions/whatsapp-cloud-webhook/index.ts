@@ -34,6 +34,8 @@ import {
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { timingSafeStringEqual } from '../_shared/auth.ts';
 import { errorEnvelope } from '../_shared/validation.ts';
+import { getLogger } from '../_shared/logger.ts';
+
 interface MetaWAMessage {
   from: string;
   id: string;
@@ -71,6 +73,8 @@ interface MetaWebhookBody {
   }> | null;
 }
 
+const log = getLogger('whatsapp-cloud-webhook');
+
 const VERIFY_TOKEN = Deno.env.get("WHATSAPP_CLOUD_WEBHOOK_VERIFY_TOKEN") ?? "";
 const APP_SECRET = Deno.env.get("WHATSAPP_CLOUD_APP_SECRET") ?? "";
 // [W5] Instância alvo no Evolution DB — configurável via env, default 'wpp2'
@@ -99,7 +103,7 @@ async function recordPing(
   try {
     await localClient.from("whatsapp_cloud_webhook_pings").insert({ kind, meta });
   } catch (e) {
-    console.warn(`[whatsapp-cloud-webhook] ping insert failed: ${(e as Error).message}`);
+    log.warn('ping insert failed', { error: (e as Error).message });
   }
 }
 
@@ -165,9 +169,7 @@ async function persistStatus(status: NormalizedStatus): Promise<"updated" | "ski
       .maybeSingle();
 
     if (!current?.id) {
-      console.warn(
-        `[whatsapp-cloud-webhook] orphan ACK for unknown message message_id=${status.wamid} status=${status.status} — skipping placeholder (awaiting real upsert)`,
-      );
+      log.warn('orphan ACK for unknown message — skipping placeholder (awaiting real upsert)', { message_id: status.wamid, status: status.status });
       return "orphan";
     }
 
@@ -180,12 +182,12 @@ async function persistStatus(status: NormalizedStatus): Promise<"updated" | "ski
           updated_at: now,
         })
         .eq("id", current.id);
-      console.log(`[whatsapp-cloud-webhook] message ${status.wamid} status: ${current.status} → ${status.status}`);
+      log.info('message status updated', { message_id: status.wamid, from: current.status, to: status.status });
       return "updated";
     }
     return "skipped";
   } catch (e) {
-    console.error(`[whatsapp-cloud-webhook] status persist error:`, e);
+    log.error('status persist error', { error: e instanceof Error ? e.message : String(e) });
     return "skipped";
   }
 }
@@ -235,16 +237,12 @@ Deno.serve(async (req) => {
       ? await verifyHmacSignature(rawBody, signature, APP_SECRET)
       : false;
     if (!ok) {
-      console.warn(
-        `[whatsapp-cloud-webhook][${rid}] invalid signature (hasSig=${!!signature})`,
-      );
+      log.warn('invalid signature', { rid, hasSig: !!signature });
       void recordPing("invalid_signature", { rid, hasSig: !!signature });
       return errorEnvelope("invalid_signature", "Assinatura HMAC inválida.", 401, req, { requestId: rid });
     }
   } else {
-    console.error(
-      `[whatsapp-cloud-webhook][${rid}] WHATSAPP_CLOUD_APP_SECRET not configured — refusing (fail-closed)`,
-    );
+    log.error('WHATSAPP_CLOUD_APP_SECRET not configured — refusing (fail-closed)', { rid });
     void recordPing("webhook_misconfigured", { rid });
     return errorEnvelope(
       "webhook_misconfigured",
@@ -281,7 +279,7 @@ Deno.serve(async (req) => {
     extraHeaders: { ...getCorsHeaders(req), "Content-Type": "application/json" },
   });
   if (parsed.ok === false) {
-    console.warn(`[whatsapp-cloud-webhook][${rid}] contract_violation:`, parsed.body.details);
+    log.warn('contract_violation', { rid, details: parsed.body.details });
     return parsed.response;
   }
 
@@ -299,7 +297,7 @@ Deno.serve(async (req) => {
     const normalized = normalizeMetaPayload(payload);
     if (normalized.validationError) {
       // Não deve ocorrer (mesmo schema do contrato), mas nunca derruba o fluxo.
-      console.warn(`[whatsapp-cloud-webhook][${rid}] normalizer validation error:`, normalized.validationError.issues);
+      log.warn('normalizer validation error', { rid, issues: normalized.validationError.issues });
     }
     const normByWamid = new Map<string, NormalizedIncoming>();
     for (const ev of normalized.events) {
@@ -330,7 +328,7 @@ Deno.serve(async (req) => {
           }
           const normalizedMsg = normByWamid.get(msg.id);
           if (!normalizedMsg) {
-            console.warn(`[whatsapp-cloud-webhook][${rid}] normalizer produced no event for message id=${msg.id} — skipped`);
+            log.warn('normalizer produced no event for message — skipped', { rid, message_id: msg.id });
             ignoredFields++;
             continue;
           }
@@ -338,7 +336,7 @@ Deno.serve(async (req) => {
             await persistInbound(normalizedMsg);
             processed++;
           } catch (e) {
-            console.error(`[whatsapp-cloud-webhook][${rid}] persist error:`, e);
+            log.error('persist error', { rid, error: e instanceof Error ? e.message : String(e) });
           }
         }
       }
@@ -373,7 +371,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: getCorsHeaders(req) },
     );
   } catch (e) {
-    console.error(`[whatsapp-cloud-webhook][${rid}] error`, e);
+    log.error('unhandled error', { rid, error: e instanceof Error ? e.message : String(e) });
     return respondWithContract(
       parsed,
       { ok: false, requestId: rid },

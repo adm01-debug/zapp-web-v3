@@ -16,6 +16,10 @@ import { checkRateLimit } from '../_shared/validation.ts';
 import { getCorsHeaders, handleCorsPreflight } from '../_shared/cors.ts';
 import { parseOrReject } from '../_shared/contract-kit.ts';
 import { CONTRACT_SCHEMAS } from '../_shared/contract-schemas.ts';
+import { getLogger } from '../_shared/logger.ts';
+
+const log = getLogger('instance-pause-control');
+
 function json(req: Request, data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -24,7 +28,7 @@ function json(req: Request, data: unknown, status = 200) {
 }
 
 function dbError(req: Request, context: string, error: { message: string; code?: string }): Response {
-  console.error(`[instance-pause-control] ${context}`, error.message, 'code:', error.code);
+  log.error(context, { error: error.message, code: error.code });
   // P0001 = PL/pgSQL RAISE EXCEPTION (business rules); 22xxx = data exception; 23xxx = constraint
   if (error.code === 'PGRST116') return json(req, { error: 'Not found' }, 404);
   if (error.code === '42501') return json(req, { error: 'Forbidden' }, 403);
@@ -154,7 +158,7 @@ Deno.serve(async (req) => {
 
     return json(req, { error: `unknown_action:${action}` }, 400);
   } catch (e) {
-    console.error('[instance-pause-control] unexpected error', e instanceof Error ? (e.stack ?? e.message) : String(e));
+    log.error('unexpected error', { error: e instanceof Error ? (e.stack ?? e.message) : String(e) });
     return json(req, { error: 'Internal server error' }, 500);
   }
 });

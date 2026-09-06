@@ -2,6 +2,9 @@
 // NUNCA relança erro — falha de gravação não pode quebrar o hot path de envio.
 
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { getLogger } from "./logger.ts";
+
+const log = getLogger('log-retry-metric');
 
 /** log-retry-metric utilities and exports. */
 export interface RetryReason {
@@ -44,7 +47,7 @@ export function logRetryMetric(input: RetryMetricInput): void {
 
   // Log estruturado (sempre — captura via edge_function_logs)
   try {
-    console.info('[retry-metric]', JSON.stringify(input));
+    log.info('[retry-metric]', JSON.stringify(input));
   } catch {
     // ignore
   }
@@ -71,11 +74,11 @@ export function logRetryMetric(input: RetryMetricInput): void {
     .then(
       (res: { error: { message: string } | null }) => {
         if (res?.error) {
-          console.warn('[retry-metric] insert failed:', res.error.message);
+          log.warn('[retry-metric] insert failed:', res.error.message);
         }
       },
       (e: unknown) => {
-        console.warn('[retry-metric] insert threw:', e instanceof Error ? e.message : String(e));
+        log.warn('[retry-metric] insert threw:', e instanceof Error ? e.message : String(e));
       },
     );
 }
